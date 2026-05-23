@@ -595,6 +595,63 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       </div>
 
+      {/* Alert Aspek Penilaian Belum Diatur */}
+      {kelas.kolomNilai.length === 0 && (
+        <div style={{
+          padding: "24px",
+          borderRadius: "var(--radius-sm)",
+          backgroundColor: "var(--warning-glow)",
+          border: "1px dashed rgba(245, 158, 11, 0.3)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          boxShadow: "0 4px 12px rgba(245, 158, 11, 0.05)"
+        }} className="animate-fade-in">
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "1.6rem", display: "flex", alignItems: "center" }}>⚠️</span>
+            <div>
+              <h4 style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--warning)" }}>
+                Aspek Penilaian Belum Dikonfigurasi
+              </h4>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                Kelas ini belum memiliki aspek atau kolom nilai (seperti UTS, UAS, Tugas) sehingga penilaian belum dapat diisi.
+              </p>
+            </div>
+          </div>
+          
+          <div style={{ height: "1px", backgroundColor: "rgba(245, 158, 11, 0.15)", margin: "4px 0" }}></div>
+          
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "500" }}>
+              💡 <strong>Langkah cepat:</strong> Gunakan tombol "Atur Aspek & Bobot Nilai" di bagian bawah untuk menambahkan kolom aspek baru.
+            </span>
+            <button
+              onClick={() => {
+                setKolomModalOpen(true);
+                const configCard = document.getElementById("konfigurasi-kelas");
+                if (configCard) {
+                  configCard.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="btn"
+              style={{
+                padding: "8px 18px",
+                fontSize: "0.85rem",
+                backgroundColor: "var(--warning)",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "var(--radius-sm)",
+                fontWeight: "700",
+                cursor: "pointer",
+                boxShadow: "0 4px 10px rgba(245, 158, 11, 0.2)"
+              }}
+            >
+              ⚙️ Mulai Atur Aspek Sekarang
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Table: Main Spreadsheet Gradebook */}
       <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
         
@@ -822,7 +879,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       <div className="grid-cols-2" style={{ gridTemplateColumns: "1.4fr 0.6fr", alignItems: "start" }}>
 
         {/* LEFT COLUMN: glass-card konfigurasi kelas */}
-        <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="glass-card" id="konfigurasi-kelas" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div>
             <h4 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "4px" }}>⚙️ Konfigurasi Kelas</h4>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Kelola aspek penilaian, bobot, dan skema nilai.</p>
