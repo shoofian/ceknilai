@@ -461,8 +461,15 @@ a:hover {
 
 /* Mobile Responsive */
 @media (max-width: 1024px) {
+  .app-container {
+    flex-direction: column;
+  }
+
   .sidebar {
     transform: translateX(-100%);
+    top: 60px; /* Sit below mobile header */
+    height: calc(100vh - 60px);
+    width: 280px; /* Slightly wider on mobile for easier tapping */
   }
   
   .sidebar.active {
