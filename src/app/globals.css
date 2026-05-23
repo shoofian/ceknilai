@@ -471,11 +471,15 @@ a:hover {
   
   .main-content {
     margin-left: 0;
-    padding: 20px;
+    padding: 16px;
   }
   
   .mobile-header {
     display: flex;
+  }
+
+  .header {
+    display: none !important;
   }
   
   .grid-cols-3, .grid-cols-4 {
@@ -489,7 +493,7 @@ a:hover {
   }
   
   .page-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
   
   .btn {
@@ -500,6 +504,21 @@ a:hover {
   .glass-card {
     padding: 16px;
   }
+
+  .flex-wrap-mobile {
+    flex-wrap: wrap;
+  }
+}
+
+/* Modal Responsiveness */
+.modal-content-scroll {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+/* Ensure inputs in tables have min-width on mobile to avoid squishing */
+.premium-table .form-input {
+  min-width: 60px;
 }
 
 /* Cetak Laporan - CSS Print Styling */

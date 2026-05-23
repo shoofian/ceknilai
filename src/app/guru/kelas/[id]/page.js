@@ -1060,7 +1060,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* MODAL: ADD/EDIT STUDENT */}
       {siswaModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "450px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "450px" }}>
             <h3 style={{ fontSize: "1.4rem", fontWeight: "800", marginBottom: "20px" }}>
               {isEditingSiswa ? "✏️ Edit Biodata Siswa" : "👤 Tambah Siswa Baru"}
             </h3>

@@ -179,8 +179,8 @@ export default function KelolaKelas() {
                   ⚙️ Kelola Nilai &amp; Siswa
                 </Link>
                 
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ flex: 1, padding: "8px 12px", fontSize: "0.8rem" }}>
+                <div className="flex-wrap-mobile" style={{ display: "flex", gap: "8px" }}>
+                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ flex: 1, padding: "8px 12px", fontSize: "0.8rem", minWidth: "80px" }}>
                     ✏️ Edit
                   </button>
                   <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ flex: 1, padding: "8px 12px", fontSize: "0.8rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)" }}>
@@ -222,7 +222,7 @@ export default function KelolaKelas() {
             padding: "20px"
           }}
         >
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "450px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "450px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
             <h3 style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "20px" }}>
               {isEditing ? "✏️ Edit Kelas" : "➕ Tambah Kelas Baru"}
             </h3>

@@ -231,7 +231,7 @@ export default function GuruLayout({ children }) {
       {/* Main Content Pane */}
       <div className="main-content" style={{ minWidth: 0 }}>
         {/* Top Header - Desktop Only */}
-        <header className="header no-print" style={{ margin: "-32px -32px 32px -32px", display: "flex", justifyContent: "space-between", borderTop: "none" }}>
+        <header className="header no-print" style={{ margin: "-32px -32px 32px -32px", borderTop: "none" }}>
           <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>Panel Guru &bull; Penilaian Digital</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Login sebagai: <strong>{guru?.username}</strong></span>

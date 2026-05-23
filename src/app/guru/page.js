@@ -94,7 +94,7 @@ export default function GuruDashboard() {
       </div>
 
       {/* Stats Cards Grid */}
-      <div className="grid-cols-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+      <div className="grid-cols-4">
         
         <div className="stat-card">
           <div>
@@ -131,7 +131,7 @@ export default function GuruDashboard() {
       </div>
 
       {/* Main Grid Dashboard */}
-      <div className="grid-cols-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", alignItems: "start" }}>
+      <div className="grid-cols-2" style={{ alignItems: "start" }}>
         
         {/* Left Side: Recent Classes */}
         <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
