@@ -178,7 +178,7 @@ export async function createKelas(newKelas) {
 
     if (error) {
       console.error('Error creating kelas:', error);
-      return null;
+      throw error;
     }
 
     // Sync columns if present (usually empty arrays at creation, but let's be safe)
@@ -252,7 +252,7 @@ export async function updateKelas(id, updatedFields) {
         .eq('id', id);
       if (error) {
         console.error('Error updating kelas:', error);
-        return null;
+        throw error;
       }
     }
 
