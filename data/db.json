@@ -1,0 +1,129 @@
+{
+  "guru": {
+    "nama": "Wahyu Shofian, S.Kom",
+    "username": "guru",
+    "password": "password123",
+    "email": "ws@gmail.com"
+  },
+  "kelas": [
+    {
+      "id": "kelas-10a",
+      "nama": "Kelas X-A",
+      "tahunAjaran": "2025/2026",
+      "archived": false,
+      "kolomNilai": [
+        {
+          "id": "k1",
+          "nama": "Tugas 1",
+          "bobot": 20
+        }
+      ],
+      "siswa": [
+        {
+          "nisn": "1234567890",
+          "nama": "Aditya Pratama",
+          "tanggalLahir": "2010-01-15",
+          "nilai": {
+            "k1": 85
+          },
+          "catatan": "jarang masuk"
+        },
+        {
+          "nisn": "1234567891",
+          "nama": "Bella Citra",
+          "tanggalLahir": "2010-05-20",
+          "nilai": {
+            "k1": 90
+          }
+        },
+        {
+          "nisn": "1234567892",
+          "nama": "Candra Wijaya",
+          "tanggalLahir": "2010-11-02",
+          "nilai": {
+            "k1": 70
+          }
+        }
+      ],
+      "skemaPenilaian": {
+        "A": 85,
+        "B": 75,
+        "C": 65,
+        "D": 50,
+        "kkm": 75,
+        "statusA": "Aa",
+        "statusB": "Bb",
+        "statusC": "Cc",
+        "statusD": "Dd"
+      }
+    },
+    {
+      "id": "kelas-10b",
+      "nama": "Kelas X-B",
+      "tahunAjaran": "2025/2026",
+      "archived": false,
+      "kolomNilai": [
+        {
+          "id": "k1",
+          "nama": "Harian",
+          "bobot": 30
+        },
+        {
+          "id": "k2",
+          "nama": "UTS",
+          "bobot": 30
+        },
+        {
+          "id": "k3",
+          "nama": "UAS",
+          "bobot": 40
+        }
+      ],
+      "siswa": [
+        {
+          "nisn": "1234567890",
+          "nama": "Aditya Pratama",
+          "tanggalLahir": "2010-01-15",
+          "nilai": {
+            "k1": 75,
+            "k2": 80,
+            "k3": 85
+          }
+        },
+        {
+          "nisn": "1234567895",
+          "nama": "Diana Putri",
+          "tanggalLahir": "2010-08-12",
+          "nilai": {
+            "k1": 88,
+            "k2": 90,
+            "k3": 92
+          }
+        }
+      ]
+    },
+    {
+      "id": "kelas-9a",
+      "nama": "Kelas IX-A (Lulus)",
+      "tahunAjaran": "2024/2025",
+      "archived": true,
+      "kolomNilai": [
+        {
+          "id": "k1",
+          "nama": "Nilai Rata-rata",
+          "bobot": 100
+        }
+      ],
+      "siswa": [
+        {
+          "nisn": "1234567890",
+          "nama": "Aditya Pratama",
+          "tanggalLahir": "2010-01-15",
+          "nilai": {
+            "k1": 88
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1141 @@
+"use client";
+
+import { useState, useEffect, use, Fragment } from "react";
+import Modal from '@/components/Modal';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import * as XLSX from "xlsx";
+
+export default function DetailKelas({ params: paramsPromise }) {
+  const params = use(paramsPromise);
+  const classId = params.id;
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [kelas, setKelas] = useState(null);
+  
+  // States untuk Siswa
+  const [siswaModalOpen, setSiswaModalOpen] = useState(false);
+  const [isEditingSiswa, setIsEditingSiswa] = useState(false);
+  const [oldNisn, setOldNisn] = useState("");
+  const [nisn, setNisn] = useState("");
+  const [namaSiswa, setNamaSiswa] = useState("");
+  const [tanggalLahir, setTanggalLahir] = useState("");
+  const [siswaError, setSiswaError] = useState("");
+
+  // States untuk Kolom Nilai
+  const [kolomModalOpen, setKolomModalOpen] = useState(false);
+  const [kolomNama, setKolomNama] = useState("");
+  const [kolomBobot, setKolomBobot] = useState(10);
+  const [kolomError, setKolomError] = useState("");
+  
+  // Status penyimpanan otomatis tabel nilai
+  const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
+
+
+  // States untuk Rentang Nilai
+  const [rangeModalOpen, setRangeModalOpen] = useState(false);
+  const [gradeA, setGradeA] = useState(85);
+  const [gradeB, setGradeB] = useState(75);
+  const [gradeC, setGradeC] = useState(65);
+  const [gradeD, setGradeD] = useState(50);
+  const [kkm, setKkm] = useState(75);
+  // Label status untuk setiap rentang
+  const [statusA, setStatusA] = useState('A');
+  const [statusB, setStatusB] = useState('B');
+  const [statusC, setStatusC] = useState('C');
+  const [statusD, setStatusD] = useState('D');
+
+
+  // States untuk Impor CSV
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewList, setPreviewList] = useState([]);
+  const [importing, setImporting] = useState(false);
+
+  // States untuk Catatan Siswa
+  const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
+  const [catatanDraft, setCatatanDraft] = useState({}); // { [nisn]: string }
+  const [savingCatatan, setSavingCatatan] = useState({}); // { [nisn]: boolean }
+
+  const toggleCatatanRow = (studentNisn) => {
+    setOpenCatatan(prev => {
+      const isOpen = !prev[studentNisn];
+      if (isOpen && catatanDraft[studentNisn] === undefined) {
+        const student = kelas?.siswa.find(s => s.nisn === studentNisn);
+        setCatatanDraft(drafts => ({
+          ...drafts,
+          [studentNisn]: student?.catatan || ""
+        }));
+      }
+      return { ...prev, [studentNisn]: isOpen };
+    });
+  };
+
+  const saveCatatan = async (studentNisn) => {
+    const draftText = catatanDraft[studentNisn] || "";
+    setSavingCatatan(prev => ({ ...prev, [studentNisn]: true }));
+    try {
+      const response = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ catatan: draftText })
+      });
+      if (response.ok) {
+        fetchClassDetail();
+        // Tutup baris catatan setelah berhasil menyimpan
+        setOpenCatatan(prev => ({ ...prev, [studentNisn]: false }));
+      } else {
+        alert("Gagal menyimpan catatan.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setSavingCatatan(prev => ({ ...prev, [studentNisn]: false }));
+    }
+  };
+
+  const fetchClassDetail = async () => {
+    try {
+      const response = await fetch(`/api/kelas/${classId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setKelas(data);
+// Initialize grade range states from class skemaPenilaian or defaults
+        if (data.skemaPenilaian) {
+          setGradeA(data.skemaPenilaian.A ?? 85);
+          setGradeB(data.skemaPenilaian.B ?? 75);
+          setGradeC(data.skemaPenilaian.C ?? 65);
+          setGradeD(data.skemaPenilaian.D ?? 50);
+          setKkm(data.skemaPenilaian.kkm ?? 75);
+          setStatusA(data.skemaPenilaian.statusA ?? 'A');
+          setStatusB(data.skemaPenilaian.statusB ?? 'B');
+          setStatusC(data.skemaPenilaian.statusC ?? 'C');
+          setStatusD(data.skemaPenilaian.statusD ?? 'D');
+        }
+      } else {
+        alert("Gagal memuat detail kelas.");
+        router.push("/guru/kelas");
+      }
+    } catch (err) {
+      console.error("Error loading class detail", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchClassDetail();
+  }, [classId]);
+
+  // === DYNAMIC WEIGHT COMPUTATIONS ===
+  const totalBobot = kelas ? kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0) : 0;
+
+  // === HANDLERS SISWA ===
+  const handleOpenAddSiswa = () => {
+    setIsEditingSiswa(false);
+    setNisn("");
+    setNamaSiswa("");
+    setTanggalLahir("");
+    setSiswaError("");
+    setSiswaModalOpen(true);
+  };
+
+  const handleOpenEditSiswa = (siswa) => {
+    setIsEditingSiswa(true);
+    setOldNisn(siswa.nisn);
+    setNisn(siswa.nisn);
+    setNamaSiswa(siswa.nama);
+    setTanggalLahir(siswa.tanggalLahir);
+    setSiswaError("");
+    setSiswaModalOpen(true);
+  };
+
+  const handleSiswaSubmit = async (e) => {
+    e.preventDefault();
+    if (!nisn.trim() || !namaSiswa.trim() || !tanggalLahir) {
+      setSiswaError("Semua bidang harus diisi.");
+      return;
+    }
+
+    try {
+      let response;
+      if (isEditingSiswa) {
+        response = await fetch(`/api/kelas/${classId}/siswa/${oldNisn}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nama: namaSiswa.trim(), tanggalLahir }),
+        });
+      } else {
+        response = await fetch(`/api/kelas/${classId}/siswa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nisn: nisn.trim(), nama: namaSiswa.trim(), tanggalLahir }),
+        });
+      }
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal memproses data siswa");
+      }
+
+      setSiswaModalOpen(false);
+      fetchClassDetail();
+    } catch (err) {
+      setSiswaError(err.message || "Terjadi kesalahan.");
+    }
+  };
+
+  const handleDeleteSiswa = async (studentNisn, studentName) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus siswa "${studentName}" (NISN: ${studentNisn}) dari kelas ini? Semua nilainya akan terhapus.`)) {
+      try {
+        const response = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          fetchClassDetail();
+        } else {
+          const data = await response.json();
+          alert(data.error || "Gagal menghapus siswa.");
+        }
+      } catch (err) {
+        console.error("Delete student failed", err);
+      }
+    }
+  };
+
+  // === HANDLERS KOLOM NILAI ===
+
+  const handleKolomSubmit = async (e) => {
+    e.preventDefault();
+    if (!kolomNama.trim() || kolomBobot === undefined) {
+      setKolomError("Nama kolom dan bobot persentase harus diisi.");
+      return;
+    }
+
+    if (totalBobot + Number(kolomBobot) > 100) {
+      if (!confirm(`⚠️ Total persentase bobot akan melebihi 100% (saat ini ${totalBobot}%, ditambah kolom ini menjadi ${totalBobot + Number(kolomBobot)}%). Tetap simpan? Anda bisa merapikan bobot persentase nanti.`)) {
+        return;
+      }
+    }
+
+    try {
+      const response = await fetch(`/api/kelas/${classId}/kolom`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nama: kolomNama.trim(), bobot: Number(kolomBobot) }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal membuat kolom nilai");
+      }
+
+      // Reset form setelah berhasil tambah, panel tetap terbuka
+      setKolomNama("");
+      setKolomBobot(10);
+      setKolomError("");
+      fetchClassDetail();
+    } catch (err) {
+      setKolomError(err.message || "Terjadi kesalahan.");
+    }
+  };
+
+  const handleDeleteKolom = async (colId, colName) => {
+    if (confirm(`⚠️ PERINGATAN!\nApakah Anda yakin ingin menghapus kolom nilai "${colName}"?\nSemua nilai siswa pada aspek ini akan DIHAPUS secara permanen!`)) {
+      try {
+        const response = await fetch(`/api/kelas/${classId}/kolom?id=${colId}`, {
+          method: "DELETE",
+        });
+        if (response.ok) {
+          fetchClassDetail();
+        } else {
+          const data = await response.json();
+          alert(data.error || "Gagal menghapus kolom.");
+        }
+      } catch (err) {
+        console.error("Delete column failed", err);
+      }
+    }
+  };
+
+  // Save grade range and KKM configuration
+  const handleSaveRange = async () => {
+    // Validate grade ordering
+    if (gradeA < gradeB || gradeB < gradeC || gradeC < gradeD) {
+      alert('Pastikan nilai A ≥ B ≥ C ≥ D.');
+      return;
+    }
+    try {
+      const payload = {
+        skemaPenilaian: {
+          A: gradeA,
+          B: gradeB,
+          C: gradeC,
+          D: gradeD,
+          kkm: kkm,
+          statusA: statusA.trim() || 'A',
+          statusB: statusB.trim() || 'B',
+          statusC: statusC.trim() || 'C',
+          statusD: statusD.trim() || 'D',
+        },
+      };
+      const response = await fetch(`/api/kelas/${classId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Gagal menyimpan skema penilaian');
+      }
+      alert('Skema penilaian berhasil disimpan!');
+      setRangeModalOpen(false);
+      fetchClassDetail();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Terjadi kesalahan saat menyimpan skema penilaian.');
+    }
+  };
+
+
+  // === BATCH UPDATE BOBOT PERSENTASE ===
+  const handleBobotChange = (colId, value) => {
+    const updatedKolom = kelas.kolomNilai.map(col => {
+      if (col.id === colId) {
+        return { ...col, bobot: Number(value) };
+      }
+      return col;
+    });
+    setKelas({ ...kelas, kolomNilai: updatedKolom });
+  };
+
+  const handleColumnNameChange = (colId, value) => {
+    const updatedKolom = kelas.kolomNilai.map(col => {
+      if (col.id === colId) {
+        return { ...col, nama: value };
+      }
+      return col;
+    });
+    setKelas({ ...kelas, kolomNilai: updatedKolom });
+  };
+
+  const saveAllBobot = async () => {
+    const tempTotal = kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0);
+    if (tempTotal !== 100) {
+      alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${tempTotal}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
+    }
+
+    try {
+      const response = await fetch(`/api/kelas/${classId}/kolom`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kolomNilai: kelas.kolomNilai }),
+      });
+
+      if (response.ok) {
+        alert("✅ Perubahan kolom nilai dan bobot persentase berhasil disimpan!");
+        fetchClassDetail();
+      } else {
+        const data = await response.json();
+        alert(data.error || "Gagal memperbarui bobot.");
+      }
+    } catch (err) {
+      console.error("Update weights failed", err);
+    }
+  };
+
+  // === SPREADSHEET AUTO SAVE ON BLUR ===
+  const handleGradeBlur = async (studentNisn, colId, value) => {
+    const key = `${studentNisn}-${colId}`;
+    
+    // Jangan lakukan apa-apa jika nilainya kosong dan awalnya memang kosong
+    const student = kelas.siswa.find(s => s.nisn === studentNisn);
+    const originalValue = student.nilai[colId];
+    
+    const parsedValue = value === "" ? null : Number(value);
+    
+    if (parsedValue === originalValue) return;
+
+    if (parsedValue !== null && (isNaN(parsedValue) || parsedValue < 0 || parsedValue > 100)) {
+      alert("Nilai harus berupa angka di antara 0 sampai 100!");
+      return;
+    }
+
+    setSaveStatus(prev => ({ ...prev, [key]: "saving" }));
+
+    try {
+      const response = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nilai: {
+            [colId]: parsedValue
+          }
+        }),
+      });
+
+      if (response.ok) {
+        setSaveStatus(prev => ({ ...prev, [key]: "saved" }));
+        
+        // Perbarui state lokal nilai siswa secara langsung agar nilai akhir terhitung otomatis tanpa re-fetch lambat
+        const updatedSiswa = kelas.siswa.map(s => {
+          if (s.nisn === studentNisn) {
+            return {
+              ...s,
+              nilai: {
+                ...s.nilai,
+                [colId]: parsedValue
+              }
+            };
+          }
+          return s;
+        });
+        setKelas({ ...kelas, siswa: updatedSiswa });
+
+        // Kembalikan ke status idle setelah 1.5 detik
+        setTimeout(() => {
+          setSaveStatus(prev => ({ ...prev, [key]: "idle" }));
+        }, 1500);
+      } else {
+        setSaveStatus(prev => ({ ...prev, [key]: "failed" }));
+      }
+    } catch (err) {
+      console.error("Grade update failed", err);
+      setSaveStatus(prev => ({ ...prev, [key]: "failed" }));
+    }
+  };
+
+  // === DYNAMIC EXCEL TEMPLATE EXPORTER ===
+  const downloadExcelTemplate = () => {
+    // Susun header
+    const headers = ["NISN", "Nama", "Tanggal Lahir (YYYY-MM-DD)"];
+    kelas.kolomNilai.forEach(col => {
+      headers.push(col.nama);
+    });
+    
+    // Susun baris berdasarkan siswa yang sudah ada
+    const rows = [headers];
+    if (kelas.siswa.length > 0) {
+      kelas.siswa.forEach(siswa => {
+        const row = [siswa.nisn, siswa.nama, siswa.tanggalLahir];
+        kelas.kolomNilai.forEach(col => {
+          row.push(siswa.nilai[col.id] !== null && siswa.nilai[col.id] !== undefined ? siswa.nilai[col.id] : "");
+        });
+        rows.push(row);
+      });
+    } else {
+      // Row contoh jika kelas masih kosong
+      const placeholder = ["1234567890", "Aditya Pratama", "2010-01-15"];
+      kelas.kolomNilai.forEach(() => placeholder.push(""));
+      rows.push(placeholder);
+    }
+    
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    
+    // Atur lebar kolom agar rapi dan tidak terpotong (wch = width in characters)
+    ws['!cols'] = [
+      { wch: 18 }, // NISN
+      { wch: 28 }, // Nama
+      { wch: 25 }, // Tanggal Lahir
+      ...kelas.kolomNilai.map(() => ({ wch: 16 })) // Kolom-kolom aspek nilai
+    ];
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Daftar Nilai Siswa");
+    
+    XLSX.writeFile(wb, `Template_Nilai_${kelas.nama.replace(/\s+/g, "_")}.xlsx`);
+  };
+ 
+  // === DYNAMIC EXCEL PARSER ===
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert worksheet to a 2D array (header: 1 returns array of arrays, defval: "" to handle empty cells)
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+        
+        if (rows.length === 0) {
+          alert("Berkas Excel kosong!");
+          return;
+        }
+        
+        // Parse header
+        const headers = rows[0].map(h => String(h).trim());
+        const nisnIdx = headers.indexOf("NISN");
+        const namaIdx = headers.indexOf("Nama");
+        const tglIdx = headers.indexOf("Tanggal Lahir (YYYY-MM-DD)");
+        
+        if (nisnIdx === -1 || namaIdx === -1 || tglIdx === -1) {
+          alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: NISN, Nama, Tanggal Lahir (YYYY-MM-DD)");
+          return;
+        }
+        
+        const parsedSiswa = [];
+        
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
+          if (!cols || cols.length === 0 || !cols[nisnIdx]) continue;
+          
+          const nisnVal = String(cols[nisnIdx]).trim();
+          const namaVal = String(cols[namaIdx]).trim();
+          const tglVal = String(cols[tglIdx]).trim();
+          
+          if (!nisnVal || !namaVal || !tglVal) continue;
+          
+          const nilaiObj = {};
+          kelas.kolomNilai.forEach(col => {
+            const colIdx = headers.indexOf(col.nama);
+            if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
+              nilaiObj[col.nama] = Number(cols[colIdx]);
+            } else {
+              nilaiObj[col.nama] = null;
+            }
+          });
+          
+          parsedSiswa.push({
+            nisn: nisnVal,
+            nama: namaVal,
+            tanggalLahir: tglVal,
+            nilai: nilaiObj
+          });
+        }
+        
+        if (parsedSiswa.length === 0) {
+          alert("Tidak ada data siswa yang berhasil di-parse!");
+          return;
+        }
+        
+        setPreviewList(parsedSiswa);
+        setPreviewModalOpen(true);
+        
+        // Reset file input agar bisa upload file yang sama lagi jika butuh
+        e.target.value = null;
+      } catch (parseError) {
+        console.error(parseError);
+        alert("Gagal membaca file Excel. Pastikan format file benar.");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const confirmImport = async () => {
+    setImporting(true);
+    try {
+      const response = await fetch(`/api/kelas/${classId}/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siswaList: previewList }),
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message || "Impor data berhasil!");
+        setPreviewModalOpen(false);
+        fetchClassDetail();
+      } else {
+        alert(data.error || "Gagal mengimpor data.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi server saat mengimpor.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+      
+      {/* Breadcrumbs */}
+      <div style={{ display: "flex", gap: "8px", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "500" }}>
+        <Link href="/guru/kelas">📚 Daftar Kelas</Link>
+        <span>/</span>
+        <span style={{ color: "var(--text-primary)" }}>{kelas.nama}</span>
+      </div>
+
+      {/* Main Header Card */}
+      <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
+        <div>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: "800" }}>{kelas.nama}</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginTop: "4px" }}>
+            Tahun Ajaran: <strong>{kelas.tahunAjaran}</strong> &bull; {kelas.siswa.length} Siswa Terdaftar
+          </p>
+        </div>
+
+        {/* Weights overview */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ textAlign: "right" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>TOTAL PERSENTASE BOBOT</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end", marginTop: "2px" }}>
+              <span style={{ fontSize: "1.5rem", fontWeight: "800", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
+                {totalBobot}%
+              </span>
+              <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.65rem" }}>
+                {totalBobot === 100 ? "Lengkap" : "Harus 100%"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table: Main Spreadsheet Gradebook */}
+      <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
+        
+        <div style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>📊 Buku Nilai Kelas</h4>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+              Ketikkan nilai langsung pada tabel. Nilai akan <strong>terkunci secara otomatis</strong> saat kursor berpindah (blur).
+            </p>
+          </div>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>
+            <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--success)" }}></span>
+            <span>Auto-saving diaktifkan</span>
+          </div>
+        </div>
+
+        {kelas.siswa.length > 0 ? (
+          <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none" }}>
+            <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
+              <thead>
+                <tr>
+                  <th style={{ width: "140px" }}>NISN</th>
+                  <th style={{ width: "240px" }}>Nama Siswa</th>
+                  <th style={{ width: "140px" }}>Tanggal Lahir</th>
+                  
+                  {/* Dynamic Headers based on columns */}
+                  {kelas.kolomNilai.map(col => (
+                    <th key={col.id} style={{ textAlign: "center", minWidth: "100px" }}>
+                      {col.nama} ({col.bobot}%)
+                    </th>
+                  ))}
+
+                  <th style={{ textAlign: "center", width: "110px", backgroundColor: "var(--bg-tertiary)" }}>N. AKHIR</th>
+                  <th style={{ textAlign: "center", width: "80px" }}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {kelas.siswa.map((student) => {
+                  
+                  // Hitung nilai akhir lokal proporsional (Running Average)
+                  let totalBobotTerisi = 0;
+                  let totalNilaiTerisi = 0;
+                  let jumlahAspekTerisi = 0;
+                  
+                  kelas.kolomNilai.forEach(col => {
+                    const sc = student.nilai[col.id];
+                    if (sc !== undefined && sc !== null && sc !== "") {
+                      totalNilaiTerisi += Number(sc) * (col.bobot / 100);
+                      totalBobotTerisi += col.bobot;
+                      jumlahAspekTerisi++;
+                    }
+                  });
+
+                  const finalScore = totalBobotTerisi > 0 
+                    ? (totalNilaiTerisi / (totalBobotTerisi / 100)) 
+                    : 0;
+                  const isSelesai = jumlahAspekTerisi === kelas.kolomNilai.length;
+
+                  return (
+                    <Fragment key={student.nisn}>
+                      <tr>
+                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
+                          {student.nisn}
+                        </td>
+                        <td style={{ fontWeight: "700" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>{student.nama}</span>
+                            <button
+                              onClick={() => toggleCatatanRow(student.nisn)}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: "2px",
+                                fontSize: "0.95rem",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                opacity: student.catatan ? 1 : 0.4,
+                                transition: "opacity 0.2s ease"
+                              }}
+                              title={student.catatan ? "Lihat/Edit Keterangan Tambahan" : "Tambah Keterangan Tambahan"}
+                            >
+                              💬
+                            </button>
+                            {student.catatan && (
+                              <span 
+                                style={{ 
+                                  width: "6px", 
+                                  height: "6px", 
+                                  borderRadius: "50%", 
+                                  backgroundColor: "var(--success)", 
+                                  display: "inline-block" 
+                                }}
+                                title="Ada keterangan tambahan"
+                              ></span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                          {student.tanggalLahir}
+                        </td>
+
+                        {/* Dynamic Inputs for Grades */}
+                        {kelas.kolomNilai.map(col => {
+                          const cellKey = `${student.nisn}-${col.id}`;
+                          const currentStatus = saveStatus[cellKey] || "idle";
+
+                          return (
+                            <td key={col.id} style={{ textAlign: "center", position: "relative" }}>
+                              <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
+                                <input
+                                  type="number"
+                                  defaultValue={student.nilai[col.id] !== null && student.nilai[col.id] !== undefined ? student.nilai[col.id] : ""}
+                                  onBlur={(e) => handleGradeBlur(student.nisn, col.id, e.target.value)}
+                                  className="form-input"
+                                  style={{
+                                    padding: "6px 8px",
+                                    fontSize: "0.85rem",
+                                    textAlign: "center",
+                                    border: currentStatus === "saved" 
+                                      ? "1px solid var(--success)" 
+                                      : currentStatus === "saving"
+                                        ? "1px solid var(--primary)" 
+                                        : currentStatus === "failed"
+                                          ? "1px solid var(--danger)"
+                                          : "1px solid var(--border-color)",
+                                    backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
+                                    transition: "all 0.15s ease"
+                                  }}
+                                  placeholder="-"
+                                  min={0}
+                                  max={100}
+                                />
+
+                                {/* Small status dots for auto-saving indicator */}
+                                {currentStatus === "saving" && (
+                                  <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--primary)", borderRadius: "50%", display: "inline-block", animation: "pulse 0.6s infinite" }} title="Menyimpan..."></span>
+                                )}
+                                {currentStatus === "saved" && (
+                                  <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
+                                )}
+                                {currentStatus === "failed" && (
+                                  <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--danger)", borderRadius: "50%", display: "inline-block" }} title="Gagal Menyimpan"></span>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+
+                        {/* Weighted Final Score */}
+                        <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59,130,246,0.02)", padding: "10px 12px" }}>
+                          <div>{finalScore.toFixed(2)}</div>
+                          {!isSelesai && kelas.kolomNilai.length > 0 && (
+                            <div style={{ fontSize: "0.62rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "2px", opacity: 0.8 }} title="Dihitung proporsional dari tugas terisi">
+                              Berjalan ({jumlahAspekTerisi}/{kelas.kolomNilai.length})
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Row actions */}
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                            <button onClick={() => handleOpenEditSiswa(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem" }} title="Edit Profil Siswa">
+                              ✏️
+                            </button>
+                            <button onClick={() => handleDeleteSiswa(student.nisn, student.nama)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--danger)" }} title="Hapus Siswa">
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {openCatatan[student.nisn] && (
+                        <tr style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
+                          <td colSpan={5 + kelas.kolomNilai.length} style={{ padding: "12px 24px", borderBottom: "1px solid var(--border-color)" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxWidth: "600px" }}>
+                              <label style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                📝 Keterangan Tambahan / Catatan untuk {student.nama}
+                              </label>
+                              <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                                <textarea
+                                  className="form-input"
+                                  placeholder="Tulis bimbingan akademik, keterangan ketidakhadiran, atau umpan balik lainnya di sini..."
+                                  value={catatanDraft[student.nisn] !== undefined ? catatanDraft[student.nisn] : (student.catatan || "")}
+                                  onChange={(e) => setCatatanDraft({ ...catatanDraft, [student.nisn]: e.target.value })}
+                                  rows={2}
+                                  style={{ padding: "8px 12px", fontSize: "0.85rem", resize: "vertical", width: "100%", minHeight: "50px", margin: 0 }}
+                                />
+                                <div style={{ display: "flex", gap: "6px" }}>
+                                  <button
+                                    onClick={() => saveCatatan(student.nisn)}
+                                    className="btn btn-primary"
+                                    disabled={savingCatatan[student.nisn]}
+                                    style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                                  >
+                                    {savingCatatan[student.nisn] ? "Menyimpan..." : "💾 Simpan"}
+                                  </button>
+                                  <button
+                                    onClick={() => setOpenCatatan({ ...openCatatan, [student.nisn]: false })}
+                                    className="btn btn-secondary"
+                                    style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                                  >
+                                    Batal
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+            Belum ada siswa di kelas ini. Klik "Tambah Siswa Manual" atau "Impor Nilai dari CSV" untuk mengisi data.
+          </div>
+        )}
+      </div>
+
+      {/* Grid: Left - Configuration Card, Right - Operations Card */}
+      <div className="grid-cols-2" style={{ gridTemplateColumns: "1.4fr 0.6fr", alignItems: "start" }}>
+
+        {/* LEFT COLUMN: glass-card konfigurasi kelas */}
+        <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div>
+            <h4 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "4px" }}>⚙️ Konfigurasi Kelas</h4>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Kelola aspek penilaian, bobot, dan skema nilai.</p>
+          </div>
+
+          {/* Tombol-tombol konfigurasi */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {/* Button toggle Atur Aspek */}
+            <button
+              onClick={() => setKolomModalOpen(!kolomModalOpen)}
+              className="btn btn-secondary"
+              style={{ width: "100%", justifyContent: "space-between", fontSize: "0.9rem", padding: "11px 16px" }}
+            >
+              <span>⚙️ Atur Aspek &amp; Bobot Nilai</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{kolomModalOpen ? "▲ Tutup" : "▼ Buka"}</span>
+            </button>
+
+            {/* Inline card aspek — muncul di bawah tombolnya */}
+            {kolomModalOpen && (
+              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
+                      <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}>Hapus</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kelas.kolomNilai.map((col) => (
+                      <tr key={col.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                        <td style={{ padding: "6px 10px" }}>
+                          <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
+                        </td>
+                        <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                          <input type="number" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => handleBobotChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                        </td>
+                        <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                          <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Baris tambah baru */}
+                    <tr style={{ borderTop: "2px dashed var(--border-color)", backgroundColor: "rgba(59,130,246,0.03)" }}>
+                      <td style={{ padding: "8px 10px" }}>
+                        <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={kolomNama} onChange={(e) => setKolomNama(e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
+                      </td>
+                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                        <input type="number" className="form-input" placeholder="%" value={kolomBobot} min={1} max={100} onChange={(e) => setKolomBobot(e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                      </td>
+                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                        <button onClick={(e) => handleKolomSubmit(e)} className="btn btn-primary" style={{ padding: "3px 10px", fontSize: "0.82rem" }}>+</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                {kolomError && (
+                  <p style={{ color: "var(--danger)", fontSize: "0.82rem", margin: "0", padding: "6px 10px", backgroundColor: "var(--danger-glow)" }}>{kolomError}</p>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
+                      Total: {totalBobot}%
+                    </span>
+                    <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
+                      {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
+                    </span>
+                  </div>
+                  <button onClick={saveAllBobot} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>
+                    💾 Simpan
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tombol Atur Rentang Nilai & KKM */}
+            <button
+              onClick={() => setRangeModalOpen(!rangeModalOpen)}
+              className="btn btn-secondary"
+              style={{ width: "100%", justifyContent: "space-between", fontSize: "0.9rem", padding: "11px 16px" }}
+            >
+              <span>📊 Atur Rentang Nilai &amp; KKM</span>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{rangeModalOpen ? "▲ Tutup" : "▼ Buka"}</span>
+            </button>
+
+            {/* Inline card rentang nilai — muncul di bawah tombolnya */}
+            {rangeModalOpen && (
+              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px" }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
+                  Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
+                </p>
+                
+                {/* Header grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
+                </div>
+                
+                {/* A */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
+                  <input type="number" className="form-input" value={gradeA} min={0} max={100} onChange={e => setGradeA(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* B */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
+                  <input type="number" className="form-input" value={gradeB} min={0} max={100} onChange={e => setGradeB(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* C */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
+                  <input type="number" className="form-input" value={gradeC} min={0} max={100} onChange={e => setGradeC(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* D */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
+                  <input type="number" className="form-input" value={gradeD} min={0} max={100} onChange={e => setGradeD(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* KKM */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
+                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
+                </div>
+                
+                {/* Actions */}
+                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
+                  <button onClick={() => setRangeModalOpen(false)} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
+                  <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>{/* end LEFT COLUMN */}
+
+
+        <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <h4 style={{ fontSize: "1.15rem", fontWeight: "700" }}>🛠️ Operasi Data</h4>
+          
+          <button onClick={handleOpenAddSiswa} className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem" }}>
+            👤 Tambah Siswa Manual
+          </button>
+          
+          <button onClick={downloadExcelTemplate} className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem" }} disabled={kelas.kolomNilai.length === 0}>
+            📥 Unduh Template Excel (.xlsx)
+          </button>
+
+          <label className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem", cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer" }}>
+            📤 Impor Nilai dari Excel
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              style={{ display: "none" }}
+              onChange={handleExcelUpload}
+              disabled={kelas.kolomNilai.length === 0}
+            />
+          </label>
+
+          {kelas.kolomNilai.length === 0 && (
+            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+              * Tambah minimal 1 Aspek Nilai terlebih dahulu untuk membuka fitur Template &amp; Impor Excel.
+            </p>
+          )}
+        </div>
+
+      </div>
+
+      {/* MODAL: ADD/EDIT STUDENT */}
+      {siswaModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "450px" }}>
+            <h3 style={{ fontSize: "1.4rem", fontWeight: "800", marginBottom: "20px" }}>
+              {isEditingSiswa ? "✏️ Edit Biodata Siswa" : "👤 Tambah Siswa Baru"}
+            </h3>
+
+            <form onSubmit={handleSiswaSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NISN Siswa (10-digit)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 1234567890"
+                  className="form-input"
+                  value={nisn}
+                  onChange={(e) => setNisn(e.target.value)}
+                  disabled={isEditingSiswa} // NISN bersifat unique key
+                  maxLength={20}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Lengkap Siswa</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Aditya Pratama"
+                  className="form-input"
+                  value={namaSiswa}
+                  onChange={(e) => setNamaSiswa(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tanggal Lahir</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={tanggalLahir}
+                  onChange={(e) => setTanggalLahir(e.target.value)}
+                  required
+                />
+              </div>
+
+              {siswaError && (
+                <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
+                  ❌ {siswaError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setSiswaModalOpen(false)} className="btn btn-secondary">
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+
+
+      {/* MODAL: PREMIUM EXCEL IMPORT PREVIEW & CONFIRMATION */}
+      {previewModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 250, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "800px", maxHeight: "85vh", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: "800" }}>📤 Pratinjau Impor Data Excel</h3>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                Berikut adalah data siswa dan nilai yang berhasil di-parse dari file Excel Anda. Klik <strong>Konfirmasi Impor</strong> untuk menyimpannya ke basis data kelas.
+              </p>
+            </div>
+
+            {/* Table preview scrollable */}
+            <div style={{ flex: 1, overflowY: "auto", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)" }}>
+              <table className="premium-table" style={{ margin: 0 }}>
+                <thead>
+                  <tr>
+                    <th>NISN</th>
+                    <th>Nama</th>
+                    <th>Tanggal Lahir</th>
+                    {kelas.kolomNilai.map(col => (
+                      <th key={col.id} style={{ textAlign: "center" }}>{col.nama}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {previewList.map((ps, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontFamily: "monospace", fontSize: "0.8rem", fontWeight: "600" }}>{ps.nisn}</td>
+                      <td style={{ fontWeight: "700" }}>{ps.nama}</td>
+                      <td>{ps.tanggalLahir}</td>
+                      {kelas.kolomNilai.map(col => (
+                        <td key={col.id} style={{ textAlign: "center", fontWeight: "700" }}>
+                          {ps.nilai[col.nama] !== null && ps.nilai[col.nama] !== undefined ? ps.nilai[col.nama] : "-"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Confirm Actions */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: "600" }}>
+                Total: <strong>{previewList.length}</strong> record siswa siap diimpor.
+              </span>
+              
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button type="button" onClick={() => setPreviewModalOpen(false)} className="btn btn-secondary" disabled={importing}>
+                  Batal
+                </button>
+                <button type="button" onClick={confirmImport} className="btn btn-success" disabled={importing}>
+                  {importing ? "Mengimpor..." : "✅ Konfirmasi Impor"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global pulse CSS helper */}
+      <style jsx global>{`
+        @keyframes pulse {
+          0% { opacity: 0.3; transform: scale(0.9); }
+          50% { opacity: 1; transform: scale(1.1); }
+          100% { opacity: 0.3; transform: scale(0.9); }
+        }
+      `}</style>
+    </div>
+  );
+}
