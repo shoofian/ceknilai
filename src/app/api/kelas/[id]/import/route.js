@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && session.value === 'true';
+  return session && !!session.value;
 }
 
 export async function POST(request, { params }) {

@@ -7,14 +7,14 @@ export async function GET() {
     const cookieStore = await cookies();
     const session = cookieStore.get('guru_session');
     
-    if (!session || session.value !== 'true') {
+    if (!session || !session.value) {
       return NextResponse.json(
         { loggedIn: false, error: 'Belum masuk' },
         { status: 401 }
       );
     }
     
-    const guru = await getGuru();
+    const guru = await getGuru(session.value);
     const { password: _, ...guruData } = guru;
     return NextResponse.json({ loggedIn: true, user: guruData });
   } catch (error) {

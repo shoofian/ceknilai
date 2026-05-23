@@ -7,9 +7,9 @@ export async function POST(request) {
     const { username, password } = await request.json();
     const guru = await getGuru(username);
     
-    if (username.trim() === guru.username && password === guru.password) {
+    if (username.trim().toLowerCase() === guru.username.toLowerCase() && password === guru.password) {
       const cookieStore = await cookies();
-      cookieStore.set('guru_session', 'true', {
+      cookieStore.set('guru_session', guru.username, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',

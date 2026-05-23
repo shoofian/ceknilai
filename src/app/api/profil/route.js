@@ -5,16 +5,18 @@ import { cookies } from 'next/headers';
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && session.value === 'true';
+  return session && !!session.value;
 }
 
 export async function GET() {
   try {
-    if (!(await checkAuth())) {
+    const cookieStore = await cookies();
+    const session = cookieStore.get('guru_session');
+    if (!session || !session.value) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
-    const guru = await getGuru();
+    const guru = await getGuru(session.value);
     const { password: _, ...guruData } = guru;
     return NextResponse.json(guruData);
   } catch (error) {
@@ -25,7 +27,9 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    if (!(await checkAuth())) {
+    const cookieStore = await cookies();
+    const session = cookieStore.get('guru_session');
+    if (!session || !session.value) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -35,7 +39,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Nama, username, dan email harus diisi' }, { status: 400 });
     }
 
-    const currentGuru = await getGuru();
+    const currentGuru = await getGuru(session.value);
 
     const updatedProfile = {
       nama: nama.trim(),
