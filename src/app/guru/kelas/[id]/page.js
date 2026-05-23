@@ -848,7 +848,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
                       <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
                       <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}>Hapus</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}></th>
                     </tr>
                   </thead>
                   <tbody>
