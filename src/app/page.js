@@ -190,6 +190,9 @@ export default function StudentPortal() {
                           <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
                             📚 TA: {res.tahunAjaran}
                           </span>
+                          <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
+                            ⏱️ Sem. {res.semester || "Ganjil"}
+                          </span>
                           <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", fontWeight: "600" }}>
                             💻 {res.mataPelajaran || "Informatika"}
                           </span>
@@ -297,7 +300,7 @@ export default function StudentPortal() {
                         <div>
                           <h4 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{res.namaKelas}</h4>
                           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "4px" }}>
-                            Mata Pelajaran: <strong>{res.mataPelajaran || "Informatika"}</strong> &bull; Tahun Ajaran: <strong>{res.tahunAjaran}</strong> &bull; Guru Pengampu: <strong>{res.guruNama}</strong>
+                            Mata Pelajaran: <strong>{res.mataPelajaran || "Informatika"}</strong> &bull; Tahun Ajaran: <strong>{res.tahunAjaran}</strong> &bull; Semester: <strong>{res.semester || "Ganjil"}</strong> &bull; Guru Pengampu: <strong>{res.guruNama}</strong>
                           </p>
                         </div>
 

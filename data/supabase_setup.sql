@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS kelas (
   nama text NOT NULL,
   mata_pelajaran text DEFAULT 'Informatika',
   tahun_ajaran text NOT NULL,
+  semester text DEFAULT 'Ganjil',
   archived boolean DEFAULT false,
   skema_penilaian jsonb DEFAULT '{"A": 85, "B": 75, "C": 65, "D": 50, "kkm": 75, "statusA": "A", "statusB": "B", "statusC": "C", "statusD": "D"}'::jsonb
 );

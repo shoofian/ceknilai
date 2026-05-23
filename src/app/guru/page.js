@@ -158,7 +158,7 @@ export default function GuruDashboard() {
                   <div>
                     <h5 style={{ fontSize: "0.95rem", fontWeight: "700" }}>{kelas.nama}</h5>
                     <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-                      Mata Pelajaran: {kelas.mataPelajaran || 'Informatika'} &bull; TA: {kelas.tahunAjaran} &bull; {kelas.siswa.length} Siswa
+                      Mata Pelajaran: {kelas.mataPelajaran || 'Informatika'} &bull; TA: {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
                     </p>
                   </div>
                   <Link href={`/guru/kelas/${kelas.id}`} className="btn btn-primary" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>

@@ -12,6 +12,7 @@ export default function KelolaKelas() {
   const [nama, setNama] = useState("");
   const [mataPelajaran, setMataPelajaran] = useState("Informatika");
   const [tahunAjaran, setTahunAjaran] = useState("2025/2026");
+  const [semester, setSemester] = useState("Ganjil");
   const [error, setError] = useState("");
 
   const fetchKelas = async () => {
@@ -37,6 +38,7 @@ export default function KelolaKelas() {
     setNama("");
     setMataPelajaran("Informatika");
     setTahunAjaran("2025/2026");
+    setSemester("Ganjil");
     setError("");
     setModalOpen(true);
   };
@@ -47,6 +49,7 @@ export default function KelolaKelas() {
     setNama(k.nama);
     setMataPelajaran(k.mataPelajaran || "Informatika");
     setTahunAjaran(k.tahunAjaran);
+    setSemester(k.semester || "Ganjil");
     setError("");
     setModalOpen(true);
   };
@@ -68,13 +71,13 @@ export default function KelolaKelas() {
         response = await fetch(`/api/kelas/${currentId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim() }),
+          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim(), semester: semester.trim() }),
         });
       } else {
         response = await fetch("/api/kelas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim() }),
+          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim(), semester: semester.trim() }),
         });
       }
 
@@ -156,6 +159,9 @@ export default function KelolaKelas() {
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
                   <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
                     📚 {k.tahunAjaran}
+                  </span>
+                  <span className="badge" style={{ fontSize: "0.72rem", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                    ⏱️ Semester {k.semester || "Ganjil"}
                   </span>
                   <span className="badge" style={{ fontSize: "0.72rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
                     💻 {k.mataPelajaran}
@@ -256,6 +262,25 @@ export default function KelolaKelas() {
                   onChange={(e) => setTahunAjaran(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Semester</label>
+                <select
+                  className="form-input"
+                  value={semester}
+                  onChange={(e) => setSemester(e.target.value)}
+                  required
+                  style={{ 
+                    appearance: "auto", 
+                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    color: "var(--text-primary)", 
+                    border: "1px solid var(--border-color)" 
+                  }}
+                >
+                  <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
+                  <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
+                </select>
               </div>
 
               {error && (

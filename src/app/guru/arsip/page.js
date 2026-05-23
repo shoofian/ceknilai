@@ -84,7 +84,7 @@ export default function ArsipKelas() {
             <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--text-muted)", opacity: 0.85 }}>
               <div>
                 <span className="badge badge-warning" style={{ marginBottom: "8px", backgroundColor: "rgba(100, 116, 139, 0.1)", color: "var(--text-secondary)", borderColor: "var(--border-color)" }}>
-                  📁 diarsipkan &bull; {k.tahunAjaran}
+                  📁 diarsipkan &bull; {k.tahunAjaran} ({k.semester || "Ganjil"})
                 </span>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "700" }}>{k.nama}</h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px" }}>

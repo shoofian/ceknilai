@@ -575,7 +575,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         <div>
           <h2 style={{ fontSize: "1.8rem", fontWeight: "800" }}>{kelas.nama}</h2>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginTop: "4px" }}>
-            Mata Pelajaran: <strong>{kelas.mataPelajaran}</strong> &bull; Tahun Ajaran: <strong>{kelas.tahunAjaran}</strong> &bull; {kelas.siswa.length} Siswa Terdaftar
+            Mata Pelajaran: <strong>{kelas.mataPelajaran}</strong> &bull; Tahun Ajaran: <strong>{kelas.tahunAjaran}</strong> &bull; Semester: <strong>{kelas.semester || "Ganjil"}</strong> &bull; {kelas.siswa.length} Siswa Terdaftar
           </p>
         </div>
 

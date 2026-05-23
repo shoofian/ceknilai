@@ -150,7 +150,7 @@ export default function CetakLaporan() {
             >
               {kelas.map((k) => (
                 <option key={k.id} value={k.id}>
-                  {k.nama} - {k.mataPelajaran || "Informatika"} ({k.tahunAjaran}) {k.archived ? "[Arsip]" : ""}
+                  {k.nama} - {k.mataPelajaran || "Informatika"} (Sem. {k.semester || "Ganjil"} - {k.tahunAjaran}) {k.archived ? "[Arsip]" : ""}
                 </option>
               ))}
             </select>
@@ -193,7 +193,7 @@ export default function CetakLaporan() {
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <p>Kelas: <strong>{selectedClass.nama}</strong></p>
                 <p>Mata Pelajaran: <strong>{selectedClass.mataPelajaran || "Informatika"}</strong></p>
-                <p>Tahun Ajaran: <strong>{selectedClass.tahunAjaran}</strong></p>
+                <p>Tahun Ajaran: <strong>{selectedClass.tahunAjaran} ({selectedClass.semester || "Ganjil"})</strong></p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", textAlign: "right" }} className="align-left-mobile">
                 <p>Total Siswa: <strong>{stats.totalStudents} orang</strong></p>

@@ -23,6 +23,7 @@ function mapKelasFromDb(k) {
     nama: k.nama,
     mataPelajaran: k.mata_pelajaran || 'Informatika',
     tahunAjaran: k.tahun_ajaran,
+    semester: k.semester || 'Ganjil',
     archived: !!k.archived,
     skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
     kolomNilai: (k.kolom_nilai || []).map(col => ({
@@ -164,6 +165,7 @@ export async function createKelas(newKelas) {
       nama: cleanNama,
       mata_pelajaran: cleanMapel,
       tahun_ajaran: cleanTahun,
+      semester: (newKelas.semester || 'Ganjil').trim(),
       archived: false,
       skema_penilaian: newKelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" }
     };
@@ -239,6 +241,7 @@ export async function updateKelas(id, updatedFields) {
     if (updatedFields.nama !== undefined) updates.nama = updatedFields.nama;
     if (updatedFields.mataPelajaran !== undefined) updates.mata_pelajaran = updatedFields.mataPelajaran;
     if (updatedFields.tahunAjaran !== undefined) updates.tahun_ajaran = updatedFields.tahunAjaran;
+    if (updatedFields.semester !== undefined) updates.semester = updatedFields.semester;
     if (updatedFields.archived !== undefined) updates.archived = updatedFields.archived;
     if (updatedFields.skemaPenilaian !== undefined) updates.skema_penilaian = updatedFields.skemaPenilaian;
 
@@ -503,6 +506,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         namaKelas: k.nama,
         mataPelajaran: k.mata_pelajaran || 'Informatika',
         tahunAjaran: k.tahun_ajaran,
+        semester: k.semester || 'Ganjil',
         archived: !!k.archived,
         guruNama,
         siswa: {
