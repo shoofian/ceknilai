@@ -7,6 +7,7 @@ import Link from "next/link";
 export default function LoginGuru() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -122,16 +123,40 @@ export default function LoginGuru() {
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label" htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="form-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="form-input"
+                  style={{ paddingRight: "45px" }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "12px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "1.1rem",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                  title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                >
+                  {showPassword ? "👁️" : "🙈"}
+                </button>
+              </div>
             </div>
 
             {error && (
@@ -151,14 +176,6 @@ export default function LoginGuru() {
               )}
             </button>
           </form>
-
-          {/* Info note */}
-          <div style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--text-muted)", borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
-            <p>Gunakan akun guru bawaan yang diberikan oleh Superadmin.</p>
-            <p style={{ marginTop: "4px" }}>
-              Username: <strong>guru</strong> &bull; Password: <strong>password123</strong>
-            </p>
-          </div>
         </div>
       </main>
 
