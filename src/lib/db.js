@@ -40,10 +40,14 @@ function mapKelasFromDb(k) {
 }
 
 // === GURU PROFILE ===
-export async function getGuru() {
+export async function getGuru(username = null) {
   if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
   try {
-    const { data, error } = await supabase.from('guru').select('*').limit(1).maybeSingle();
+    let query = supabase.from('guru').select('*');
+    if (username) {
+      query = query.eq('username', username.trim().toLowerCase());
+    }
+    const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
       console.error('Error fetching guru:', error);
       return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
@@ -58,14 +62,22 @@ export async function getGuru() {
 export async function updateGuru(updatedProfile) {
   if (!supabase) return null;
   try {
+    const current = await getGuru();
+    const currentUsername = current?.username || 'guru';
+
+    const updates = {
+      username: updatedProfile.username,
+      nama: updatedProfile.nama,
+      email: updatedProfile.email
+    };
+    if (updatedProfile.password) {
+      updates.password = updatedProfile.password;
+    }
+
     const { data, error } = await supabase
       .from('guru')
-      .update({
-        nama: updatedProfile.nama,
-        email: updatedProfile.email,
-        password: updatedProfile.password
-      })
-      .eq('username', 'guru')
+      .update(updates)
+      .eq('username', currentUsername)
       .select()
       .single();
 

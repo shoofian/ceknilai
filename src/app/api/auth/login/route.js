@@ -5,7 +5,7 @@ import { cookies } from 'next/headers';
 export async function POST(request) {
   try {
     const { username, password } = await request.json();
-    const guru = await getGuru();
+    const guru = await getGuru(username);
     
     if (username.trim() === guru.username && password === guru.password) {
       const cookieStore = await cookies();
