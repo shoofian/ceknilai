@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getKelasById, updateKelas, deleteKelas } from '@/lib/db';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');

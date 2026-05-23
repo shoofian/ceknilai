@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getGuru } from '@/lib/db';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const cookieStore = await cookies();
@@ -15,6 +17,15 @@ export async function GET() {
     }
     
     const guru = await getGuru(session.value);
+    
+    // Keamanan: Validasi bahwa data guru yang diambil cocok dengan username sesi
+    if (!guru || !guru.username || guru.username.toLowerCase() !== session.value.toLowerCase()) {
+      return NextResponse.json(
+        { loggedIn: false, error: 'Sesi tidak valid' },
+        { status: 401 }
+      );
+    }
+    
     const { password: _, ...guruData } = guru;
     return NextResponse.json({ loggedIn: true, user: guruData });
   } catch (error) {

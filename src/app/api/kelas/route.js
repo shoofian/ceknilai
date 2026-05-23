@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getKelas, createKelas } from '@/lib/db';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // Helper untuk mengecek autentikasi guru
 async function checkAuth() {
   const cookieStore = await cookies();

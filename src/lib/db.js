@@ -45,7 +45,7 @@ export async function getGuru(username = null) {
   try {
     let query = supabase.from('guru').select('*');
     if (username) {
-      query = query.eq('username', username.trim().toLowerCase());
+      query = query.ilike('username', username.trim());
     }
     const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
