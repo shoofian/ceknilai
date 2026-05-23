@@ -186,7 +186,14 @@ export default function StudentPortal() {
                       {/* Accent Header */}
                       <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
                         <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff" }}>{res.namaKelas}</h4>
-                        <span style={{ fontSize: "0.8rem", opacity: 0.85, fontWeight: "500" }}>TA: {res.tahunAjaran}</span>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
+                          <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
+                            📚 TA: {res.tahunAjaran}
+                          </span>
+                          <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", fontWeight: "600" }}>
+                            💻 {res.mataPelajaran || "Informatika"}
+                          </span>
+                        </div>
                         {res.archived && (
                           <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "rgba(0,0,0,0.3)", color: "#ffffff", fontSize: "0.6rem", border: "1px solid rgba(255,255,255,0.2)" }}>ARSIP</span>
                         )}
@@ -290,7 +297,7 @@ export default function StudentPortal() {
                         <div>
                           <h4 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{res.namaKelas}</h4>
                           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "4px" }}>
-                            Tahun Ajaran: <strong>{res.tahunAjaran}</strong> &bull; Guru Pengampu: <strong>{res.guruNama}</strong>
+                            Mata Pelajaran: <strong>{res.mataPelajaran || "Informatika"}</strong> &bull; Tahun Ajaran: <strong>{res.tahunAjaran}</strong> &bull; Guru Pengampu: <strong>{res.guruNama}</strong>
                           </p>
                         </div>
 

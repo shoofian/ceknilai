@@ -21,6 +21,7 @@ function mapKelasFromDb(k) {
   return {
     id: k.id,
     nama: k.nama,
+    mataPelajaran: k.mata_pelajaran || 'Informatika',
     tahunAjaran: k.tahun_ajaran,
     archived: !!k.archived,
     skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
@@ -140,11 +141,29 @@ export async function getKelasById(id) {
 export async function createKelas(newKelas) {
   if (!supabase) return null;
   try {
+    const cleanNama = newKelas.nama.trim();
+    const cleanMapel = (newKelas.mataPelajaran || 'Informatika').trim();
+    const cleanTahun = (newKelas.tahunAjaran || '2025/2026').trim();
+
+    // Validasi Keunikan: Cek apakah kombinasi Nama Kelas + Mata Pelajaran + Tahun Ajaran sudah terdaftar
+    const { data: existing } = await supabase
+      .from('kelas')
+      .select('id')
+      .ilike('nama', cleanNama)
+      .ilike('mata_pelajaran', cleanMapel)
+      .eq('tahun_ajaran', cleanTahun)
+      .maybeSingle();
+
+    if (existing) {
+      throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" sudah terdaftar.`);
+    }
+
     const id = newKelas.id || 'kelas-' + Math.random().toString(36).substring(2, 11);
     const kelasRow = {
       id,
-      nama: newKelas.nama,
-      tahun_ajaran: newKelas.tahunAjaran || '2025/2026',
+      nama: cleanNama,
+      mata_pelajaran: cleanMapel,
+      tahun_ajaran: cleanTahun,
       archived: false,
       skema_penilaian: newKelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" }
     };
@@ -186,15 +205,39 @@ export async function createKelas(newKelas) {
     return getKelasById(id);
   } catch (err) {
     console.error('Unexpected error in createKelas:', err);
-    return null;
+    throw err;
   }
 }
 
 export async function updateKelas(id, updatedFields) {
   if (!supabase) return null;
   try {
+    const currentKelas = await getKelasById(id);
+    if (!currentKelas) return null;
+
+    // Validasi Keunikan saat Update
+    if (updatedFields.nama !== undefined || updatedFields.mataPelajaran !== undefined || updatedFields.tahunAjaran !== undefined) {
+      const cleanNama = (updatedFields.nama !== undefined ? updatedFields.nama : currentKelas.nama).trim();
+      const cleanMapel = (updatedFields.mataPelajaran !== undefined ? updatedFields.mataPelajaran : currentKelas.mataPelajaran).trim();
+      const cleanTahun = (updatedFields.tahunAjaran !== undefined ? updatedFields.tahunAjaran : currentKelas.tahunAjaran).trim();
+
+      const { data: existing } = await supabase
+        .from('kelas')
+        .select('id')
+        .ilike('nama', cleanNama)
+        .ilike('mata_pelajaran', cleanMapel)
+        .eq('tahun_ajaran', cleanTahun)
+        .neq('id', id)
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" sudah terdaftar.`);
+      }
+    }
+
     const updates = {};
     if (updatedFields.nama !== undefined) updates.nama = updatedFields.nama;
+    if (updatedFields.mataPelajaran !== undefined) updates.mata_pelajaran = updatedFields.mataPelajaran;
     if (updatedFields.tahunAjaran !== undefined) updates.tahun_ajaran = updatedFields.tahunAjaran;
     if (updatedFields.archived !== undefined) updates.archived = updatedFields.archived;
     if (updatedFields.skemaPenilaian !== undefined) updates.skema_penilaian = updatedFields.skemaPenilaian;
@@ -249,7 +292,7 @@ export async function updateKelas(id, updatedFields) {
     return getKelasById(id);
   } catch (err) {
     console.error('Unexpected error in updateKelas:', err);
-    return null;
+    throw err;
   }
 }
 
@@ -458,6 +501,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       hasil.push({
         kelasId: k.id,
         namaKelas: k.nama,
+        mataPelajaran: k.mata_pelajaran || 'Informatika',
         tahunAjaran: k.tahun_ajaran,
         archived: !!k.archived,
         guruNama,

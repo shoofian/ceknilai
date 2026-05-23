@@ -10,6 +10,7 @@ export default function KelolaKelas() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState("");
   const [nama, setNama] = useState("");
+  const [mataPelajaran, setMataPelajaran] = useState("Informatika");
   const [tahunAjaran, setTahunAjaran] = useState("2025/2026");
   const [error, setError] = useState("");
 
@@ -34,6 +35,7 @@ export default function KelolaKelas() {
   const handleOpenAdd = () => {
     setIsEditing(false);
     setNama("");
+    setMataPelajaran("Informatika");
     setTahunAjaran("2025/2026");
     setError("");
     setModalOpen(true);
@@ -43,6 +45,7 @@ export default function KelolaKelas() {
     setIsEditing(true);
     setCurrentId(k.id);
     setNama(k.nama);
+    setMataPelajaran(k.mataPelajaran || "Informatika");
     setTahunAjaran(k.tahunAjaran);
     setError("");
     setModalOpen(true);
@@ -54,6 +57,10 @@ export default function KelolaKelas() {
       setError("Nama kelas harus diisi.");
       return;
     }
+    if (!mataPelajaran.trim()) {
+      setError("Mata pelajaran harus diisi.");
+      return;
+    }
 
     try {
       let response;
@@ -61,13 +68,13 @@ export default function KelolaKelas() {
         response = await fetch(`/api/kelas/${currentId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: nama.trim(), tahunAjaran: tahunAjaran.trim() }),
+          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim() }),
         });
       } else {
         response = await fetch("/api/kelas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: nama.trim(), tahunAjaran: tahunAjaran.trim() }),
+          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim() }),
         });
       }
 
@@ -146,9 +153,14 @@ export default function KelolaKelas() {
           {kelas.map((k) => (
             <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}>
               <div>
-                <span className="badge badge-primary" style={{ marginBottom: "8px" }}>
-                  📚 {k.tahunAjaran}
-                </span>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+                  <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
+                    📚 {k.tahunAjaran}
+                  </span>
+                  <span className="badge" style={{ fontSize: "0.72rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                    💻 {k.mataPelajaran}
+                  </span>
+                </div>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "700" }}>{k.nama}</h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px" }}>
                   👨‍🎓 <strong>{k.siswa.length}</strong> siswa terdaftar &bull; 🏷️ <strong>{k.kolomNilai.length}</strong> aspek penilaian
@@ -218,6 +230,18 @@ export default function KelolaKelas() {
                   className="form-input"
                   value={nama}
                   onChange={(e) => setNama(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Mata Pelajaran</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Informatika"
+                  className="form-input"
+                  value={mataPelajaran}
+                  onChange={(e) => setMataPelajaran(e.target.value)}
                   required
                 />
               </div>

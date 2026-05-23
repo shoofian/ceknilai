@@ -41,19 +41,27 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
-    const { nama, tahunAjaran } = await request.json();
+    const { nama, mataPelajaran, tahunAjaran } = await request.json();
     if (!nama) {
       return NextResponse.json({ error: 'Nama kelas harus diisi' }, { status: 400 });
     }
+    if (!mataPelajaran) {
+      return NextResponse.json({ error: 'Mata pelajaran harus diisi' }, { status: 400 });
+    }
 
-    const newKelas = await createKelas({
-      nama,
-      tahunAjaran: tahunAjaran || '2025/2026',
-      kolomNilai: [],
-      siswa: []
-    });
+    try {
+      const newKelas = await createKelas({
+        nama,
+        mataPelajaran,
+        tahunAjaran: tahunAjaran || '2025/2026',
+        kolomNilai: [],
+        siswa: []
+      });
 
-    return NextResponse.json({ success: true, kelas: newKelas });
+      return NextResponse.json({ success: true, kelas: newKelas });
+    } catch (dbError) {
+      return NextResponse.json({ error: dbError.message }, { status: 400 });
+    }
   } catch (error) {
     console.error('Error in POST kelas API:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });

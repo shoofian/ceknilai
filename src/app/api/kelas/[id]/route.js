@@ -39,12 +39,15 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const fieldsToUpdate = await request.json();
     
-    const updated = await updateKelas(id, fieldsToUpdate);
-    if (!updated) {
-      return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+    try {
+      const updated = await updateKelas(id, fieldsToUpdate);
+      if (!updated) {
+        return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, kelas: updated });
+    } catch (dbError) {
+      return NextResponse.json({ error: dbError.message || 'Gagal memperbarui kelas' }, { status: 400 });
     }
-    
-    return NextResponse.json({ success: true, kelas: updated });
   } catch (error) {
     console.error('Error in PATCH kelas by id API:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });
