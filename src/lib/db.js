@@ -41,17 +41,17 @@ function mapKelasFromDb(k) {
 
 // === GURU PROFILE ===
 export async function getGuru() {
-  if (!supabase) return { username: 'guru', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
   try {
     const { data, error } = await supabase.from('guru').select('*').limit(1).maybeSingle();
     if (error) {
       console.error('Error fetching guru:', error);
-      return { username: 'guru', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+      return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
     }
-    return data || { username: 'guru', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+    return data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
-    return { username: 'guru', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
   }
 }
 
