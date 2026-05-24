@@ -487,23 +487,45 @@ export default function DetailKelas({ params: paramsPromise }) {
     // Susun header
     const headers = ["NISN", "Nama", "Tanggal Lahir (YYYY-MM-DD)"];
     kelas.kolomNilai.forEach(col => {
-      headers.push(col.nama);
+      headers.push(`${col.nama} (${col.bobot}%)`);
     });
+    headers.push("Nilai Akhir");
+    headers.push("Predikat");
     
     // Susun baris berdasarkan siswa yang sudah ada
     const rows = [headers];
     if (kelas.siswa.length > 0) {
       kelas.siswa.forEach(siswa => {
         const row = [siswa.nisn, siswa.nama, siswa.tanggalLahir];
+        let totalNilaiTerisi = 0;
         kelas.kolomNilai.forEach(col => {
-          row.push(siswa.nilai[col.id] !== null && siswa.nilai[col.id] !== undefined ? siswa.nilai[col.id] : "");
+          const val = siswa.nilai[col.id];
+          row.push(val !== null && val !== undefined ? val : "");
+          if (val !== null && val !== undefined && val !== "") {
+            totalNilaiTerisi += Number(val) * (col.bobot / 100);
+          }
         });
+        
+        row.push(Number(totalNilaiTerisi.toFixed(2)));
+        
+        // Calculate predikat
+        const A = gradeA || 85;
+        const B = gradeB || 75;
+        const C = gradeC || 65;
+        let predikat = statusD || 'D';
+        if (totalNilaiTerisi >= A) predikat = statusA || 'A';
+        else if (totalNilaiTerisi >= B) predikat = statusB || 'B';
+        else if (totalNilaiTerisi >= C) predikat = statusC || 'C';
+        
+        row.push(predikat);
         rows.push(row);
       });
     } else {
       // Row contoh jika kelas masih kosong
       const placeholder = ["1234567890", "Aditya Pratama", "2010-01-15"];
       kelas.kolomNilai.forEach(() => placeholder.push(""));
+      placeholder.push(""); // Nilai Akhir
+      placeholder.push(""); // Predikat
       rows.push(placeholder);
     }
     
@@ -514,13 +536,15 @@ export default function DetailKelas({ params: paramsPromise }) {
       { wch: 18 }, // NISN
       { wch: 28 }, // Nama
       { wch: 25 }, // Tanggal Lahir
-      ...kelas.kolomNilai.map(() => ({ wch: 16 })) // Kolom-kolom aspek nilai
+      ...kelas.kolomNilai.map(() => ({ wch: 16 })), // Kolom-kolom aspek nilai
+      { wch: 14 }, // Nilai Akhir
+      { wch: 18 }  // Predikat
     ];
     
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Daftar Nilai Siswa");
     
-    XLSX.writeFile(wb, `Template_Nilai_${kelas.nama.replace(/\s+/g, "_")}.xlsx`);
+    XLSX.writeFile(wb, `Ekspor_Nilai_${kelas.nama.replace(/\s+/g, "_")}.xlsx`);
   };
  
   // === DYNAMIC EXCEL PARSER ===
@@ -569,9 +593,12 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           const nilaiObj = {};
           kelas.kolomNilai.forEach(col => {
-            const colIdx = headers.indexOf(col.nama);
+            const headerCol = headers.find(h => h === col.nama || h.startsWith(`${col.nama} (`));
+            const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
+            
             if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
-              nilaiObj[col.nama] = Number(cols[colIdx]);
+              const parsedVal = Number(cols[colIdx]);
+              nilaiObj[col.nama] = isNaN(parsedVal) ? null : parsedVal;
             } else {
               nilaiObj[col.nama] = null;
             }
@@ -757,8 +784,8 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
               <thead>
                 <tr>
-                  <th style={{ width: "140px" }}>NISN</th>
-                  <th style={{ width: "240px" }}>Nama Siswa</th>
+                  <th style={{ width: "140px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "2px 0 5px rgba(0,0,0,0.1)" }}>NISN</th>
+                  <th style={{ width: "240px", position: "sticky", left: "140px", zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "2px 0 5px rgba(0,0,0,0.1)" }}>Nama Siswa</th>
                   <th style={{ width: "140px" }}>Tanggal Lahir</th>
                   
                   {/* Dynamic Headers based on columns */}
@@ -820,10 +847,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr>
-                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
+                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" }}>
                           {student.nisn}
                         </td>
-                        <td style={{ fontWeight: "700" }}>
+                        <td style={{ fontWeight: "700", position: "sticky", left: "140px", zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
                             <button
@@ -1158,7 +1185,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           </button>
           
           <button onClick={downloadExcelTemplate} className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem" }} disabled={kelas.kolomNilai.length === 0}>
-            📥 Unduh Template Excel (.xlsx)
+            📥 Ekspor / Unduh Nilai Excel (.xlsx)
           </button>
 
           <label className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem", cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer" }}>
