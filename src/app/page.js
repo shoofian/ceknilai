@@ -15,7 +15,7 @@ export default function StudentPortal() {
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
 
   const handleDownloadImage = async (kelasId) => {
-    const element = document.getElementById(`rapor-card-${kelasId}`);
+    const element = document.getElementById(`export-dashboard-${kelasId}`);
     if (!element) return;
     
     try {
@@ -562,6 +562,115 @@ export default function StudentPortal() {
                           </div>
                         </div>
                       )}
+
+                      {/* Off-Screen Dashboard for Export (5:4 aspect ratio = 1000x800) */}
+                      <div id={`export-dashboard-${res.kelasId}`} style={{
+                        position: "absolute", left: "-9999px", top: 0, width: "1000px", height: "800px", 
+                        backgroundColor: "#0f172a", borderRadius: "0px", padding: "40px 50px", 
+                        boxSizing: "border-box", display: "flex", flexDirection: "column", 
+                        color: "#f8fafc", fontFamily: "sans-serif", overflow: "hidden"
+                      }}>
+                        {/* Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #334155", paddingBottom: "24px", marginBottom: "30px" }}>
+                          <div>
+                            <h2 style={{ fontSize: "2.8rem", fontWeight: "900", color: "#10b981", margin: 0, letterSpacing: "-1px" }}>RAPOR HASIL BELAJAR</h2>
+                            <p style={{ fontSize: "1.3rem", color: "#94a3b8", margin: "8px 0 0 0", fontWeight: "600" }}>Tahun Ajaran {res.tahunAjaran} &bull; Semester {res.semester || "Ganjil"}</p>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, letterSpacing: "-1px", background: "linear-gradient(135deg, #f8fafc 30%, #10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CekNilai</h3>
+                          </div>
+                        </div>
+
+                        {/* Content Body */}
+                        <div style={{ display: "flex", gap: "40px", flex: 1 }}>
+                          {/* Left Column: Info & Grid */}
+                          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "24px" }}>
+                            
+                            {/* Student Profile Card */}
+                            <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+                              <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 8px 0", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "700" }}>NAMA SISWA</p>
+                              <h3 style={{ fontSize: "2.5rem", fontWeight: "800", margin: 0, color: "#f8fafc", letterSpacing: "-1px" }}>{res.siswa.nama}</h3>
+                              
+                              <div style={{ display: "flex", gap: "40px", marginTop: "24px" }}>
+                                <div>
+                                  <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NISN</p>
+                                  <p style={{ fontSize: "1.4rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{res.siswa.nisn}</p>
+                                </div>
+                                <div>
+                                  <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>KELAS</p>
+                                  <p style={{ fontSize: "1.4rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{res.namaKelas}</p>
+                                </div>
+                              </div>
+                              
+                              <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px dashed #334155" }}>
+                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 6px 0", fontWeight: "600" }}>MATA PELAJARAN</p>
+                                <p style={{ fontSize: "1.6rem", fontWeight: "800", margin: 0, color: "#38bdf8" }}>{res.mataPelajaran || "Informatika"}</p>
+                                <p style={{ color: "#64748b", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "500" }}>Guru Pengampu: {res.guruNama}</p>
+                              </div>
+                            </div>
+
+                            {/* Aspects Grid */}
+                            <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155", flex: 1, display: "flex", flexDirection: "column" }}>
+                              <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 20px 0", textTransform: "uppercase", letterSpacing: "1px", fontWeight: "700" }}>Rincian Aspek Penilaian</p>
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignContent: "start" }}>
+                                {res.detailNilai.map(col => (
+                                  <div key={col.kolomId} style={{ backgroundColor: "#0f172a", padding: "20px", borderRadius: "16px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                      <h4 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
+                                      <p style={{ margin: "6px 0 0 0", fontSize: "0.95rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
+                                    </div>
+                                    <div style={{ fontSize: "1.8rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : (col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e") }}>
+                                      {col.nilaiAsli === null ? "-" : col.nilaiAsli}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                          </div>
+
+                          {/* Right Column: Final Score */}
+                          <div style={{ width: "360px", display: "flex", flexDirection: "column", gap: "24px" }}>
+                            <div style={{ backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.05)" : "rgba(244, 63, 94, 0.05)", padding: "40px 30px", borderRadius: "20px", border: `2px solid ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)"}`, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1 }}>
+                              <p style={{ color: res.nilaiAkhir >= res.kkm ? "#34d399" : "#fb7185", fontSize: "1.3rem", margin: "0 0 20px 0", textTransform: "uppercase", letterSpacing: "2px", fontWeight: "800" }}>NILAI AKHIR</p>
+                              
+                              <h1 style={{ fontSize: "7.5rem", fontWeight: "900", margin: 0, lineHeight: 1, color: res.nilaiAkhir >= res.kkm ? "#10b981" : "#f43f5e", letterSpacing: "-3px" }}>
+                                {res.isNilaiAkhirGenerated ? res.nilaiAkhir : "🔒"}
+                              </h1>
+                              
+                              {res.isNilaiAkhirGenerated && (
+                                <div style={{ width: "140px", height: "140px", borderRadius: "50%", border: `6px solid ${res.predikat === 'A' || res.predikat === 'B' ? '#10b981' : res.predikat === 'C' ? '#f59e0b' : '#f43f5e'}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "5rem", fontWeight: "900", marginTop: "40px", color: res.predikat === 'A' || res.predikat === 'B' ? '#10b981' : res.predikat === 'C' ? '#f59e0b' : '#f43f5e', backgroundColor: "rgba(15, 23, 42, 0.5)", boxShadow: `0 0 40px ${res.predikat === 'A' || res.predikat === 'B' ? 'rgba(16, 185, 129, 0.2)' : res.predikat === 'C' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(244, 63, 94, 0.2)'}` }}>
+                                  {res.predikat}
+                                </div>
+                              )}
+                              
+                              {res.isNilaiAkhirGenerated && (
+                                <p style={{ marginTop: "30px", fontSize: "1.4rem", fontWeight: "800", color: res.nilaiAkhir >= res.kkm ? "#34d399" : "#fb7185", letterSpacing: "1px", textTransform: "uppercase" }}>
+                                  {res.statusKelulusan}
+                                </p>
+                              )}
+
+                              {!res.isNilaiAkhirGenerated && (
+                                <p style={{ marginTop: "30px", fontSize: "1.2rem", fontWeight: "600", color: "#f59e0b" }}>
+                                  Sedang Diproses Guru
+                                </p>
+                              )}
+                            </div>
+                            
+                            {/* KKM info box */}
+                            <div style={{ backgroundColor: "#1e293b", padding: "24px", borderRadius: "20px", border: "1px solid #334155", textAlign: "center" }}>
+                              <p style={{ margin: "0 0 6px 0", fontSize: "1.1rem", color: "#94a3b8", fontWeight: "600" }}>Standar Kelulusan (KKM)</p>
+                              <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: "800", color: "#f8fafc" }}>{res.kkm}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div style={{ marginTop: "30px", borderTop: "2px solid #334155", paddingTop: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <p style={{ margin: 0, color: "#64748b", fontSize: "1.1rem", fontWeight: "500" }}>Dicetak pada {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                          <p style={{ margin: 0, color: "#475569", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "3px" }}>GENERATED BY CEKNILAI APP</p>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
