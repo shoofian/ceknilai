@@ -155,14 +155,16 @@ export async function createKelas(newKelas, guruUsername = null) {
     const cleanNama = newKelas.nama.trim();
     const cleanMapel = (newKelas.mataPelajaran || 'Informatika').trim();
     const cleanTahun = (newKelas.tahunAjaran || '2025/2026').trim();
+    const cleanSemester = (newKelas.semester || 'Ganjil').trim();
 
-    // Validasi Keunikan: Cek apakah kombinasi Nama Kelas + Mata Pelajaran + Tahun Ajaran sudah terdaftar untuk guru ini
+    // Validasi Keunikan: Cek apakah kombinasi Nama Kelas + Mata Pelajaran + Tahun Ajaran + Semester sudah terdaftar untuk guru ini
     let query = supabase
       .from('kelas')
       .select('id')
       .ilike('nama', cleanNama)
       .ilike('mata_pelajaran', cleanMapel)
-      .eq('tahun_ajaran', cleanTahun);
+      .eq('tahun_ajaran', cleanTahun)
+      .ilike('semester', cleanSemester);
       
     if (guruUsername) {
       query = query.eq('guru_username', guruUsername);
@@ -171,7 +173,7 @@ export async function createKelas(newKelas, guruUsername = null) {
     const { data: existing } = await query.maybeSingle();
 
     if (existing) {
-      throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" sudah terdaftar.`);
+      throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" Semester "${cleanSemester}" sudah terdaftar.`);
     }
 
     const id = newKelas.id || 'kelas-' + Math.random().toString(36).substring(2, 11);
@@ -180,7 +182,7 @@ export async function createKelas(newKelas, guruUsername = null) {
       nama: cleanNama,
       mata_pelajaran: cleanMapel,
       tahun_ajaran: cleanTahun,
-      semester: (newKelas.semester || 'Ganjil').trim(),
+      semester: cleanSemester,
       archived: false,
       is_nilai_akhir_generated: false,
       guru_username: guruUsername || 'guru',
@@ -235,10 +237,11 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
     if (!currentKelas) return null; // Jika tidak ditemukan atau bukan milik guru ini
 
     // Validasi Keunikan saat Update
-    if (updatedFields.nama !== undefined || updatedFields.mataPelajaran !== undefined || updatedFields.tahunAjaran !== undefined) {
+    if (updatedFields.nama !== undefined || updatedFields.mataPelajaran !== undefined || updatedFields.tahunAjaran !== undefined || updatedFields.semester !== undefined) {
       const cleanNama = (updatedFields.nama !== undefined ? updatedFields.nama : currentKelas.nama).trim();
       const cleanMapel = (updatedFields.mataPelajaran !== undefined ? updatedFields.mataPelajaran : currentKelas.mataPelajaran).trim();
       const cleanTahun = (updatedFields.tahunAjaran !== undefined ? updatedFields.tahunAjaran : currentKelas.tahunAjaran).trim();
+      const cleanSemester = (updatedFields.semester !== undefined ? updatedFields.semester : currentKelas.semester).trim();
 
       let query = supabase
         .from('kelas')
@@ -246,6 +249,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
         .ilike('nama', cleanNama)
         .ilike('mata_pelajaran', cleanMapel)
         .eq('tahun_ajaran', cleanTahun)
+        .ilike('semester', cleanSemester)
         .neq('id', id);
         
       if (guruUsername) {
@@ -255,7 +259,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
       const { data: existing } = await query.maybeSingle();
 
       if (existing) {
-        throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" sudah terdaftar.`);
+        throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" Semester "${cleanSemester}" sudah terdaftar.`);
       }
     }
 
