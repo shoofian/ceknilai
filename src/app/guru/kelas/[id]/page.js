@@ -25,8 +25,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Kolom Nilai
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
-  const [kolomNama, setKolomNama] = useState("");
-  const [kolomBobot, setKolomBobot] = useState(10);
+  const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "" }]);
   const [kolomError, setKolomError] = useState("");
   
   // Status penyimpanan otomatis tabel nilai
@@ -129,7 +128,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   }, [classId]);
 
   // === DYNAMIC WEIGHT COMPUTATIONS ===
-  const totalBobot = kelas ? kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0) : 0;
+  const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0) : 0) + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0);
 
   // === HANDLERS SISWA ===
   const handleOpenAddSiswa = () => {
@@ -206,38 +205,21 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // === HANDLERS KOLOM NILAI ===
 
-  const handleKolomSubmit = async (e) => {
-    e.preventDefault();
-    if (!kolomNama.trim() || kolomBobot === undefined) {
-      setKolomError("Nama kolom dan bobot persentase harus diisi.");
-      return;
+  const handleNewAspectChange = (id, field, value) => {
+    const updated = newAspects.map(a => a.id === id ? { ...a, [field]: value } : a);
+    setNewAspects(updated);
+
+    // Auto-add new empty row if the last row is typed into
+    if (id === newAspects[newAspects.length - 1].id && field === "nama" && value.trim() !== "") {
+      setNewAspects([...updated, { id: Date.now() + Math.random(), nama: "", bobot: "" }]);
     }
-
-    if (totalBobot + Number(kolomBobot) > 100) {
-      if (!confirm(`⚠️ Total persentase bobot akan melebihi 100% (saat ini ${totalBobot}%, ditambah kolom ini menjadi ${totalBobot + Number(kolomBobot)}%). Tetap simpan? Anda bisa merapikan bobot persentase nanti.`)) {
-        return;
-      }
-    }
-
-    try {
-      const response = await fetch(`/api/kelas/${classId}/kolom`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nama: kolomNama.trim(), bobot: Number(kolomBobot) }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Gagal membuat kolom nilai");
-      }
-
-      // Reset form setelah berhasil tambah, panel tetap terbuka
-      setKolomNama("");
-      setKolomBobot(10);
-      setKolomError("");
-      fetchClassDetail();
-    } catch (err) {
-      setKolomError(err.message || "Terjadi kesalahan.");
+  };
+  
+  const handleRemoveNewAspect = (id) => {
+    if (newAspects.length > 1) {
+      setNewAspects(newAspects.filter(a => a.id !== id));
+    } else {
+      setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]);
     }
   };
 
@@ -321,12 +303,26 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const saveAllBobot = async () => {
-    const tempTotal = kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0);
-    if (tempTotal !== 100) {
-      alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${tempTotal}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
+    if (totalBobot !== 100) {
+      alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
     }
 
     try {
+      // Buat aspek-aspek baru terlebih dahulu
+      const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
+      for (const aspect of validNewAspects) {
+        const res = await fetch(`/api/kelas/${classId}/kolom`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0 }),
+        });
+        if (!res.ok) {
+           const data = await res.json();
+           throw new Error(data.error || "Gagal membuat aspek baru");
+        }
+      }
+
+      // Perbarui aspek-aspek yang sudah ada
       const response = await fetch(`/api/kelas/${classId}/kolom`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -335,6 +331,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       if (response.ok) {
         alert("✅ Perubahan kolom nilai dan bobot persentase berhasil disimpan!");
+        setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Reset form tambah
         fetchClassDetail();
       } else {
         const data = await response.json();
@@ -342,6 +339,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
     } catch (err) {
       console.error("Update weights failed", err);
+      alert(err.message || "Gagal menyimpan.");
     }
   };
 
@@ -922,18 +920,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </td>
                       </tr>
                     ))}
-                    {/* Baris tambah baru */}
-                    <tr style={{ borderTop: "2px dashed var(--border-color)", backgroundColor: "rgba(59,130,246,0.03)" }}>
-                      <td style={{ padding: "8px 10px" }}>
-                        <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={kolomNama} onChange={(e) => setKolomNama(e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
-                      </td>
-                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                        <input type="number" className="form-input" placeholder="%" value={kolomBobot} min={1} max={100} onChange={(e) => setKolomBobot(e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
-                      </td>
-                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                        <button onClick={(e) => handleKolomSubmit(e)} className="btn btn-primary" style={{ padding: "3px 10px", fontSize: "0.82rem" }}>+</button>
-                      </td>
-                    </tr>
+                    {/* Baris tambah baru (Seamless) */}
+                    {newAspects.map((aspect, index) => (
+                      <tr key={aspect.id} style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
+                        <td style={{ padding: "8px 10px" }}>
+                          <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
+                        </td>
+                        <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                          <input type="number" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => handleNewAspectChange(aspect.id, 'bobot', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                        </td>
+                        <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                          {index !== newAspects.length - 1 ? (
+                            <button onClick={() => handleRemoveNewAspect(aspect.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px", fontSize: "0.8rem", minWidth: "30px" }} title="Batal tambah">✖</button>
+                          ) : (
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "default" }}>✧</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
 
