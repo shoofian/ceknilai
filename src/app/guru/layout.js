@@ -73,7 +73,8 @@ export default function GuruLayout({ children }) {
     { name: "📚 Daftar Kelas", path: "/guru/kelas" },
     { name: "📁 Arsip Kelas", path: "/guru/arsip" },
     { name: "🖨️ Cetak Laporan", path: "/guru/laporan" },
-    { name: "👤 Profil Saya", path: "/guru/profil" }
+    { name: "👤 Profil Saya", path: "/guru/profil" },
+    { name: "🌐 Portal Siswa", path: "/" }
   ];
 
   if (loading) {

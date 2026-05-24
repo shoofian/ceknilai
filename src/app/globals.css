@@ -486,7 +486,7 @@ a:hover {
   }
 
   .header {
-    display: none !important;
+    padding: 0 16px;
   }
   
   .grid-cols-3, .grid-cols-4 {
