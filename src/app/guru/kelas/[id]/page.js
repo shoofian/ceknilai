@@ -57,6 +57,11 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [savingCatatan, setSavingCatatan] = useState({}); // { [nisn]: boolean }
   const [temporaryScores, setTemporaryScores] = useState({}); // For real-time updates while typing
 
+  // States untuk Fitur Duplikasi Aspek
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [availableClasses, setAvailableClasses] = useState([]);
+  const [fetchingClasses, setFetchingClasses] = useState(false);
+
   const toggleCatatanRow = (studentNisn) => {
     setOpenCatatan(prev => {
       const isOpen = !prev[studentNisn];
@@ -249,6 +254,37 @@ export default function DetailKelas({ params: paramsPromise }) {
       setNewAspects(newAspects.filter(a => a.id !== id));
     } else {
       setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]);
+    }
+  };
+
+  const handleOpenDuplicate = async () => {
+    setFetchingClasses(true);
+    setDuplicateModalOpen(true);
+    try {
+      const res = await fetch("/api/kelas");
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableClasses(data.filter(c => c.id !== classId));
+      } else {
+        alert("Gagal memuat daftar kelas");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setFetchingClasses(false);
+    }
+  };
+
+  const handleDuplicateFromClass = (sourceClass) => {
+    if (confirm(`⚠️ PERHATIAN!\nApakah Anda yakin ingin menyalin aspek dari kelas "${sourceClass.nama}"?\nAspek penilaian yang ada di tabel saat ini akan TERHAPUS dan tertiban (overwrite) dengan yang baru.`)) {
+      const copiedColumns = sourceClass.kolomNilai.map(col => ({
+        ...col,
+        id: 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5)
+      }));
+      setKelas({ ...kelas, kolomNilai: copiedColumns });
+      setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Bersihkan newAspects
+      setDuplicateModalOpen(false);
     }
   };
 
@@ -1033,9 +1069,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                       {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
                     </span>
                   </div>
-                  <button onClick={saveAllBobot} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>
-                    💾 Simpan
-                  </button>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain">
+                      📋 Salin dari Kelas Lain
+                    </button>
+                    <button onClick={saveAllBobot} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>
+                      💾 Simpan
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1276,6 +1317,47 @@ export default function DetailKelas({ params: paramsPromise }) {
           100% { opacity: 0.3; transform: scale(0.9); }
         }
       `}</style>
+      {/* Duplicate Modal */}
+      {duplicateModalOpen && (
+        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "500px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px", maxHeight: "85vh" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: "800" }}>📋 Salin dari Kelas Lain</h3>
+              <button onClick={() => setDuplicateModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Pilih kelas sumber untuk menyalin konfigurasi aspek dan bobotnya. Tindakan ini akan <b style={{color: "var(--danger)"}}>meniban dan menghapus</b> aspek yang ada di tabel saat ini.</p>
+
+            <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
+              {fetchingClasses ? (
+                <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+                  <span className="spinner" style={{ width: "24px", height: "24px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+                </div>
+              ) : availableClasses.length === 0 ? (
+                <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem", padding: "20px" }}>Belum ada kelas lain yang tersedia.</p>
+              ) : (
+                availableClasses.map(c => (
+                  <div key={c.id} style={{ padding: "12px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                    <div>
+                      <h4 style={{ fontSize: "0.95rem", fontWeight: "700" }}>{c.nama}</h4>
+                      <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>{c.mataPelajaran} &bull; <span style={{color: "var(--primary)", fontWeight: "700"}}>{c.kolomNilai.length} Aspek</span></p>
+                    </div>
+                    <button 
+                      onClick={() => handleDuplicateFromClass(c)}
+                      className="btn btn-secondary" 
+                      style={{ padding: "6px 12px", fontSize: "0.8rem", borderColor: c.kolomNilai.length === 0 ? "var(--border-color)" : "var(--primary)", color: c.kolomNilai.length === 0 ? "var(--text-muted)" : "var(--primary)" }}
+                      disabled={c.kolomNilai.length === 0}
+                    >
+                      {c.kolomNilai.length === 0 ? "Kosong" : "Pilih"}
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
