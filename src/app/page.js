@@ -292,8 +292,10 @@ export default function StudentPortal() {
                             💻 {res.mataPelajaran || "Informatika"}
                           </span>
                         </div>
-                        {res.archived && (
-                          <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "rgba(0,0,0,0.3)", color: "#ffffff", fontSize: "0.6rem", border: "1px solid rgba(255,255,255,0.2)" }}>ARSIP</span>
+                        {res.archived ? (
+                          <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "rgba(0,0,0,0.3)", color: "#ffffff", fontSize: "0.65rem", fontWeight: "700", border: "1px solid rgba(255,255,255,0.2)" }}>ARSIP</span>
+                        ) : (
+                          <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "var(--success)", color: "#fff", fontSize: "0.65rem", fontWeight: "800", padding: "4px 8px", boxShadow: "0 2px 10px rgba(16, 185, 129, 0.5)", border: "1px solid rgba(255,255,255,0.2)" }}>🟢 AKTIF</span>
                         )}
                       </div>
 
