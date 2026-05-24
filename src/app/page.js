@@ -456,7 +456,7 @@ export default function StudentPortal() {
                           className="btn btn-secondary"
                           style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", borderColor: "rgba(16, 185, 129, 0.4)", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.2)", flex: "1 1 auto", opacity: isGenerating ? 0.7 : 1, cursor: isGenerating ? "wait" : "pointer" }}
                         >
-                          {isGenerating ? "📸 Memproses..." : "📸 Unduh Gambar Rapor (Sosmed)"}
+                          {isGenerating ? "📸 Memproses..." : "📸 Bagikan Hasil"}
                         </button>
                       </div>
                       
@@ -569,13 +569,13 @@ export default function StudentPortal() {
                       {/* Off-Screen Dashboard for Export (Portrait mode 900x1600) */}
                       <div id={`export-dashboard-${res.kelasId}`} style={{
                         position: "absolute", left: "-9999px", top: 0, width: "900px", height: "1600px", 
-                        backgroundColor: "#0f172a", padding: "60px 50px", 
+                        backgroundColor: "#0f172a", padding: "80px 60px", 
                         boxSizing: "border-box", display: "flex", flexDirection: "column", 
                         color: "#f8fafc", fontFamily: "sans-serif", overflow: "hidden"
                       }}>
                         
                         {/* 1. Header Section */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "60px", borderBottom: "2px solid #334155", paddingBottom: "30px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "80px", borderBottom: "2px solid #334155", paddingBottom: "40px" }}>
                           <div>
                             <h2 style={{ fontSize: "3rem", fontWeight: "900", color: "#10b981", margin: 0, letterSpacing: "-1px" }}>RAPOR HASIL BELAJAR</h2>
                             <p style={{ fontSize: "1.5rem", color: "#94a3b8", margin: "12px 0 0 0", fontWeight: "600" }}>Tahun Ajaran {res.tahunAjaran} &bull; Semester {res.semester || "Ganjil"}</p>
@@ -586,17 +586,17 @@ export default function StudentPortal() {
                         </div>
 
                         {/* 2. Big Score Circular Banner */}
-                        <div style={{ display: "flex", justifyContent: "center", marginBottom: "60px" }}>
-                           <div style={{ position: "relative", width: "400px", height: "400px", borderRadius: "50%", border: `12px solid ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.4)" : "rgba(244, 63, 94, 0.4)"}`, backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.05)" : "rgba(244, 63, 94, 0.05)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: `0 0 80px ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)"}` }}>
+                        <div style={{ display: "flex", justifyContent: "center", marginBottom: "70px" }}>
+                           <div style={{ position: "relative", width: "420px", height: "420px", borderRadius: "50%", border: `16px solid ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.4)" : "rgba(244, 63, 94, 0.4)"}`, backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.05)" : "rgba(244, 63, 94, 0.05)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", boxShadow: `0 0 100px ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)"}` }}>
                              
-                             <p style={{ margin: "0 0 10px 0", fontSize: "1.5rem", fontWeight: "700", color: "#94a3b8", letterSpacing: "3px" }}>NILAI AKHIR</p>
+                             <p style={{ margin: "0 0 10px 0", fontSize: "1.8rem", fontWeight: "700", color: "#94a3b8", letterSpacing: "4px" }}>NILAI AKHIR</p>
                              
-                             <h1 style={{ fontSize: "9rem", fontWeight: "900", margin: 0, lineHeight: 1, color: res.nilaiAkhir >= res.kkm ? "#10b981" : "#f43f5e", letterSpacing: "-5px" }}>
+                             <h1 style={{ fontSize: "10rem", fontWeight: "900", margin: 0, lineHeight: 1, color: res.nilaiAkhir >= res.kkm ? "#10b981" : "#f43f5e", letterSpacing: "-5px" }}>
                                 {res.isNilaiAkhirGenerated ? res.nilaiAkhir : "🔒"}
                              </h1>
                              
                              {res.isNilaiAkhirGenerated && (
-                               <div style={{ position: "absolute", bottom: "-30px", right: "20px", width: "120px", height: "120px", borderRadius: "50%", backgroundColor: res.predikat === 'A' || res.predikat === 'B' ? '#10b981' : res.predikat === 'C' ? '#f59e0b' : '#f43f5e', color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "5rem", fontWeight: "900", border: "8px solid #0f172a", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
+                               <div style={{ position: "absolute", bottom: "-40px", right: "20px", width: "130px", height: "130px", borderRadius: "50%", backgroundColor: res.predikat === 'A' || res.predikat === 'B' ? '#10b981' : res.predikat === 'C' ? '#f59e0b' : '#f43f5e', color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "5rem", fontWeight: "900", border: "10px solid #0f172a", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
                                  {res.predikat}
                                </div>
                              )}
@@ -606,50 +606,50 @@ export default function StudentPortal() {
 
                         {/* Status Kelulusan */}
                         {res.isNilaiAkhirGenerated && (
-                          <div style={{ textAlign: "center", marginBottom: "60px" }}>
-                            <span style={{ backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)", color: res.nilaiAkhir >= res.kkm ? "#34d399" : "#fb7185", padding: "16px 40px", borderRadius: "99px", fontSize: "1.8rem", fontWeight: "800", letterSpacing: "2px", border: `2px solid ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.5)" : "rgba(244, 63, 94, 0.5)"}` }}>
+                          <div style={{ textAlign: "center", marginBottom: "80px" }}>
+                            <span style={{ backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)", color: res.nilaiAkhir >= res.kkm ? "#34d399" : "#fb7185", padding: "18px 50px", borderRadius: "99px", fontSize: "2rem", fontWeight: "800", letterSpacing: "2px", border: `2px solid ${res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.5)" : "rgba(244, 63, 94, 0.5)"}` }}>
                               {res.statusKelulusan} (KKM: {res.kkm})
                             </span>
                           </div>
                         )}
 
                         {!res.isNilaiAkhirGenerated && (
-                          <div style={{ textAlign: "center", marginBottom: "60px" }}>
-                            <span style={{ backgroundColor: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "16px 40px", borderRadius: "99px", fontSize: "1.8rem", fontWeight: "800", letterSpacing: "2px", border: "2px solid rgba(245, 158, 11, 0.5)" }}>
+                          <div style={{ textAlign: "center", marginBottom: "80px" }}>
+                            <span style={{ backgroundColor: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", padding: "18px 50px", borderRadius: "99px", fontSize: "2rem", fontWeight: "800", letterSpacing: "2px", border: "2px solid rgba(245, 158, 11, 0.5)" }}>
                               Sedang Diproses Guru
                             </span>
                           </div>
                         )}
 
                         {/* 3. Student & Class Details */}
-                        <div style={{ backgroundColor: "#1e293b", padding: "40px", borderRadius: "24px", border: "1px solid #334155", marginBottom: "40px" }}>
-                          <p style={{ color: "#94a3b8", fontSize: "1.2rem", margin: "0 0 8px 0", fontWeight: "700", letterSpacing: "2px" }}>NAMA SISWA</p>
-                          <h3 style={{ fontSize: "3rem", fontWeight: "800", margin: 0, color: "#f8fafc", letterSpacing: "-1px" }}>{res.siswa.nama}</h3>
+                        <div style={{ backgroundColor: "#1e293b", padding: "50px", borderRadius: "30px", border: "1px solid #334155", marginBottom: "50px" }}>
+                          <p style={{ color: "#94a3b8", fontSize: "1.3rem", margin: "0 0 12px 0", fontWeight: "700", letterSpacing: "2px" }}>NAMA SISWA</p>
+                          <h3 style={{ fontSize: "3.5rem", fontWeight: "800", margin: 0, color: "#f8fafc", letterSpacing: "-1px" }}>{res.siswa.nama}</h3>
                           
-                          <div style={{ display: "flex", gap: "60px", marginTop: "30px", borderTop: "1px dashed #334155", paddingTop: "30px" }}>
+                          <div style={{ display: "flex", gap: "60px", marginTop: "40px", borderTop: "2px dashed #334155", paddingTop: "40px" }}>
                             <div style={{ flex: 1 }}>
-                              <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 6px 0", fontWeight: "600" }}>KELAS</p>
-                              <p style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{res.namaKelas}</p>
+                              <p style={{ color: "#94a3b8", fontSize: "1.2rem", margin: "0 0 8px 0", fontWeight: "600" }}>KELAS & NISN</p>
+                              <p style={{ fontSize: "1.8rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{res.namaKelas} &bull; {res.siswa.nisn}</p>
                             </div>
-                            <div style={{ flex: 2 }}>
-                              <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 6px 0", fontWeight: "600" }}>MATA PELAJARAN</p>
-                              <p style={{ fontSize: "1.6rem", fontWeight: "800", margin: 0, color: "#38bdf8" }}>{res.mataPelajaran || "Informatika"}</p>
+                            <div style={{ flex: 1.5 }}>
+                              <p style={{ color: "#94a3b8", fontSize: "1.2rem", margin: "0 0 8px 0", fontWeight: "600" }}>MATA PELAJARAN</p>
+                              <p style={{ fontSize: "1.8rem", fontWeight: "800", margin: 0, color: "#38bdf8" }}>{res.mataPelajaran || "Informatika"}</p>
                             </div>
                           </div>
                         </div>
 
                         {/* 4. Aspects Grid */}
-                        <div style={{ backgroundColor: "#1e293b", padding: "40px", borderRadius: "24px", border: "1px solid #334155", flex: 1, display: "flex", flexDirection: "column" }}>
-                          <p style={{ color: "#94a3b8", fontSize: "1.2rem", margin: "0 0 24px 0", textTransform: "uppercase", letterSpacing: "2px", fontWeight: "700", textAlign: "center" }}>RINCIAN KOMPONEN NILAI</p>
+                        <div style={{ backgroundColor: "#1e293b", padding: "50px", borderRadius: "30px", border: "1px solid #334155", flex: 1, display: "flex", flexDirection: "column" }}>
+                          <p style={{ color: "#94a3b8", fontSize: "1.3rem", margin: "0 0 30px 0", textTransform: "uppercase", letterSpacing: "2px", fontWeight: "700", textAlign: "center" }}>RINCIAN KOMPONEN NILAI</p>
                           
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", alignContent: "start" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignContent: "start" }}>
                             {res.detailNilai.map(col => (
-                              <div key={col.kolomId} style={{ backgroundColor: "#0f172a", padding: "24px", borderRadius: "20px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div key={col.kolomId} style={{ backgroundColor: "#0f172a", padding: "28px", borderRadius: "24px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <div>
-                                  <h4 style={{ margin: 0, fontSize: "1.4rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
-                                  <p style={{ margin: "8px 0 0 0", fontSize: "1.1rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
+                                  <h4 style={{ margin: 0, fontSize: "1.5rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
+                                  <p style={{ margin: "10px 0 0 0", fontSize: "1.2rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
                                 </div>
-                                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : (col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e") }}>
+                                <div style={{ fontSize: "2.5rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : (col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e") }}>
                                   {col.nilaiAsli === null ? "-" : col.nilaiAsli}
                                 </div>
                               </div>
@@ -658,9 +658,9 @@ export default function StudentPortal() {
                         </div>
 
                         {/* 5. Footer */}
-                        <div style={{ marginTop: "40px", borderTop: "2px solid #334155", paddingTop: "30px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <p style={{ margin: 0, color: "#64748b", fontSize: "1.2rem", fontWeight: "600" }}>Dicetak: {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                          <p style={{ margin: 0, color: "#475569", fontSize: "1.3rem", fontWeight: "900", letterSpacing: "4px" }}>GENERATED BY CEKNILAI APP</p>
+                        <div style={{ marginTop: "50px", borderTop: "2px solid #334155", paddingTop: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <p style={{ margin: 0, color: "#64748b", fontSize: "1.3rem", fontWeight: "600" }}>Dicetak: {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                          <p style={{ margin: 0, color: "#475569", fontSize: "1.4rem", fontWeight: "900", letterSpacing: "4px" }}>GENERATED BY CEKNILAI APP</p>
                         </div>
 
                       </div>
