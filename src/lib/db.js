@@ -493,6 +493,22 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
     const guruCache = {};
 
     for (const s of data) {
+      // LOG ACTIVITY: Catat waktu akses siswa secara fire-and-forget
+      const currentNilai = s.nilai || {};
+      const history = Array.isArray(currentNilai._login_history) ? [...currentNilai._login_history] : [];
+      history.push(new Date().toISOString());
+      
+      // Simpan maksimal 15 log terakhir agar JSON tidak membengkak
+      if (history.length > 15) history.shift();
+      
+      const updatedNilai = { ...currentNilai, _login_history: history };
+      supabase.from('siswa')
+        .update({ nilai: updatedNilai })
+        .eq('kelas_id', s.kelas_id)
+        .eq('nisn', s.nisn)
+        .then(() => {})
+        .catch(err => console.error("Gagal mencatat log aktifitas:", err));
+
       const k = s.kelas;
       if (!k) continue;
 

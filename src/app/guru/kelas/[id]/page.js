@@ -62,6 +62,15 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [availableClasses, setAvailableClasses] = useState([]);
   const [fetchingClasses, setFetchingClasses] = useState(false);
 
+  // States untuk Log Aktifitas Siswa
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedHistorySiswa, setSelectedHistorySiswa] = useState(null);
+
+  const handleOpenHistory = (student) => {
+    setSelectedHistorySiswa(student);
+    setHistoryModalOpen(true);
+  };
+
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
 
@@ -996,6 +1005,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {/* Row actions */}
                         <td style={{ textAlign: "center" }}>
                           <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                            <div style={{ position: "relative" }}>
+                              <button onClick={() => handleOpenHistory(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) ? 1 : 0.5 }} title="Lihat Riwayat Akses Siswa">
+                                👁️
+                              </button>
+                              {student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0 && (
+                                <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", border: "1px solid var(--bg-primary)" }} title="Siswa sudah pernah melihat nilainya"></span>
+                              )}
+                            </div>
                             <button onClick={() => handleOpenEditSiswa(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem" }} title="Edit Profil Siswa">
                               ✏️
                             </button>
@@ -1385,6 +1402,56 @@ export default function DetailKelas({ params: paramsPromise }) {
           100% { opacity: 0.3; transform: scale(0.9); }
         }
       `}</style>
+      
+      {/* MODAL: ACTIVITY LOG */}
+      {historyModalOpen && selectedHistorySiswa && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "450px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800" }}>👁️ Riwayat Akses</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                  Siswa: <strong>{selectedHistorySiswa.nama}</strong> ({selectedHistorySiswa.nisn})
+                </p>
+              </div>
+              <button onClick={() => setHistoryModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            <div style={{ maxHeight: "300px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+              {(!selectedHistorySiswa.nilai || !selectedHistorySiswa.nilai._login_history || selectedHistorySiswa.nilai._login_history.length === 0) ? (
+                <div style={{ textAlign: "center", padding: "30px 0", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "8px", opacity: 0.5 }}>😴</div>
+                  Siswa ini belum pernah mengecek nilainya di portal.
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column-reverse" }}>
+                  {selectedHistorySiswa.nilai._login_history.map((timestamp, idx) => {
+                    const dateObj = new Date(timestamp);
+                    const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                    const formattedTime = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB';
+                    
+                    return (
+                      <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "10px", borderBottom: idx === 0 ? "none" : "1px solid var(--border-color)" }}>
+                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--success)", marginTop: "6px" }}></div>
+                        <div>
+                          <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-primary)" }}>{formattedDate}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Pukul {formattedTime}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
+              <button onClick={() => setHistoryModalOpen(false)} className="btn btn-secondary">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Duplicate Modal */}
       {duplicateModalOpen && (
         <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
