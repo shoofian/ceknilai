@@ -729,7 +729,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   }
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+    <>
+      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "40px" }}>
       
       {/* Breadcrumbs */}
       <div style={{ display: "flex", gap: "8px", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "500" }}>
@@ -1266,6 +1267,8 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       </div>
 
+      </div> {/* END OF MAIN WRAPPER */}
+
       {/* MODAL: ADD/EDIT STUDENT */}
       {siswaModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
@@ -1493,6 +1496,6 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-    </div>
+    </>
   );
 }
