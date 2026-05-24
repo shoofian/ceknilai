@@ -25,6 +25,7 @@ function mapKelasFromDb(k) {
     tahunAjaran: k.tahun_ajaran,
     semester: k.semester || 'Ganjil',
     archived: !!k.archived,
+    isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
     skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
     kolomNilai: (k.kolom_nilai || []).map(col => ({
       id: col.id,
@@ -181,6 +182,7 @@ export async function createKelas(newKelas, guruUsername = null) {
       tahun_ajaran: cleanTahun,
       semester: (newKelas.semester || 'Ganjil').trim(),
       archived: false,
+      is_nilai_akhir_generated: false,
       guru_username: guruUsername || 'guru',
       skema_penilaian: newKelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" }
     };
@@ -262,8 +264,17 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
     if (updatedFields.mataPelajaran !== undefined) updates.mata_pelajaran = updatedFields.mataPelajaran;
     if (updatedFields.tahunAjaran !== undefined) updates.tahun_ajaran = updatedFields.tahunAjaran;
     if (updatedFields.semester !== undefined) updates.semester = updatedFields.semester;
-    if (updatedFields.archived !== undefined) updates.archived = updatedFields.archived;
-    if (updatedFields.skemaPenilaian !== undefined) updates.skema_penilaian = updatedFields.skemaPenilaian;
+    if (updatedFields.archived !== undefined) {
+      updates.archived = updatedFields.archived;
+    }
+    
+    if (updatedFields.isNilaiAkhirGenerated !== undefined) {
+      updates.is_nilai_akhir_generated = updatedFields.isNilaiAkhirGenerated;
+    }
+
+    if (updatedFields.skemaPenilaian !== undefined) {
+      updates.skema_penilaian = updatedFields.skemaPenilaian;
+    }
 
     if (Object.keys(updates).length > 0) {
       const { error } = await supabase
@@ -538,6 +549,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         tahunAjaran: k.tahun_ajaran,
         semester: k.semester || 'Ganjil',
         archived: !!k.archived,
+        isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
         guruNama,
         siswa: {
           nisn: s.nisn,

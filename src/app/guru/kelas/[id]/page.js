@@ -134,10 +134,38 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleOpenAddSiswa = () => {
     setIsEditingSiswa(false);
     setNisn("");
+    setOldNisn(null);
     setNamaSiswa("");
     setTanggalLahir("");
     setSiswaError("");
     setSiswaModalOpen(true);
+  };
+
+  const handleTogglePublish = async () => {
+    const newStatus = !kelas.isNilaiAkhirGenerated;
+    const confirmMsg = newStatus 
+      ? "🚀 Apakah Anda yakin ingin MENG-GENERATE dan MEMPUBLIKASIKAN Nilai Akhir? Siswa akan bisa melihat nilai akhir dan status kelulusan mereka." 
+      : "🔒 Apakah Anda yakin ingin MENYEMBUNYIKAN Nilai Akhir? Siswa hanya akan bisa melihat rincian nilai tugas/ujian mereka tanpa melihat hasil akhir kalkulasi.";
+      
+    if (confirm(confirmMsg)) {
+      try {
+        const response = await fetch(`/api/kelas/${classId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isNilaiAkhirGenerated: newStatus }),
+        });
+        
+        if (response.ok) {
+           fetchClassDetail();
+        } else {
+           const data = await response.json();
+           alert(data.error || "Gagal mengubah status publikasi.");
+        }
+      } catch (err) {
+        console.error("Toggle publish failed", err);
+        alert("Terjadi kesalahan sistem.");
+      }
+    }
   };
 
   const handleOpenEditSiswa = (siswa) => {
@@ -571,14 +599,41 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* Main Header Card */}
       <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
         <div>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: "800" }}>{kelas.nama}</h2>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "12px" }}>
+            {kelas.nama}
+            {kelas.isNilaiAkhirGenerated ? (
+              <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "6px 12px" }}>🚀 NILAI AKHIR PUBLIK</span>
+            ) : (
+              <span className="badge badge-warning" style={{ fontSize: "0.75rem", padding: "6px 12px" }}>🔒 NILAI AKHIR DRAFT</span>
+            )}
+          </h2>
           <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginTop: "4px" }}>
             Mata Pelajaran: <strong>{kelas.mataPelajaran}</strong> &bull; Tahun Ajaran: <strong>{kelas.tahunAjaran}</strong> &bull; Semester: <strong>{kelas.semester || "Ganjil"}</strong> &bull; {kelas.siswa.length} Siswa Terdaftar
           </p>
         </div>
 
-        {/* Weights overview */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+        {/* Weights overview & Publish Button */}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+          
+          <div style={{ textAlign: "right" }}>
+            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>STATUS KELAS</span>
+            <div style={{ marginTop: "4px" }}>
+              <button 
+                onClick={handleTogglePublish}
+                className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
+                style={{ 
+                  padding: "6px 14px", 
+                  fontSize: "0.85rem",
+                  borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
+                  color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff"
+                }}
+              >
+                {kelas.isNilaiAkhirGenerated ? "🔒 Tarik/Sembunyikan Nilai Akhir" : "🚀 Generate Nilai Akhir"}
+              </button>
+            </div>
+          </div>
+          
+          <div style={{ width: "1px", height: "40px", backgroundColor: "var(--border-color)", margin: "0 4px" }}></div>
           <div style={{ textAlign: "right" }}>
             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>TOTAL PERSENTASE BOBOT</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end", marginTop: "2px" }}>

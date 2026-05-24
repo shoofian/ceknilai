@@ -10,6 +10,7 @@ export default function StudentPortal() {
   const [error, setError] = useState("");
   const [results, setResults] = useState(null);
   const [activeClassId, setActiveClassId] = useState(null);
+  const [simulationScores, setSimulationScores] = useState({});
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -36,6 +37,7 @@ export default function StudentPortal() {
       if (data.hasil && data.hasil.length > 0) {
         setResults(data.hasil);
         setActiveClassId(null); // Menampilkan card-card kelas terlebih dahulu
+        setSimulationScores({});
       } else {
         setResults([]);
         setError("Data nilai tidak ditemukan. Periksa kembali NISN dan Tanggal Lahir Anda.");
@@ -181,7 +183,7 @@ export default function StudentPortal() {
                         cursor: "pointer",
                         transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       }}
-                      onClick={() => setActiveClassId(res.kelasId)}
+                      onClick={() => { setActiveClassId(res.kelasId); setSimulationScores({}); }}
                     >
                       {/* Accent Header */}
                       <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
@@ -233,15 +235,28 @@ export default function StudentPortal() {
                         <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div>
                             <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Nilai Akhir</span>
-                            <p style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>{res.nilaiAkhir.toFixed(2)}</p>
+                            {res.isNilaiAkhirGenerated ? (
+                              <p style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>{res.nilaiAkhir.toFixed(2)}</p>
+                            ) : (
+                              <p style={{ fontSize: "1rem", fontWeight: "700", color: "var(--text-muted)", margin: 0 }}>🔒 Menunggu</p>
+                            )}
                           </div>
                           
-                          <span
-                            className={`badge ${res.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`}
-                            style={{ fontSize: "0.72rem", padding: "5px 10px", borderRadius: "6px" }}
-                          >
-                            {res.statusKelulusan}
-                          </span>
+                          {res.isNilaiAkhirGenerated ? (
+                            <span
+                              className={`badge ${res.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`}
+                              style={{ fontSize: "0.72rem", padding: "5px 10px", borderRadius: "6px" }}
+                            >
+                              {res.statusKelulusan}
+                            </span>
+                          ) : (
+                            <span
+                              className={`badge badge-warning`}
+                              style={{ fontSize: "0.72rem", padding: "5px 10px", borderRadius: "6px" }}
+                            >
+                              DRAFT
+                            </span>
+                          )}
                         </div>
 
                         {/* Progress */}
@@ -282,7 +297,7 @@ export default function StudentPortal() {
               /* DETAIL CLASS VIEW WITH BACK BUTTON */
               <div>
                 <button
-                  onClick={() => setActiveClassId(null)}
+                  onClick={() => { setActiveClassId(null); setSimulationScores({}); }}
                   className="btn btn-secondary animate-fade-in"
                   style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", marginBottom: "16px", fontSize: "0.85rem", borderRadius: "var(--radius-sm)" }}
                 >
@@ -291,6 +306,44 @@ export default function StudentPortal() {
 
                 {results.map((res) => {
                   if (res.kelasId !== activeClassId) return null;
+
+                  const handleSimulationChange = (kolomId, val) => {
+                    setSimulationScores(prev => ({...prev, [kolomId]: val}));
+                  };
+                  
+                  let displayNilaiAkhir = res.nilaiAkhir;
+                  let displayPredikat = res.predikat;
+                  let isSimulated = false;
+                  
+                  // Hanya jalankan simulasi jika ada aspek kosong atau nilai akhir belum dipublish
+                  let simTotalNilai = 0;
+                  let simTotalBobot = 0;
+                  
+                  res.detailNilai.forEach((col) => {
+                    let scoreVal = col.nilaiAsli;
+                    if (scoreVal === null) {
+                      if (simulationScores[col.kolomId] !== undefined && simulationScores[col.kolomId] !== "") {
+                        scoreVal = Number(simulationScores[col.kolomId]);
+                        isSimulated = true;
+                      }
+                    }
+                    
+                    if (scoreVal !== null && scoreVal !== "") {
+                      simTotalNilai += Number(scoreVal) * (col.bobot / 100);
+                      simTotalBobot += col.bobot;
+                    }
+                  });
+
+                  if (simTotalBobot > 0) {
+                    const simFinal = simTotalNilai / (simTotalBobot / 100);
+                    displayNilaiAkhir = Number(simFinal.toFixed(2));
+                    
+                    displayPredikat = 'E';
+                    if (displayNilaiAkhir >= res.skema.A) displayPredikat = 'A';
+                    else if (displayNilaiAkhir >= res.skema.B) displayPredikat = 'B';
+                    else if (displayNilaiAkhir >= res.skema.C) displayPredikat = 'C';
+                    else if (displayNilaiAkhir >= res.skema.D) displayPredikat = 'D';
+                  }
 
                   return (
                     <div key={res.kelasId} className="glass-card animate-fade-in" style={{ borderTop: "4px solid var(--primary)" }}>
@@ -316,47 +369,67 @@ export default function StudentPortal() {
                         </div>
                       </div>
 
-                      {/* Summary Score Grid */}
-                      <div className="grid-cols-1" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "30px" }}>
-                        
-                        <div style={{ background: "var(--bg-tertiary)", padding: "20px", borderRadius: "var(--radius-md)", textAlign: "center", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                          <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Nilai Akhir</span>
-                          <h3 style={{ fontSize: "3rem", fontWeight: "800", color: "var(--primary)", marginTop: "6px", marginBottom: 0, lineHeight: 1.1 }}>{res.nilaiAkhir}</h3>
-                          
-                          {res.jumlahAspekTerisi < res.totalAspekCount && (
-                            <span className="badge badge-warning" style={{ fontSize: "0.65rem", marginTop: "8px", textTransform: "none", padding: "4px 10px", borderRadius: "6px" }} title="Dihitung secara proporsional dari tugas yang sudah diisi">
-                              🏃 Nilai Berjalan ({res.jumlahAspekTerisi}/{res.totalAspekCount} Aspek - {res.totalBobotTerisi}% Bobot)
+                      {/* Summary Score Grid / Simulator Grid */}
+                      {!res.isNilaiAkhirGenerated ? (
+                        <div style={{ background: "var(--warning-glow)", padding: "24px", borderRadius: "var(--radius-md)", border: "1px dashed rgba(245, 158, 11, 0.4)", marginBottom: "30px", textAlign: "center" }}>
+                          <span style={{ fontSize: "2rem" }}>🔒</span>
+                          <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--warning)", marginTop: "8px", marginBottom: "4px" }}>Nilai Akhir Sedang Diproses</h3>
+                          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Guru belum merilis Nilai Akhir resmi untuk kelas ini. Namun Anda dapat menggunakan <strong>Kalkulator Simulasi</strong> di bawah untuk memprediksi nilai target Anda!</p>
+                        </div>
+                      ) : (
+                        <div className="grid-cols-1" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "30px" }}>
+                          <div style={{ background: "var(--bg-tertiary)", padding: "20px", borderRadius: "var(--radius-md)", textAlign: "center", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Nilai Akhir Resmi</span>
+                            <h3 style={{ fontSize: "3rem", fontWeight: "800", color: "var(--primary)", marginTop: "6px", marginBottom: 0, lineHeight: 1.1 }}>{res.nilaiAkhir}</h3>
+                            
+                            {/* Progress bar */}
+                            <div style={{ width: "100%", height: "8px", backgroundColor: "var(--border-color)", borderRadius: "99px", overflow: "hidden", marginTop: "12px" }}>
+                              <div style={{ width: `${Math.min(res.nilaiAkhir, 100)}%`, height: "100%", backgroundColor: res.nilaiAkhir >= res.kkm ? "var(--success)" : res.nilaiAkhir >= 60 ? "var(--warning)" : "var(--danger)", borderRadius: "99px", transition: "var(--transition)" }}></div>
+                            </div>
+                          </div>
+
+                          <div style={{ background: "var(--bg-tertiary)", padding: "20px", borderRadius: "var(--radius-md)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid var(--border-color)" }}>
+                            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Predikat Hasil</span>
+                            <div
+                              style={{
+                                width: "70px",
+                                height: "70px",
+                                borderRadius: "50%",
+                                backgroundColor: res.predikat === "A" || res.predikat === "B" ? "var(--success-glow)" : res.predikat === "C" ? "var(--warning-glow)" : "var(--danger-glow)",
+                                border: `2px solid ${res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"}`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "2rem",
+                                fontWeight: "800",
+                                color: res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)",
+                                marginTop: "10px"
+                              }}
+                            >
+                              {res.predikat}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Simulation Overview Panel */}
+                      {(!res.isLengkap || res.jumlahAspekTerisi < res.totalAspekCount) && (
+                        <div style={{ background: "var(--primary-glow)", padding: "20px", borderRadius: "var(--radius-md)", border: "1px solid rgba(59, 130, 246, 0.3)", marginBottom: "30px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
+                          <div>
+                            <span style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                              ✨ Kalkulator Simulasi Target
                             </span>
-                          )}
-
-                          {/* Progress bar */}
-                          <div style={{ width: "100%", height: "8px", backgroundColor: "var(--border-color)", borderRadius: "99px", overflow: "hidden", marginTop: "12px" }}>
-                            <div style={{ width: `${Math.min(res.nilaiAkhir, 100)}%`, height: "100%", backgroundColor: res.nilaiAkhir >= res.kkm ? "var(--success)" : res.nilaiAkhir >= 60 ? "var(--warning)" : "var(--danger)", borderRadius: "99px", transition: "var(--transition)" }}></div>
+                            <p style={{ color: "var(--text-primary)", fontSize: "0.9rem", marginTop: "4px", margin: 0 }}>
+                              Anda dapat mengisi komponen nilai yang masih kosong di tabel bawah untuk memprediksi Nilai Akhir Anda!
+                            </p>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>PROYEKSI NILAI AKHIR</span>
+                            <h3 style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--primary)", margin: 0, lineHeight: 1 }}>{displayNilaiAkhir}</h3>
+                            <span className="badge badge-primary" style={{ fontSize: "0.65rem", marginTop: "4px" }}>PREDIKAT: {displayPredikat}</span>
                           </div>
                         </div>
-
-                        <div style={{ background: "var(--bg-tertiary)", padding: "20px", borderRadius: "var(--radius-md)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid var(--border-color)" }}>
-                          <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Predikat Hasil</span>
-                          <div
-                            style={{
-                              width: "70px",
-                              height: "70px",
-                              borderRadius: "50%",
-                              backgroundColor: res.predikat === "A" || res.predikat === "B" ? "var(--success-glow)" : res.predikat === "C" ? "var(--warning-glow)" : "var(--danger-glow)",
-                              border: `2px solid ${res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"}`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "2rem",
-                              fontWeight: "800",
-                              color: res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)",
-                              marginTop: "10px"
-                            }}
-                          >
-                            {res.predikat}
-                          </div>
-                        </div>
-                      </div>
+                      )}
                       
                       {/* Catatan Tambahan Guru (Jika ada) */}
                       {res.siswa.catatan && (
@@ -401,7 +474,17 @@ export default function StudentPortal() {
                                 <td style={{ fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</td>
                                 <td>{col.bobot}%</td>
                                 <td style={{ fontWeight: "700", color: col.nilaiAsli === null ? "var(--text-muted)" : (col.nilaiAsli >= res.kkm ? "var(--success)" : "var(--text-primary)") }}>
-                                  {col.nilaiAsli === null ? "Belum Diisi" : col.nilaiAsli}
+                                  {col.nilaiAsli === null ? (
+                                    <input 
+                                      type="number" 
+                                      min="0" 
+                                      max="100" 
+                                      placeholder="Simulasikan Nilai" 
+                                      value={simulationScores[col.kolomId] || ""}
+                                      onChange={(e) => handleSimulationChange(col.kolomId, e.target.value)}
+                                      style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--primary)", background: "var(--primary-glow)", color: "var(--primary)", fontWeight: "700", width: "140px", fontSize: "0.85rem", outline: "none" }}
+                                    />
+                                  ) : col.nilaiAsli}
                                 </td>
                                 <td style={{ fontWeight: "600", color: "var(--text-secondary)" }}>
                                   {col.nilaiAsli === null ? "-" : col.kontribusi}
