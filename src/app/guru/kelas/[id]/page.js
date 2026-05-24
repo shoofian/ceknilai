@@ -55,6 +55,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
   const [catatanDraft, setCatatanDraft] = useState({}); // { [nisn]: string }
   const [savingCatatan, setSavingCatatan] = useState({}); // { [nisn]: boolean }
+  const [temporaryScores, setTemporaryScores] = useState({}); // For real-time updates while typing
 
   const toggleCatatanRow = (studentNisn) => {
     setOpenCatatan(prev => {
@@ -144,8 +145,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleTogglePublish = async () => {
     const newStatus = !kelas.isNilaiAkhirGenerated;
     const confirmMsg = newStatus 
-      ? "🚀 Apakah Anda yakin ingin MENG-GENERATE dan MEMPUBLIKASIKAN Nilai Akhir? Siswa akan bisa melihat nilai akhir dan status kelulusan mereka." 
-      : "🔒 Apakah Anda yakin ingin MENYEMBUNYIKAN Nilai Akhir? Siswa hanya akan bisa melihat rincian nilai tugas/ujian mereka tanpa melihat hasil akhir kalkulasi.";
+      ? "🚀 Apakah Anda yakin ingin MENAMPILKAN dan MEMPUBLIKASIKAN Nilai Akhir? Siswa akan bisa melihat nilai akhir aktual dan status kelulusan mereka." 
+      : "🔒 Apakah Anda yakin ingin MENARIK KEMBALI Nilai Akhir? Nilai akhir akan kembali disembunyikan dari siswa.";
       
     if (confirm(confirmMsg)) {
       try {
@@ -381,7 +382,10 @@ export default function DetailKelas({ params: paramsPromise }) {
     
     const parsedValue = value === "" ? null : Number(value);
     
-    if (parsedValue === originalValue) return;
+    if (parsedValue === originalValue) {
+      setTemporaryScores(prev => { const next = { ...prev }; delete next[key]; return next; });
+      return;
+    }
 
     if (parsedValue !== null && (isNaN(parsedValue) || parsedValue < 0 || parsedValue > 100)) {
       alert("Nilai harus berupa angka di antara 0 sampai 100!");
@@ -418,6 +422,12 @@ export default function DetailKelas({ params: paramsPromise }) {
           return s;
         });
         setKelas({ ...kelas, siswa: updatedSiswa });
+
+        setTemporaryScores(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
 
         // Kembalikan ke status idle setelah 1.5 detik
         setTimeout(() => {
@@ -733,7 +743,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           whiteSpace: "nowrap"
                         }}
                       >
-                        {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Generate"}
+                        {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Tampilkan"}
                       </button>
                     </div>
                   </th>
@@ -749,7 +759,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                   let jumlahAspekTerisi = 0;
                   
                   kelas.kolomNilai.forEach(col => {
-                    const sc = student.nilai[col.id];
+                    const cellKey = `${student.nisn}-${col.id}`;
+                    let sc = student.nilai[col.id];
+                    
+                    if (temporaryScores[cellKey] !== undefined) {
+                      sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
+                    }
+
                     if (sc !== undefined && sc !== null && sc !== "") {
                       totalNilaiTerisi += Number(sc) * (col.bobot / 100);
                       totalBobotTerisi += col.bobot;
@@ -815,7 +831,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                               <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
                                 <input
                                   type="number"
-                                  defaultValue={student.nilai[col.id] !== null && student.nilai[col.id] !== undefined ? student.nilai[col.id] : ""}
+                                  value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[col.id] !== null && student.nilai[col.id] !== undefined ? student.nilai[col.id] : "")}
+                                  onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
                                   onBlur={(e) => handleGradeBlur(student.nisn, col.id, e.target.value)}
                                   className="form-input"
                                   style={{
@@ -864,7 +881,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                               )}
                             </div>
                           ) : (
-                            <div title="Belum di-generate" style={{ fontSize: "1.2rem" }}>🔒</div>
+                            <div title="Belum ditampilkan" style={{ fontSize: "1.2rem" }}>🔒</div>
                           )}
                         </td>
 
