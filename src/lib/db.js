@@ -490,12 +490,20 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       return hasil;
     }
 
-    const guru = await getGuru();
-    const guruNama = guru?.nama || "Guru";
+    const guruCache = {};
 
     for (const s of data) {
       const k = s.kelas;
       if (!k) continue;
+
+      let guruNama = "Guru";
+      if (k.guru_username) {
+        if (!guruCache[k.guru_username]) {
+           const g = await getGuru(k.guru_username);
+           guruCache[k.guru_username] = g?.nama || "Guru";
+        }
+        guruNama = guruCache[k.guru_username];
+      }
 
       // Hitung nilai akhir & persentase (Running Average / Progresif)
       let totalNilaiTerisi = 0;
