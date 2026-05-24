@@ -239,6 +239,16 @@ a:hover {
   color: var(--text-muted);
 }
 
+/* Hide spin buttons on number inputs to prevent accidental scroll changes */
+.form-input[type="number"]::-webkit-outer-spin-button,
+.form-input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.form-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;

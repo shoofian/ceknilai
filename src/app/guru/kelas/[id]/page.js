@@ -952,6 +952,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                   value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[col.id] !== null && student.nilai[col.id] !== undefined ? student.nilai[col.id] : "")}
                                   onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
                                   onBlur={(e) => handleGradeBlur(student.nisn, col.id, e.target.value)}
+                                  onWheel={(e) => e.target.blur()}
                                   className="form-input"
                                   style={{
                                     padding: "6px 8px",
