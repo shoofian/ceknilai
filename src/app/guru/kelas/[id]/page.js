@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, Fragment } from "react";
+import { useState, useEffect, use, useMemo, Fragment } from "react";
 import Modal from '@/components/Modal';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,6 +61,62 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [availableClasses, setAvailableClasses] = useState([]);
   const [fetchingClasses, setFetchingClasses] = useState(false);
+
+  // States untuk Sort Tabel
+  const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const sortedStudents = useMemo(() => {
+    if (!kelas?.siswa) return [];
+    
+    // First map with computed final scores
+    const mapped = kelas.siswa.map(student => {
+      let totalNilaiTerisi = 0;
+      let jumlahAspekTerisi = 0;
+      
+      kelas.kolomNilai.forEach(col => {
+        const cellKey = `${student.nisn}-${col.id}`;
+        let sc = student.nilai[col.id];
+        if (temporaryScores[cellKey] !== undefined) {
+          sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
+        }
+        if (sc !== undefined && sc !== null && sc !== "") {
+          totalNilaiTerisi += Number(sc) * (col.bobot / 100);
+          jumlahAspekTerisi++;
+        }
+      });
+      return {
+        ...student,
+        finalScore: totalNilaiTerisi,
+        isSelesai: jumlahAspekTerisi === kelas.kolomNilai.length,
+        jumlahAspekTerisi
+      };
+    });
+
+    if (sortConfig.key) {
+      mapped.sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+        
+        // Handle string comparison nicely
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return mapped;
+  }, [kelas?.siswa, kelas?.kolomNilai, temporaryScores, sortConfig]);
 
   const toggleCatatanRow = (studentNisn) => {
     setOpenCatatan(prev => {
@@ -784,8 +840,12 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
               <thead>
                 <tr>
-                  <th style={{ width: "140px", minWidth: "140px" }}>NISN</th>
-                  <th style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>Nama Siswa</th>
+                  <th style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nisn')}>
+                    NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                  </th>
+                  <th style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                    Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                  </th>
                   <th style={{ width: "140px", minWidth: "140px" }}>Tanggal Lahir</th>
                   
                   {/* Dynamic Headers based on columns */}
@@ -795,9 +855,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </th>
                   ))}
 
-                  <th style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)" }}>
+                  <th style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('finalScore')}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
-                      <span>N. AKHIR</span>
+                      <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
                       <button 
                         onClick={handleTogglePublish}
                         className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
@@ -818,31 +878,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </tr>
               </thead>
               <tbody>
-                {kelas.siswa.map((student) => {
+                {sortedStudents.map((student) => {
                   
-                  // Hitung nilai akhir lokal proporsional (Running Average)
-                  let totalBobotTerisi = 0;
-                  let totalNilaiTerisi = 0;
-                  let jumlahAspekTerisi = 0;
-                  
-                  kelas.kolomNilai.forEach(col => {
-                    const cellKey = `${student.nisn}-${col.id}`;
-                    let sc = student.nilai[col.id];
-                    
-                    if (temporaryScores[cellKey] !== undefined) {
-                      sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
-                    }
-
-                    if (sc !== undefined && sc !== null && sc !== "") {
-                      totalNilaiTerisi += Number(sc) * (col.bobot / 100);
-                      totalBobotTerisi += col.bobot;
-                      jumlahAspekTerisi++;
-                    }
-                  });
-
-                  // Kalkulasi diubah murni menjadi aktual
-                  const finalScore = totalNilaiTerisi;
-                  const isSelesai = jumlahAspekTerisi === kelas.kolomNilai.length;
+                  // Nilai akhir sudah dihitung di useMemo
+                  const finalScore = student.finalScore;
+                  const isSelesai = student.isSelesai;
+                  const jumlahAspekTerisi = student.jumlahAspekTerisi;
 
                   return (
                     <Fragment key={student.nisn}>
