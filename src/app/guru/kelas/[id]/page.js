@@ -853,7 +853,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <th style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nisn')}>
                     NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                   </th>
-                  <th style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                  <th className="sticky-nama" style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
                     Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                   </th>
                   <th style={{ width: "140px", minWidth: "140px" }}>Tanggal Lahir</th>
@@ -901,7 +901,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
-                        <td style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>
+                        <td className="sticky-nama" style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
                             <button
@@ -1403,6 +1403,13 @@ export default function DetailKelas({ params: paramsPromise }) {
           0% { opacity: 0.3; transform: scale(0.9); }
           50% { opacity: 1; transform: scale(1.1); }
           100% { opacity: 0.3; transform: scale(0.9); }
+        }
+        
+        @media (max-width: 768px) {
+          .sticky-nama {
+            position: static !important;
+            box-shadow: none !important;
+          }
         }
       `}</style>
       
