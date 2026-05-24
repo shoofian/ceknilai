@@ -168,7 +168,21 @@ export default function KelolaKelas() {
                   </span>
                 </div>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "700" }}>{k.nama}</h3>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode Kelas:</span>
+                  <code style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)" }}>{k.id}</code>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(k.id);
+                      alert("Kode Kelas disalin!");
+                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
+                    title="Salin Kode Kelas"
+                  >
+                    📋
+                  </button>
+                </div>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "10px" }}>
                   👨‍🎓 <strong>{k.siswa.length}</strong> siswa terdaftar &bull; 🏷️ <strong>{k.kolomNilai.length}</strong> aspek penilaian
                 </p>
               </div>

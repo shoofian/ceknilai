@@ -742,7 +742,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* Main Header Card */}
       <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
         <div>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "12px" }}>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
             {kelas.nama}
             {kelas.isNilaiAkhirGenerated ? (
               <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "6px 12px" }}>🚀 NILAI AKHIR PUBLIK</span>
@@ -750,9 +750,24 @@ export default function DetailKelas({ params: paramsPromise }) {
               <span className="badge badge-warning" style={{ fontSize: "0.75rem", padding: "6px 12px" }}>🔒 NILAI AKHIR DRAFT</span>
             )}
           </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginTop: "4px" }}>
-            Mata Pelajaran: <strong>{kelas.mataPelajaran}</strong> &bull; Tahun Ajaran: <strong>{kelas.tahunAjaran}</strong> &bull; Semester: <strong>{kelas.semester || "Ganjil"}</strong> &bull; {kelas.siswa.length} Siswa Terdaftar
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
+            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500" }}>
+              {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
+            </p>
+            <div style={{ padding: "4px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", fontWeight: "600" }}>
+              <span>Kode Kelas: <span style={{ fontFamily: "monospace", color: "var(--primary)" }}>{kelas.id}</span></span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(kelas.id);
+                  alert("Kode Kelas disalin!");
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem" }}
+                title="Salin Kode Kelas"
+              >
+                📋
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Weights overview */}

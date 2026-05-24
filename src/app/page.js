@@ -16,6 +16,57 @@ export default function StudentPortal() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // States untuk Fitur Gabung Kelas
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [joinKodeKelas, setJoinKodeKelas] = useState("");
+  const [joinNisn, setJoinNisn] = useState("");
+  const [joinNama, setJoinNama] = useState("");
+  const [joinTglLahir, setJoinTglLahir] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState("");
+  const [joinSuccess, setJoinSuccess] = useState("");
+
+  const handleJoinClass = async (e) => {
+    e.preventDefault();
+    setJoining(true);
+    setJoinError("");
+    setJoinSuccess("");
+
+    try {
+      const res = await fetch("/api/kelas/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kodeKelas: joinKodeKelas,
+          nisn: joinNisn,
+          nama: joinNama,
+          tanggalLahir: joinTglLahir
+        })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal mendaftar ke kelas.");
+      }
+
+      setJoinSuccess(data.message || "Berhasil bergabung ke kelas!");
+      // Reset form on success after a short delay
+      setTimeout(() => {
+        setJoinModalOpen(false);
+        setJoinKodeKelas("");
+        setJoinNisn("");
+        setJoinNama("");
+        setJoinTglLahir("");
+        setJoinSuccess("");
+      }, 2000);
+      
+    } catch (err) {
+      setJoinError(err.message);
+    } finally {
+      setJoining(false);
+    }
+  };
+
   const handleDownloadImage = async (kelasId) => {
     const element = document.getElementById(`export-dashboard-${kelasId}`);
     if (!element) return;
@@ -168,6 +219,20 @@ export default function StudentPortal() {
               {error}
             </div>
           )}
+
+          {/* Gabung Kelas Section */}
+          <div style={{ marginTop: "28px", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "24px" }}>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px", fontWeight: "500" }}>
+              Diminta guru mendaftar mandiri?
+            </p>
+            <button 
+              onClick={() => setJoinModalOpen(true)}
+              className="btn btn-secondary" 
+              style={{ padding: "8px 20px", fontSize: "0.9rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}
+            >
+              🔗 Gabung ke Kelas dengan Kode
+            </button>
+          </div>
         </div>
 
         {/* Search Results */}
@@ -710,6 +775,96 @@ export default function StudentPortal() {
               </a>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: GABUNG KELAS */}
+      {joinModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "450px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--primary)" }}>
+                🔗 Gabung Kelas Baru
+              </h3>
+              <button onClick={() => setJoinModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "20px", lineHeight: "1.5" }}>
+              Masukkan Kode Kelas yang diberikan oleh Guru Anda beserta identitas lengkap untuk mendaftar ke kelas tersebut secara otomatis.
+            </p>
+
+            <form onSubmit={handleJoinClass} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Kode Kelas (Diberikan Guru)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: kelas-8fk2x9"
+                  className="form-input"
+                  value={joinKodeKelas}
+                  onChange={(e) => setJoinKodeKelas(e.target.value)}
+                  style={{ fontFamily: "monospace", letterSpacing: "1px" }}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NISN Siswa</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 1234567890"
+                  className="form-input"
+                  value={joinNisn}
+                  onChange={(e) => setJoinNisn(e.target.value)}
+                  maxLength={20}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Lengkap (Sesuai Rapot)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Aditya Pratama"
+                  className="form-input"
+                  value={joinNama}
+                  onChange={(e) => setJoinNama(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tanggal Lahir</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={joinTglLahir}
+                  onChange={(e) => setJoinTglLahir(e.target.value)}
+                  required
+                />
+              </div>
+
+              {joinError && (
+                <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem", border: "1px solid rgba(239, 68, 68, 0.2)", marginTop: "4px" }}>
+                  ❌ {joinError}
+                </div>
+              )}
+              
+              {joinSuccess && (
+                <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--success-glow)", color: "var(--success)", fontSize: "0.85rem", border: "1px solid rgba(16, 185, 129, 0.2)", marginTop: "4px", textAlign: "center", fontWeight: "600" }}>
+                  ✅ {joinSuccess}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button type="button" onClick={() => setJoinModalOpen(false)} className="btn btn-secondary" disabled={joining}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={joining}>
+                  {joining ? "Memproses..." : "Daftar Sekarang"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
