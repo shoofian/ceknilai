@@ -129,7 +129,8 @@ export default function StudentPortal() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }} className="animate-fade-in">
+    <>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }} className="animate-fade-in">
       {/* Navbar Portal */}
       <nav className="header no-print">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -747,6 +748,12 @@ export default function StudentPortal() {
         )}
       </main>
 
+      {/* Footer */}
+      <footer className="no-print" style={{ borderTop: "1px solid var(--border-color)", padding: "20px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", backgroundColor: "var(--bg-secondary)" }}>
+        <p>&copy; {new Date().getFullYear()} CekNilai - Sistem Penilaian Online. Dikembangkan menggunakan Next.js &amp; Vanilla CSS.</p>
+      </footer>
+      </div>
+
       {/* Modal Preview Gambar (Global to Portal) */}
       {generatedImage && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, backdropFilter: "blur(8px)", padding: "20px" }} className="animate-fade-in">
@@ -869,11 +876,6 @@ export default function StudentPortal() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="no-print" style={{ borderTop: "1px solid var(--border-color)", padding: "20px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", backgroundColor: "var(--bg-secondary)" }}>
-        <p>&copy; {new Date().getFullYear()} CekNilai - Sistem Penilaian Online. Dikembangkan menggunakan Next.js &amp; Vanilla CSS.</p>
-      </footer>
-
       {/* Styles injector for spinning spinner and print styles */}
       <style jsx global>{`
         @keyframes spin {
@@ -881,6 +883,6 @@ export default function StudentPortal() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+    </>
   );
 }
