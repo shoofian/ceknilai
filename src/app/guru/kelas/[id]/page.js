@@ -784,8 +784,8 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
               <thead>
                 <tr>
-                  <th style={{ width: "140px", minWidth: "140px", position: "sticky", left: 0, zIndex: 11, backgroundColor: "var(--bg-tertiary)" }}>NISN</th>
-                  <th style={{ width: "240px", minWidth: "240px", position: "sticky", left: "140px", zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>Nama Siswa</th>
+                  <th style={{ width: "140px", minWidth: "140px" }}>NISN</th>
+                  <th style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>Nama Siswa</th>
                   <th style={{ width: "140px", minWidth: "140px" }}>Tanggal Lahir</th>
                   
                   {/* Dynamic Headers based on columns */}
@@ -847,10 +847,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr>
-                        <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600", position: "sticky", left: 0, zIndex: 6, backgroundColor: "var(--bg-secondary)" }}>
+                        <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
-                        <td style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: "140px", zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>
+                        <td style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
                             <button
