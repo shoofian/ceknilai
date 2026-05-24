@@ -157,6 +157,9 @@ export default function KelolaKelas() {
             <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}>
               <div>
                 <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
+                  <span className="badge" style={{ fontSize: "0.75rem", backgroundColor: "var(--success)", color: "#fff", fontWeight: "800", padding: "4px 8px", boxShadow: "0 2px 10px var(--success-glow)" }}>
+                    🟢 AKTIF
+                  </span>
                   <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
                     📚 {k.tahunAjaran}
                   </span>
