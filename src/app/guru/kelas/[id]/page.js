@@ -339,6 +339,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     try {
       // Buat aspek-aspek baru terlebih dahulu
       const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
+      let updatedKolomNilai = [...kelas.kolomNilai]; // Salin state lama
+
       for (const aspect of validNewAspects) {
         const res = await fetch(`/api/kelas/${classId}/kolom`, {
           method: "POST",
@@ -349,13 +351,15 @@ export default function DetailKelas({ params: paramsPromise }) {
            const data = await res.json();
            throw new Error(data.error || "Gagal membuat aspek baru");
         }
+        const data = await res.json();
+        updatedKolomNilai.push(data.kolom); // Masukkan aspek yang baru dibuat ke daftar sinkronisasi
       }
 
-      // Perbarui aspek-aspek yang sudah ada
+      // Perbarui seluruh konfigurasi secara massal
       const response = await fetch(`/api/kelas/${classId}/kolom`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kolomNilai: kelas.kolomNilai }),
+        body: JSON.stringify({ kolomNilai: updatedKolomNilai }),
       });
 
       if (response.ok) {
