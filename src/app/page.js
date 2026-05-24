@@ -568,10 +568,10 @@ export default function StudentPortal() {
 
                       {/* Off-Screen Dashboard for Export (Portrait mode 4:5 ratio = 1000x1250) */}
                       <div id={`export-dashboard-${res.kelasId}`} style={{
-                        position: "absolute", left: "-9999px", top: 0, width: "1000px", height: "1250px", 
+                        position: "absolute", left: "-9999px", top: 0, width: "1000px", minHeight: "1250px", height: "auto",
                         backgroundColor: "#0f172a", padding: "60px 70px", 
                         boxSizing: "border-box", display: "flex", flexDirection: "column", 
-                        color: "#f8fafc", fontFamily: "sans-serif", overflow: "hidden"
+                        color: "#f8fafc", fontFamily: "sans-serif"
                       }}>
                         
                         {/* 1. Header Section */}
