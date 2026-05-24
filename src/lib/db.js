@@ -569,6 +569,40 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
 
       const statusKelulusan = finalScoreRounded >= skema.kkm ? "LULUS" : "TIDAK LULUS";
 
+      // Hitung Rata-Rata Kelas
+      let rataRataKelas = "-";
+      try {
+        const { data: allSiswa } = await supabase
+          .from('siswa')
+          .select('nilai')
+          .eq('kelas_id', k.id);
+        
+        if (allSiswa && allSiswa.length > 0) {
+          let totalClassScore = 0;
+          let validStudentCount = 0;
+          allSiswa.forEach(ss => {
+            let studentScore = 0;
+            let filled = false;
+            kolomNilai.forEach(col => {
+              const v = (ss.nilai || {})[col.id];
+              if (v !== undefined && v !== null && v !== "") {
+                studentScore += Number(v) * (col.bobot / 100);
+                filled = true;
+              }
+            });
+            if (filled) {
+              totalClassScore += studentScore;
+              validStudentCount++;
+            }
+          });
+          if (validStudentCount > 0) {
+            rataRataKelas = Number((totalClassScore / validStudentCount).toFixed(2));
+          }
+        }
+      } catch (err) {
+        console.error("Gagal menghitung rata-rata kelas:", err);
+      }
+
       hasil.push({
         kelasId: k.id,
         namaKelas: k.nama,
@@ -589,6 +623,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         statusKelulusan,
         kkm: skema.kkm,
         skema,
+        rataRataKelas,
         isLengkap: totalBobot === 100,
         jumlahAspekTerisi,
         totalAspekCount: kolomNilai.length,
