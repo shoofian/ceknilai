@@ -5,12 +5,13 @@ import { cookies } from 'next/headers';
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && !!session.value;
+  return session && session.value ? session.value : null;
 }
 
 export async function POST(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -24,7 +25,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const kelas = await getKelasById(id);
+    const kelas = await getKelasById(id, username);
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
     }
@@ -50,7 +51,7 @@ export async function POST(request, { params }) {
     await updateKelas(id, {
       kolomNilai: kelas.kolomNilai,
       siswa: kelas.siswa
-    });
+    }, username);
 
     return NextResponse.json({ success: true, kolom: newColumn });
   } catch (error) {
@@ -61,7 +62,8 @@ export async function POST(request, { params }) {
 
 export async function PATCH(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -72,7 +74,7 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Data kolom nilai tidak valid' }, { status: 400 });
     }
 
-    const kelas = await getKelasById(id);
+    const kelas = await getKelasById(id, username);
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
     }
@@ -84,7 +86,7 @@ export async function PATCH(request, { params }) {
       bobot: Number(col.bobot)
     }));
 
-    await updateKelas(id, { kolomNilai: cleanedKolom });
+    await updateKelas(id, { kolomNilai: cleanedKolom }, username);
     return NextResponse.json({ success: true, kolomNilai: cleanedKolom });
   } catch (error) {
     console.error('Error in PATCH kolom API:', error);
@@ -94,7 +96,8 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -106,7 +109,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'ID kolom harus ditentukan' }, { status: 400 });
     }
 
-    const kelas = await getKelasById(id);
+    const kelas = await getKelasById(id, username);
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
     }
@@ -129,7 +132,7 @@ export async function DELETE(request, { params }) {
     await updateKelas(id, {
       kolomNilai: kelas.kolomNilai,
       siswa: kelas.siswa
-    });
+    }, username);
 
     return NextResponse.json({ success: true });
   } catch (error) {

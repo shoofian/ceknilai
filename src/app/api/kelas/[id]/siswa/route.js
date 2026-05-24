@@ -5,12 +5,13 @@ import { cookies } from 'next/headers';
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && !!session.value;
+  return session && session.value ? session.value : null;
 }
 
 export async function POST(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -39,7 +40,7 @@ export async function POST(request, { params }) {
         nama: nama.trim(),
         tanggalLahir,
         nilai: nilai || {}
-      });
+      }, username);
       
       if (!addedSiswa) {
         return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });

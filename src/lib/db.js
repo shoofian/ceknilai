@@ -95,7 +95,7 @@ export async function updateGuru(updatedProfile) {
 }
 
 // === KELAS CRUD ===
-export async function getKelas(includeArchived = false) {
+export async function getKelas(includeArchived = false, guruUsername = null) {
   if (!supabase) return [];
   try {
     let query = supabase
@@ -105,6 +105,10 @@ export async function getKelas(includeArchived = false) {
 
     if (!includeArchived) {
       query = query.eq('archived', false);
+    }
+    
+    if (guruUsername) {
+      query = query.eq('guru_username', guruUsername);
     }
 
     const { data, error } = await query;
@@ -119,14 +123,19 @@ export async function getKelas(includeArchived = false) {
   }
 }
 
-export async function getKelasById(id) {
+export async function getKelasById(id, guruUsername = null) {
   if (!supabase) return null;
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('kelas')
       .select('*, kolom_nilai(*), siswa(*)')
-      .eq('id', id)
-      .maybeSingle();
+      .eq('id', id);
+      
+    if (guruUsername) {
+      query = query.eq('guru_username', guruUsername);
+    }
+    
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error(`Error fetching kelas with id ${id}:`, error);
@@ -139,21 +148,26 @@ export async function getKelasById(id) {
   }
 }
 
-export async function createKelas(newKelas) {
+export async function createKelas(newKelas, guruUsername = null) {
   if (!supabase) return null;
   try {
     const cleanNama = newKelas.nama.trim();
     const cleanMapel = (newKelas.mataPelajaran || 'Informatika').trim();
     const cleanTahun = (newKelas.tahunAjaran || '2025/2026').trim();
 
-    // Validasi Keunikan: Cek apakah kombinasi Nama Kelas + Mata Pelajaran + Tahun Ajaran sudah terdaftar
-    const { data: existing } = await supabase
+    // Validasi Keunikan: Cek apakah kombinasi Nama Kelas + Mata Pelajaran + Tahun Ajaran sudah terdaftar untuk guru ini
+    let query = supabase
       .from('kelas')
       .select('id')
       .ilike('nama', cleanNama)
       .ilike('mata_pelajaran', cleanMapel)
-      .eq('tahun_ajaran', cleanTahun)
-      .maybeSingle();
+      .eq('tahun_ajaran', cleanTahun);
+      
+    if (guruUsername) {
+      query = query.eq('guru_username', guruUsername);
+    }
+
+    const { data: existing } = await query.maybeSingle();
 
     if (existing) {
       throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" sudah terdaftar.`);
@@ -167,6 +181,7 @@ export async function createKelas(newKelas) {
       tahun_ajaran: cleanTahun,
       semester: (newKelas.semester || 'Ganjil').trim(),
       archived: false,
+      guru_username: guruUsername || 'guru',
       skema_penilaian: newKelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" }
     };
 
@@ -211,11 +226,11 @@ export async function createKelas(newKelas) {
   }
 }
 
-export async function updateKelas(id, updatedFields) {
+export async function updateKelas(id, updatedFields, guruUsername = null) {
   if (!supabase) return null;
   try {
-    const currentKelas = await getKelasById(id);
-    if (!currentKelas) return null;
+    const currentKelas = await getKelasById(id, guruUsername);
+    if (!currentKelas) return null; // Jika tidak ditemukan atau bukan milik guru ini
 
     // Validasi Keunikan saat Update
     if (updatedFields.nama !== undefined || updatedFields.mataPelajaran !== undefined || updatedFields.tahunAjaran !== undefined) {
@@ -223,14 +238,19 @@ export async function updateKelas(id, updatedFields) {
       const cleanMapel = (updatedFields.mataPelajaran !== undefined ? updatedFields.mataPelajaran : currentKelas.mataPelajaran).trim();
       const cleanTahun = (updatedFields.tahunAjaran !== undefined ? updatedFields.tahunAjaran : currentKelas.tahunAjaran).trim();
 
-      const { data: existing } = await supabase
+      let query = supabase
         .from('kelas')
         .select('id')
         .ilike('nama', cleanNama)
         .ilike('mata_pelajaran', cleanMapel)
         .eq('tahun_ajaran', cleanTahun)
-        .neq('id', id)
-        .maybeSingle();
+        .neq('id', id);
+        
+      if (guruUsername) {
+        query = query.eq('guru_username', guruUsername);
+      }
+
+      const { data: existing } = await query.maybeSingle();
 
       if (existing) {
         throw new Error(`Kelas "${cleanNama}" dengan Mata Pelajaran "${cleanMapel}" pada Tahun Ajaran "${cleanTahun}" sudah terdaftar.`);
@@ -299,10 +319,14 @@ export async function updateKelas(id, updatedFields) {
   }
 }
 
-export async function deleteKelas(id) {
+export async function deleteKelas(id, guruUsername = null) {
   if (!supabase) return false;
   try {
-    const { error } = await supabase.from('kelas').delete().eq('id', id);
+    let query = supabase.from('kelas').delete().eq('id', id);
+    if (guruUsername) {
+      query = query.eq('guru_username', guruUsername);
+    }
+    const { error } = await query;
     if (error) {
       console.error('Error deleting kelas:', error);
       return false;
@@ -315,9 +339,12 @@ export async function deleteKelas(id) {
 }
 
 // === SISWA CRUD DI DALAM KELAS ===
-export async function addSiswaToKelas(kelasId, siswaBaru) {
+export async function addSiswaToKelas(kelasId, siswaBaru, guruUsername = null) {
   if (!supabase) return null;
   try {
+    // Dapatkan data kelas untuk otorisasi & inisialisasi kolom nilai
+    const kelas = await getKelasById(kelasId, guruUsername);
+    if (!kelas) return null;
     // Cek apakah NISN sudah ada di kelas ini
     const { data: existing, error: checkError } = await supabase
       .from('siswa')
@@ -330,9 +357,6 @@ export async function addSiswaToKelas(kelasId, siswaBaru) {
       throw new Error('Siswa dengan NISN tersebut sudah ada di kelas ini.');
     }
 
-    // Dapatkan data kelas untuk inisialisasi kolom nilai
-    const kelas = await getKelasById(kelasId);
-    if (!kelas) return null;
 
     const nilai = siswaBaru.nilai || {};
     kelas.kolomNilai.forEach(col => {
@@ -374,9 +398,12 @@ export async function addSiswaToKelas(kelasId, siswaBaru) {
   }
 }
 
-export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa) {
+export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa, guruUsername = null) {
   if (!supabase) return null;
   try {
+    // Otorisasi
+    const kelas = await getKelasById(kelasId, guruUsername);
+    if (!kelas) return null;
     const updates = {};
     if (updatedSiswa.nama !== undefined) updates.nama = updatedSiswa.nama;
     if (updatedSiswa.tanggalLahir !== undefined) updates.tanggal_lahir = updatedSiswa.tanggalLahir;
@@ -409,9 +436,12 @@ export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa) {
   }
 }
 
-export async function deleteSiswaFromKelas(kelasId, nisn) {
+export async function deleteSiswaFromKelas(kelasId, nisn, guruUsername = null) {
   if (!supabase) return false;
   try {
+    // Otorisasi
+    const kelas = await getKelasById(kelasId, guruUsername);
+    if (!kelas) return false;
     const { error } = await supabase
       .from('siswa')
       .delete()

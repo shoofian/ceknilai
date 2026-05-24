@@ -4,23 +4,23 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-// Helper untuk mengecek autentikasi guru
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && !!session.value;
+  return session && session.value ? session.value : null;
 }
 
 export async function GET(request) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const archivedParam = searchParams.get('archived');
     
-    const allKelas = await getKelas(true); // Ambil semua
+    const allKelas = await getKelas(true, username); // Ambil semua milik guru ini
     
     if (archivedParam === 'true') {
       return NextResponse.json(allKelas.filter(k => k.archived));
@@ -37,7 +37,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -57,7 +58,7 @@ export async function POST(request) {
         semester: semester || 'Ganjil',
         kolomNilai: [],
         siswa: []
-      });
+      }, username);
 
       return NextResponse.json({ success: true, kelas: newKelas });
     } catch (dbError) {

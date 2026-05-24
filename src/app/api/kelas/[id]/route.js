@@ -7,17 +7,18 @@ export const dynamic = 'force-dynamic';
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && !!session.value;
+  return session && session.value ? session.value : null;
 }
 
 export async function GET(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
     const { id } = await params;
-    const kelas = await getKelasById(id);
+    const kelas = await getKelasById(id, username);
     
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
@@ -32,7 +33,8 @@ export async function GET(request, { params }) {
 
 export async function PATCH(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -40,7 +42,7 @@ export async function PATCH(request, { params }) {
     const fieldsToUpdate = await request.json();
     
     try {
-      const updated = await updateKelas(id, fieldsToUpdate);
+      const updated = await updateKelas(id, fieldsToUpdate, username);
       if (!updated) {
         return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
       }
@@ -56,12 +58,13 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
     const { id } = await params;
-    const success = await deleteKelas(id);
+    const success = await deleteKelas(id, username);
     
     if (!success) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });

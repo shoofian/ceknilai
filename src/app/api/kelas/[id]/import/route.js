@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 async function checkAuth() {
   const cookieStore = await cookies();
   const session = cookieStore.get('guru_session');
-  return session && !!session.value;
+  return session && session.value ? session.value : null;
 }
 
 // Helper to parse dates of various formats to YYYY-MM-DD
@@ -51,7 +51,8 @@ function parseDateToYmd(dateStr) {
 
 export async function POST(request, { params }) {
   try {
-    if (!(await checkAuth())) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
@@ -62,7 +63,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Data impor tidak valid' }, { status: 400 });
     }
 
-    const kelas = await getKelasById(id);
+    const kelas = await getKelasById(id, username);
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
     }
@@ -127,7 +128,7 @@ export async function POST(request, { params }) {
       }
     }
 
-    await updateKelas(id, { siswa: currentStudents });
+    await updateKelas(id, { siswa: currentStudents }, username);
 
     return NextResponse.json({
       success: true,
