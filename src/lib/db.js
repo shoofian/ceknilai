@@ -525,9 +525,8 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         });
       });
 
-      const finalScore = totalBobotTerisi > 0 
-        ? (totalNilaiTerisi / (totalBobotTerisi / 100)) 
-        : 0;
+      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual)
+      const finalScore = totalNilaiTerisi;
       const finalScoreRounded = Number(finalScore.toFixed(2));
 
       // Ambil skema penilaian kustom dari kelas atau gunakan default

@@ -612,28 +612,8 @@ export default function DetailKelas({ params: paramsPromise }) {
           </p>
         </div>
 
-        {/* Weights overview & Publish Button */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
-          
-          <div style={{ textAlign: "right" }}>
-            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>STATUS KELAS</span>
-            <div style={{ marginTop: "4px" }}>
-              <button 
-                onClick={handleTogglePublish}
-                className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
-                style={{ 
-                  padding: "6px 14px", 
-                  fontSize: "0.85rem",
-                  borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
-                  color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff"
-                }}
-              >
-                {kelas.isNilaiAkhirGenerated ? "🔒 Tarik/Sembunyikan Nilai Akhir" : "🚀 Generate Nilai Akhir"}
-              </button>
-            </div>
-          </div>
-          
-          <div style={{ width: "1px", height: "40px", backgroundColor: "var(--border-color)", margin: "0 4px" }}></div>
+        {/* Weights overview */}
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <div style={{ textAlign: "right" }}>
             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>TOTAL PERSENTASE BOBOT</span>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end", marginTop: "2px" }}>
@@ -738,7 +718,25 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </th>
                   ))}
 
-                  <th style={{ textAlign: "center", width: "110px", backgroundColor: "var(--bg-tertiary)" }}>N. AKHIR</th>
+                  <th style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
+                      <span>N. AKHIR</span>
+                      <button 
+                        onClick={handleTogglePublish}
+                        className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
+                        style={{ 
+                          padding: "4px 8px", 
+                          fontSize: "0.65rem",
+                          borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
+                          color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff",
+                          width: "100%",
+                          whiteSpace: "nowrap"
+                        }}
+                      >
+                        {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Generate"}
+                      </button>
+                    </div>
+                  </th>
                   <th style={{ textAlign: "center", width: "80px" }}>Aksi</th>
                 </tr>
               </thead>
@@ -759,9 +757,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                     }
                   });
 
-                  const finalScore = totalBobotTerisi > 0 
-                    ? (totalNilaiTerisi / (totalBobotTerisi / 100)) 
-                    : 0;
+                  // Kalkulasi diubah murni menjadi aktual
+                  const finalScore = totalNilaiTerisi;
                   const isSelesai = jumlahAspekTerisi === kelas.kolomNilai.length;
 
                   return (
@@ -856,12 +853,18 @@ export default function DetailKelas({ params: paramsPromise }) {
                         })}
 
                         {/* Weighted Final Score */}
-                        <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59,130,246,0.02)", padding: "10px 12px" }}>
-                          <div>{finalScore.toFixed(2)}</div>
-                          {!isSelesai && kelas.kolomNilai.length > 0 && (
-                            <div style={{ fontSize: "0.62rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "2px", opacity: 0.8 }} title="Dihitung proporsional dari tugas terisi">
-                              Berjalan ({jumlahAspekTerisi}/{kelas.kolomNilai.length})
+                        <td style={{ textAlign: "center", fontWeight: "800", color: kelas.isNilaiAkhirGenerated ? "var(--primary)" : "var(--text-muted)", backgroundColor: "rgba(59,130,246,0.02)", padding: "10px 12px" }}>
+                          {kelas.isNilaiAkhirGenerated ? (
+                            <div>
+                              {finalScore.toFixed(2)}
+                              {!isSelesai && kelas.kolomNilai.length > 0 && (
+                                <div style={{ fontSize: "0.62rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "2px", opacity: 0.8 }} title="Nilai kumulatif terisi">
+                                  Aktual ({jumlahAspekTerisi}/{kelas.kolomNilai.length})
+                                </div>
+                              )}
                             </div>
+                          ) : (
+                            <div title="Belum di-generate" style={{ fontSize: "1.2rem" }}>🔒</div>
                           )}
                         </td>
 

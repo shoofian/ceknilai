@@ -11,6 +11,7 @@ export default function StudentPortal() {
   const [results, setResults] = useState(null);
   const [activeClassId, setActiveClassId] = useState(null);
   const [simulationScores, setSimulationScores] = useState({});
+  const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -297,7 +298,7 @@ export default function StudentPortal() {
               /* DETAIL CLASS VIEW WITH BACK BUTTON */
               <div>
                 <button
-                  onClick={() => { setActiveClassId(null); setSimulationScores({}); }}
+                  onClick={() => { setActiveClassId(null); setSimulationScores({}); setIsSimulatorOpen(false); }}
                   className="btn btn-secondary animate-fade-in"
                   style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", marginBottom: "16px", fontSize: "0.85rem", borderRadius: "var(--radius-sm)" }}
                 >
@@ -335,7 +336,7 @@ export default function StudentPortal() {
                   });
 
                   if (simTotalBobot > 0) {
-                    const simFinal = simTotalNilai / (simTotalBobot / 100);
+                    const simFinal = simTotalNilai;
                     displayNilaiAkhir = Number(simFinal.toFixed(2));
                     
                     displayPredikat = 'E';
@@ -412,22 +413,16 @@ export default function StudentPortal() {
                         </div>
                       )}
 
-                      {/* Simulation Overview Panel */}
+                      {/* Button to Open Simulator */}
                       {(!res.isLengkap || res.jumlahAspekTerisi < res.totalAspekCount) && (
-                        <div style={{ background: "var(--primary-glow)", padding: "20px", borderRadius: "var(--radius-md)", border: "1px solid rgba(59, 130, 246, 0.3)", marginBottom: "30px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
-                          <div>
-                            <span style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
-                              ✨ Kalkulator Simulasi Target
-                            </span>
-                            <p style={{ color: "var(--text-primary)", fontSize: "0.9rem", marginTop: "4px", margin: 0 }}>
-                              Anda dapat mengisi komponen nilai yang masih kosong di tabel bawah untuk memprediksi Nilai Akhir Anda!
-                            </p>
-                          </div>
-                          <div style={{ textAlign: "right" }}>
-                            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>PROYEKSI NILAI AKHIR</span>
-                            <h3 style={{ fontSize: "2.2rem", fontWeight: "800", color: "var(--primary)", margin: 0, lineHeight: 1 }}>{displayNilaiAkhir}</h3>
-                            <span className="badge badge-primary" style={{ fontSize: "0.65rem", marginTop: "4px" }}>PREDIKAT: {displayPredikat}</span>
-                          </div>
+                        <div style={{ textAlign: "center", marginBottom: "30px", marginTop: "-10px" }}>
+                          <button
+                            onClick={() => setIsSimulatorOpen(true)}
+                            className="btn btn-primary"
+                            style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", boxShadow: "0 4px 14px rgba(59, 130, 246, 0.4)" }}
+                          >
+                            ✨ Buka Kalkulator Estimasi Target
+                          </button>
                         </div>
                       )}
                       
@@ -474,17 +469,7 @@ export default function StudentPortal() {
                                 <td style={{ fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</td>
                                 <td>{col.bobot}%</td>
                                 <td style={{ fontWeight: "700", color: col.nilaiAsli === null ? "var(--text-muted)" : (col.nilaiAsli >= res.kkm ? "var(--success)" : "var(--text-primary)") }}>
-                                  {col.nilaiAsli === null ? (
-                                    <input 
-                                      type="number" 
-                                      min="0" 
-                                      max="100" 
-                                      placeholder="Simulasikan Nilai" 
-                                      value={simulationScores[col.kolomId] || ""}
-                                      onChange={(e) => handleSimulationChange(col.kolomId, e.target.value)}
-                                      style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--primary)", background: "var(--primary-glow)", color: "var(--primary)", fontWeight: "700", width: "140px", fontSize: "0.85rem", outline: "none" }}
-                                    />
-                                  ) : col.nilaiAsli}
+                                  {col.nilaiAsli === null ? "Belum Diisi" : col.nilaiAsli}
                                 </td>
                                 <td style={{ fontWeight: "600", color: "var(--text-secondary)" }}>
                                   {col.nilaiAsli === null ? "-" : col.kontribusi}
@@ -498,6 +483,49 @@ export default function StudentPortal() {
                       <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "right" }}>
                         * Nilai Akhir dihitung berdasarkan penjumlahan dari (Nilai Asli &times; Bobot %). KKM kelulusan untuk kelas ini adalah {res.kkm}.
                       </p>
+
+                      {/* Simulator Modal Pop-up */}
+                      {isSimulatorOpen && (
+                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", backgroundColor: "var(--bg-primary)" }}>
+                            <button onClick={() => setIsSimulatorOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+                            
+                            <div style={{ textAlign: "center" }}>
+                              <span style={{ fontSize: "2rem" }}>✨</span>
+                              <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", marginTop: "10px", marginBottom: "4px" }}>Kalkulator Simulasi Target</h3>
+                              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>Isi target skor Anda pada tugas yang masih kosong untuk melihat proyeksi hasil akhir murni (aktual).</p>
+                            </div>
+                            
+                            <div style={{ background: "var(--primary-glow)", padding: "16px", borderRadius: "var(--radius-sm)", textAlign: "center", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>PROYEKSI NILAI AKHIR AKTUAL</span>
+                              <h3 style={{ fontSize: "2.5rem", fontWeight: "800", color: "var(--primary)", margin: "4px 0", lineHeight: 1 }}>{displayNilaiAkhir}</h3>
+                              <span className="badge badge-primary" style={{ fontSize: "0.7rem" }}>PREDIKAT: {displayPredikat}</span>
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
+                              {res.detailNilai.map((col) => col.nilaiAsli === null ? (
+                                <div key={col.kolomId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", background: "var(--bg-secondary)" }}>
+                                  <div>
+                                    <h4 style={{ fontSize: "0.9rem", fontWeight: "700", margin: 0 }}>{col.namaKolom || col.namaKomom}</h4>
+                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Bobot: {col.bobot}%</span>
+                                  </div>
+                                  <input 
+                                    type="number" 
+                                    min="0" 
+                                    max="100" 
+                                    placeholder="Skor (0-100)" 
+                                    value={simulationScores[col.kolomId] || ""}
+                                    onChange={(e) => handleSimulationChange(col.kolomId, e.target.value)}
+                                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--primary)", background: "var(--bg-primary)", color: "var(--text-primary)", fontWeight: "700", width: "120px", fontSize: "0.9rem", outline: "none" }}
+                                  />
+                                </div>
+                              ) : null)}
+                            </div>
+                            
+                            <button onClick={() => setSimulationScores({})} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Reset Simulasi</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
