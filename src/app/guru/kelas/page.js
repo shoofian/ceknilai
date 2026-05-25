@@ -134,7 +134,8 @@ export default function KelolaKelas() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <>
+      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
       {/* Header section with add button */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
@@ -220,6 +221,8 @@ export default function KelolaKelas() {
           </button>
         </div>
       )}
+
+      </div>
 
       {/* Glassmorphism Modal for Add/Edit Class */}
       {modalOpen && (
@@ -325,6 +328,6 @@ export default function KelolaKelas() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+    </>
   );
 }
