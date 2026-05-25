@@ -499,6 +499,10 @@ a:hover {
     padding: 0 16px;
   }
   
+  .desktop-header {
+    display: none;
+  }
+  
   .grid-cols-3, .grid-cols-4 {
     grid-template-columns: repeat(2, 1fr);
   }
