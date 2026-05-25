@@ -14,6 +14,9 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState(null);
   
+  // State Onboarding
+  const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+  
   // States untuk Siswa
   const [siswaModalOpen, setSiswaModalOpen] = useState(false);
   const [isEditingSiswa, setIsEditingSiswa] = useState(false);
@@ -182,6 +185,15 @@ export default function DetailKelas({ params: paramsPromise }) {
           setStatusB(data.skemaPenilaian.statusB ?? 'B');
           setStatusC(data.skemaPenilaian.statusC ?? 'C');
           setStatusD(data.skemaPenilaian.statusD ?? 'D');
+        }
+
+        // Cek jika kelas baru saja dibuat (belum ada siswa & kolom)
+        if (data.siswa.length === 0 && data.kolomNilai.length === 0) {
+          const seen = localStorage.getItem(`onboarding_seen_${classId}`);
+          if (!seen) {
+            setOnboardingModalOpen(true);
+            localStorage.setItem(`onboarding_seen_${classId}`, 'true');
+          }
         }
       } else {
         alert("Gagal memuat detail kelas.");
@@ -1515,6 +1527,75 @@ export default function DetailKelas({ params: paramsPromise }) {
                 ))
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Onboarding Modal */}
+      {onboardingModalOpen && (
+        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(4px)" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "600px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px", maxHeight: "90vh", overflowY: "auto", position: "relative" }}>
+            
+            {/* Header */}
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🎉</div>
+              <h2 style={{ fontSize: "1.8rem", fontWeight: "800", background: "linear-gradient(135deg, var(--primary), var(--success))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Kelas Berhasil Dibuat!
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.95rem", marginTop: "8px" }}>
+                Ikuti 3 langkah mudah ini untuk mulai memberikan penilaian di kelas {kelas?.nama}.
+              </p>
+            </div>
+
+            {/* Steps */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "8px" }}>
+              
+              {/* Step 1 */}
+              <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "16px", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", flexShrink: 0, boxShadow: "0 2px 8px var(--primary-glow)" }}>1</div>
+                <div>
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "4px", color: "var(--text-primary)" }}>Atur Aspek Penilaian</h4>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Scroll ke bagian bawah dan klik <strong>"⚙️ Atur Aspek & Bobot Nilai"</strong>. Tentukan kolom penilaian (misal: UTS, UAS, Tugas) beserta persentase bobotnya hingga total 100%.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "16px", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--success)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", flexShrink: 0, boxShadow: "0 2px 8px var(--success-glow)" }}>2</div>
+                <div>
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "4px", color: "var(--text-primary)" }}>Tambahkan Siswa</h4>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Tambahkan siswa satu per satu, impor dari Excel, atau bagikan <strong>Kode Kelas ({kelas?.id})</strong> agar siswa dapat mendaftar mandiri via Portal Siswa.
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "16px", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--warning)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", flexShrink: 0, boxShadow: "0 2px 8px var(--warning-glow)" }}>3</div>
+                <div>
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "4px", color: "var(--text-primary)" }}>Mulai Mengisi Nilai</h4>
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Setelah aspek dan siswa siap, Anda bisa langsung mengetikkan nilai di tabel buku nilai. Semua perubahan akan tersimpan secara otomatis.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Action */}
+            <div style={{ marginTop: "16px" }}>
+              <button 
+                onClick={() => setOnboardingModalOpen(false)}
+                className="btn btn-primary" 
+                style={{ width: "100%", padding: "14px", fontSize: "1rem", borderRadius: "var(--radius-md)", justifyContent: "center", boxShadow: "0 4px 15px var(--primary-glow)" }}
+              >
+                Siap, Ayo Mulai! 🚀
+              </button>
+            </div>
+            
           </div>
         </div>
       )}
