@@ -671,7 +671,7 @@ export default function StudentPortal() {
                         {/* SECTION 2: Data Kelas */}
                         <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
                           <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>2. Data Kelas</p>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
                             <div>
                               <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NAMA KELAS</p>
                               <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{res.namaKelas}</p>
@@ -684,9 +684,31 @@ export default function StudentPortal() {
                               <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>GURU PENGAMPU</p>
                               <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{res.guruNama}</p>
                             </div>
-                            <div>
-                              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>RATA-RATA KELAS</p>
-                              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{res.rataRataKelas}</p>
+                            <div style={{ gridColumn: "1 / -1", display: "flex", gap: "40px", marginTop: "10px", padding: "20px", backgroundColor: "#0f172a", borderRadius: "16px", border: "1px solid #334155" }}>
+                              <div style={{ flex: 1, borderRight: "1px solid #334155" }}>
+                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>RATA-RATA KELAS</p>
+                                <p style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#38bdf8" }}>{res.rataRataKelas}</p>
+                              </div>
+                              <div style={{ flex: 1.5 }}>
+                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>RATA-RATA INDIVIDU (NILAI AKHIR)</p>
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                  <p style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: res.isNilaiAkhirGenerated && typeof res.rataRataKelas === 'number' ? (res.nilaiAkhir >= res.rataRataKelas ? "#10b981" : "#f43f5e") : "#f8fafc" }}>
+                                    {res.isNilaiAkhirGenerated ? res.nilaiAkhir : "-"}
+                                  </p>
+                                  {res.isNilaiAkhirGenerated && typeof res.rataRataKelas === 'number' && (
+                                    <span style={{ 
+                                      fontSize: "0.9rem", 
+                                      fontWeight: "700",
+                                      padding: "6px 12px", 
+                                      borderRadius: "99px",
+                                      backgroundColor: res.nilaiAkhir >= res.rataRataKelas ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)",
+                                      color: res.nilaiAkhir >= res.rataRataKelas ? "#10b981" : "#f43f5e" 
+                                    }}>
+                                      {res.nilaiAkhir >= res.rataRataKelas ? "▲ Di Atas Rata-rata" : "▼ Di Bawah Rata-rata"}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
