@@ -187,10 +187,6 @@ export default function DetailKelas({ params: paramsPromise }) {
           setStatusD(data.skemaPenilaian.statusD ?? 'D');
         }
 
-        // Cek jika kelas baru saja dibuat (belum ada siswa & kolom)
-        if (data.siswa.length === 0 && data.kolomNilai.length === 0) {
-          setOnboardingModalOpen(true);
-        }
       } else {
         alert("Gagal memuat detail kelas.");
         router.push("/guru/kelas");
@@ -205,6 +201,17 @@ export default function DetailKelas({ params: paramsPromise }) {
   useEffect(() => {
     fetchClassDetail();
   }, [classId]);
+
+  // Efek untuk memunculkan onboarding modal
+  useEffect(() => {
+    if (kelas && Array.isArray(kelas.siswa) && kelas.siswa.length === 0 && Array.isArray(kelas.kolomNilai) && kelas.kolomNilai.length === 0) {
+      const seen = sessionStorage.getItem(`onboarding_seen_${classId}`);
+      if (!seen) {
+        setOnboardingModalOpen(true);
+        sessionStorage.setItem(`onboarding_seen_${classId}`, 'true');
+      }
+    }
+  }, [kelas, classId]);
 
   // === DYNAMIC WEIGHT COMPUTATIONS ===
   const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0) : 0) + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0);
