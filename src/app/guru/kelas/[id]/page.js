@@ -189,11 +189,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         // Cek jika kelas baru saja dibuat (belum ada siswa & kolom)
         if (data.siswa.length === 0 && data.kolomNilai.length === 0) {
-          const seen = localStorage.getItem(`onboarding_seen_${classId}`);
-          if (!seen) {
-            setOnboardingModalOpen(true);
-            localStorage.setItem(`onboarding_seen_${classId}`, 'true');
-          }
+          setOnboardingModalOpen(true);
         }
       } else {
         alert("Gagal memuat detail kelas.");
