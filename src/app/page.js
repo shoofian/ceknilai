@@ -690,7 +690,7 @@ export default function StudentPortal() {
                                 <p style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#38bdf8" }}>{res.rataRataKelas}</p>
                               </div>
                               <div style={{ flex: 1.5 }}>
-                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>RATA-RATA INDIVIDU (NILAI AKHIR)</p>
+                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>TOTAL NILAI SEMENTARA</p>
                                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                                   <p style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: res.isNilaiAkhirGenerated && typeof res.rataRataKelas === 'number' ? (res.nilaiAkhir >= res.rataRataKelas ? "#10b981" : "#f43f5e") : "#f8fafc" }}>
                                     {res.isNilaiAkhirGenerated ? res.nilaiAkhir : "-"}
