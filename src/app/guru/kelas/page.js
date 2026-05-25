@@ -157,54 +157,70 @@ export default function KelolaKelas() {
           {kelas.map((k) => (
             <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}>
               <div>
-                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "10px" }}>
-                  <span className="badge" style={{ fontSize: "0.75rem", backgroundColor: "var(--success)", color: "#fff", fontWeight: "800", padding: "4px 8px", boxShadow: "0 2px 10px var(--success-glow)" }}>
+                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                  <span className="badge" style={{ fontSize: "0.7rem", backgroundColor: "var(--success)", color: "#fff", fontWeight: "800", padding: "4px 8px", boxShadow: "0 2px 10px var(--success-glow)" }}>
                     🟢 AKTIF
                   </span>
-                  <span className="badge badge-primary" style={{ fontSize: "0.72rem" }}>
+                  <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
                     📚 {k.tahunAjaran}
                   </span>
-                  <span className="badge" style={{ fontSize: "0.72rem", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
                     ⏱️ Semester {k.semester || "Ganjil"}
                   </span>
-                  <span className="badge" style={{ fontSize: "0.72rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
                     💻 {k.mataPelajaran}
                   </span>
                 </div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "700" }}>{k.nama}</h3>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "4px" }}>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode Kelas:</span>
-                  <code style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)" }}>{k.id}</code>
+                
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "800", lineHeight: "1.3" }}>{k.nama}</h3>
+                
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode Kelas:</span>
+                  <code style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)", fontWeight: "700" }}>{k.id}</code>
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(k.id);
                       alert("Kode Kelas disalin!");
                     }}
-                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem" }}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem", padding: "2px" }}
                     title="Salin Kode Kelas"
                   >
                     📋
                   </button>
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "10px" }}>
-                  👨‍🎓 <strong>{k.siswa.length}</strong> siswa terdaftar &bull; 🏷️ <strong>{k.kolomNilai.length}</strong> aspek penilaian
-                </p>
+                
+                <div style={{ display: "flex", gap: "16px", marginTop: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "1.1rem" }}>👨‍🎓</span>
+                    <div>
+                      <div style={{ fontSize: "0.9rem", fontWeight: "700" }}>{k.siswa.length}</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Siswa</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ fontSize: "1.1rem" }}>🏷️</span>
+                    <div>
+                      <div style={{ fontSize: "0.9rem", fontWeight: "700" }}>{k.kolomNilai.length}</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Aspek</div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Action buttons */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "auto" }}>
-                <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
+                <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "0.9rem" }}>
                   ⚙️ Kelola Nilai &amp; Siswa
                 </Link>
                 
-                <div className="flex-wrap-mobile" style={{ display: "flex", gap: "8px" }}>
-                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ flex: 1, padding: "8px 12px", fontSize: "0.8rem", minWidth: "80px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px" }}>
+                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.8rem", width: "100%", justifyContent: "center" }}>
                     ✏️ Edit
                   </button>
-                  <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ flex: 1, padding: "8px 12px", fontSize: "0.8rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)" }}>
+                  <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.8rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center" }}>
                     📁 Arsipkan
                   </button>
-                  <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px 12px", fontSize: "0.8rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }} title="Hapus Kelas">
+                  <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px 12px", fontSize: "0.8rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", justifyContent: "center" }} title="Hapus Kelas">
                     🗑️
                   </button>
                 </div>
