@@ -168,7 +168,8 @@ export default function KelolaKelas() {
         for (let r = 0; r < Math.min(rows.length, 20); r++) {
           if (!rows[r] || !Array.isArray(rows[r])) continue;
           
-          const tempHeaders = rows[r].map((h) => String(h || "").trim().toLowerCase());
+          // Use Array.from to safely handle sparse arrays (non-adjacent columns)
+          const tempHeaders = Array.from({ length: rows[r].length }, (_, i) => String(rows[r][i] || "").trim().toLowerCase());
           
           const nIdx = tempHeaders.findIndex((h) => h === "nisn" || h.includes("nisn"));
           const namIdx = tempHeaders.findIndex((h) => h === "nama" || h === "nama siswa" || h.includes("nama") || h.includes("peserta didik"));
