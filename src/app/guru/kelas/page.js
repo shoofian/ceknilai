@@ -160,23 +160,42 @@ export default function KelolaKelas() {
           return;
         }
 
-        const headers = rows[0].map((h) => String(h).trim().toLowerCase());
-        const nisnIdx = headers.findIndex((h) => h.includes("nisn"));
-        const namaIdx = headers.findIndex((h) => h.includes("nama") || h.includes("peserta didik"));
-        const rombelIdx = headers.findIndex((h) => h.includes("rombel") || h.includes("rombongan belajar") || h.includes("kelas"));
-        const tglIdx = headers.findIndex((h) => h.includes("tanggal lahir") || h.includes("lahir"));
+        let headerRowIndex = -1;
+        let nisnIdx = -1, namaIdx = -1, rombelIdx = -1, tglIdx = -1;
+        let headers = [];
 
-        if (nisnIdx === -1 || namaIdx === -1 || rombelIdx === -1) {
-          alert("Gagal menemukan kolom NISN, Nama, atau Rombel di dalam berkas.");
+        // Scan the first 20 rows to find the actual header row
+        for (let r = 0; r < Math.min(rows.length, 20); r++) {
+          if (!rows[r] || !Array.isArray(rows[r])) continue;
+          
+          const tempHeaders = rows[r].map((h) => String(h || "").trim().toLowerCase());
+          
+          const nIdx = tempHeaders.findIndex((h) => h === "nisn" || h.includes("nisn"));
+          const namIdx = tempHeaders.findIndex((h) => h === "nama" || h === "nama siswa" || h.includes("nama") || h.includes("peserta didik"));
+          const romIdx = tempHeaders.findIndex((h) => h === "rombel" || h === "kelas" || h.includes("rombel") || h.includes("rombongan belajar") || h.includes("kelas saat ini"));
+          
+          if (nIdx !== -1 && namIdx !== -1 && romIdx !== -1) {
+            headerRowIndex = r;
+            headers = tempHeaders;
+            nisnIdx = nIdx;
+            namaIdx = namIdx;
+            rombelIdx = romIdx;
+            tglIdx = tempHeaders.findIndex((h) => h.includes("tanggal lahir") || h.includes("lahir"));
+            break;
+          }
+        }
+
+        if (headerRowIndex === -1) {
+          alert("Gagal menemukan baris header dengan kolom NISN, Nama, atau Rombel di dalam berkas. Pastikan file Dapodik sudah benar.");
           return;
         }
 
         const extractedStudents = [];
         const uniqueClasses = new Set();
 
-        for (let i = 1; i < rows.length; i++) {
+        for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const cols = rows[i];
-          if (!cols || cols.length === 0) continue;
+          if (!cols || !Array.isArray(cols) || cols.length === 0) continue;
 
           const nisnVal = cols[nisnIdx] ? String(cols[nisnIdx]).trim() : "";
           const namaVal = cols[namaIdx] ? String(cols[namaIdx]).trim() : "";
