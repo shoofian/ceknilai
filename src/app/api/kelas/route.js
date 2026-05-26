@@ -56,13 +56,7 @@ export async function POST(request) {
         mataPelajaran,
         tahunAjaran: tahunAjaran || '2025/2026',
         semester: semester || 'Ganjil',
-        kolomNilai: [
-          {
-            id: 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
-            nama: 'Nilai Harian',
-            bobot: 100
-          }
-        ],
+        kolomNilai: [],
         siswa: []
       }, username);
 
