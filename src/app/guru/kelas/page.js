@@ -218,16 +218,15 @@ export default function KelolaKelas() {
         const classArray = Array.from(uniqueClasses).sort();
         setParsedClasses(classArray);
 
-        // Populate initial forms directly based on discovered unique classes
-        const initialForms = classArray.map((cls, idx) => ({
-          id: Date.now() + idx,
-          nama: cls,
+        // Hanya berikan satu baris form kosong di awal, sesuai permintaan user
+        const initialForms = [{
+          id: Date.now(),
+          nama: "",
           mataPelajaran: "Informatika",
           tahunAjaran: "2025/2026",
           semester: "Ganjil",
-          sourceRombel: cls
-        }));
-        initialForms.push({ id: Date.now() + 1000, nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" });
+          sourceRombel: ""
+        }];
 
         setBulkForms(initialForms);
         setBulkModalOpen(true);
