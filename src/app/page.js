@@ -308,23 +308,25 @@ export default function StudentPortal() {
                           </div>
                           
                           {/* Predikat Circle */}
-                          <div
-                            style={{
-                              width: "42px",
-                              height: "42px",
-                              borderRadius: "50%",
-                              backgroundColor: res.predikat === "A" || res.predikat === "B" ? "var(--success-glow)" : res.predikat === "C" ? "var(--warning-glow)" : "var(--danger-glow)",
-                              border: `1.5px solid ${res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"}`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "1.1rem",
-                              fontWeight: "800",
-                              color: res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"
-                            }}
-                          >
-                            {res.predikat}
-                          </div>
+                          {res.isNilaiAkhirGenerated && (
+                            <div
+                              style={{
+                                width: "42px",
+                                height: "42px",
+                                borderRadius: "50%",
+                                backgroundColor: res.predikat === "A" || res.predikat === "B" ? "var(--success-glow)" : res.predikat === "C" ? "var(--warning-glow)" : "var(--danger-glow)",
+                                border: `1.5px solid ${res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"}`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "1.1rem",
+                                fontWeight: "800",
+                                color: res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"
+                              }}
+                            >
+                              {res.predikat}
+                            </div>
+                          )}
                         </div>
 
                         <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -344,14 +346,7 @@ export default function StudentPortal() {
                             >
                               {res.statusKelulusan}
                             </span>
-                          ) : (
-                            <span
-                              className={`badge badge-warning`}
-                              style={{ fontSize: "0.72rem", padding: "5px 10px", borderRadius: "6px" }}
-                            >
-                              DRAFT
-                            </span>
-                          )}
+                          ) : null}
                         </div>
 
                         {/* Progress */}
@@ -684,32 +679,97 @@ export default function StudentPortal() {
                               <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>GURU PENGAMPU</p>
                               <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{res.guruNama}</p>
                             </div>
-                            <div style={{ gridColumn: "1 / -1", display: "flex", gap: "40px", marginTop: "10px", padding: "20px", backgroundColor: "#0f172a", borderRadius: "16px", border: "1px solid #334155" }}>
-                              <div style={{ flex: 1, borderRight: "1px solid #334155" }}>
-                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>RATA-RATA KELAS</p>
-                                <p style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#38bdf8" }}>{res.rataRataKelas}</p>
-                              </div>
-                              <div style={{ flex: 1.5 }}>
-                                <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>TOTAL NILAI SEMENTARA</p>
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                  <p style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: res.isNilaiAkhirGenerated && typeof res.rataRataKelas === 'number' ? (res.nilaiAkhir >= res.rataRataKelas ? "#10b981" : "#f43f5e") : "#f8fafc" }}>
-                                    {res.isNilaiAkhirGenerated ? res.nilaiAkhir : "-"}
-                                  </p>
-                                  {res.isNilaiAkhirGenerated && typeof res.rataRataKelas === 'number' && (
-                                    <span style={{ 
-                                      fontSize: "0.9rem", 
-                                      fontWeight: "700",
-                                      padding: "6px 12px", 
-                                      borderRadius: "99px",
-                                      backgroundColor: res.nilaiAkhir >= res.rataRataKelas ? "rgba(16, 185, 129, 0.15)" : "rgba(244, 63, 94, 0.15)",
-                                      color: res.nilaiAkhir >= res.rataRataKelas ? "#10b981" : "#f43f5e" 
-                                    }}>
-                                      {res.nilaiAkhir >= res.rataRataKelas ? "▲ Di Atas Rata-rata" : "▼ Di Bawah Rata-rata"}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
+                             {/* Radar chart section — replaces rata-rata kelas & total nilai */}
+                             {(() => {
+                                const aspects = res.detailNilai.filter(c => c.nilaiAsli !== null);
+                                if (aspects.length < 3) return null;
+                                const N = aspects.length;
+                                const CX = 220, CY = 195, R = 155;
+                                const toXY = (i, val) => {
+                                  const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                                  const r = (val / 100) * R;
+                                  return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
+                                };
+                                const gridLevels = [20, 40, 60, 80, 100];
+                                return (
+                                  <div style={{ gridColumn: "1 / -1", marginTop: "10px", display: "flex", alignItems: "center", gap: "30px" }}>
+                                    <div style={{ flexShrink: 0 }}>
+                                      <svg width="440" height="390" xmlns="http://www.w3.org/2000/svg">
+                                        {/* Grid circles */}
+                                        {gridLevels.map(level => (
+                                          <polygon
+                                            key={level}
+                                            points={Array.from({ length: N }, (_, i) => {
+                                              const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                                              const r = (level / 100) * R;
+                                              return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`;
+                                            }).join(" ")}
+                                            fill="none"
+                                            stroke="#334155"
+                                            strokeWidth="1"
+                                          />
+                                        ))}
+                                        {/* Axis lines */}
+                                        {aspects.map((_, i) => {
+                                          const [x, y] = toXY(i, 100);
+                                          return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
+                                        })}
+                                        {/* Data polygon */}
+                                        <polygon
+                                          points={aspects.map((col, i) => toXY(i, col.nilaiAsli).join(",")).join(" ")}
+                                          fill="rgba(59,130,246,0.25)"
+                                          stroke="#3b82f6"
+                                          strokeWidth="2"
+                                        />
+                                        {/* Data dots */}
+                                        {aspects.map((col, i) => {
+                                          const [x, y] = toXY(i, col.nilaiAsli);
+                                          return <circle key={i} cx={x} cy={y} r="5" fill="#3b82f6" stroke="#f8fafc" strokeWidth="2" />;
+                                        })}
+                                        {/* Value labels */}
+                                        {aspects.map((col, i) => {
+                                          const [x, y] = toXY(i, col.nilaiAsli);
+                                          return <text key={i} x={x} y={y - 10} fill="#38bdf8" fontSize="14" fontWeight="700" textAnchor="middle">{col.nilaiAsli}</text>;
+                                        })}
+                                        {/* Axis labels */}
+                                        {aspects.map((col, i) => {
+                                          const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                                          const lr = R + 28;
+                                          const lx = CX + lr * Math.cos(angle);
+                                          const ly = CY + lr * Math.sin(angle);
+                                          const label = col.namaKomom || col.namaKolom || "";
+                                          const words = label.split(" ");
+                                          return (
+                                            <text key={i} x={lx} y={ly} fill="#94a3b8" fontSize="13" fontWeight="600" textAnchor="middle" dominantBaseline="middle">
+                                              {words.length <= 2 ? label : (
+                                                <>
+                                                  <tspan x={lx} dy="-8">{words.slice(0, Math.ceil(words.length/2)).join(" ")}</tspan>
+                                                  <tspan x={lx} dy="18">{words.slice(Math.ceil(words.length/2)).join(" ")}</tspan>
+                                                </>
+                                              )}
+                                            </text>
+                                          );
+                                        })}
+                                        {/* Grid labels */}
+                                        {gridLevels.map(level => (
+                                          <text key={level} x={CX + 4} y={CY - (level / 100) * R + 4} fill="#475569" fontSize="11">{level}</text>
+                                        ))}
+                                      </svg>
+                                    </div>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                      {aspects.map((col, i) => (
+                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                          <div style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#3b82f6", flexShrink: 0 }} />
+                                          <div>
+                                            <p style={{ margin: 0, fontSize: "0.9rem", color: "#94a3b8", fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</p>
+                                            <p style={{ margin: 0, fontSize: "1.1rem", color: col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e", fontWeight: "800" }}>{col.nilaiAsli} <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: "600" }}>/ 100</span></p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                             })()}
                           </div>
                         </div>
 
