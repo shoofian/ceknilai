@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import * as XLSX from "xlsx";
 
 export default function KelolaKelas() {
   const [loading, setLoading] = useState(true);
@@ -14,6 +15,14 @@ export default function KelolaKelas() {
   const [tahunAjaran, setTahunAjaran] = useState("2025/2026");
   const [semester, setSemester] = useState("Ganjil");
   const [error, setError] = useState("");
+
+  // Bulk Import States
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [parsedClasses, setParsedClasses] = useState([]);
+  const [parsedStudents, setParsedStudents] = useState([]);
+  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" }]);
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [bulkError, setBulkError] = useState("");
 
   const fetchKelas = async () => {
     try {
@@ -133,6 +142,164 @@ export default function KelolaKelas() {
     }
   };
 
+  const handleDapodikUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+        if (rows.length < 2) {
+          alert("Berkas Excel/CSV kosong atau format tidak sesuai.");
+          return;
+        }
+
+        const headers = rows[0].map((h) => String(h).trim().toLowerCase());
+        const nisnIdx = headers.findIndex((h) => h.includes("nisn"));
+        const namaIdx = headers.findIndex((h) => h.includes("nama") || h.includes("peserta didik"));
+        const rombelIdx = headers.findIndex((h) => h.includes("rombel") || h.includes("rombongan belajar") || h.includes("kelas"));
+        const tglIdx = headers.findIndex((h) => h.includes("tanggal lahir") || h.includes("lahir"));
+
+        if (nisnIdx === -1 || namaIdx === -1 || rombelIdx === -1) {
+          alert("Gagal menemukan kolom NISN, Nama, atau Rombel di dalam berkas.");
+          return;
+        }
+
+        const extractedStudents = [];
+        const uniqueClasses = new Set();
+
+        for (let i = 1; i < rows.length; i++) {
+          const cols = rows[i];
+          if (!cols || cols.length === 0) continue;
+
+          const nisnVal = cols[nisnIdx] ? String(cols[nisnIdx]).trim() : "";
+          const namaVal = cols[namaIdx] ? String(cols[namaIdx]).trim() : "";
+          const rombelVal = cols[rombelIdx] ? String(cols[rombelIdx]).trim() : "";
+          const tglVal = tglIdx !== -1 && cols[tglIdx] ? String(cols[tglIdx]).trim() : "-";
+
+          if (!nisnVal || !namaVal || !rombelVal) continue;
+
+          extractedStudents.push({ nisn: nisnVal, nama: namaVal, rombel: rombelVal, tanggalLahir: tglVal, nilai: {}, catatan: "" });
+          uniqueClasses.add(rombelVal);
+        }
+
+        if (extractedStudents.length === 0) {
+          alert("Tidak ada data siswa yang valid.");
+          return;
+        }
+
+        setParsedStudents(extractedStudents);
+        const classArray = Array.from(uniqueClasses).sort();
+        setParsedClasses(classArray);
+
+        // Populate initial forms directly based on discovered unique classes
+        const initialForms = classArray.map((cls, idx) => ({
+          id: Date.now() + idx,
+          nama: cls,
+          mataPelajaran: "Informatika",
+          tahunAjaran: "2025/2026",
+          semester: "Ganjil",
+          sourceRombel: cls
+        }));
+        initialForms.push({ id: Date.now() + 1000, nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" });
+
+        setBulkForms(initialForms);
+        setBulkModalOpen(true);
+        setBulkError("");
+        e.target.value = null; // reset input
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan saat memproses berkas.");
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleBulkFormChange = (id, field, value) => {
+    setBulkForms((prev) => {
+      const updated = prev.map((form) => {
+        if (form.id === id) {
+          return { ...form, [field]: value };
+        }
+        return form;
+      });
+
+      const isLastFilled = updated[updated.length - 1].nama.trim() !== "" || updated[updated.length - 1].sourceRombel !== "";
+      if (isLastFilled) {
+        updated.push({ id: Date.now(), nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" });
+      }
+
+      return updated;
+    });
+  };
+
+  const handleRemoveBulkForm = (id) => {
+    setBulkForms((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    setBulkError("");
+
+    const validForms = bulkForms.filter((f) => f.nama.trim() !== "" && f.sourceRombel !== "");
+    if (validForms.length === 0) {
+      setBulkError("Anda harus mengisi setidaknya satu kelas untuk diimpor.");
+      return;
+    }
+
+    setIsBulkImporting(true);
+
+    try {
+      let successCount = 0;
+      for (const form of validForms) {
+        // 1. Create Class
+        const resKelas = await fetch("/api/kelas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nama: form.nama.trim(), mataPelajaran: form.mataPelajaran.trim(), tahunAjaran: form.tahunAjaran.trim(), semester: form.semester.trim() }),
+        });
+
+        if (!resKelas.ok) {
+          const errData = await resKelas.json();
+          throw new Error(`Gagal membuat kelas ${form.nama}: ${errData.error}`);
+        }
+
+        const dataKelas = await resKelas.json();
+        const newClassId = dataKelas.kelas.id;
+
+        // 2. Import Students
+        const studentsForThisClass = parsedStudents.filter((s) => s.rombel === form.sourceRombel);
+        if (studentsForThisClass.length > 0) {
+          const resStudents = await fetch(`/api/kelas/${newClassId}/import`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ siswaList: studentsForThisClass }),
+          });
+
+          if (!resStudents.ok) {
+            console.error(`Gagal mengimpor siswa untuk kelas ${form.nama}`);
+          }
+        }
+        successCount++;
+      }
+
+      alert(`${successCount} Kelas beserta siswanya berhasil diimpor!`);
+      setBulkModalOpen(false);
+      fetchKelas();
+    } catch (err) {
+      console.error(err);
+      setBulkError(err.message || "Terjadi kesalahan saat memproses impor massal.");
+    } finally {
+      setIsBulkImporting(false);
+    }
+  };
+
   return (
     <>
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -143,9 +310,15 @@ export default function KelolaKelas() {
           <h1 className="page-title">Manajemen Kelas</h1>
           <p className="page-subtitle">Buat dan kelola kelas aktif untuk tahun ajaran berjalan.</p>
         </div>
-        <button onClick={handleOpenAdd} className="btn btn-primary">
-          ➕ Tambah Kelas Baru
-        </button>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <label className="btn btn-secondary" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            📥 Impor Kelas Dapodik
+            <input type="file" accept=".csv, .xlsx, .xls" style={{ display: "none" }} onChange={handleDapodikUpload} />
+          </label>
+          <button onClick={handleOpenAdd} className="btn btn-primary">
+            ➕ Tambah Kelas Baru
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -331,6 +504,108 @@ export default function KelolaKelas() {
                 </button>
                 <button type="submit" className="btn btn-primary">
                   Simpan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Modal for Dapodik Import */}
+      {bulkModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 300,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "800px", border: "1px solid var(--primary)", boxShadow: "0 20px 40px rgba(59,130,246,0.2)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)" }}>
+                  📦 Impor Kelas Massal (Dapodik)
+                </h3>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                  Ditemukan <strong>{parsedStudents.length} siswa</strong> dari <strong>{parsedClasses.length} rombel/kelas</strong>. Silakan atur pembuatan kelas di bawah ini.
+                </p>
+              </div>
+              <button onClick={() => setBulkModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            <form onSubmit={handleBulkSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ overflowX: "auto" }}>
+                <table className="premium-table" style={{ minWidth: "700px", margin: 0 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "25%" }}>Nama Kelas Target</th>
+                      <th style={{ width: "20%" }}>Mata Pelajaran</th>
+                      <th style={{ width: "15%" }}>T.A.</th>
+                      <th style={{ width: "15%" }}>Semester</th>
+                      <th style={{ width: "20%" }}>Sumber Dapodik</th>
+                      <th style={{ width: "5%" }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkForms.map((form, index) => (
+                      <tr key={form.id}>
+                        <td style={{ padding: "8px" }}>
+                          <input type="text" className="form-input" placeholder="Nama kelas..." value={form.nama} onChange={(e) => handleBulkFormChange(form.id, "nama", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <input type="text" className="form-input" placeholder="Mapel..." value={form.mataPelajaran} onChange={(e) => handleBulkFormChange(form.id, "mataPelajaran", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <input type="text" className="form-input" placeholder="T.A." value={form.tahunAjaran} onChange={(e) => handleBulkFormChange(form.id, "tahunAjaran", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <select className="form-input" value={form.semester} onChange={(e) => handleBulkFormChange(form.id, "semester", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
+                            <option value="Ganjil">Ganjil</option>
+                            <option value="Genap">Genap</option>
+                          </select>
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <select className="form-input" value={form.sourceRombel} onChange={(e) => handleBulkFormChange(form.id, "sourceRombel", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
+                            <option value="">-- Abaikan --</option>
+                            {parsedClasses.map((cls) => (
+                              <option key={cls} value={cls}>{cls}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td style={{ padding: "8px", textAlign: "center" }}>
+                          {index !== bulkForms.length - 1 ? (
+                            <button type="button" onClick={() => handleRemoveBulkForm(form.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "4px 8px" }} title="Hapus Baris">✖</button>
+                          ) : (
+                            <span style={{ color: "var(--text-muted)" }}>✧</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {bulkError && (
+                <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
+                  ❌ {bulkError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button type="button" onClick={() => setBulkModalOpen(false)} className="btn btn-secondary" disabled={isBulkImporting}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={isBulkImporting}>
+                  {isBulkImporting ? "Mengimpor..." : "🚀 Simpan & Impor Kelas"}
                 </button>
               </div>
             </form>
