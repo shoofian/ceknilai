@@ -679,97 +679,6 @@ export default function StudentPortal() {
                               <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>GURU PENGAMPU</p>
                               <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{res.guruNama}</p>
                             </div>
-                             {/* Radar chart section — replaces rata-rata kelas & total nilai */}
-                             {(() => {
-                                const aspects = res.detailNilai.filter(c => c.nilaiAsli !== null);
-                                if (aspects.length < 3) return null;
-                                const N = aspects.length;
-                                const CX = 220, CY = 195, R = 155;
-                                const toXY = (i, val) => {
-                                  const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
-                                  const r = (val / 100) * R;
-                                  return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
-                                };
-                                const gridLevels = [20, 40, 60, 80, 100];
-                                return (
-                                  <div style={{ gridColumn: "1 / -1", marginTop: "10px", display: "flex", alignItems: "center", gap: "30px" }}>
-                                    <div style={{ flexShrink: 0 }}>
-                                      <svg width="440" height="390" xmlns="http://www.w3.org/2000/svg">
-                                        {/* Grid circles */}
-                                        {gridLevels.map(level => (
-                                          <polygon
-                                            key={level}
-                                            points={Array.from({ length: N }, (_, i) => {
-                                              const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
-                                              const r = (level / 100) * R;
-                                              return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`;
-                                            }).join(" ")}
-                                            fill="none"
-                                            stroke="#334155"
-                                            strokeWidth="1"
-                                          />
-                                        ))}
-                                        {/* Axis lines */}
-                                        {aspects.map((_, i) => {
-                                          const [x, y] = toXY(i, 100);
-                                          return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
-                                        })}
-                                        {/* Data polygon */}
-                                        <polygon
-                                          points={aspects.map((col, i) => toXY(i, col.nilaiAsli).join(",")).join(" ")}
-                                          fill="rgba(59,130,246,0.25)"
-                                          stroke="#3b82f6"
-                                          strokeWidth="2"
-                                        />
-                                        {/* Data dots */}
-                                        {aspects.map((col, i) => {
-                                          const [x, y] = toXY(i, col.nilaiAsli);
-                                          return <circle key={i} cx={x} cy={y} r="5" fill="#3b82f6" stroke="#f8fafc" strokeWidth="2" />;
-                                        })}
-                                        {/* Value labels */}
-                                        {aspects.map((col, i) => {
-                                          const [x, y] = toXY(i, col.nilaiAsli);
-                                          return <text key={i} x={x} y={y - 10} fill="#38bdf8" fontSize="14" fontWeight="700" textAnchor="middle">{col.nilaiAsli}</text>;
-                                        })}
-                                        {/* Axis labels */}
-                                        {aspects.map((col, i) => {
-                                          const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
-                                          const lr = R + 28;
-                                          const lx = CX + lr * Math.cos(angle);
-                                          const ly = CY + lr * Math.sin(angle);
-                                          const label = col.namaKomom || col.namaKolom || "";
-                                          const words = label.split(" ");
-                                          return (
-                                            <text key={i} x={lx} y={ly} fill="#94a3b8" fontSize="13" fontWeight="600" textAnchor="middle" dominantBaseline="middle">
-                                              {words.length <= 2 ? label : (
-                                                <>
-                                                  <tspan x={lx} dy="-8">{words.slice(0, Math.ceil(words.length/2)).join(" ")}</tspan>
-                                                  <tspan x={lx} dy="18">{words.slice(Math.ceil(words.length/2)).join(" ")}</tspan>
-                                                </>
-                                              )}
-                                            </text>
-                                          );
-                                        })}
-                                        {/* Grid labels */}
-                                        {gridLevels.map(level => (
-                                          <text key={level} x={CX + 4} y={CY - (level / 100) * R + 4} fill="#475569" fontSize="11">{level}</text>
-                                        ))}
-                                      </svg>
-                                    </div>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                      {aspects.map((col, i) => (
-                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                          <div style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#3b82f6", flexShrink: 0 }} />
-                                          <div>
-                                            <p style={{ margin: 0, fontSize: "0.9rem", color: "#94a3b8", fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</p>
-                                            <p style={{ margin: 0, fontSize: "1.1rem", color: col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e", fontWeight: "800" }}>{col.nilaiAsli} <span style={{ color: "#64748b", fontSize: "0.8rem", fontWeight: "600" }}>/ 100</span></p>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                );
-                             })()}
                           </div>
                         </div>
 
@@ -797,22 +706,112 @@ export default function StudentPortal() {
                           </div>
                         </div>
 
-                        {/* SECTION 4: Detail Nilai */}
+                        {/* SECTION 4: Grafik Performa Radar */}
                         <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155", flex: 1 }}>
-                          <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>4. Rincian Komponen Nilai</p>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignContent: "start" }}>
-                            {res.detailNilai.map(col => (
-                              <div key={col.kolomId} style={{ backgroundColor: "#0f172a", padding: "20px", borderRadius: "16px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <div>
-                                  <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
-                                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
+                          <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>4. Grafik Performa</p>
+                          {(() => {
+                            const aspects = res.detailNilai.filter(c => c.nilaiAsli !== null);
+                            if (aspects.length < 3) {
+                              return (
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                  {res.detailNilai.map(col => (
+                                    <div key={col.kolomId} style={{ backgroundColor: "#0f172a", padding: "20px", borderRadius: "16px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                      <div>
+                                        <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
+                                        <p style={{ margin: "6px 0 0 0", fontSize: "1rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
+                                      </div>
+                                      <div style={{ fontSize: "2.2rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : (col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e") }}>
+                                        {col.nilaiAsli === null ? "-" : col.nilaiAsli}
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : (col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e") }}>
-                                  {col.nilaiAsli === null ? "-" : col.nilaiAsli}
+                              );
+                            }
+                            const N = aspects.length;
+                            const CX = 270, CY = 250, R = 200;
+                            const toXY = (i, val) => {
+                              const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                              const r = (val / 100) * R;
+                              return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
+                            };
+                            const gridLevels = [20, 40, 60, 80, 100];
+                            return (
+                              <div style={{ display: "flex", alignItems: "center", gap: "40px" }}>
+                                <div style={{ flexShrink: 0 }}>
+                                  <svg width="540" height="500" xmlns="http://www.w3.org/2000/svg">
+                                    {gridLevels.map(level => (
+                                      <polygon
+                                        key={level}
+                                        points={Array.from({ length: N }, (_, i) => {
+                                          const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                                          const r = (level / 100) * R;
+                                          return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`;
+                                        }).join(" ")}
+                                        fill="none" stroke={level === 100 ? "#475569" : "#1e3a5f"} strokeWidth={level === 100 ? "1.5" : "1"}
+                                      />
+                                    ))}
+                                    {aspects.map((_, i) => {
+                                      const [x, y] = toXY(i, 100);
+                                      return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
+                                    })}
+                                    <polygon
+                                      points={aspects.map((col, i) => toXY(i, col.nilaiAsli).join(",")).join(" ")}
+                                      fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="2.5"
+                                    />
+                                    {aspects.map((col, i) => {
+                                      const [x, y] = toXY(i, col.nilaiAsli);
+                                      return <circle key={i} cx={x} cy={y} r="6" fill="#3b82f6" stroke="#f8fafc" strokeWidth="2.5" />;
+                                    })}
+                                    {aspects.map((col, i) => {
+                                      const [x, y] = toXY(i, col.nilaiAsli);
+                                      const offsetY = y < CY ? -14 : 20;
+                                      return <text key={i} x={x} y={y + offsetY} fill="#38bdf8" fontSize="16" fontWeight="800" textAnchor="middle">{col.nilaiAsli}</text>;
+                                    })}
+                                    {aspects.map((col, i) => {
+                                      const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                                      const lr = R + 38;
+                                      const lx = CX + lr * Math.cos(angle);
+                                      const ly = CY + lr * Math.sin(angle);
+                                      const label = col.namaKomom || col.namaKolom || "";
+                                      const words = label.split(" ");
+                                      const lineH = 18;
+                                      return (
+                                        <text key={i} x={lx} y={ly} fill="#cbd5e1" fontSize="15" fontWeight="600" textAnchor="middle" dominantBaseline="middle">
+                                          {words.length <= 2 ? label : (
+                                            <>
+                                              <tspan x={lx} dy={`-${lineH/2}px`}>{words.slice(0, Math.ceil(words.length/2)).join(" ")}</tspan>
+                                              <tspan x={lx} dy={`${lineH}px`}>{words.slice(Math.ceil(words.length/2)).join(" ")}</tspan>
+                                            </>
+                                          )}
+                                        </text>
+                                      );
+                                    })}
+                                    {gridLevels.map(level => (
+                                      <text key={level} x={CX + 5} y={CY - (level / 100) * R + 5} fill="#475569" fontSize="12">{ level}</text>
+                                    ))}
+                                  </svg>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
+                                  <p style={{ color: "#64748b", fontSize: "0.95rem", fontWeight: "700", margin: "0 0 8px 0", textTransform: "uppercase", letterSpacing: "0.05em" }}>Legenda Aspek</p>
+                                  {res.detailNilai.map((col, i) => (
+                                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", backgroundColor: "#0f172a", borderRadius: "12px", border: `1px solid ${col.nilaiAsli === null ? "#1e293b" : col.nilaiAsli >= res.kkm ? "rgba(16,185,129,0.2)" : "rgba(244,63,94,0.2)"}` }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: col.nilaiAsli === null ? "#475569" : "#3b82f6", flexShrink: 0 }} />
+                                        <div>
+                                          <p style={{ margin: 0, fontSize: "1rem", color: "#cbd5e1", fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</p>
+                                          <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", fontWeight: "500" }}>Bobot {col.bobot}%</p>
+                                        </div>
+                                      </div>
+                                      <span style={{ fontSize: "1.4rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e" }}>
+                                        {col.nilaiAsli === null ? "-" : col.nilaiAsli}
+                                      </span>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Footer Info */}
