@@ -755,18 +755,18 @@ export default function DetailKelas({ params: paramsPromise }) {
       </div>
 
       {/* Main Header Card */}
-      <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
-        <div>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+      <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
+        <div style={{ flex: "1 1 min-content" }}>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", lineHeight: "1.2" }}>
             {kelas.nama}
             {kelas.isNilaiAkhirGenerated ? (
-              <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "6px 12px" }}>🚀 NILAI AKHIR PUBLIK</span>
+              <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>🚀 NILAI AKHIR PUBLIK</span>
             ) : (
-              <span className="badge badge-warning" style={{ fontSize: "0.75rem", padding: "6px 12px" }}>🔒 NILAI AKHIR DRAFT</span>
+              <span className="badge badge-warning" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>🔒 NILAI AKHIR DRAFT</span>
             )}
           </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px" }}>
-            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "12px", flexWrap: "wrap" }}>
+            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500", fontSize: "0.9rem" }}>
               {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
             </p>
             <div style={{ padding: "4px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", fontWeight: "600" }}>
@@ -776,7 +776,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   navigator.clipboard.writeText(kelas.id);
                   alert("Kode Kelas disalin!");
                 }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem" }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem", padding: "2px" }}
                 title="Salin Kode Kelas"
               >
                 📋
@@ -786,11 +786,11 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
 
         {/* Weights overview */}
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <div style={{ textAlign: "right" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: "16px", flex: "0 0 auto" }}>
+          <div style={{ textAlign: "right", backgroundColor: "var(--bg-tertiary)", padding: "12px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>TOTAL PERSENTASE BOBOT</span>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end", marginTop: "2px" }}>
-              <span style={{ fontSize: "1.5rem", fontWeight: "800", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "flex-end", marginTop: "4px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "1.5rem", fontWeight: "800", color: totalBobot === 100 ? "var(--success)" : "var(--warning)", lineHeight: "1" }}>
                 {totalBobot}%
               </span>
               <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.65rem" }}>
@@ -1210,8 +1210,8 @@ export default function DetailKelas({ params: paramsPromise }) {
 
             {/* Inline card rentang nilai — muncul di bawah tombolnya */}
             {rangeModalOpen && (
-              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px" }}>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
+              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px", overflowX: "auto" }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0, minWidth: "300px" }}>
                   Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
                 </p>
                 
