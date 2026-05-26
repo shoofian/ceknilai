@@ -74,6 +74,9 @@ export default function DetailKelas({ params: paramsPromise }) {
     setHistoryModalOpen(true);
   };
 
+  // State tab aktif: 'nilai' | 'ranking' | 'analitik'
+  const [activeTab, setActiveTab] = useState('nilai');
+
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
 
@@ -129,6 +132,74 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     return mapped;
   }, [kelas?.siswa, kelas?.kolomNilai, temporaryScores, sortConfig]);
+
+  // === COMPUTED ANALYTICS & RANKING ===
+  const analyticsData = useMemo(() => {
+    if (!kelas || !kelas.siswa || kelas.siswa.length === 0 || kelas.kolomNilai.length === 0) return null;
+
+    const skema = kelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+    const kkmVal = skema.kkm ?? 75;
+
+    // Calculate full score for each student
+    const studentScores = kelas.siswa.map(student => {
+      let total = 0;
+      let filledCount = 0;
+      kelas.kolomNilai.forEach(col => {
+        const sc = student.nilai[col.id];
+        if (sc !== undefined && sc !== null && sc !== "") {
+          total += Number(sc) * (col.bobot / 100);
+          filledCount++;
+        }
+      });
+      const complete = filledCount === kelas.kolomNilai.length;
+
+      let predikat = "-";
+      if (complete) {
+        if (total >= skema.A) predikat = skema.statusA || "A";
+        else if (total >= skema.B) predikat = skema.statusB || "B";
+        else if (total >= skema.C) predikat = skema.statusC || "C";
+        else predikat = skema.statusD || "D";
+      }
+
+      return { ...student, finalScore: parseFloat(total.toFixed(2)), complete, predikat, lulus: complete && total >= kkmVal };
+    });
+
+    // Ranking: sort descending by finalScore (only complete)
+    const ranked = [...studentScores]
+      .sort((a, b) => b.finalScore - a.finalScore)
+      .map((s, idx) => ({ ...s, rank: idx + 1 }));
+
+    const completeStudents = studentScores.filter(s => s.complete);
+    const classAvg = completeStudents.length > 0
+      ? parseFloat((completeStudents.reduce((sum, s) => sum + s.finalScore, 0) / completeStudents.length).toFixed(2))
+      : null;
+    const highest = completeStudents.length > 0 ? completeStudents.reduce((max, s) => s.finalScore > max.finalScore ? s : max, completeStudents[0]) : null;
+    const lowest = completeStudents.length > 0 ? completeStudents.reduce((min, s) => s.finalScore < min.finalScore ? s : min, completeStudents[0]) : null;
+    const passCount = completeStudents.filter(s => s.lulus).length;
+    const passRate = completeStudents.length > 0 ? Math.round((passCount / completeStudents.length) * 100) : 0;
+
+    // Grade distribution
+    const gradeDist = { A: 0, B: 0, C: 0, D: 0 };
+    completeStudents.forEach(s => {
+      if (s.finalScore >= skema.A) gradeDist.A++;
+      else if (s.finalScore >= skema.B) gradeDist.B++;
+      else if (s.finalScore >= skema.C) gradeDist.C++;
+      else gradeDist.D++;
+    });
+
+    // Per-aspect averages
+    const aspectAvg = kelas.kolomNilai.map(col => {
+      const scores = kelas.siswa
+        .map(s => s.nilai[col.id])
+        .filter(v => v !== undefined && v !== null && v !== "");
+      const avg = scores.length > 0
+        ? parseFloat((scores.reduce((a, b) => a + Number(b), 0) / scores.length).toFixed(2))
+        : null;
+      return { ...col, avg, filled: scores.length };
+    });
+
+    return { ranked, classAvg, highest, lowest, passCount, passRate, gradeDist, aspectAvg, completeCount: completeStudents.length, totalCount: kelas.siswa.length, kkmVal };
+  }, [kelas?.siswa, kelas?.kolomNilai, kelas?.skemaPenilaian, temporaryScores]);
 
   const toggleCatatanRow = (studentNisn) => {
     setOpenCatatan(prev => {
@@ -858,6 +929,189 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
+      {/* Tab Navigation */}
+      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
+        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className="btn"
+            style={{
+              padding: "8px 18px",
+              fontSize: "0.85rem",
+              fontWeight: "700",
+              borderRadius: "var(--radius-sm)",
+              border: "none",
+              cursor: "pointer",
+              transition: "all 0.2s",
+              backgroundColor: activeTab === tab.id ? "var(--primary)" : "transparent",
+              color: activeTab === tab.id ? "#ffffff" : "var(--text-secondary)",
+              boxShadow: activeTab === tab.id ? "0 2px 8px rgba(59,130,246,0.35)" : "none",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ============= RANKING TAB ============= */}
+      {activeTab === "ranking" && (
+        <div className="glass-card animate-fade-in" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "20px 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <div>
+              <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>🏆 Peringkat Siswa</h4>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>Urutan berdasarkan nilai akhir tertinggi. Hanya siswa dengan semua aspek terisi yang diperingkatkan.</p>
+            </div>
+          </div>
+          {!analyticsData ? (
+            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Tambah siswa dan aspek nilai terlebih dahulu untuk melihat peringkat.</div>
+          ) : (
+            <div className="table-container" style={{ margin: 0, borderRadius: 0, borderLeft: "none", borderRight: "none" }}>
+              <table className="premium-table" style={{ width: "100%" }}>
+                <thead>
+                  <tr>
+                    <th style={{ width: "60px", textAlign: "center" }}>Rank</th>
+                    <th>Nama Siswa</th>
+                    <th style={{ textAlign: "center" }}>NISN</th>
+                    <th style={{ textAlign: "center" }}>Nilai Akhir</th>
+                    <th style={{ textAlign: "center" }}>Predikat</th>
+                    <th style={{ textAlign: "center" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analyticsData.ranked.map((s) => (
+                    <tr key={s.nisn} style={{ backgroundColor: s.rank === 1 ? "rgba(234,179,8,0.06)" : s.rank === 2 ? "rgba(148,163,184,0.05)" : s.rank === 3 ? "rgba(180,83,9,0.05)" : "" }}>
+                      <td style={{ textAlign: "center" }}>
+                        <span style={{ fontWeight: "900", fontSize: "1.1rem", color: s.rank === 1 ? "#eab308" : s.rank === 2 ? "#94a3b8" : s.rank === 3 ? "#b45309" : "var(--text-muted)" }}>
+                          {s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : `#${s.rank}`}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: "700" }}>{s.nama}</td>
+                      <td style={{ textAlign: "center", fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
+                      <td style={{ textAlign: "center" }}>
+                        {s.complete ? (
+                          <span style={{ fontWeight: "800", fontSize: "1.1rem", color: s.finalScore >= analyticsData.kkmVal ? "var(--success)" : "var(--danger)" }}>{s.finalScore}</span>
+                        ) : (
+                          <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>Belum Lengkap</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <span className={`badge ${s.predikat === (kelas.skemaPenilaian?.statusA || "A") || s.predikat === (kelas.skemaPenilaian?.statusB || "B") ? "badge-success" : s.predikat === (kelas.skemaPenilaian?.statusC || "C") ? "badge-warning" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>
+                          {s.predikat}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        {s.complete ? (
+                          <span className={`badge ${s.lulus ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>{s.lulus ? "LULUS" : "TIDAK LULUS"}</span>
+                        ) : (
+                          <span className="badge badge-warning" style={{ fontSize: "0.7rem" }}>–</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ============= ANALITIK TAB ============= */}
+      {activeTab === "analitik" && (
+        <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {!analyticsData ? (
+            <div className="glass-card" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Tambah siswa dan aspek nilai terlebih dahulu untuk melihat analitik.</div>
+          ) : (
+            <>
+              {/* Stat Cards Row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "16px" }}>
+                {[{
+                  label: "Rata-rata Kelas", value: analyticsData.classAvg !== null ? analyticsData.classAvg : "–", icon: "📊",
+                  color: "var(--primary)", sub: `dari ${analyticsData.completeCount} siswa lengkap`
+                }, {
+                  label: "Persentase Lulus", value: `${analyticsData.passRate}%`, icon: "✅",
+                  color: analyticsData.passRate >= 75 ? "var(--success)" : "var(--warning)", sub: `${analyticsData.passCount} dari ${analyticsData.completeCount} siswa`
+                }, {
+                  label: "Nilai Tertinggi", value: analyticsData.highest?.finalScore ?? "–", icon: "🏆",
+                  color: "#eab308", sub: analyticsData.highest?.nama ?? ""
+                }, {
+                  label: "Nilai Terendah", value: analyticsData.lowest?.finalScore ?? "–", icon: "📉",
+                  color: "var(--danger)", sub: analyticsData.lowest?.nama ?? ""
+                }, {
+                  label: "Total Siswa", value: analyticsData.totalCount, icon: "👥",
+                  color: "var(--text-secondary)", sub: `${analyticsData.completeCount} nilai lengkap`
+                }].map((card, i) => (
+                  <div key={i} className="glass-card" style={{ textAlign: "center", padding: "20px 16px" }}>
+                    <div style={{ fontSize: "1.8rem", marginBottom: "6px" }}>{card.icon}</div>
+                    <div style={{ fontSize: "1.7rem", fontWeight: "900", color: card.color, lineHeight: 1 }}>{card.value}</div>
+                    <div style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", marginTop: "6px", textTransform: "uppercase" }}>{card.label}</div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "2px" }}>{card.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Grade Distribution + Aspect Averages */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
+
+                {/* Grade Distribution */}
+                <div className="glass-card">
+                  <h5 style={{ fontSize: "1rem", fontWeight: "800", marginBottom: "16px" }}>📊 Distribusi Predikat</h5>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[{ label: "Predikat A", key: "A", color: "#3b82f6" },
+                      { label: "Predikat B", key: "B", color: "#10b981" },
+                      { label: "Predikat C", key: "C", color: "#f59e0b" },
+                      { label: "Predikat D", key: "D", color: "#ef4444" }].map(g => {
+                        const count = analyticsData.gradeDist[g.key];
+                        const pct = analyticsData.completeCount > 0 ? Math.round((count / analyticsData.completeCount) * 100) : 0;
+                        return (
+                          <div key={g.key}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                              <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-secondary)" }}>{g.label} <span style={{ color: g.color }}>({kelas.skemaPenilaian?.[`status${g.key}`] || g.key})</span></span>
+                              <span style={{ fontSize: "0.82rem", fontWeight: "800" }}>{count} siswa <span style={{ color: "var(--text-muted)" }}>({pct}%)</span></span>
+                            </div>
+                            <div style={{ height: "8px", backgroundColor: "var(--bg-tertiary)", borderRadius: "99px", overflow: "hidden" }}>
+                              <div style={{ width: `${pct}%`, height: "100%", backgroundColor: g.color, borderRadius: "99px", transition: "width 0.6s ease" }} />
+                            </div>
+                          </div>
+                        );
+                    })}
+                    {analyticsData.completeCount === 0 && <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Belum ada nilai lengkap.</p>}
+                  </div>
+                </div>
+
+                {/* Per-Aspect Averages */}
+                <div className="glass-card">
+                  <h5 style={{ fontSize: "1rem", fontWeight: "800", marginBottom: "16px" }}>🎯 Rata-rata per Aspek</h5>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {analyticsData.aspectAvg.map((col) => {
+                      const pct = col.avg !== null ? Math.min(col.avg, 100) : 0;
+                      const isGood = col.avg !== null && col.avg >= analyticsData.kkmVal;
+                      return (
+                        <div key={col.id}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                            <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-secondary)" }}>{col.nama} <span style={{ color: "var(--text-muted)", fontWeight: "500" }}>({col.bobot}%)</span></span>
+                            <span style={{ fontSize: "0.82rem", fontWeight: "800", color: col.avg !== null ? (isGood ? "var(--success)" : "var(--danger)") : "var(--text-muted)" }}>
+                              {col.avg !== null ? col.avg : "–"} <span style={{ fontWeight: "500", color: "var(--text-muted)" }}>({col.filled}/{analyticsData.totalCount})</span>
+                            </span>
+                          </div>
+                          <div style={{ height: "8px", backgroundColor: "var(--bg-tertiary)", borderRadius: "99px", overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", backgroundColor: isGood ? "var(--success)" : col.avg !== null ? "var(--danger)" : "transparent", borderRadius: "99px", transition: "width 0.6s ease" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {analyticsData.aspectAvg.length === 0 && <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Belum ada aspek nilai.</p>}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ============= NILAI TAB (existing gradebook) ============= */}
+      {activeTab !== "nilai" ? null : (
+      <>
       {/* Table: Main Spreadsheet Gradebook */}
       <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
         
@@ -1298,7 +1552,10 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       </div>
 
-      </div> {/* END OF MAIN WRAPPER */}
+      </>
+      )}
+
+      </div>
 
       {/* MODAL: ADD/EDIT STUDENT */}
       {siswaModalOpen && (
