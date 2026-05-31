@@ -308,13 +308,10 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
       }
     }
 
-    // Sync students if siswa is provided
+    // Sync students if siswa is provided — use upsert to avoid losing data
     if (updatedFields.siswa !== undefined) {
-      const { error: delError } = await supabase.from('siswa').delete().eq('kelas_id', id);
-      if (delError) console.error('Error deleting students:', delError);
-
       if (updatedFields.siswa.length > 0) {
-        const studentsToInsert = updatedFields.siswa.map(s => ({
+        const studentsToUpsert = updatedFields.siswa.map(s => ({
           kelas_id: id,
           nisn: s.nisn,
           nama: s.nama,
@@ -322,8 +319,10 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
           nilai: s.nilai || {},
           catatan: s.catatan || ""
         }));
-        const { error: sError } = await supabase.from('siswa').insert(studentsToInsert);
-        if (sError) console.error('Error inserting students:', sError);
+        const { error: sError } = await supabase
+          .from('siswa')
+          .upsert(studentsToUpsert, { onConflict: 'kelas_id,nisn' });
+        if (sError) console.error('Error upserting students:', sError);
       }
     }
 

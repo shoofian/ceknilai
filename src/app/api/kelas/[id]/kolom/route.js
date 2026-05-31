@@ -40,18 +40,28 @@ export async function POST(request, { params }) {
     // Tambah kolom ke daftar
     kelas.kolomNilai.push(newColumn);
 
-    // Inisialisasi nilai null untuk semua siswa di kolom baru ini
-    kelas.siswa.forEach(siswa => {
-      if (siswa.nilai === undefined) {
-        siswa.nilai = {};
-      }
-      siswa.nilai[columnId] = null;
-    });
-
+    // Tambah kolom ke daftar — simpan hanya kolomNilai, jangan sentuh siswa via updateKelas
     await updateKelas(id, {
-      kolomNilai: kelas.kolomNilai,
-      siswa: kelas.siswa
+      kolomNilai: kelas.kolomNilai
     }, username);
+
+    // Inisialisasi nilai null untuk semua siswa di kolom baru ini secara langsung (aman, tanpa delete)
+    if (kelas.siswa && kelas.siswa.length > 0) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const sb = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        { auth: { persistSession: false } }
+      );
+
+      for (const siswa of kelas.siswa) {
+        const updatedNilai = { ...(siswa.nilai || {}), [columnId]: null };
+        await sb.from('siswa')
+          .update({ nilai: updatedNilai })
+          .eq('kelas_id', id)
+          .eq('nisn', siswa.nisn);
+      }
+    }
 
     return NextResponse.json({ success: true, kolom: newColumn });
   } catch (error) {
