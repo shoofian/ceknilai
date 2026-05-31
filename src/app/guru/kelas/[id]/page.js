@@ -1130,26 +1130,26 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
 
         {kelas.siswa.length > 0 ? (
-          <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none" }}>
+          <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}>
             <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
-              <thead>
+              <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                 <tr>
-                  <th style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nisn')}>
+                  <th style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
                     NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                   </th>
-                  <th className="sticky-nama" style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                  <th className="sticky-nama" style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
                     Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                   </th>
-                  <th style={{ width: "140px", minWidth: "140px" }}>Tanggal Lahir</th>
+                  <th style={{ width: "140px", minWidth: "140px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Tanggal Lahir</th>
                   
                   {/* Dynamic Headers based on columns */}
                   {kelas.kolomNilai.map(col => (
-                    <th key={col.id} style={{ textAlign: "center", minWidth: "100px" }}>
+                    <th key={col.id} style={{ textAlign: "center", minWidth: "100px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
                       {col.nama} ({col.bobot}%)
                     </th>
                   ))}
 
-                  <th style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('finalScore')}>
+                  <th style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 21 }} onClick={() => handleSort('finalScore')}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
                       <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
                       <button 
@@ -1168,7 +1168,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </button>
                     </div>
                   </th>
-                  <th style={{ textAlign: "center", width: "80px" }}>Aksi</th>
+                  <th style={{ textAlign: "center", width: "80px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Aksi</th>
                 </tr>
               </thead>
               <tbody>
