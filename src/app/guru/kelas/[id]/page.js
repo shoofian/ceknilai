@@ -1819,17 +1819,28 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }
 
                 const N = aspects.length;
-                const CX = 210, CY = 180, R = 120; // Slightly smaller to fit top achievers list
+                const CX = 170, CY = 160, R = 100; // Smaller radius to fit tighter column
                 const toXY = (i, val) => {
                   const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                   const r = (val / 100) * R;
                   return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
                 };
                 const gridLevels = [20, 40, 60, 80, 100];
+                
+                // Helper to abbreviate long aspect names (e.g., "Ujian Tengah Semester" -> "UTS")
+                const abbreviate = (name) => {
+                  if (name.length <= 12) return name;
+                  const words = name.split(/[\s_-]+/);
+                  if (words.length > 1) {
+                     return words.map(w => w.charAt(0).toUpperCase() + (/\d+/.test(w) ? w.replace(/\D/g, '') : '')).join("");
+                  }
+                  return name.substring(0, 10) + "..";
+                };
+
                 return (
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, width: "100%" }}>
-                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                      <svg width="420" height="380" xmlns="http://www.w3.org/2000/svg">
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                      <svg width="340" height="320" viewBox="0 0 340 320" xmlns="http://www.w3.org/2000/svg">
                         {/* Grid polygons */}
                         {gridLevels.map(level => (
                           <polygon
@@ -1866,12 +1877,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {/* Axis labels (names) */}
                         {aspects.map((col, i) => {
                           const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
-                          const lr = R + 30; // Label radius
+                          const lr = R + 25; // Label radius
                           const lx = CX + lr * Math.cos(angle);
                           const ly = CY + lr * Math.sin(angle);
-                          const label = col.nama.length > 15 ? col.nama.substring(0, 15) + "..." : col.nama;
+                          const label = abbreviate(col.nama);
                           return (
-                            <text key={i} x={lx} y={ly} fill="#cbd5e1" fontSize="13" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
+                            <text key={i} x={lx} y={ly} fill="#cbd5e1" fontSize="12" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
                               {label}
                             </text>
                           );
@@ -1882,15 +1893,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                     {/* Top Achievers per Aspect */}
                     <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", width: "100%", padding: "10px 0 0 0" }}>
                       {aspects.slice(0, 10).map(col => (
-                         <div key={col.id} style={{ display: "flex", flexDirection: "column", gap: "4px", backgroundColor: "#0f172a", padding: "12px 14px", borderRadius: "10px", border: "1px solid #334155" }}>
-                            <span style={{ fontSize: "0.95rem", color: "#94a3b8", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                         <div key={col.id} style={{ display: "flex", flexDirection: "column", gap: "6px", backgroundColor: "#0f172a", padding: "12px 14px", borderRadius: "10px", border: "1px solid #334155" }}>
+                            <div style={{ fontSize: "0.95rem", color: "#94a3b8", fontWeight: "700", whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                               {col.nama}
-                            </span>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>
-                              <span style={{ fontSize: "1.1rem" }}>🏆</span>
-                              <span style={{ fontSize: "1.1rem", color: "#eab308", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "flex-start", gap: "6px", width: "100%" }}>
+                              <span style={{ fontSize: "1.1rem", marginTop: "1px" }}>🏆</span>
+                              <div style={{ fontSize: "1.1rem", color: "#eab308", fontWeight: "800", whiteSpace: "normal", wordBreak: "break-word", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", flex: 1, lineHeight: "1.3" }}>
                                 {col.topStudent}
-                              </span>
+                              </div>
                             </div>
                          </div>
                       ))}
