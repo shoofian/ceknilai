@@ -1870,15 +1870,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </div>
 
                     {/* Top Achievers per Aspect */}
-                    <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", padding: "10px" }}>
+                    <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", width: "100%", padding: "10px 0 0 0" }}>
                       {aspects.slice(0, 10).map(col => (
-                         <div key={col.id} style={{ display: "flex", flexDirection: "column", gap: "8px", backgroundColor: "#0f172a", padding: "16px", borderRadius: "12px", border: "1px solid #334155" }}>
-                            <span style={{ fontSize: "1.05rem", color: "#94a3b8", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                         <div key={col.id} style={{ display: "flex", flexDirection: "column", gap: "4px", backgroundColor: "#0f172a", padding: "12px 14px", borderRadius: "10px", border: "1px solid #334155" }}>
+                            <span style={{ fontSize: "0.95rem", color: "#94a3b8", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                               {col.nama}
                             </span>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
-                              <span style={{ fontSize: "1.2rem" }}>🏆</span>
-                              <span style={{ fontSize: "1.2rem", color: "#eab308", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>
+                              <span style={{ fontSize: "1.1rem" }}>🏆</span>
+                              <span style={{ fontSize: "1.1rem", color: "#eab308", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
                                 {col.topStudent}
                               </span>
                             </div>
@@ -1893,7 +1893,7 @@ export default function DetailKelas({ params: paramsPromise }) {
            {/* Bar Chart: Distribusi Predikat */}
            <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column" }}>
              <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 30px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Distribusi Predikat</p>
-             <div style={{ display: "flex", flexDirection: "column", gap: "24px", flex: 1, justifyContent: "center" }}>
+             <div style={{ display: "flex", flexDirection: "column", gap: "36px", flex: 1 }}>
                 {analyticsData?.gradeDist && Object.entries(analyticsData.gradeDist).map(([pred, count]) => {
                   const maxCount = Math.max(...Object.values(analyticsData.gradeDist), 1);
                   const pct = Math.round((count / maxCount) * 100);
