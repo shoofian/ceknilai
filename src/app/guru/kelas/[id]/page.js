@@ -198,12 +198,18 @@ export default function DetailKelas({ params: paramsPromise }) {
     // Per-aspect averages
     const aspectAvg = kelas.kolomNilai.map(col => {
       const scores = kelas.siswa
-        .map(s => s.nilai[col.id])
-        .filter(v => v !== undefined && v !== null && v !== "");
+        .map(s => ({ nama: s.nama, finalScore: s.finalScore, val: s.nilai[col.id] }))
+        .filter(s => s.val !== undefined && s.val !== null && s.val !== "");
+        
       const avg = scores.length > 0
-        ? parseFloat((scores.reduce((a, b) => a + Number(b), 0) / scores.length).toFixed(2))
+        ? parseFloat((scores.reduce((a, b) => a + Number(b.val), 0) / scores.length).toFixed(2))
         : null;
-      return { ...col, avg, filled: scores.length };
+        
+      const topStudent = scores.length > 0 
+        ? scores.reduce((max, s) => Number(s.val) > Number(max.val) ? s : (Number(s.val) === Number(max.val) && s.finalScore > max.finalScore ? s : max), scores[0]) 
+        : null;
+
+      return { ...col, avg, filled: scores.length, topStudent: topStudent?.nama || "-" };
     });
 
     return { ranked, classAvg, highest, lowest, passCount, passRate, gradeDist, aspectAvg, completeCount: completeStudents.length, totalCount: kelas.siswa.length, kkmVal };
@@ -1680,7 +1686,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
               <div>
                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>NAMA KELAS</p>
-                <p style={{ fontSize: "2.2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{kelas?.namaKelas || "-"}</p>
+                <p style={{ fontSize: "2.2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{kelas?.nama || "-"}</p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>MATA PELAJARAN</p>
@@ -1690,7 +1696,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
               <div>
                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>GURU PENGAMPU</p>
-                <p style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{kelas?.user?.namaLengkap || "-"}</p>
+                <p style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{kelas?.userId || "Guru Pengampu"}</p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>TOTAL SISWA</p>
@@ -1766,7 +1772,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                <div>
                  <p style={{ color: "#f43f5e", fontSize: "1rem", margin: "0 0 6px 0", fontWeight: "700", letterSpacing: "1px" }}>NILAI TERENDAH</p>
                  <h3 style={{ fontSize: "2.5rem", fontWeight: "900", margin: 0, color: "#f8fafc" }}>{analyticsData?.lowest?.finalScore ?? "-"}</h3>
-                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600" }}>{analyticsData?.lowest?.nama ? analyticsData.lowest.nama.substring(0, 3) + "*** (Disamarkan)" : ""}</p>
+                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600", fontStyle: "italic" }}>{analyticsData?.lowest ? "(Identitas Disembunyikan)" : ""}</p>
                </div>
                <div style={{ fontSize: "3rem" }}>📉</div>
             </div>
@@ -1790,8 +1796,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                              <div style={{ fontSize: "1.3rem", fontWeight: "700", color: "#f8fafc" }}>{aspect.nama}</div>
                              <div style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "600", marginTop: "4px" }}>Bobot {aspect.bobot}%</div>
                            </div>
-                           <div style={{ fontSize: "2.5rem", fontWeight: "900", color: aspect.avg >= (kelas?.kkm ?? 75) ? "#10b981" : "#f43f5e" }}>
-                             {aspect.avg}
+                           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                             <div style={{ fontSize: "2.5rem", fontWeight: "900", lineHeight: 1, color: aspect.avg >= (kelas?.kkm ?? 75) ? "#10b981" : "#f43f5e" }}>
+                               {aspect.avg}
+                             </div>
+                             <div style={{ fontSize: "0.85rem", color: "#eab308", fontWeight: "700" }}>🏆 {aspect.topStudent}</div>
                            </div>
                         </div>
                       ))}
@@ -1800,7 +1809,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }
 
                 const N = aspects.length;
-                const CX = 210, CY = 200, R = 140;
+                const CX = 210, CY = 180, R = 120; // Slightly smaller to fit top achievers list
                 const toXY = (i, val) => {
                   const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                   const r = (val / 100) * R;
@@ -1808,55 +1817,67 @@ export default function DetailKelas({ params: paramsPromise }) {
                 };
                 const gridLevels = [20, 40, 60, 80, 100];
                 return (
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1, width: "100%" }}>
-                    <svg width="420" height="420" xmlns="http://www.w3.org/2000/svg">
-                      {/* Grid polygons */}
-                      {gridLevels.map(level => (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, width: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                      <svg width="420" height="380" xmlns="http://www.w3.org/2000/svg">
+                        {/* Grid polygons */}
+                        {gridLevels.map(level => (
+                          <polygon
+                            key={level}
+                            points={Array.from({ length: N }, (_, i) => {
+                              const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                              const r = (level / 100) * R;
+                              return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`;
+                            }).join(" ")}
+                            fill="none" stroke={level === 100 ? "#475569" : "#1e3a5f"} strokeWidth={level === 100 ? "1.5" : "1"}
+                          />
+                        ))}
+                        {/* Grid lines */}
+                        {aspects.map((_, i) => {
+                          const [x, y] = toXY(i, 100);
+                          return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
+                        })}
+                        {/* Data polygon */}
                         <polygon
-                          key={level}
-                          points={Array.from({ length: N }, (_, i) => {
-                            const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
-                            const r = (level / 100) * R;
-                            return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`;
-                          }).join(" ")}
-                          fill="none" stroke={level === 100 ? "#475569" : "#1e3a5f"} strokeWidth={level === 100 ? "1.5" : "1"}
+                          points={aspects.map((col, i) => toXY(i, col.avg).join(",")).join(" ")}
+                          fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" strokeWidth="3"
                         />
+                        {/* Data points */}
+                        {aspects.map((col, i) => {
+                          const [x, y] = toXY(i, col.avg);
+                          return <circle key={i} cx={x} cy={y} r="6" fill="#10b981" stroke="#f8fafc" strokeWidth="2.5" />;
+                        })}
+                        {/* Data labels (values) */}
+                        {aspects.map((col, i) => {
+                          const [x, y] = toXY(i, col.avg);
+                          const offsetY = y < CY ? -14 : 22;
+                          return <text key={i} x={x} y={y + offsetY} fill="#38bdf8" fontSize="16" fontWeight="800" textAnchor="middle">{col.avg}</text>;
+                        })}
+                        {/* Axis labels (names) */}
+                        {aspects.map((col, i) => {
+                          const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                          const lr = R + 30; // Label radius
+                          const lx = CX + lr * Math.cos(angle);
+                          const ly = CY + lr * Math.sin(angle);
+                          const label = col.nama.length > 15 ? col.nama.substring(0, 15) + "..." : col.nama;
+                          return (
+                            <text key={i} x={lx} y={ly} fill="#cbd5e1" fontSize="13" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
+                              {label}
+                            </text>
+                          );
+                        })}
+                      </svg>
+                    </div>
+
+                    {/* Top Achievers per Aspect */}
+                    <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", width: "100%", padding: "10px" }}>
+                      {aspects.slice(0, 6).map(col => (
+                         <div key={col.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0f172a", padding: "8px 12px", borderRadius: "10px", border: "1px solid #334155" }}>
+                            <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontWeight: "700" }}>{col.nama.length > 12 ? col.nama.substring(0, 12) + ".." : col.nama}</span>
+                            <span style={{ fontSize: "0.9rem", color: "#eab308", fontWeight: "800", textAlign: "right" }}>🏆 {col.topStudent.length > 15 ? col.topStudent.substring(0, 15) + ".." : col.topStudent}</span>
+                         </div>
                       ))}
-                      {/* Grid lines */}
-                      {aspects.map((_, i) => {
-                        const [x, y] = toXY(i, 100);
-                        return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
-                      })}
-                      {/* Data polygon */}
-                      <polygon
-                        points={aspects.map((col, i) => toXY(i, col.avg).join(",")).join(" ")}
-                        fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" strokeWidth="3"
-                      />
-                      {/* Data points */}
-                      {aspects.map((col, i) => {
-                        const [x, y] = toXY(i, col.avg);
-                        return <circle key={i} cx={x} cy={y} r="6" fill="#10b981" stroke="#f8fafc" strokeWidth="2.5" />;
-                      })}
-                      {/* Data labels (values) */}
-                      {aspects.map((col, i) => {
-                        const [x, y] = toXY(i, col.avg);
-                        const offsetY = y < CY ? -14 : 22;
-                        return <text key={i} x={x} y={y + offsetY} fill="#38bdf8" fontSize="16" fontWeight="800" textAnchor="middle">{col.avg}</text>;
-                      })}
-                      {/* Axis labels (names) */}
-                      {aspects.map((col, i) => {
-                        const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
-                        const lr = R + 35; // Label radius
-                        const lx = CX + lr * Math.cos(angle);
-                        const ly = CY + lr * Math.sin(angle);
-                        const label = col.nama.length > 15 ? col.nama.substring(0, 15) + "..." : col.nama;
-                        return (
-                          <text key={i} x={lx} y={ly} fill="#cbd5e1" fontSize="14" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
-                            {label}
-                          </text>
-                        );
-                      })}
-                    </svg>
+                    </div>
                   </div>
                 );
              })()}
@@ -1918,7 +1939,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>Klik tombol unduh di bawah untuk menyimpannya ke perangkat Anda.</p>
             </div>
             
-            <div style={{ width: "100%", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "24px", boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}>
+            <div style={{ width: "100%", borderRadius: "12px", overflowY: "auto", overflowX: "hidden", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "24px", boxShadow: "0 20px 40px rgba(0,0,0,0.4)", maxHeight: "40vh" }}>
               <img src={generatedOverviewImage.url} alt="Overview Kelas" style={{ width: "100%", height: "auto", display: "block" }} />
             </div>
             
