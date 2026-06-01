@@ -285,7 +285,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   }, [kelas, classId]);
 
   // === DYNAMIC WEIGHT COMPUTATIONS ===
-  const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + col.bobot, 0) : 0) + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0);
+  const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + (Number(col.bobot) || 0), 0) : 0) + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0);
 
   // === HANDLERS SISWA ===
   const handleOpenAddSiswa = () => {
@@ -499,9 +499,10 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // === BATCH UPDATE BOBOT PERSENTASE ===
   const handleBobotChange = (colId, value) => {
+    // Simpan sebagai string mentah agar field bisa dikosongkan tanpa otomatis jadi 0
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
-        return { ...col, bobot: Number(value) };
+        return { ...col, bobot: value === "" ? "" : value };
       }
       return col;
     });
@@ -542,11 +543,12 @@ export default function DetailKelas({ params: paramsPromise }) {
         updatedKolomNilai.push(data.kolom); // Masukkan aspek yang baru dibuat ke daftar sinkronisasi
       }
 
-      // Perbarui seluruh konfigurasi secara massal
+      // Perbarui seluruh konfigurasi secara massal — konversi bobot ke Number sebelum dikirim
+      const kolomToSave = updatedKolomNilai.map(col => ({ ...col, bobot: Number(col.bobot) || 0 }));
       const response = await fetch(`/api/kelas/${classId}/kolom`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kolomNilai: updatedKolomNilai }),
+        body: JSON.stringify({ kolomNilai: kolomToSave }),
       });
 
       if (response.ok) {
@@ -1233,7 +1235,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                               <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
                                 <input
                                   id={`grade-${student.nisn}-${col.id}`}
-                                  type="number"
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
                                   value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[col.id] !== null && student.nilai[col.id] !== undefined ? student.nilai[col.id] : "")}
                                   onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
                                   onBlur={(e) => handleGradeBlur(student.nisn, col.id, e.target.value)}
@@ -1415,7 +1419,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
                         </td>
                         <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                          <input type="number" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => handleBobotChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
                         </td>
                         <td style={{ padding: "6px 10px", textAlign: "center" }}>
                           <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
@@ -1429,7 +1433,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
                         </td>
                         <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                          <input type="number" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => handleNewAspectChange(aspect.id, 'bobot', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
                         </td>
                         <td style={{ padding: "8px 10px", textAlign: "center" }}>
                           {index !== newAspects.length - 1 ? (
