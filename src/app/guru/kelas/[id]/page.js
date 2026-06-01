@@ -1766,7 +1766,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                <div>
                  <p style={{ color: "#f43f5e", fontSize: "1rem", margin: "0 0 6px 0", fontWeight: "700", letterSpacing: "1px" }}>NILAI TERENDAH</p>
                  <h3 style={{ fontSize: "2.5rem", fontWeight: "900", margin: 0, color: "#f8fafc" }}>{analyticsData?.lowest?.finalScore ?? "-"}</h3>
-                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600" }}>{analyticsData?.lowest?.nama ?? ""}</p>
+                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600" }}>{analyticsData?.lowest?.nama ? analyticsData.lowest.nama.substring(0, 3) + "*** (Disamarkan)" : ""}</p>
                </div>
                <div style={{ fontSize: "3rem" }}>📉</div>
             </div>
@@ -1780,7 +1780,7 @@ export default function DetailKelas({ params: paramsPromise }) {
            <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column", alignItems: "center" }}>
              <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase", alignSelf: "flex-start", paddingLeft: "10px" }}>Rata-Rata per Aspek</p>
              {(() => {
-                const aspects = analyticsData?.aspectAverages || [];
+                const aspects = analyticsData?.aspectAvg || [];
                 if (aspects.length < 3) {
                   return (
                     <div style={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", gap: "16px", justifyContent: "center" }}>
@@ -1866,8 +1866,8 @@ export default function DetailKelas({ params: paramsPromise }) {
            <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column" }}>
              <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 30px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Distribusi Predikat</p>
              <div style={{ display: "flex", flexDirection: "column", gap: "24px", flex: 1, justifyContent: "center" }}>
-                {analyticsData?.predicateDistribution && Object.entries(analyticsData.predicateDistribution).map(([pred, count]) => {
-                  const maxCount = Math.max(...Object.values(analyticsData.predicateDistribution), 1);
+                {analyticsData?.gradeDist && Object.entries(analyticsData.gradeDist).map(([pred, count]) => {
+                  const maxCount = Math.max(...Object.values(analyticsData.gradeDist), 1);
                   const pct = Math.round((count / maxCount) * 100);
                   const color = pred === 'A' || pred === 'B' ? '#10b981' : pred === 'C' ? '#f59e0b' : '#f43f5e';
                   return (
