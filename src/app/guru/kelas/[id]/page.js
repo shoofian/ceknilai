@@ -58,6 +58,12 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State loading saat simpan aspek & bobot
   const [isSavingBobot, setIsSavingBobot] = useState(false);
 
+  // States untuk Presensi
+  const [presensiModalOpen, setPresensiModalOpen] = useState(false);
+  const [isSavingPresensi, setIsSavingPresensi] = useState(false);
+  // temporary settings while configuring
+  const [presensiConfigTemp, setPresensiConfigTemp] = useState({ digunakan: false, bobot: 0 });
+
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
 
@@ -162,7 +168,32 @@ export default function DetailKelas({ params: paramsPromise }) {
           filledCount++;
         }
       });
-      const complete = filledCount === kelas.kolomNilai.length;
+      
+      // Hitung Presensi jika digunakan
+      const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
+      const pertemuanList = skema.pertemuan || [];
+      let complete = filledCount === kelas.kolomNilai.length;
+      
+      if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
+        let attTotal = 0;
+        let attCount = 0;
+        pertemuanList.forEach(p => {
+          const val = student.nilai[`_presensi_${p.id}`];
+          if (val) {
+            attCount++;
+            if (val === 'H') attTotal += 100;
+            else if (val === 'S' || val === 'I') attTotal += 50;
+            else if (val === 'A') attTotal += 0;
+          }
+        });
+        
+        // Poin kehadiran rata-rata (hanya dihitung berdasarkan jumlah pertemuan yg sudah diisi)
+        const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+        total += attAvg * (presensiConfig.bobot / 100);
+        
+        // Jika ada pertemuan, anggap "complete" jika setidaknya semua nilai akademik terisi
+        // (atau bisa juga mewajibkan semua presensi terisi, tapi ini lebih fleksibel)
+      }
 
       let predikat = "-";
       if (complete) {
@@ -308,8 +339,10 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   }, [kelas, classId]);
 
-  // === DYNAMIC WEIGHT COMPUTATIONS ===
-  const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + (Number(col.bobot) || 0), 0) : 0) + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0);
+  // === DYNAMIC WEIGHT COMPUTATIONS ===  // Derived values for validation
+  const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + (Number(col.bobot) || 0), 0) : 0) 
+    + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0)
+    + (kelas?.skemaPenilaian?.presensi?.digunakan ? Number(kelas.skemaPenilaian.presensi.bobot) || 0 : 0);
 
   // === HANDLERS BAGIKAN OVERVIEW ===
   const handleDownloadOverview = async () => {
@@ -982,8 +1015,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
       {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
-        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }].map(tab => (
+      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content", flexWrap: "wrap" }}>
+        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -1179,6 +1212,115 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ============= PRESENSI TAB ============= */}
+      {activeTab === "presensi" && (
+        <div className="glass-card animate-fade-in" style={{ padding: "24px 0", display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+            <div>
+              <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>📅 Tabel Presensi (Kehadiran)</h4>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                Kelola kehadiran siswa. Klik pada sel untuk mengubah status: <strong style={{color:"var(--success)"}}>H</strong> (Hadir), <strong style={{color:"var(--warning)"}}>I</strong> (Izin), <strong style={{color:"#3b82f6"}} >S</strong> (Sakit), <strong style={{color:"var(--danger)"}}>A</strong> (Alpa).
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <button onClick={() => {
+                setPresensiConfigTemp(kelas.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 });
+                setPresensiModalOpen(true);
+              }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
+                ⚙️ Pengaturan Presensi
+              </button>
+              <button onClick={async () => {
+                const namaPertemuan = prompt("Nama Pertemuan:", `Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
+                if (!namaPertemuan) return;
+                const newPertemuan = { id: Date.now().toString(), nama: namaPertemuan, tanggal: new Date().toISOString().split('T')[0] };
+                const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan] };
+                setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                try {
+                  await fetch(`/api/kelas/${kelas.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
+                } catch(e) { console.error("Error saving pertemuan", e) }
+              }} className="btn btn-primary" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
+                ➕ Tambah Pertemuan
+              </button>
+            </div>
+          </div>
+
+          <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", overflowX: "auto" }}>
+            <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
+              <thead>
+                <tr>
+                  <th className="sticky-nama" style={{ width: "250px", position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
+                  {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
+                    <th key={p.id} style={{ minWidth: "100px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
+                      <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500", marginTop: "2px" }}>{p.tanggal}</div>
+                      <button onClick={async () => {
+                        if(!confirm(`Hapus ${p.nama}? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus.`)) return;
+                        const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: kelas.skemaPenilaian.pertemuan.filter(pt => pt.id !== p.id) };
+                        setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                        try {
+                           await fetch(`/api/kelas/${kelas.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
+                        } catch(e) {}
+                      }} style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.7rem", marginTop: "6px", fontWeight: "bold" }}>Hapus</button>
+                    </th>
+                  ))}
+                  {(!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) && (
+                    <th style={{ color: "var(--text-muted)", fontWeight: "500", fontStyle: "italic", textAlign: "center" }}>Belum ada pertemuan. Klik "Tambah Pertemuan".</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {kelas.siswa.length === 0 ? (
+                  <tr>
+                    <td colSpan={(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                      Belum ada siswa di kelas ini.
+                    </td>
+                  </tr>
+                ) : kelas.siswa.map((siswa, sIdx) => (
+                  <tr key={siswa.nisn}>
+                    <td className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: "var(--bg-primary)" }}>{siswa.nama}</td>
+                    {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
+                      const val = siswa.nilai[`_presensi_${p.id}`] || "";
+                      return (
+                        <td key={p.id} style={{ textAlign: "center", padding: "6px" }}>
+                          <button 
+                            onClick={() => {
+                              const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : "";
+                              const newSiswa = [...kelas.siswa];
+                              newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
+                              setKelas({ ...kelas, siswa: newSiswa });
+                              
+                              // Trigger auto save reusing handleSaveScore logic
+                              handleSaveScore(siswa.nisn, `_presensi_${p.id}`, nextVal);
+                            }}
+                            title="Klik untuk mengubah"
+                            style={{
+                              width: "42px", height: "42px", borderRadius: "10px", border: val === "" ? "1px dashed var(--border-color)" : "none", fontWeight: "800", cursor: "pointer", fontSize: "1.1rem",
+                              backgroundColor: val === 'H' ? "var(--success)" : val === 'I' ? "var(--warning)" : val === 'S' ? "#3b82f6" : val === 'A' ? "var(--danger)" : "transparent",
+                              color: val === "" ? "var(--text-muted)" : "#fff",
+                              transition: "all 0.2s"
+                            }}>
+                            {val || "-"}
+                          </button>
+                        </td>
+                      )
+                    })}
+                    {(!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) && (
+                      <td></td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ display: "flex", gap: "20px", fontSize: "0.85rem", color: "var(--text-secondary)", justifyContent: "center", marginTop: "10px", flexWrap: "wrap", padding: "0 20px" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--success)" }}></div> Hadir (100)</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (50)</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (50)</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpa (0)</span>
+          </div>
         </div>
       )}
 
@@ -2280,6 +2422,80 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
             </div>
             
+          </div>
+        </div>
+      )}
+
+      {/* Presensi Settings Modal */}
+      {presensiModalOpen && (
+        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(4px)" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "500px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: "800" }}>⚙️ Pengaturan Presensi</h3>
+              <button onClick={() => setPresensiModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", backgroundColor: "var(--bg-tertiary)", padding: "16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                <input 
+                  type="checkbox" 
+                  id="gunakanPresensi"
+                  checked={presensiConfigTemp.digunakan}
+                  onChange={(e) => setPresensiConfigTemp({...presensiConfigTemp, digunakan: e.target.checked})}
+                  style={{ width: "20px", height: "20px", marginTop: "2px", accentColor: "var(--primary)" }}
+                />
+                <div>
+                  <label htmlFor="gunakanPresensi" style={{ fontWeight: "700", fontSize: "1rem", cursor: "pointer", color: "var(--text-primary)" }}>Gunakan Presensi sebagai Aspek Nilai Akhir</label>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                    Jika diaktifkan, rata-rata poin kehadiran akan menyumbang persentase pada Nilai Akhir siswa.
+                  </p>
+                </div>
+              </div>
+
+              {presensiConfigTemp.digunakan && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Bobot Presensi (%)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={presensiConfigTemp.bobot || ""}
+                    onChange={(e) => setPresensiConfigTemp({...presensiConfigTemp, bobot: Number(e.target.value)})}
+                    className="input-field"
+                    placeholder="Contoh: 10"
+                  />
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Saran: Jika bobot presensi 10%, pastikan sisa 90% dibagi ke aspek akademik lainnya agar total pas 100%.</span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "8px" }}>
+              <button onClick={() => setPresensiModalOpen(false)} className="btn btn-secondary">Batal</button>
+              <button 
+                onClick={async () => {
+                  setIsSavingPresensi(true);
+                  const updatedSkema = { ...kelas.skemaPenilaian, presensi: presensiConfigTemp };
+                  try {
+                    const response = await fetch(`/api/kelas/${kelas.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
+                    if (response.ok) {
+                      setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                      setPresensiModalOpen(false);
+                    } else {
+                      alert("Gagal menyimpan pengaturan presensi.");
+                    }
+                  } catch (e) {
+                    console.error(e);
+                    alert("Terjadi kesalahan.");
+                  } finally {
+                    setIsSavingPresensi(false);
+                  }
+                }} 
+                className="btn btn-primary"
+                disabled={isSavingPresensi || (presensiConfigTemp.digunakan && (!presensiConfigTemp.bobot || presensiConfigTemp.bobot <= 0))}
+              >
+                {isSavingPresensi ? "Menyimpan..." : "Simpan Pengaturan"}
+              </button>
+            </div>
           </div>
         </div>
       )}
