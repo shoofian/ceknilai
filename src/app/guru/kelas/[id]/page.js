@@ -58,6 +58,9 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State loading saat simpan aspek & bobot
   const [isSavingBobot, setIsSavingBobot] = useState(false);
 
+  // State untuk profile guru
+  const [guruProfile, setGuruProfile] = useState(null);
+
   // States untuk Bagikan Overview
   const [isGeneratingOverview, setIsGeneratingOverview] = useState(false);
   const [generatedOverviewImage, setGeneratedOverviewImage] = useState(null);
@@ -285,6 +288,13 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   useEffect(() => {
     fetchClassDetail();
+    // Fetch guru profile
+    fetch('/api/profil')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setGuruProfile(data);
+      })
+      .catch(err => console.error("Error fetching guru profile:", err));
   }, [classId]);
 
   // Efek untuk memunculkan onboarding modal
@@ -1696,7 +1706,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
               <div>
                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>GURU PENGAMPU</p>
-                <p style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{kelas?.userId || "Guru Pengampu"}</p>
+                <p style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{guruProfile?.nama || kelas?.userId || "Guru Pengampu"}</p>
               </div>
               <div style={{ textAlign: "right" }}>
                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>TOTAL SISWA</p>
