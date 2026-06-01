@@ -1872,9 +1872,16 @@ export default function DetailKelas({ params: paramsPromise }) {
                     {/* Top Achievers per Aspect */}
                     <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", padding: "10px" }}>
                       {aspects.slice(0, 10).map(col => (
-                         <div key={col.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0f172a", padding: "12px 16px", borderRadius: "10px", border: "1px solid #334155" }}>
-                            <span style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "700" }}>{col.nama.length > 14 ? col.nama.substring(0, 14) + ".." : col.nama}</span>
-                            <span style={{ fontSize: "1.1rem", color: "#eab308", fontWeight: "800", textAlign: "right" }}>🏆 {col.topStudent.length > 15 ? col.topStudent.substring(0, 15) + ".." : col.topStudent}</span>
+                         <div key={col.id} style={{ display: "flex", flexDirection: "column", gap: "8px", backgroundColor: "#0f172a", padding: "16px", borderRadius: "12px", border: "1px solid #334155" }}>
+                            <span style={{ fontSize: "1.05rem", color: "#94a3b8", fontWeight: "700", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {col.nama}
+                            </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
+                              <span style={{ fontSize: "1.2rem" }}>🏆</span>
+                              <span style={{ fontSize: "1.2rem", color: "#eab308", fontWeight: "800", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", flex: 1 }}>
+                                {col.topStudent}
+                              </span>
+                            </div>
                          </div>
                       ))}
                     </div>
