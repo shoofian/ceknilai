@@ -54,6 +54,9 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [previewList, setPreviewList] = useState([]);
   const [importing, setImporting] = useState(false);
 
+  // State loading saat simpan aspek & bobot
+  const [isSavingBobot, setIsSavingBobot] = useState(false);
+
   // States untuk Catatan Siswa
   const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
   const [catatanDraft, setCatatanDraft] = useState({}); // { [nisn]: string }
@@ -524,6 +527,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
     }
 
+    setIsSavingBobot(true);
     try {
       // Buat aspek-aspek baru terlebih dahulu
       const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
@@ -552,9 +556,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       });
 
       if (response.ok) {
-        alert("✅ Perubahan kolom nilai dan bobot persentase berhasil disimpan!");
         setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Reset form tambah
-        fetchClassDetail();
+        await fetchClassDetail();
       } else {
         const data = await response.json();
         alert(data.error || "Gagal memperbarui bobot.");
@@ -562,6 +565,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     } catch (err) {
       console.error("Update weights failed", err);
       alert(err.message || "Gagal menyimpan.");
+    } finally {
+      setIsSavingBobot(false);
     }
   };
 
@@ -1460,12 +1465,33 @@ export default function DetailKelas({ params: paramsPromise }) {
                       {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
                     </span>
                   </div>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain">
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
                       📋 Salin dari Kelas Lain
                     </button>
-                    <button onClick={saveAllBobot} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>
-                      💾 Simpan
+                    <button
+                      onClick={saveAllBobot}
+                      className="btn btn-primary"
+                      style={{ padding: "5px 16px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
+                      disabled={isSavingBobot}
+                    >
+                      {isSavingBobot ? (
+                        <>
+                          <span style={{
+                            display: "inline-block",
+                            width: "13px",
+                            height: "13px",
+                            border: "2px solid rgba(255,255,255,0.4)",
+                            borderTopColor: "#fff",
+                            borderRadius: "50%",
+                            animation: "spin 0.7s linear infinite",
+                            flexShrink: 0
+                          }} />
+                          Menyimpan...
+                        </>
+                      ) : (
+                        <>💾 Simpan</>
+                      )}
                     </button>
                   </div>
                 </div>
