@@ -1653,118 +1653,256 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       </div>
 
-      {/* Off-Screen Dashboard for Overview Kelas Export */}
+      {/* Off-Screen Dashboard for Overview Kelas Export (1080x1350 - 4:5 Portrait) */}
       <div id={`export-class-dashboard-${classId}`} style={{
-        position: "absolute", left: "-9999px", top: 0, width: "1000px", minHeight: "1250px", height: "auto",
-        backgroundColor: "#0f172a", padding: "60px 70px", 
-        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "24px",
+        position: "absolute", left: "-9999px", top: 0, width: "1080px", height: "1350px", overflow: "hidden",
+        backgroundColor: "#0f172a", padding: "60px 80px", 
+        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "28px",
         color: "#f8fafc", fontFamily: "sans-serif"
       }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "10px", borderBottom: "2px solid #334155", paddingBottom: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "10px", borderBottom: "2px solid #334155", paddingBottom: "24px" }}>
           <div>
-            <h2 style={{ fontSize: "2.8rem", fontWeight: "900", color: "#10b981", margin: 0, letterSpacing: "-1px" }}>OVERVIEW KELAS</h2>
-            <p style={{ fontSize: "1.2rem", color: "#94a3b8", margin: "8px 0 0 0", fontWeight: "600" }}>Tahun Ajaran {kelas?.tahunAjaran || ""} &bull; Semester {kelas?.semester || "Ganjil"}</p>
+            <h2 style={{ fontSize: "3.2rem", fontWeight: "900", color: "#10b981", margin: 0, letterSpacing: "-1px" }}>OVERVIEW KELAS</h2>
+            <p style={{ fontSize: "1.4rem", color: "#94a3b8", margin: "8px 0 0 0", fontWeight: "600" }}>
+              Tahun Ajaran {kelas?.tahunAjaran || ""} &bull; Semester {kelas?.semester || "Ganjil"}
+            </p>
           </div>
-          <div>
-            <h3 style={{ fontSize: "2.2rem", fontWeight: "800", margin: 0, letterSpacing: "-1px", background: "linear-gradient(135deg, #f8fafc 30%, #10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CekNilai</h3>
+          <div style={{ textAlign: "right" }}>
+            <h3 style={{ fontSize: "2.6rem", fontWeight: "900", margin: 0, letterSpacing: "-1.5px", background: "linear-gradient(135deg, #f8fafc 30%, #38bdf8)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CekNilai</h3>
+            <p style={{ fontSize: "1rem", color: "#64748b", margin: "4px 0 0 0", fontWeight: "700", letterSpacing: "1px" }}>ANALYTICS REPORT</p>
           </div>
         </div>
 
-        {/* SECTION 1: Data Kelas */}
-        <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
-          <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>1. Identitas Kelas</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
-            <div>
-              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NAMA KELAS</p>
-              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{kelas?.namaKelas || ""}</p>
+        {/* SECTION 1: Identitas & Top Metrics */}
+        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "24px" }}>
+          <div style={{ backgroundColor: "#1e293b", padding: "30px 40px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>NAMA KELAS</p>
+                <p style={{ fontSize: "2.2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{kelas?.namaKelas || "-"}</p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>MATA PELAJARAN</p>
+                <p style={{ fontSize: "1.8rem", fontWeight: "700", margin: 0, color: "#38bdf8" }}>{kelas?.mataPelajaran || "-"}</p>
+              </div>
             </div>
-            <div>
-              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>MATA PELAJARAN</p>
-              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{kelas?.mataPelajaran || ""}</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+              <div>
+                <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>GURU PENGAMPU</p>
+                <p style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#e2e8f0" }}>{kelas?.user?.namaLengkap || "-"}</p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "0 0 4px 0", fontWeight: "700", letterSpacing: "1px" }}>TOTAL SISWA</p>
+                <p style={{ fontSize: "2.2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.totalCount ?? 0}</p>
+              </div>
             </div>
-            <div>
-              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>GURU PENGAMPU</p>
-              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{kelas?.user?.namaLengkap || ""}</p>
+          </div>
+
+          <div style={{ backgroundColor: "#1e293b", padding: "30px 40px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", position: "relative", overflow: "hidden" }}>
+             <div style={{ position: "absolute", right: "-20px", top: "-20px", fontSize: "8rem", opacity: 0.05 }}>📊</div>
+             <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 10px 0", fontWeight: "800", letterSpacing: "1.5px", textTransform: "uppercase" }}>Rata-Rata Kelas</p>
+             <h1 style={{ fontSize: "6rem", fontWeight: "900", margin: 0, lineHeight: 1, color: "#10b981" }}>{analyticsData?.classAvg ?? "-"}</h1>
+             <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "16px 0 0 0", fontWeight: "600" }}>Dari {analyticsData?.completeCount ?? 0} siswa bernilai lengkap</p>
+          </div>
+        </div>
+
+        {/* SECTION 2: Kelulusan & Nilai Ekstrem */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+          {/* Donut Chart Kelulusan */}
+          <div style={{ backgroundColor: "#1e293b", padding: "30px 40px", borderRadius: "24px", border: "1px solid #334155", display: "flex", alignItems: "center", gap: "30px" }}>
+             {(() => {
+               const pass = analyticsData?.passCount ?? 0;
+               const total = analyticsData?.completeCount || 1; // avoid div by 0
+               const fail = total - pass;
+               const passPct = Math.round((pass / total) * 100);
+               const failPct = 100 - passPct;
+               const R = 70;
+               const C = 2 * Math.PI * R;
+               const passDash = (passPct / 100) * C;
+               return (
+                 <>
+                   <div style={{ position: "relative", width: "160px", height: "160px" }}>
+                     <svg width="160" height="160" viewBox="0 0 160 160">
+                        {/* Circle Background */}
+                        <circle cx="80" cy="80" r={R} fill="none" stroke="#f43f5e" strokeWidth="16" />
+                        {/* Circle Pass */}
+                        <circle cx="80" cy="80" r={R} fill="none" stroke="#10b981" strokeWidth="16" strokeDasharray={`${passDash} ${C}`} strokeLinecap="round" transform="rotate(-90 80 80)" />
+                     </svg>
+                     <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontSize: "2rem", fontWeight: "900", color: "#f8fafc", lineHeight: 1 }}>{passPct}%</span>
+                        <span style={{ fontSize: "0.8rem", color: "#94a3b8", fontWeight: "700" }}>LULUS</span>
+                     </div>
+                   </div>
+                   <div style={{ flex: 1 }}>
+                     <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Tingkat Kelulusan</p>
+                     <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                       <div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#10b981" }}></div>
+                       <div style={{ flex: 1, fontSize: "1.1rem", fontWeight: "700", color: "#e2e8f0" }}>Lulus (≥ {kelas?.kkm ?? 75})</div>
+                       <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#10b981" }}>{pass}</div>
+                     </div>
+                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                       <div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#f43f5e" }}></div>
+                       <div style={{ flex: 1, fontSize: "1.1rem", fontWeight: "700", color: "#e2e8f0" }}>Belum Lulus</div>
+                       <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#f43f5e" }}>{fail}</div>
+                     </div>
+                   </div>
+                 </>
+               );
+             })()}
+          </div>
+
+          {/* Extremes */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ backgroundColor: "#1e293b", padding: "26px 30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
+               <div>
+                 <p style={{ color: "#eab308", fontSize: "1rem", margin: "0 0 6px 0", fontWeight: "700", letterSpacing: "1px" }}>NILAI TERTINGGI</p>
+                 <h3 style={{ fontSize: "2.5rem", fontWeight: "900", margin: 0, color: "#f8fafc" }}>{analyticsData?.highest?.finalScore ?? "-"}</h3>
+                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600" }}>{analyticsData?.highest?.nama ?? ""}</p>
+               </div>
+               <div style={{ fontSize: "3rem" }}>🏆</div>
+            </div>
+            <div style={{ backgroundColor: "#1e293b", padding: "26px 30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
+               <div>
+                 <p style={{ color: "#f43f5e", fontSize: "1rem", margin: "0 0 6px 0", fontWeight: "700", letterSpacing: "1px" }}>NILAI TERENDAH</p>
+                 <h3 style={{ fontSize: "2.5rem", fontWeight: "900", margin: 0, color: "#f8fafc" }}>{analyticsData?.lowest?.finalScore ?? "-"}</h3>
+                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600" }}>{analyticsData?.lowest?.nama ?? ""}</p>
+               </div>
+               <div style={{ fontSize: "3rem" }}>📉</div>
             </div>
           </div>
         </div>
 
-        {/* SECTION 2: Ringkasan Analitik */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-          <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
-             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Rata-rata Kelas</p>
-             <h1 style={{ fontSize: "5rem", fontWeight: "900", margin: 0, lineHeight: 1, color: "#10b981" }}>{analyticsData?.classAvg ?? "-"}</h1>
-             <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "10px 0 0 0", fontWeight: "600" }}>dari {analyticsData?.completeCount ?? 0} siswa bernilai lengkap</p>
-          </div>
-          <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
-             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Tingkat Kelulusan</p>
-             <h1 style={{ fontSize: "5rem", fontWeight: "900", margin: 0, lineHeight: 1, color: (analyticsData?.passRate ?? 0) >= 75 ? "#10b981" : "#f59e0b" }}>{analyticsData?.passRate ?? 0}%</h1>
-             <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "10px 0 0 0", fontWeight: "600" }}>{analyticsData?.passCount ?? 0} dari {analyticsData?.completeCount ?? 0} siswa lulus KKM ({kelas?.kkm ?? 75})</p>
-          </div>
-        </div>
+        {/* SECTION 3: Radar Chart & Predikat */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", flex: 1 }}>
+           
+           {/* Radar Chart: Rata-rata per Aspek */}
+           <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column", alignItems: "center" }}>
+             <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase", alignSelf: "flex-start", paddingLeft: "10px" }}>Rata-Rata per Aspek</p>
+             {(() => {
+                const aspects = analyticsData?.aspectAverages || [];
+                if (aspects.length < 3) {
+                  return (
+                    <div style={{ width: "100%", flex: 1, display: "flex", flexDirection: "column", gap: "16px", justifyContent: "center" }}>
+                      {aspects.map(aspect => (
+                        <div key={aspect.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px", backgroundColor: "#0f172a", borderRadius: "16px", border: "1px solid #334155" }}>
+                           <div>
+                             <div style={{ fontSize: "1.3rem", fontWeight: "700", color: "#f8fafc" }}>{aspect.nama}</div>
+                             <div style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "600", marginTop: "4px" }}>Bobot {aspect.bobot}%</div>
+                           </div>
+                           <div style={{ fontSize: "2.5rem", fontWeight: "900", color: aspect.avg >= (kelas?.kkm ?? 75) ? "#10b981" : "#f43f5e" }}>
+                             {aspect.avg}
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
 
-        {/* SECTION 3: Statistik Siswa */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
-          <div style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "16px", border: "1px solid #334155" }}>
-             <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>TOTAL SISWA</p>
-             <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.totalCount ?? 0}</h3>
-          </div>
-          <div style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "16px", border: "1px solid #334155" }}>
-             <p style={{ color: "#eab308", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NILAI TERTINGGI</p>
-             <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.highest?.finalScore ?? "-"}</h3>
-             <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: "4px 0 0 0" }}>{analyticsData?.highest?.nama ?? ""}</p>
-          </div>
-          <div style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "16px", border: "1px solid #334155" }}>
-             <p style={{ color: "#f43f5e", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NILAI TERENDAH</p>
-             <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.lowest?.finalScore ?? "-"}</h3>
-             <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: "4px 0 0 0" }}>{analyticsData?.lowest?.nama ?? ""}</p>
-          </div>
-        </div>
+                const N = aspects.length;
+                const CX = 210, CY = 200, R = 140;
+                const toXY = (i, val) => {
+                  const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                  const r = (val / 100) * R;
+                  return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
+                };
+                const gridLevels = [20, 40, 60, 80, 100];
+                return (
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1, width: "100%" }}>
+                    <svg width="420" height="420" xmlns="http://www.w3.org/2000/svg">
+                      {/* Grid polygons */}
+                      {gridLevels.map(level => (
+                        <polygon
+                          key={level}
+                          points={Array.from({ length: N }, (_, i) => {
+                            const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                            const r = (level / 100) * R;
+                            return `${CX + r * Math.cos(angle)},${CY + r * Math.sin(angle)}`;
+                          }).join(" ")}
+                          fill="none" stroke={level === 100 ? "#475569" : "#1e3a5f"} strokeWidth={level === 100 ? "1.5" : "1"}
+                        />
+                      ))}
+                      {/* Grid lines */}
+                      {aspects.map((_, i) => {
+                        const [x, y] = toXY(i, 100);
+                        return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
+                      })}
+                      {/* Data polygon */}
+                      <polygon
+                        points={aspects.map((col, i) => toXY(i, col.avg).join(",")).join(" ")}
+                        fill="rgba(16, 185, 129, 0.2)" stroke="#10b981" strokeWidth="3"
+                      />
+                      {/* Data points */}
+                      {aspects.map((col, i) => {
+                        const [x, y] = toXY(i, col.avg);
+                        return <circle key={i} cx={x} cy={y} r="6" fill="#10b981" stroke="#f8fafc" strokeWidth="2.5" />;
+                      })}
+                      {/* Data labels (values) */}
+                      {aspects.map((col, i) => {
+                        const [x, y] = toXY(i, col.avg);
+                        const offsetY = y < CY ? -14 : 22;
+                        return <text key={i} x={x} y={y + offsetY} fill="#38bdf8" fontSize="16" fontWeight="800" textAnchor="middle">{col.avg}</text>;
+                      })}
+                      {/* Axis labels (names) */}
+                      {aspects.map((col, i) => {
+                        const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
+                        const lr = R + 35; // Label radius
+                        const lx = CX + lr * Math.cos(angle);
+                        const ly = CY + lr * Math.sin(angle);
+                        const label = col.nama.length > 15 ? col.nama.substring(0, 15) + "..." : col.nama;
+                        return (
+                          <text key={i} x={lx} y={ly} fill="#cbd5e1" fontSize="14" fontWeight="700" textAnchor="middle" dominantBaseline="middle">
+                            {label}
+                          </text>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                );
+             })()}
+           </div>
 
-        {/* SECTION 4: Distribusi Predikat & Rata-rata Aspek */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", flex: 1 }}>
-           <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
-             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Distribusi Predikat</p>
-             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+           {/* Bar Chart: Distribusi Predikat */}
+           <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column" }}>
+             <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 30px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Distribusi Predikat</p>
+             <div style={{ display: "flex", flexDirection: "column", gap: "24px", flex: 1, justifyContent: "center" }}>
                 {analyticsData?.predicateDistribution && Object.entries(analyticsData.predicateDistribution).map(([pred, count]) => {
                   const maxCount = Math.max(...Object.values(analyticsData.predicateDistribution), 1);
                   const pct = Math.round((count / maxCount) * 100);
                   const color = pred === 'A' || pred === 'B' ? '#10b981' : pred === 'C' ? '#f59e0b' : '#f43f5e';
                   return (
-                    <div key={pred} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                       <div style={{ fontSize: "1.5rem", fontWeight: "800", width: "30px", color }}>{pred}</div>
-                       <div style={{ flex: 1, backgroundColor: "#0f172a", height: "16px", borderRadius: "8px", overflow: "hidden" }}>
-                          <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: "8px" }}></div>
+                    <div key={pred} style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                       <div style={{ width: "50px", height: "50px", borderRadius: "12px", backgroundColor: "rgba(15,23,42,0.5)", border: `2px solid ${color}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.8rem", fontWeight: "900", color }}>
+                         {pred}
                        </div>
-                       <div style={{ fontSize: "1.2rem", fontWeight: "700", color: "#f8fafc", width: "40px", textAlign: "right" }}>{count}</div>
+                       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
+                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                           <span style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "700" }}>
+                             {pred === 'A' ? "Sangat Baik" : pred === 'B' ? "Baik" : pred === 'C' ? "Cukup" : "Kurang"}
+                           </span>
+                           <span style={{ fontSize: "1.4rem", fontWeight: "900", color: "#f8fafc" }}>{count} <span style={{ fontSize: "1rem", fontWeight: "600", color: "#64748b" }}>siswa</span></span>
+                         </div>
+                         <div style={{ width: "100%", backgroundColor: "#0f172a", height: "16px", borderRadius: "8px", overflow: "hidden" }}>
+                            <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: "8px", position: "relative" }}>
+                              <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundImage: "linear-gradient(90deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)" }}></div>
+                            </div>
+                         </div>
+                       </div>
                     </div>
                   );
                 })}
              </div>
            </div>
-
-           <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
-             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Rata-rata per Aspek</p>
-             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {analyticsData?.aspectAverages && analyticsData.aspectAverages.map(aspect => (
-                  <div key={aspect.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid #334155" }}>
-                     <div>
-                       <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#f8fafc" }}>{aspect.nama}</div>
-                       <div style={{ fontSize: "0.85rem", color: "#94a3b8", fontWeight: "600" }}>Bobot {aspect.bobot}%</div>
-                     </div>
-                     <div style={{ fontSize: "1.6rem", fontWeight: "800", color: aspect.avg >= (kelas?.kkm ?? 75) ? "#10b981" : "#f43f5e" }}>
-                       {aspect.avg}
-                     </div>
-                  </div>
-                ))}
-             </div>
-           </div>
         </div>
         
-        {/* Watermark for Image Download */}
-        <div style={{ textAlign: "center", color: "#64748b", fontSize: "0.85rem", marginTop: "auto", fontWeight: "600", letterSpacing: "2px", paddingTop: "20px" }}>
-          GENERATED BY CEKNILAI APP
+        {/* Footer / Watermark */}
+        <div style={{ textAlign: "center", marginTop: "auto", borderTop: "1px solid #334155", paddingTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ color: "#64748b", fontSize: "1rem", fontWeight: "600", letterSpacing: "1px" }}>
+            Di-generate otomatis dari CekNilai App
+          </div>
+          <div style={{ color: "#475569", fontSize: "0.9rem", fontWeight: "600", fontFamily: "monospace" }}>
+            ID: {classId.substring(0, 8).toUpperCase()} / {new Date().toLocaleDateString('id-ID')}
+          </div>
         </div>
       </div>
       
