@@ -5,6 +5,7 @@ import Modal from '@/components/Modal';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
+import html2canvas from "html2canvas";
 
 export default function DetailKelas({ params: paramsPromise }) {
   const params = use(paramsPromise);
@@ -56,6 +57,10 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // State loading saat simpan aspek & bobot
   const [isSavingBobot, setIsSavingBobot] = useState(false);
+
+  // States untuk Bagikan Overview
+  const [isGeneratingOverview, setIsGeneratingOverview] = useState(false);
+  const [generatedOverviewImage, setGeneratedOverviewImage] = useState(null);
 
   // States untuk Catatan Siswa
   const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
@@ -289,6 +294,30 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // === DYNAMIC WEIGHT COMPUTATIONS ===
   const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + (Number(col.bobot) || 0), 0) : 0) + newAspects.filter(a => a.nama.trim() !== "").reduce((sum, a) => sum + (Number(a.bobot) || 0), 0);
+
+  // === HANDLERS BAGIKAN OVERVIEW ===
+  const handleDownloadOverview = async () => {
+    const element = document.getElementById(`export-class-dashboard-${classId}`);
+    if (!element) return;
+    
+    setIsGeneratingOverview(true);
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2, 
+        backgroundColor: "#0f172a",
+        logging: false,
+        useCORS: true
+      });
+      
+      const image = canvas.toDataURL("image/png");
+      setGeneratedOverviewImage({ url: image, filename: `Overview_Kelas_${kelas?.namaKelas?.replace(/\s+/g, '_')}_${kelas?.mataPelajaran?.replace(/\s+/g, '_')}.png` });
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memproses gambar. Silakan coba kembali.");
+    } finally {
+      setIsGeneratingOverview(false);
+    }
+  };
 
   // === HANDLERS SISWA ===
   const handleOpenAddSiswa = () => {
@@ -1030,6 +1059,27 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div className="glass-card" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Tambah siswa dan aspek nilai terlebih dahulu untuk melihat analitik.</div>
           ) : (
             <>
+              {/* Header Tab Analitik */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0 }}>Ringkasan Analitik</h3>
+                <button
+                  onClick={handleDownloadOverview}
+                  disabled={isGeneratingOverview}
+                  className="btn btn-primary"
+                  style={{
+                    padding: "8px 16px",
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    opacity: isGeneratingOverview ? 0.7 : 1,
+                    cursor: isGeneratingOverview ? "wait" : "pointer"
+                  }}
+                >
+                  {isGeneratingOverview ? "📸 Memproses..." : "📸 Bagikan Overview"}
+                </button>
+              </div>
+
               {/* Stat Cards Row */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "16px" }}>
                 {[{
@@ -1602,6 +1652,147 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
       </div>
+
+      {/* Off-Screen Dashboard for Overview Kelas Export */}
+      <div id={`export-class-dashboard-${classId}`} style={{
+        position: "absolute", left: "-9999px", top: 0, width: "1000px", minHeight: "1250px", height: "auto",
+        backgroundColor: "#0f172a", padding: "60px 70px", 
+        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "24px",
+        color: "#f8fafc", fontFamily: "sans-serif"
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "10px", borderBottom: "2px solid #334155", paddingBottom: "20px" }}>
+          <div>
+            <h2 style={{ fontSize: "2.8rem", fontWeight: "900", color: "#10b981", margin: 0, letterSpacing: "-1px" }}>OVERVIEW KELAS</h2>
+            <p style={{ fontSize: "1.2rem", color: "#94a3b8", margin: "8px 0 0 0", fontWeight: "600" }}>Tahun Ajaran {kelas?.tahunAjaran || ""} &bull; Semester {kelas?.semester || "Ganjil"}</p>
+          </div>
+          <div>
+            <h3 style={{ fontSize: "2.2rem", fontWeight: "800", margin: 0, letterSpacing: "-1px", background: "linear-gradient(135deg, #f8fafc 30%, #10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>CekNilai</h3>
+          </div>
+        </div>
+
+        {/* SECTION 1: Data Kelas */}
+        <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+          <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>1. Identitas Kelas</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
+            <div>
+              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NAMA KELAS</p>
+              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{kelas?.namaKelas || ""}</p>
+            </div>
+            <div>
+              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>MATA PELAJARAN</p>
+              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{kelas?.mataPelajaran || ""}</p>
+            </div>
+            <div>
+              <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>GURU PENGAMPU</p>
+              <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{kelas?.user?.namaLengkap || ""}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: Ringkasan Analitik */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Rata-rata Kelas</p>
+             <h1 style={{ fontSize: "5rem", fontWeight: "900", margin: 0, lineHeight: 1, color: "#10b981" }}>{analyticsData?.classAvg ?? "-"}</h1>
+             <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "10px 0 0 0", fontWeight: "600" }}>dari {analyticsData?.completeCount ?? 0} siswa bernilai lengkap</p>
+          </div>
+          <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Tingkat Kelulusan</p>
+             <h1 style={{ fontSize: "5rem", fontWeight: "900", margin: 0, lineHeight: 1, color: (analyticsData?.passRate ?? 0) >= 75 ? "#10b981" : "#f59e0b" }}>{analyticsData?.passRate ?? 0}%</h1>
+             <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "10px 0 0 0", fontWeight: "600" }}>{analyticsData?.passCount ?? 0} dari {analyticsData?.completeCount ?? 0} siswa lulus KKM ({kelas?.kkm ?? 75})</p>
+          </div>
+        </div>
+
+        {/* SECTION 3: Statistik Siswa */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
+          <div style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "16px", border: "1px solid #334155" }}>
+             <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>TOTAL SISWA</p>
+             <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.totalCount ?? 0}</h3>
+          </div>
+          <div style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "16px", border: "1px solid #334155" }}>
+             <p style={{ color: "#eab308", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NILAI TERTINGGI</p>
+             <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.highest?.finalScore ?? "-"}</h3>
+             <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: "4px 0 0 0" }}>{analyticsData?.highest?.nama ?? ""}</p>
+          </div>
+          <div style={{ backgroundColor: "#1e293b", padding: "20px", borderRadius: "16px", border: "1px solid #334155" }}>
+             <p style={{ color: "#f43f5e", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NILAI TERENDAH</p>
+             <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0, color: "#f8fafc" }}>{analyticsData?.lowest?.finalScore ?? "-"}</h3>
+             <p style={{ color: "#94a3b8", fontSize: "0.85rem", margin: "4px 0 0 0" }}>{analyticsData?.lowest?.nama ?? ""}</p>
+          </div>
+        </div>
+
+        {/* SECTION 4: Distribusi Predikat & Rata-rata Aspek */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", flex: 1 }}>
+           <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Distribusi Predikat</p>
+             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {analyticsData?.predicateDistribution && Object.entries(analyticsData.predicateDistribution).map(([pred, count]) => {
+                  const maxCount = Math.max(...Object.values(analyticsData.predicateDistribution), 1);
+                  const pct = Math.round((count / maxCount) * 100);
+                  const color = pred === 'A' || pred === 'B' ? '#10b981' : pred === 'C' ? '#f59e0b' : '#f43f5e';
+                  return (
+                    <div key={pred} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                       <div style={{ fontSize: "1.5rem", fontWeight: "800", width: "30px", color }}>{pred}</div>
+                       <div style={{ flex: 1, backgroundColor: "#0f172a", height: "16px", borderRadius: "8px", overflow: "hidden" }}>
+                          <div style={{ width: `${pct}%`, height: "100%", backgroundColor: color, borderRadius: "8px" }}></div>
+                       </div>
+                       <div style={{ fontSize: "1.2rem", fontWeight: "700", color: "#f8fafc", width: "40px", textAlign: "right" }}>{count}</div>
+                    </div>
+                  );
+                })}
+             </div>
+           </div>
+
+           <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+             <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Rata-rata per Aspek</p>
+             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {analyticsData?.aspectAverages && analyticsData.aspectAverages.map(aspect => (
+                  <div key={aspect.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid #334155" }}>
+                     <div>
+                       <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#f8fafc" }}>{aspect.nama}</div>
+                       <div style={{ fontSize: "0.85rem", color: "#94a3b8", fontWeight: "600" }}>Bobot {aspect.bobot}%</div>
+                     </div>
+                     <div style={{ fontSize: "1.6rem", fontWeight: "800", color: aspect.avg >= (kelas?.kkm ?? 75) ? "#10b981" : "#f43f5e" }}>
+                       {aspect.avg}
+                     </div>
+                  </div>
+                ))}
+             </div>
+           </div>
+        </div>
+        
+        {/* Watermark for Image Download */}
+        <div style={{ textAlign: "center", color: "#64748b", fontSize: "0.85rem", marginTop: "auto", fontWeight: "600", letterSpacing: "2px", paddingTop: "20px" }}>
+          GENERATED BY CEKNILAI APP
+        </div>
+      </div>
+      
+      {/* Modal Download Generated Overview */}
+      {generatedOverviewImage && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
+          <div className="glass-card" style={{ width: "95%", maxWidth: "600px", padding: "30px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative", maxHeight: "90vh", overflowY: "auto", border: "1px solid rgba(255,255,255,0.1)", background: "var(--bg-primary)" }}>
+            <button onClick={() => setGeneratedOverviewImage(null)} style={{ position: "absolute", top: "15px", right: "15px", background: "rgba(255,255,255,0.1)", border: "none", width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", cursor: "pointer", color: "var(--text-primary)", transition: "all 0.2s" }}>✕</button>
+            
+            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+              <div style={{ fontSize: "3rem", marginBottom: "10px" }}>✅</div>
+              <h3 style={{ fontSize: "1.5rem", fontWeight: "800", margin: "0 0 8px 0" }}>Overview Berhasil Dibuat!</h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>Klik tombol unduh di bawah untuk menyimpannya ke perangkat Anda.</p>
+            </div>
+            
+            <div style={{ width: "100%", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "24px", boxShadow: "0 20px 40px rgba(0,0,0,0.4)" }}>
+              <img src={generatedOverviewImage.url} alt="Overview Kelas" style={{ width: "100%", height: "auto", display: "block" }} />
+            </div>
+            
+            <div style={{ display: "flex", gap: "12px", width: "100%" }}>
+              <button onClick={() => setGeneratedOverviewImage(null)} className="btn btn-secondary" style={{ flex: 1, padding: "12px", fontSize: "0.95rem" }}>Tutup</button>
+              <a href={generatedOverviewImage.url} download={generatedOverviewImage.filename} className="btn btn-primary" style={{ flex: 2, padding: "12px", fontSize: "0.95rem", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }} onClick={() => setTimeout(() => setGeneratedOverviewImage(null), 500)}>
+                ⬇️ Unduh Gambar (PNG)
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: ADD/EDIT STUDENT */}
       {siswaModalOpen && (
