@@ -1659,11 +1659,11 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       </div>
 
-      {/* Off-Screen Dashboard for Overview Kelas Export (1080x1350 - 4:5 Portrait) */}
+      {/* Off-Screen Dashboard for Overview Kelas Export (1080x1920 - 16:9 Portrait) */}
       <div id={`export-class-dashboard-${classId}`} style={{
-        position: "absolute", left: "-9999px", top: 0, width: "1080px", height: "1350px", overflow: "hidden",
-        backgroundColor: "#0f172a", padding: "60px 80px", 
-        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "28px",
+        position: "absolute", left: "-9999px", top: 0, width: "1080px", height: "1920px", overflow: "hidden",
+        backgroundColor: "#0f172a", padding: "80px 100px", 
+        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "40px",
         color: "#f8fafc", fontFamily: "sans-serif"
       }}>
         {/* Header */}
@@ -1772,7 +1772,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                <div>
                  <p style={{ color: "#f43f5e", fontSize: "1rem", margin: "0 0 6px 0", fontWeight: "700", letterSpacing: "1px" }}>NILAI TERENDAH</p>
                  <h3 style={{ fontSize: "2.5rem", fontWeight: "900", margin: 0, color: "#f8fafc" }}>{analyticsData?.lowest?.finalScore ?? "-"}</h3>
-                 <p style={{ color: "#94a3b8", fontSize: "1.1rem", margin: "6px 0 0 0", fontWeight: "600", fontStyle: "italic" }}>{analyticsData?.lowest ? "(Identitas Disembunyikan)" : ""}</p>
+                 <p style={{ margin: "6px 0 0 0", height: "1.1rem" }}></p>
                </div>
                <div style={{ fontSize: "3rem" }}>📉</div>
             </div>
@@ -1870,11 +1870,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </div>
 
                     {/* Top Achievers per Aspect */}
-                    <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", width: "100%", padding: "10px" }}>
-                      {aspects.slice(0, 6).map(col => (
-                         <div key={col.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0f172a", padding: "8px 12px", borderRadius: "10px", border: "1px solid #334155" }}>
-                            <span style={{ fontSize: "0.85rem", color: "#94a3b8", fontWeight: "700" }}>{col.nama.length > 12 ? col.nama.substring(0, 12) + ".." : col.nama}</span>
-                            <span style={{ fontSize: "0.9rem", color: "#eab308", fontWeight: "800", textAlign: "right" }}>🏆 {col.topStudent.length > 15 ? col.topStudent.substring(0, 15) + ".." : col.topStudent}</span>
+                    <div style={{ marginTop: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", width: "100%", padding: "10px" }}>
+                      {aspects.slice(0, 10).map(col => (
+                         <div key={col.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#0f172a", padding: "12px 16px", borderRadius: "10px", border: "1px solid #334155" }}>
+                            <span style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "700" }}>{col.nama.length > 14 ? col.nama.substring(0, 14) + ".." : col.nama}</span>
+                            <span style={{ fontSize: "1.1rem", color: "#eab308", fontWeight: "800", textAlign: "right" }}>🏆 {col.topStudent.length > 15 ? col.topStudent.substring(0, 15) + ".." : col.topStudent}</span>
                          </div>
                       ))}
                     </div>
