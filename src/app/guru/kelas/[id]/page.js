@@ -81,6 +81,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Catatan Siswa
   const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
+  const [expandedNama, setExpandedNama] = useState({}); // { [nisn]: boolean }
   const [catatanDraft, setCatatanDraft] = useState({}); // { [nisn]: string }
   const [savingCatatan, setSavingCatatan] = useState({}); // { [nisn]: boolean }
   const [temporaryScores, setTemporaryScores] = useState({}); // For real-time updates while typing
@@ -294,6 +295,12 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
       return { ...prev, [studentNisn]: isOpen };
     });
+  };
+  const toggleNamaExpand = (studentNisn) => {
+    setExpandedNama(prev => ({
+      ...prev,
+      [studentNisn]: !prev[studentNisn]
+    }));
   };
 
   const saveCatatan = async (studentNisn) => {
@@ -1489,7 +1496,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </tr>
                 ) : kelas.siswa.map((siswa, sIdx) => (
                   <tr key={siswa.nisn}>
-                    <td className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: "var(--bg-primary)" }}>{siswa.nama}</td>
+                    <td 
+                      className={`sticky-nama ${expandedNama[siswa.nisn] ? 'expanded-active' : ''}`}
+                      onClick={() => toggleNamaExpand(siswa.nisn)}
+                      title="Klik untuk melihat nama lengkap"
+                      style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: "var(--bg-primary)", cursor: "pointer" }}
+                    >
+                      {siswa.nama}
+                    </td>
                     {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
                       const val = siswa.nilai[`_presensi_${p.id}`] || "";
                       return (
@@ -1632,7 +1646,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
-                        <td className="sticky-nama" style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)" }}>
+                        <td 
+                          className={`sticky-nama ${expandedNama[student.nisn] ? 'expanded-active' : ''}`}
+                          onClick={() => toggleNamaExpand(student.nisn)}
+                          title="Klik untuk melihat nama lengkap"
+                          style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
+                        >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
                             <button
@@ -2536,7 +2555,19 @@ export default function DetailKelas({ params: paramsPromise }) {
             background-color: var(--bg-primary) !important;
             box-shadow: 4px 0 8px rgba(0,0,0,0.08) !important;
             z-index: 10 !important;
+            transition: all 0.2s ease;
           }
+          
+          .sticky-nama.expanded-active {
+            max-width: 250px !important;
+            min-width: 250px !important;
+            width: 250px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            z-index: 15 !important;
+            overflow: visible !important;
+          }
+
           th.sticky-nama {
             background-color: var(--bg-tertiary) !important;
             z-index: 11 !important;
