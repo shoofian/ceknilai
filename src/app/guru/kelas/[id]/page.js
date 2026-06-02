@@ -71,6 +71,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [pertemuanNama, setPertemuanNama] = useState("");
   const [pertemuanTanggal, setPertemuanTanggal] = useState("");
   const [isSavingPertemuan, setIsSavingPertemuan] = useState(false);
+  const [pertemuanAgenda, setPertemuanAgenda] = useState("");
+  const [agendaCollapsed, setAgendaCollapsed] = useState(true);
 
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
@@ -451,6 +453,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSelectedPertemuanId("");
     setPertemuanNama(`Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
     setPertemuanTanggal(new Date().toISOString().split('T')[0]);
+    setPertemuanAgenda("");
     setPertemuanModalOpen(true);
   };
 
@@ -459,6 +462,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSelectedPertemuanId(pertemuan.id);
     setPertemuanNama(pertemuan.nama);
     setPertemuanTanggal(pertemuan.tanggal || new Date().toISOString().split('T')[0]);
+    setPertemuanAgenda(pertemuan.agenda || "");
     setPertemuanModalOpen(true);
   };
 
@@ -479,7 +483,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       // Update existing
       updatedPertemuan = (kelas.skemaPenilaian?.pertemuan || []).map(p => 
         p.id === selectedPertemuanId 
-          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal } 
+          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal, agenda: pertemuanAgenda.trim() } 
           : p
       );
     } else {
@@ -487,7 +491,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       const newPertemuan = { 
         id: Date.now().toString(), 
         nama: pertemuanNama.trim(), 
-        tanggal: pertemuanTanggal 
+        tanggal: pertemuanTanggal,
+        agenda: pertemuanAgenda.trim()
       };
       updatedPertemuan = [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan];
     }
@@ -1444,6 +1449,43 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           )}
 
+          {/* Collapsible Jurnal Agenda Pembelajaran */}
+          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
+            <div className="glass-card" style={{ padding: "16px 20px", margin: "0 24px 12px 24px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", userSelect: "none" }} onClick={() => setAgendaCollapsed(!agendaCollapsed)}>
+                <h5 style={{ fontSize: "0.95rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
+                  📖 Jurnal Agenda Pembelajaran ({kelas.skemaPenilaian.pertemuan.filter(p => p.agenda).length}/{kelas.skemaPenilaian.pertemuan.length} Terisi)
+                </h5>
+                <span style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: "800", display: "flex", alignItems: "center", gap: "4px" }}>
+                  {agendaCollapsed ? "📖 Buka Jurnal" : "✕ Tutup Jurnal"}
+                </span>
+              </div>
+              
+              {!agendaCollapsed && (
+                <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
+                  {kelas.skemaPenilaian.pertemuan.map((p, idx) => (
+                    <div key={p.id} style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "10px 12px", borderBottom: idx === kelas.skemaPenilaian.pertemuan.length - 1 ? "none" : "1px dashed var(--border-color)", flexWrap: "wrap" }}>
+                      <div style={{ minWidth: "120px", flex: "0 0 auto" }}>
+                        <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{p.nama}</strong>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>{p.tanggal}</div>
+                      </div>
+                      <div style={{ flex: "1 1 200px", fontSize: "0.85rem", color: p.agenda ? "var(--text-primary)" : "var(--text-muted)", fontStyle: p.agenda ? "normal" : "italic", lineHeight: 1.4, alignSelf: "center" }}>
+                        {p.agenda || "Belum ada catatan agenda pembelajaran. Klik tombol 'Tulis' di kanan atau 'Ubah' pada tabel presensi untuk menambahkan."}
+                      </div>
+                      <button 
+                        onClick={() => handleOpenEditPertemuan(p)} 
+                        className="btn btn-secondary" 
+                        style={{ padding: "6px 12px", fontSize: "0.75rem", borderColor: "var(--border-color)", flex: "0 0 auto", marginLeft: "auto" }}
+                      >
+                        ✏️ Tulis
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Hint scroll horizontal pada mobile */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
             <div className="mobile-scroll-hint">
@@ -1460,6 +1502,33 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
                       <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</div>
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500", marginTop: "2px" }}>{p.tanggal}</div>
+                      {p.agenda && (
+                        <div 
+                          onClick={() => handleOpenEditPertemuan(p)}
+                          title={`Agenda: ${p.agenda}`} 
+                          style={{ 
+                            fontSize: "0.68rem", 
+                            backgroundColor: "rgba(59, 130, 246, 0.08)", 
+                            color: "var(--primary)", 
+                            padding: "2px 6px", 
+                            borderRadius: "4px", 
+                            marginTop: "4px", 
+                            display: "inline-flex", 
+                            alignItems: "center",
+                            gap: "4px",
+                            cursor: "pointer",
+                            maxWidth: "100px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontWeight: "600",
+                            marginLeft: "auto",
+                            marginRight: "auto"
+                          }}
+                        >
+                          📖 {p.agenda}
+                        </div>
+                      )}
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
                         <button onClick={() => handleOpenEditPertemuan(p)} style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Ubah</button>
                         <button onClick={async () => {
@@ -2880,6 +2949,27 @@ export default function DetailKelas({ params: paramsPromise }) {
                     backgroundColor: "var(--bg-secondary)",
                     color: "var(--text-primary)",
                     fontSize: "0.95rem"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Agenda / Catatan Pembelajaran (Opsional)</label>
+                <textarea
+                  value={pertemuanAgenda}
+                  onChange={(e) => setPertemuanAgenda(e.target.value)}
+                  className="input-field"
+                  placeholder="Contoh: Pembahasan materi Array dan Looping, siswa mengerjakan tugas modul 3."
+                  rows={3}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-secondary)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.95rem",
+                    resize: "vertical"
                   }}
                 />
               </div>
