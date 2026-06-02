@@ -257,6 +257,31 @@ export default function DetailKelas({ params: paramsPromise }) {
     return { ranked, classAvg, highest, lowest, passCount, passRate, gradeDist, aspectAvg, completeCount: completeStudents.length, totalCount: kelas.siswa.length, kkmVal };
   }, [kelas?.siswa, kelas?.kolomNilai, kelas?.skemaPenilaian, temporaryScores]);
 
+  const presensiStats = useMemo(() => {
+    if (!kelas || !kelas.siswa) {
+      return { totalH: 0, totalI: 0, totalS: 0, totalA: 0, avgAttendance: 0, totalPertemuan: 0 };
+    }
+
+    const pertemuanList = kelas.skemaPenilaian?.pertemuan || [];
+    const totalP = pertemuanList.length;
+    let totalH = 0, totalI = 0, totalS = 0, totalA = 0;
+    
+    kelas.siswa.forEach(siswa => {
+      pertemuanList.forEach(p => {
+        const status = siswa.nilai[`_presensi_${p.id}`];
+        if (status === 'H') totalH++;
+        else if (status === 'I') totalI++;
+        else if (status === 'S') totalS++;
+        else if (status === 'A') totalA++;
+      });
+    });
+
+    const totalPossible = kelas.siswa.length * totalP;
+    const avgAttendance = totalPossible > 0 ? Math.round((totalH / totalPossible) * 100) : 0;
+
+    return { totalH, totalI, totalS, totalA, avgAttendance, totalPertemuan: totalP };
+  }, [kelas]);
+
   const toggleCatatanRow = (studentNisn) => {
     setOpenCatatan(prev => {
       const isOpen = !prev[studentNisn];
@@ -480,6 +505,57 @@ export default function DetailKelas({ params: paramsPromise }) {
       alert("Terjadi kesalahan.");
     } finally {
       setIsSavingPertemuan(false);
+    }
+  };
+
+  const handleSaveScore = async (studentNisn, colId, value) => {
+    try {
+      await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nilai: {
+            [colId]: value === "" ? null : value
+          }
+        }),
+      });
+    } catch (err) {
+      console.error("Score save failed", err);
+    }
+  };
+
+  const handleBulkPresensi = async (pertemuanId, status) => {
+    if (!kelas || !kelas.siswa) return;
+
+    // 1. Update state secara lokal langsung agar responsif
+    const updatedSiswa = kelas.siswa.map(s => ({
+      ...s,
+      nilai: {
+        ...s.nilai,
+        [`_presensi_${pertemuanId}`]: status === "" ? null : status
+      }
+    }));
+    
+    setKelas({ ...kelas, siswa: updatedSiswa });
+    setPertemuanModalOpen(false);
+
+    // 2. Simpan paralel ke backend Supabase
+    try {
+      const savePromises = kelas.siswa.map(s => 
+        fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nilai: {
+              [`_presensi_${pertemuanId}`]: status === "" ? null : status
+            }
+          })
+        })
+      );
+      await Promise.all(savePromises);
+    } catch (err) {
+      console.error("Bulk presensi failed", err);
+      alert("Beberapa data presensi gagal disimpan ke server. Silakan muat ulang halaman.");
     }
   };
 
@@ -1315,6 +1391,52 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           </div>
 
+          {/* Ringkasan Statistik Presensi */}
+          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", padding: "0 24px", marginBottom: "12px" }}>
+              <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)" }}>
+                <div style={{ fontSize: "2rem" }}>📅</div>
+                <div>
+                  <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)" }}>{presensiStats.totalPertemuan}</div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Total Pertemuan</div>
+                </div>
+              </div>
+
+              <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)" }}>
+                <div style={{ fontSize: "2rem" }}>📈</div>
+                <div>
+                  <div style={{ fontSize: "1.5rem", fontWeight: "800", color: presensiStats.avgAttendance >= 85 ? "var(--success)" : "var(--warning)" }}>{presensiStats.avgAttendance}%</div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Rata-Rata Kehadiran</div>
+                </div>
+              </div>
+
+              <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", gridColumn: "span 2" }}>
+                <div style={{ fontSize: "2rem" }}>📊</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                    <div>
+                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--success)" }}>{presensiStats.totalH}</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Hadir</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--warning)" }}>{presensiStats.totalI}</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Izin</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "#3b82f6" }}>{presensiStats.totalS}</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Sakit</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--danger)" }}>{presensiStats.totalA}</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Alpa</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "6px" }}>Akumulasi Kehadiran Kelas</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", overflowX: "auto" }}>
             <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
               <thead>
@@ -1339,6 +1461,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                   ))}
                   {(!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) && (
                     <th style={{ color: "var(--text-muted)", fontWeight: "500", fontStyle: "italic", textAlign: "center" }}>Belum ada pertemuan. Klik "Tambah Pertemuan".</th>
+                  )}
+                  {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
+                    <>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--success)" }}>H</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--warning)" }}>I</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#3b82f6" }}>S</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--danger)" }}>A</th>
+                      <th style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-secondary)", color: "var(--primary)", fontWeight: "800" }}>% Hadir</th>
+                    </>
                   )}
                 </tr>
               </thead>
@@ -1381,6 +1512,29 @@ export default function DetailKelas({ params: paramsPromise }) {
                     {(!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) && (
                       <td></td>
                     )}
+                    {kelas.skemaPenilaian?.pertemuan?.length > 0 && (() => {
+                      let countH = 0, countI = 0, countS = 0, countA = 0;
+                      (kelas.skemaPenilaian?.pertemuan || []).forEach(p => {
+                        const status = siswa.nilai[`_presensi_${p.id}`];
+                        if (status === 'H') countH++;
+                        else if (status === 'I') countI++;
+                        else if (status === 'S') countS++;
+                        else if (status === 'A') countA++;
+                      });
+                      const totalP = kelas.skemaPenilaian.pertemuan.length;
+                      const persentase = totalP > 0 ? Math.round((countH / totalP) * 100) : 0;
+                      return (
+                        <>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.02)" }}>{countH}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>{countI}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "#3b82f6", backgroundColor: "rgba(59, 130, 246, 0.02)" }}>{countS}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--danger)", backgroundColor: "rgba(239, 68, 68, 0.02)" }}>{countA}</td>
+                          <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.05)", fontSize: "1rem" }}>
+                            {persentase}%
+                          </td>
+                        </>
+                      );
+                    })()}
                   </tr>
                 ))}
               </tbody>
@@ -2621,6 +2775,47 @@ export default function DetailKelas({ params: paramsPromise }) {
                   }}
                 />
               </div>
+
+              {isEditingPertemuan && (
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Presensi Massal (Bulk)</label>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Ubah status kehadiran seluruh siswa di pertemuan ini sekaligus.</p>
+                  <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap" }}>
+                    {[
+                      { val: 'H', label: 'Hadir', color: 'var(--success)' },
+                      { val: 'I', label: 'Izin', color: 'var(--warning)' },
+                      { val: 'S', label: 'Sakit', color: '#3b82f6' },
+                      { val: 'A', label: 'Alpa', color: 'var(--danger)' },
+                      { val: '', label: 'Kosongkan', color: 'var(--text-muted)' }
+                    ].map(item => (
+                      <button
+                        key={item.val}
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Ubah status kehadiran SEMUA siswa di ${pertemuanNama} menjadi "${item.label}"?`)) {
+                            handleBulkPresensi(selectedPertemuanId, item.val);
+                          }
+                        }}
+                        className="btn"
+                        style={{
+                          flex: "1 1 auto",
+                          padding: "8px 10px",
+                          fontSize: "0.75rem",
+                          fontWeight: "800",
+                          backgroundColor: "var(--bg-tertiary)",
+                          border: "1px solid var(--border-color)",
+                          color: item.color,
+                          cursor: "pointer",
+                          borderRadius: "var(--radius-sm)",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        {item.val || "∅"} {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "8px" }}>
