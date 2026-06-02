@@ -72,7 +72,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [pertemuanTanggal, setPertemuanTanggal] = useState("");
   const [isSavingPertemuan, setIsSavingPertemuan] = useState(false);
   const [pertemuanMateri, setPertemuanMateri] = useState("");
-  const [pertemuanKeterangan, setPertemuanKeterangan] = useState("");
+  const [pertemuanKegiatan, setPertemuanKegiatan] = useState("");
   const [agendaCollapsed, setAgendaCollapsed] = useState(true);
 
   // State untuk profile guru
@@ -455,7 +455,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setPertemuanNama(`Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
     setPertemuanTanggal(new Date().toISOString().split('T')[0]);
     setPertemuanMateri("");
-    setPertemuanKeterangan("");
+    setPertemuanKegiatan("");
     setPertemuanModalOpen(true);
   };
 
@@ -465,7 +465,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setPertemuanNama(pertemuan.nama);
     setPertemuanTanggal(pertemuan.tanggal || new Date().toISOString().split('T')[0]);
     setPertemuanMateri(pertemuan.materi || "");
-    setPertemuanKeterangan(pertemuan.keterangan || "");
+    setPertemuanKegiatan(pertemuan.kegiatan || pertemuan.keterangan || "");
     setPertemuanModalOpen(true);
   };
 
@@ -486,7 +486,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       // Update existing
       updatedPertemuan = (kelas.skemaPenilaian?.pertemuan || []).map(p => 
         p.id === selectedPertemuanId 
-          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal, materi: pertemuanMateri.trim(), keterangan: pertemuanKeterangan.trim() } 
+          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal, materi: pertemuanMateri.trim(), kegiatan: pertemuanKegiatan.trim() } 
           : p
       );
     } else {
@@ -496,7 +496,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         nama: pertemuanNama.trim(), 
         tanggal: pertemuanTanggal,
         materi: pertemuanMateri.trim(),
-        keterangan: pertemuanKeterangan.trim()
+        kegiatan: pertemuanKegiatan.trim()
       };
       updatedPertemuan = [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan];
     }
@@ -1458,7 +1458,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div className="glass-card" style={{ padding: "16px 20px", margin: "0 24px 12px 24px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", userSelect: "none" }} onClick={() => setAgendaCollapsed(!agendaCollapsed)}>
                 <h5 style={{ fontSize: "0.95rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                  📖 Jurnal Agenda Pembelajaran ({kelas.skemaPenilaian.pertemuan.filter(p => p.materi || p.keterangan).length}/{kelas.skemaPenilaian.pertemuan.length} Terisi)
+                  📖 Jurnal Agenda Pembelajaran ({kelas.skemaPenilaian.pertemuan.filter(p => p.materi || p.kegiatan || p.keterangan).length}/{kelas.skemaPenilaian.pertemuan.length} Terisi)
                 </h5>
                 <span style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: "800", display: "flex", alignItems: "center", gap: "4px" }}>
                   {agendaCollapsed ? "📖 Buka Jurnal" : "✕ Tutup Jurnal"}
@@ -1467,41 +1467,44 @@ export default function DetailKelas({ params: paramsPromise }) {
               
               {!agendaCollapsed && (
                 <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
-                  {kelas.skemaPenilaian.pertemuan.map((p, idx) => (
-                    <div key={p.id} style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "10px 12px", borderBottom: idx === kelas.skemaPenilaian.pertemuan.length - 1 ? "none" : "1px dashed var(--border-color)", flexWrap: "wrap" }}>
-                      <div style={{ minWidth: "120px", flex: "0 0 auto" }}>
-                        <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{p.nama}</strong>
-                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>{p.tanggal}</div>
-                      </div>
-                      
-                      <div style={{ flex: "1 1 200px", fontSize: "0.85rem", alignSelf: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
-                        {p.materi ? (
-                          <div>
-                            <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>📚 Materi: </span>
-                            <span style={{ color: "var(--text-primary)" }}>{p.materi}</span>
-                          </div>
-                        ) : (
-                          <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📚 Materi belum diisi</div>
-                        )}
-                        {p.keterangan ? (
-                          <div>
-                            <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>📝 Keterangan: </span>
-                            <span style={{ color: "var(--text-secondary)" }}>{p.keterangan}</span>
-                          </div>
-                        ) : (
-                          <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📝 Keterangan belum diisi</div>
-                        )}
-                      </div>
+                  {kelas.skemaPenilaian.pertemuan.map((p, idx) => {
+                    const currentKegiatan = p.kegiatan || p.keterangan || "";
+                    return (
+                      <div key={p.id} style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "10px 12px", borderBottom: idx === kelas.skemaPenilaian.pertemuan.length - 1 ? "none" : "1px dashed var(--border-color)", flexWrap: "wrap" }}>
+                        <div style={{ minWidth: "120px", flex: "0 0 auto" }}>
+                          <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{p.nama}</strong>
+                          <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>{p.tanggal}</div>
+                        </div>
+                        
+                        <div style={{ flex: "1 1 200px", fontSize: "0.85rem", alignSelf: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {p.materi ? (
+                            <div>
+                              <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>📚 Materi: </span>
+                              <span style={{ color: "var(--text-primary)" }}>{p.materi}</span>
+                            </div>
+                          ) : (
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📚 Materi belum diisi</div>
+                          )}
+                          {currentKegiatan ? (
+                            <div>
+                              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>📝 Kegiatan: </span>
+                              <span style={{ color: "var(--text-secondary)" }}>{currentKegiatan}</span>
+                            </div>
+                          ) : (
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📝 Kegiatan belum diisi</div>
+                          )}
+                        </div>
 
-                      <button 
-                        onClick={() => handleOpenEditPertemuan(p)} 
-                        className="btn btn-secondary" 
-                        style={{ padding: "6px 12px", fontSize: "0.75rem", borderColor: "var(--border-color)", flex: "0 0 auto", marginLeft: "auto" }}
-                      >
-                        ✏️ Tulis
-                      </button>
-                    </div>
-                  ))}
+                        <button 
+                          onClick={() => handleOpenEditPertemuan(p)} 
+                          className="btn btn-secondary" 
+                          style={{ padding: "6px 12px", fontSize: "0.75rem", borderColor: "var(--border-color)", flex: "0 0 auto", marginLeft: "auto" }}
+                        >
+                          ✏️ Tulis
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1550,10 +1553,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                           📚 {p.materi}
                         </div>
                       )}
-                      {p.keterangan && (
+                      {(p.kegiatan || p.keterangan) && (
                         <div 
                           onClick={() => handleOpenEditPertemuan(p)}
-                          title={`Keterangan: ${p.keterangan}`} 
+                          title={`Kegiatan: ${p.kegiatan || p.keterangan}`} 
                           style={{ 
                             fontSize: "0.68rem", 
                             backgroundColor: "rgba(16, 185, 129, 0.08)", 
@@ -1574,7 +1577,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             marginRight: "auto"
                           }}
                         >
-                          📝 {p.keterangan}
+                          📝 {p.kegiatan || p.keterangan}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
@@ -3008,7 +3011,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                   value={pertemuanMateri}
                   onChange={(e) => setPertemuanMateri(e.target.value)}
                   className="input-field"
-                  placeholder="Contoh: Pengenalan JS, Struktur Kondisional IF-ELSE"
                   style={{
                     width: "100%",
                     padding: "10px 14px",
@@ -3022,12 +3024,11 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Keterangan / Catatan (Opsional)</label>
+                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Kegiatan Pembelajaran (Opsional)</label>
                 <textarea
-                  value={pertemuanKeterangan}
-                  onChange={(e) => setPertemuanKeterangan(e.target.value)}
+                  value={pertemuanKegiatan}
+                  onChange={(e) => setPertemuanKegiatan(e.target.value)}
                   className="input-field"
-                  placeholder="Contoh: Kelas kondusif, semua siswa memahami materi. 2 siswa izin ke toilet."
                   rows={2}
                   style={{
                     width: "100%",
