@@ -64,6 +64,14 @@ export default function DetailKelas({ params: paramsPromise }) {
   // temporary settings while configuring
   const [presensiConfigTemp, setPresensiConfigTemp] = useState({ digunakan: false, bobot: 0 });
 
+  // States untuk Pertemuan
+  const [pertemuanModalOpen, setPertemuanModalOpen] = useState(false);
+  const [isEditingPertemuan, setIsEditingPertemuan] = useState(false);
+  const [selectedPertemuanId, setSelectedPertemuanId] = useState("");
+  const [pertemuanNama, setPertemuanNama] = useState("");
+  const [pertemuanTanggal, setPertemuanTanggal] = useState("");
+  const [isSavingPertemuan, setIsSavingPertemuan] = useState(false);
+
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
 
@@ -403,6 +411,75 @@ export default function DetailKelas({ params: paramsPromise }) {
         console.error("Toggle publish failed", err);
         alert("Terjadi kesalahan sistem.");
       }
+    }
+  };
+
+  const handleOpenAddPertemuan = () => {
+    setIsEditingPertemuan(false);
+    setSelectedPertemuanId("");
+    setPertemuanNama(`Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
+    setPertemuanTanggal(new Date().toISOString().split('T')[0]);
+    setPertemuanModalOpen(true);
+  };
+
+  const handleOpenEditPertemuan = (pertemuan) => {
+    setIsEditingPertemuan(true);
+    setSelectedPertemuanId(pertemuan.id);
+    setPertemuanNama(pertemuan.nama);
+    setPertemuanTanggal(pertemuan.tanggal || new Date().toISOString().split('T')[0]);
+    setPertemuanModalOpen(true);
+  };
+
+  const handleSavePertemuan = async () => {
+    if (!pertemuanNama.trim()) {
+      alert("Nama pertemuan harus diisi.");
+      return;
+    }
+    if (!pertemuanTanggal) {
+      alert("Tanggal pertemuan harus diisi.");
+      return;
+    }
+
+    setIsSavingPertemuan(true);
+    let updatedPertemuan = [];
+
+    if (isEditingPertemuan) {
+      // Update existing
+      updatedPertemuan = (kelas.skemaPenilaian?.pertemuan || []).map(p => 
+        p.id === selectedPertemuanId 
+          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal } 
+          : p
+      );
+    } else {
+      // Add new
+      const newPertemuan = { 
+        id: Date.now().toString(), 
+        nama: pertemuanNama.trim(), 
+        tanggal: pertemuanTanggal 
+      };
+      updatedPertemuan = [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan];
+    }
+
+    const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: updatedPertemuan };
+
+    try {
+      const response = await fetch(`/api/kelas/${kelas.id}`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ skemaPenilaian: updatedSkema }) 
+      });
+
+      if (response.ok) {
+        setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+        setPertemuanModalOpen(false);
+      } else {
+        alert("Gagal menyimpan pertemuan.");
+      }
+    } catch (e) {
+      console.error("Error saving pertemuan", e);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setIsSavingPertemuan(false);
     }
   };
 
@@ -1232,16 +1309,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
                 ⚙️ Pengaturan Presensi
               </button>
-              <button onClick={async () => {
-                const namaPertemuan = prompt("Nama Pertemuan:", `Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
-                if (!namaPertemuan) return;
-                const newPertemuan = { id: Date.now().toString(), nama: namaPertemuan, tanggal: new Date().toISOString().split('T')[0] };
-                const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan] };
-                setKelas({ ...kelas, skemaPenilaian: updatedSkema });
-                try {
-                  await fetch(`/api/kelas/${kelas.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
-                } catch(e) { console.error("Error saving pertemuan", e) }
-              }} className="btn btn-primary" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
+              <button onClick={handleOpenAddPertemuan} className="btn btn-primary" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
                 ➕ Tambah Pertemuan
               </button>
             </div>
@@ -1253,17 +1321,20 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <tr>
                   <th className="sticky-nama" style={{ width: "250px", position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
                   {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
-                    <th key={p.id} style={{ minWidth: "100px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
+                    <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
                       <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</div>
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500", marginTop: "2px" }}>{p.tanggal}</div>
-                      <button onClick={async () => {
-                        if(!confirm(`Hapus ${p.nama}? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus.`)) return;
-                        const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: kelas.skemaPenilaian.pertemuan.filter(pt => pt.id !== p.id) };
-                        setKelas({ ...kelas, skemaPenilaian: updatedSkema });
-                        try {
-                           await fetch(`/api/kelas/${kelas.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
-                        } catch(e) {}
-                      }} style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.7rem", marginTop: "6px", fontWeight: "bold" }}>Hapus</button>
+                      <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
+                        <button onClick={() => handleOpenEditPertemuan(p)} style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Ubah</button>
+                        <button onClick={async () => {
+                          if(!confirm(`Hapus ${p.nama}? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus.`)) return;
+                          const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: kelas.skemaPenilaian.pertemuan.filter(pt => pt.id !== p.id) };
+                          setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                          try {
+                             await fetch(`/api/kelas/${kelas.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
+                          } catch(e) {}
+                        }} style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Hapus</button>
+                      </div>
                     </th>
                   ))}
                   {(!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) && (
@@ -2476,7 +2547,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   setIsSavingPresensi(true);
                   const updatedSkema = { ...kelas.skemaPenilaian, presensi: presensiConfigTemp };
                   try {
-                    const response = await fetch(`/api/kelas/${kelas.id}`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
+                    const response = await fetch(`/api/kelas/${kelas.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
                     if (response.ok) {
                       setKelas({ ...kelas, skemaPenilaian: updatedSkema });
                       setPresensiModalOpen(false);
@@ -2494,6 +2565,72 @@ export default function DetailKelas({ params: paramsPromise }) {
                 disabled={isSavingPresensi || (presensiConfigTemp.digunakan && (!presensiConfigTemp.bobot || presensiConfigTemp.bobot <= 0))}
               >
                 {isSavingPresensi ? "Menyimpan..." : "Simpan Pengaturan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tambah/Edit Pertemuan Modal */}
+      {pertemuanModalOpen && (
+        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(4px)" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "450px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>
+                {isEditingPertemuan ? "✏️ Edit Pertemuan" : "📅 Tambah Pertemuan Baru"}
+              </h3>
+              <button onClick={() => setPertemuanModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Nama Pertemuan</label>
+                <input
+                  type="text"
+                  value={pertemuanNama}
+                  onChange={(e) => setPertemuanNama(e.target.value)}
+                  className="input-field"
+                  placeholder="Contoh: Pertemuan 1"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-secondary)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.95rem"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tanggal Pertemuan</label>
+                <input
+                  type="date"
+                  value={pertemuanTanggal}
+                  onChange={(e) => setPertemuanTanggal(e.target.value)}
+                  className="input-field"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-secondary)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.95rem"
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "8px" }}>
+              <button onClick={() => setPertemuanModalOpen(false)} className="btn btn-secondary">Batal</button>
+              <button 
+                onClick={handleSavePertemuan} 
+                className="btn btn-primary"
+                disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal}
+              >
+                {isSavingPertemuan ? "Menyimpan..." : "Simpan"}
               </button>
             </div>
           </div>
