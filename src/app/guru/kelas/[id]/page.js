@@ -1393,47 +1393,54 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           {/* Ringkasan Statistik Presensi */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", padding: "0 24px", marginBottom: "12px" }}>
-              <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)" }}>
-                <div style={{ fontSize: "2rem" }}>📅</div>
+            <div className="presensi-stats-grid">
+              <div className="glass-card presensi-stats-card">
+                <div style={{ fontSize: "1.8rem" }}>📅</div>
                 <div>
-                  <div style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)" }}>{presensiStats.totalPertemuan}</div>
-                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Total Pertemuan</div>
+                  <div style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", lineHeight: 1.2 }}>{presensiStats.totalPertemuan}</div>
+                  <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "2px" }}>Total Pertemuan</div>
                 </div>
               </div>
 
-              <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)" }}>
-                <div style={{ fontSize: "2rem" }}>📈</div>
+              <div className="glass-card presensi-stats-card">
+                <div style={{ fontSize: "1.8rem" }}>📈</div>
                 <div>
-                  <div style={{ fontSize: "1.5rem", fontWeight: "800", color: presensiStats.avgAttendance >= 85 ? "var(--success)" : "var(--warning)" }}>{presensiStats.avgAttendance}%</div>
-                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Rata-Rata Kehadiran</div>
+                  <div style={{ fontSize: "1.3rem", fontWeight: "800", color: presensiStats.avgAttendance >= 85 ? "var(--success)" : "var(--warning)", lineHeight: 1.2 }}>{presensiStats.avgAttendance}%</div>
+                  <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "2px" }}>Rata-Rata Kehadiran</div>
                 </div>
               </div>
 
-              <div className="glass-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px 20px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", gridColumn: "span 2" }}>
-                <div style={{ fontSize: "2rem" }}>📊</div>
+              <div className="glass-card presensi-stats-card presensi-accum-card">
+                <div style={{ fontSize: "1.8rem" }}>📊</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
                     <div>
-                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--success)" }}>{presensiStats.totalH}</span>
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Hadir</span>
+                      <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--success)" }}>{presensiStats.totalH}</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Hadir</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--warning)" }}>{presensiStats.totalI}</span>
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Izin</span>
+                      <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--warning)" }}>{presensiStats.totalI}</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Izin</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "#3b82f6" }}>{presensiStats.totalS}</span>
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Sakit</span>
+                      <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "#3b82f6" }}>{presensiStats.totalS}</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Sakit</span>
                     </div>
                     <div>
-                      <span style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--danger)" }}>{presensiStats.totalA}</span>
-                      <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Alpa</span>
+                      <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--danger)" }}>{presensiStats.totalA}</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Alpa</span>
                     </div>
                   </div>
-                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "6px" }}>Akumulasi Kehadiran Kelas</div>
+                  <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "4px" }}>Akumulasi Kehadiran Kelas</div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Hint scroll horizontal pada mobile */}
+          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
+            <div className="mobile-scroll-hint">
+              ↔️ Geser tabel ke kanan untuk melihat rekap kehadiran
             </div>
           )}
 
@@ -2484,10 +2491,80 @@ export default function DetailKelas({ params: paramsPromise }) {
           100% { opacity: 0.3; transform: scale(0.9); }
         }
         
+        .presensi-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+          padding: 0 24px;
+          margin-bottom: 12px;
+        }
+
+        .presensi-stats-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 16px 20px;
+          background-color: var(--bg-tertiary);
+          border: 1px solid var(--border-color);
+        }
+
+        .presensi-accum-card {
+          grid-column: span 2;
+        }
+
+        .mobile-scroll-hint {
+          display: none;
+        }
+        
+        @media (max-width: 1024px) {
+          .presensi-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+          }
+        }
+
         @media (max-width: 768px) {
           .sticky-nama {
-            position: static !important;
-            box-shadow: none !important;
+            position: sticky !important;
+            left: 0 !important;
+            max-width: 130px !important;
+            min-width: 130px !important;
+            width: 130px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            background-color: var(--bg-primary) !important;
+            box-shadow: 4px 0 8px rgba(0,0,0,0.08) !important;
+            z-index: 10 !important;
+          }
+          th.sticky-nama {
+            background-color: var(--bg-tertiary) !important;
+            z-index: 11 !important;
+          }
+          
+          .mobile-scroll-hint {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 4px;
+            margin-bottom: 12px;
+            font-style: italic;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .presensi-stats-grid {
+            grid-template-columns: 1fr;
+            padding: 0 16px;
+            gap: 12px;
+          }
+          .presensi-accum-card {
+            grid-column: span 1;
+          }
+          .presensi-stats-card {
+            padding: 12px 16px;
+            gap: 12px;
           }
         }
       `}</style>
