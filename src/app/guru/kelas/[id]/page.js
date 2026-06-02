@@ -71,7 +71,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [pertemuanNama, setPertemuanNama] = useState("");
   const [pertemuanTanggal, setPertemuanTanggal] = useState("");
   const [isSavingPertemuan, setIsSavingPertemuan] = useState(false);
-  const [pertemuanAgenda, setPertemuanAgenda] = useState("");
+  const [pertemuanMateri, setPertemuanMateri] = useState("");
+  const [pertemuanKeterangan, setPertemuanKeterangan] = useState("");
   const [agendaCollapsed, setAgendaCollapsed] = useState(true);
 
   // State untuk profile guru
@@ -453,7 +454,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSelectedPertemuanId("");
     setPertemuanNama(`Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
     setPertemuanTanggal(new Date().toISOString().split('T')[0]);
-    setPertemuanAgenda("");
+    setPertemuanMateri("");
+    setPertemuanKeterangan("");
     setPertemuanModalOpen(true);
   };
 
@@ -462,7 +464,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSelectedPertemuanId(pertemuan.id);
     setPertemuanNama(pertemuan.nama);
     setPertemuanTanggal(pertemuan.tanggal || new Date().toISOString().split('T')[0]);
-    setPertemuanAgenda(pertemuan.agenda || "");
+    setPertemuanMateri(pertemuan.materi || "");
+    setPertemuanKeterangan(pertemuan.keterangan || "");
     setPertemuanModalOpen(true);
   };
 
@@ -483,7 +486,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       // Update existing
       updatedPertemuan = (kelas.skemaPenilaian?.pertemuan || []).map(p => 
         p.id === selectedPertemuanId 
-          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal, agenda: pertemuanAgenda.trim() } 
+          ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal, materi: pertemuanMateri.trim(), keterangan: pertemuanKeterangan.trim() } 
           : p
       );
     } else {
@@ -492,7 +495,8 @@ export default function DetailKelas({ params: paramsPromise }) {
         id: Date.now().toString(), 
         nama: pertemuanNama.trim(), 
         tanggal: pertemuanTanggal,
-        agenda: pertemuanAgenda.trim()
+        materi: pertemuanMateri.trim(),
+        keterangan: pertemuanKeterangan.trim()
       };
       updatedPertemuan = [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan];
     }
@@ -1454,7 +1458,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div className="glass-card" style={{ padding: "16px 20px", margin: "0 24px 12px 24px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", userSelect: "none" }} onClick={() => setAgendaCollapsed(!agendaCollapsed)}>
                 <h5 style={{ fontSize: "0.95rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                  📖 Jurnal Agenda Pembelajaran ({kelas.skemaPenilaian.pertemuan.filter(p => p.agenda).length}/{kelas.skemaPenilaian.pertemuan.length} Terisi)
+                  📖 Jurnal Agenda Pembelajaran ({kelas.skemaPenilaian.pertemuan.filter(p => p.materi || p.keterangan).length}/{kelas.skemaPenilaian.pertemuan.length} Terisi)
                 </h5>
                 <span style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: "800", display: "flex", alignItems: "center", gap: "4px" }}>
                   {agendaCollapsed ? "📖 Buka Jurnal" : "✕ Tutup Jurnal"}
@@ -1469,9 +1473,26 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{p.nama}</strong>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>{p.tanggal}</div>
                       </div>
-                      <div style={{ flex: "1 1 200px", fontSize: "0.85rem", color: p.agenda ? "var(--text-primary)" : "var(--text-muted)", fontStyle: p.agenda ? "normal" : "italic", lineHeight: 1.4, alignSelf: "center" }}>
-                        {p.agenda || "Belum ada catatan agenda pembelajaran. Klik tombol 'Tulis' di kanan atau 'Ubah' pada tabel presensi untuk menambahkan."}
+                      
+                      <div style={{ flex: "1 1 200px", fontSize: "0.85rem", alignSelf: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {p.materi ? (
+                          <div>
+                            <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>📚 Materi: </span>
+                            <span style={{ color: "var(--text-primary)" }}>{p.materi}</span>
+                          </div>
+                        ) : (
+                          <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📚 Materi belum diisi</div>
+                        )}
+                        {p.keterangan ? (
+                          <div>
+                            <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>📝 Keterangan: </span>
+                            <span style={{ color: "var(--text-secondary)" }}>{p.keterangan}</span>
+                          </div>
+                        ) : (
+                          <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📝 Keterangan belum diisi</div>
+                        )}
                       </div>
+
                       <button 
                         onClick={() => handleOpenEditPertemuan(p)} 
                         className="btn btn-secondary" 
@@ -1502,10 +1523,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
                       <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</div>
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500", marginTop: "2px" }}>{p.tanggal}</div>
-                      {p.agenda && (
+                      {p.materi && (
                         <div 
                           onClick={() => handleOpenEditPertemuan(p)}
-                          title={`Agenda: ${p.agenda}`} 
+                          title={`Materi: ${p.materi}`} 
                           style={{ 
                             fontSize: "0.68rem", 
                             backgroundColor: "rgba(59, 130, 246, 0.08)", 
@@ -1517,7 +1538,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             alignItems: "center",
                             gap: "4px",
                             cursor: "pointer",
-                            maxWidth: "100px",
+                            maxWidth: "110px",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
@@ -1526,7 +1547,34 @@ export default function DetailKelas({ params: paramsPromise }) {
                             marginRight: "auto"
                           }}
                         >
-                          📖 {p.agenda}
+                          📚 {p.materi}
+                        </div>
+                      )}
+                      {p.keterangan && (
+                        <div 
+                          onClick={() => handleOpenEditPertemuan(p)}
+                          title={`Keterangan: ${p.keterangan}`} 
+                          style={{ 
+                            fontSize: "0.68rem", 
+                            backgroundColor: "rgba(16, 185, 129, 0.08)", 
+                            color: "var(--success)", 
+                            padding: "2px 6px", 
+                            borderRadius: "4px", 
+                            marginTop: "4px", 
+                            display: "inline-flex", 
+                            alignItems: "center",
+                            gap: "4px",
+                            cursor: "pointer",
+                            maxWidth: "110px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontWeight: "600",
+                            marginLeft: "auto",
+                            marginRight: "auto"
+                          }}
+                        >
+                          📝 {p.keterangan}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
@@ -2954,13 +3002,33 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Agenda / Catatan Pembelajaran (Opsional)</label>
-                <textarea
-                  value={pertemuanAgenda}
-                  onChange={(e) => setPertemuanAgenda(e.target.value)}
+                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Materi Pembelajaran (Opsional)</label>
+                <input
+                  type="text"
+                  value={pertemuanMateri}
+                  onChange={(e) => setPertemuanMateri(e.target.value)}
                   className="input-field"
-                  placeholder="Contoh: Pembahasan materi Array dan Looping, siswa mengerjakan tugas modul 3."
-                  rows={3}
+                  placeholder="Contoh: Pengenalan JS, Struktur Kondisional IF-ELSE"
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-secondary)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.95rem"
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Keterangan / Catatan (Opsional)</label>
+                <textarea
+                  value={pertemuanKeterangan}
+                  onChange={(e) => setPertemuanKeterangan(e.target.value)}
+                  className="input-field"
+                  placeholder="Contoh: Kelas kondusif, semua siswa memahami materi. 2 siswa izin ke toilet."
+                  rows={2}
                   style={{
                     width: "100%",
                     padding: "10px 14px",
