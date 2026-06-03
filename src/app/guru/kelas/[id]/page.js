@@ -1416,7 +1416,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={() => {
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
-                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM (${s.finalScore}) ✅` : `Belum Tuntas (${s.finalScore}) ❌`}_\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
+                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`}_\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._`;
                 navigator.clipboard.writeText(text);
                 alert("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
@@ -1468,11 +1468,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <h4 style={{ fontSize: "1.05rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{i + 1}. {s.nama}</h4>
                       {s.finalScore >= analyticsData?.kkmVal ? (
                         <span style={{ fontSize: "0.75rem", backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>
-                          ✅ Nilai Akhir Aman ({s.finalScore})
+                          ✅ Nilai Akhir Aman
                         </span>
                       ) : (
                         <span style={{ fontSize: "0.75rem", backgroundColor: "rgba(239, 68, 68, 0.15)", color: "#fca5a5", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>
-                          ❌ Nilai Akhir Kurang ({s.finalScore})
+                          ❌ Nilai Akhir Kurang
                         </span>
                       )}
                     </div>
