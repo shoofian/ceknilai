@@ -1417,7 +1417,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
                 analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`}_\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
-                `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._`;
+                `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
                 navigator.clipboard.writeText(text);
                 alert("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
               }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
@@ -1496,6 +1496,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             )}
             
             <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed rgba(255,255,255,0.2)", textAlign: "center", fontSize: "0.75rem", color: "#64748b" }}>
+              <p style={{ margin: "0 0 8px 0", color: "#94a3b8", fontSize: "0.85rem" }}>Siswa dapat mengecek detail nilai masing-masing secara privat melalui: <strong style={{ color: "#38bdf8" }}>ceknilaimu.vercel.app</strong></p>
               Dihasilkan otomatis oleh CekNilai App • {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
           </div>
