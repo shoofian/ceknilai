@@ -1206,7 +1206,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content", flexWrap: "wrap" }}>
-        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }].map(tab => (
+        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
