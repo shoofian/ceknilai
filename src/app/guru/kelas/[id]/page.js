@@ -1417,7 +1417,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <button onClick={() => {
-                const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
+                const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nGuru Pengampu: ${guruProfile?.nama || "-"}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
                 analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`}_\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
@@ -1454,7 +1454,8 @@ export default function DetailKelas({ params: paramsPromise }) {
           <div id="laporan-wali-kelas-export" style={{ backgroundColor: "#0f172a", padding: "24px", borderRadius: "var(--radius-md)", color: "#f8fafc", width: "100%", maxWidth: "800px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "24px", borderBottom: "1px dashed rgba(255,255,255,0.2)", paddingBottom: "16px" }}>
               <h2 style={{ fontSize: "1.5rem", fontWeight: "800", margin: "0 0 8px 0", color: "#38bdf8" }}>Laporan Kendala Akademik</h2>
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "#94a3b8" }}>{kelas.mataPelajaran} • Kelas {kelas.nama} • KKM: {analyticsData?.kkmVal}</p>
+              <p style={{ margin: 0, fontSize: "0.9rem", color: "#94a3b8", marginBottom: "6px" }}>{kelas.mataPelajaran} • Kelas {kelas.nama}</p>
+              <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>Guru Pengampu: <strong style={{ color: "#cbd5e1" }}>{guruProfile?.nama || "-"}</strong> • KKM: <strong style={{ color: "#cbd5e1" }}>{analyticsData?.kkmVal}</strong></p>
             </div>
 
             {analyticsData?.problematicStudents.length === 0 ? (
