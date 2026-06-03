@@ -353,6 +353,9 @@ export default function DetailKelas({ params: paramsPromise }) {
       const response = await fetch(`/api/kelas/${classId}`);
       if (response.ok) {
         const data = await response.json();
+        if (data.siswa && Array.isArray(data.siswa)) {
+          data.siswa.sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
+        }
         setKelas(data);
 // Initialize grade range states from class skemaPenilaian or defaults
         if (data.skemaPenilaian) {
