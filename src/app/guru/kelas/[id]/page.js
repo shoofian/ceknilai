@@ -1463,26 +1463,30 @@ export default function DetailKelas({ params: paramsPromise }) {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {analyticsData?.problematicStudents.map((s, i) => (
-                  <div key={s.nisn} style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-                      <h4 style={{ fontSize: "1.05rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{i + 1}. {s.nama}</h4>
-                      {s.finalScore >= analyticsData?.kkmVal ? (
-                        <span style={{ fontSize: "0.75rem", backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#34d399", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>
-                          ✅ Nilai Akhir Aman
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: "0.75rem", backgroundColor: "rgba(239, 68, 68, 0.15)", color: "#fca5a5", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>
-                          ❌ Nilai Akhir Kurang
-                        </span>
-                      )}
+                  <div key={s.nisn} style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
+                    <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: "0 0 12px 0", color: "#f8fafc" }}>{i + 1}. {s.nama}</h4>
+                    
+                    {/* Final Score Status Ribbon */}
+                    <div style={{ 
+                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "6px", marginBottom: "16px", fontSize: "0.85rem", fontWeight: "600",
+                      backgroundColor: s.finalScore >= analyticsData?.kkmVal ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                      color: s.finalScore >= analyticsData?.kkmVal ? "#34d399" : "#fca5a5",
+                      border: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? "rgba(52, 211, 153, 0.2)" : "rgba(248, 113, 113, 0.2)"}`
+                    }}>
+                      <span>{s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️"}</span>
+                      <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+
+                    {/* Aspects List */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingLeft: "4px" }}>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>Rincian Kendala Aspek:</div>
                       {s.issues.map((issue, idx) => (
-                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", borderBottom: idx < s.issues.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none", paddingBottom: idx < s.issues.length - 1 ? "8px" : "0" }}>
-                          <span style={{ color: "#cbd5e1" }}>{issue.aspek}</span>
+                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: "4px" }}>
+                          <span style={{ color: "#e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ color: "#64748b" }}>•</span> {issue.aspek}
+                          </span>
                           <span style={{ 
-                            padding: "4px 8px", borderRadius: "4px", fontWeight: "600", fontSize: "0.75rem",
-                            backgroundColor: issue.status.includes("Kosong") ? "rgba(245, 158, 11, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                            fontWeight: "700", fontSize: "0.75rem",
                             color: issue.status.includes("Kosong") ? "#fcd34d" : "#fca5a5"
                           }}>
                             {issue.status}
