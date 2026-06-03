@@ -258,7 +258,25 @@ export default function DetailKelas({ params: paramsPromise }) {
       return { ...col, avg, filled: scores.length, topStudent: topStudent?.nama || "-" };
     });
 
-    return { ranked, classAvg, highest, lowest, passCount, passRate, gradeDist, aspectAvg, completeCount: completeStudents.length, totalCount: kelas.siswa.length, kkmVal };
+    // Problematic Students for Wali Kelas Report
+    const problematicStudents = studentScores.map(s => {
+      const issues = [];
+      kelas.kolomNilai.forEach(col => {
+        const val = s.nilai[col.id];
+        if (val === undefined || val === null || val === "") {
+          issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
+        } else if (Number(val) < kkmVal) {
+          issues.push({ aspek: col.nama, status: `Di bawah KKM (${val})` });
+        }
+      });
+      return { ...s, issues };
+    }).filter(s => s.issues.length > 0);
+
+    return { 
+      kkmVal, ranked, classAvg, highest, lowest, passCount, passRate, gradeDist, 
+      aspectAvg, completeCount: completeStudents.length, totalCount: studentScores.length,
+      problematicStudents
+    };
   }, [kelas?.siswa, kelas?.kolomNilai, kelas?.skemaPenilaian, temporaryScores]);
 
   const presensiStats = useMemo(() => {
@@ -1185,7 +1203,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content", flexWrap: "wrap" }}>
-        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }].map(tab => (
+        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -1381,6 +1399,95 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* ============= TINDAK LANJUT TAB ============= */}
+      {activeTab === "tindak-lanjut" && (
+        <div className="glass-card animate-fade-in" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px" }}>
+            <div>
+              <h4 style={{ fontSize: "1.25rem", fontWeight: "800", color: "var(--text-primary)" }}>📢 Laporan Tindak Lanjut Wali Kelas</h4>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px", maxWidth: "600px" }}>
+                Daftar siswa yang memiliki nilai kosong atau di bawah KKM ({analyticsData?.kkmVal}). Laporan ini aman dibagikan karena tidak menampilkan angka nilai secara spesifik.
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              <button onClick={() => {
+                const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
+                (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
+                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
+                `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._`;
+                navigator.clipboard.writeText(text);
+                alert("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
+              }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
+                📋 Salin Teks WhatsApp
+              </button>
+              <button onClick={async () => {
+                const element = document.getElementById("laporan-wali-kelas-export");
+                if (!element) return;
+                
+                // Backup styles before modifying
+                const originalStyle = element.getAttribute("style");
+                // Temporarily increase size and padding to make the image look like a neat ticket
+                element.style.padding = "40px";
+                element.style.width = "800px";
+                
+                const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#0f172a" });
+                
+                // Restore styles
+                element.setAttribute("style", originalStyle);
+                
+                const link = document.createElement("a");
+                link.download = `Laporan_Wali_Kelas_${kelas.nama.replace(/\s+/g, "_")}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+              }} className="btn btn-primary" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
+                📸 Unduh Gambar
+              </button>
+            </div>
+          </div>
+
+          <div id="laporan-wali-kelas-export" style={{ backgroundColor: "#0f172a", padding: "24px", borderRadius: "var(--radius-md)", color: "#f8fafc", width: "100%", maxWidth: "800px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: "24px", borderBottom: "1px dashed rgba(255,255,255,0.2)", paddingBottom: "16px" }}>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", margin: "0 0 8px 0", color: "#38bdf8" }}>Laporan Kendala Akademik</h2>
+              <p style={{ margin: 0, fontSize: "0.9rem", color: "#94a3b8" }}>{kelas.mataPelajaran} • Kelas {kelas.nama} • KKM: {analyticsData?.kkmVal}</p>
+            </div>
+
+            {analyticsData?.problematicStudents.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <span style={{ fontSize: "3rem" }}>🎉</span>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "700", marginTop: "16px", color: "#10b981" }}>Luar Biasa! Semua Siswa Tuntas</h3>
+                <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginTop: "8px" }}>Tidak ada siswa dengan nilai kosong atau di bawah KKM.</p>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {analyticsData?.problematicStudents.map((s, i) => (
+                  <div key={s.nisn} style={{ backgroundColor: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
+                    <h4 style={{ fontSize: "1.05rem", fontWeight: "700", margin: "0 0 12px 0", color: "#f8fafc" }}>{i + 1}. {s.nama}</h4>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {s.issues.map((issue, idx) => (
+                        <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", borderBottom: idx < s.issues.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none", paddingBottom: idx < s.issues.length - 1 ? "8px" : "0" }}>
+                          <span style={{ color: "#cbd5e1" }}>{issue.aspek}</span>
+                          <span style={{ 
+                            padding: "4px 8px", borderRadius: "4px", fontWeight: "600", fontSize: "0.75rem",
+                            backgroundColor: issue.status.includes("Kosong") ? "rgba(245, 158, 11, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                            color: issue.status.includes("Kosong") ? "#fcd34d" : "#fca5a5"
+                          }}>
+                            {issue.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed rgba(255,255,255,0.2)", textAlign: "center", fontSize: "0.75rem", color: "#64748b" }}>
+              Dihasilkan otomatis oleh CekNilai App • {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+          </div>
         </div>
       )}
 
