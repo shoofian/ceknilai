@@ -266,7 +266,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (val === undefined || val === null || val === "") {
           issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
         } else if (Number(val) < kkmVal) {
-          issues.push({ aspek: col.nama, status: `Di bawah KKM (${val})` });
+          issues.push({ aspek: col.nama, status: "Di bawah KKM" });
         }
       });
       return { ...s, issues };
