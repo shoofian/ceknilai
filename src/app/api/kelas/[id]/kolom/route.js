@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
     }
 
     const { id } = await params;
-    const { nama, bobot } = await request.json();
+    const { nama, bobot, isGroup, subKolom } = await request.json();
 
     if (!nama || bobot === undefined) {
       return NextResponse.json(
@@ -34,8 +34,16 @@ export async function POST(request, { params }) {
     const newColumn = {
       id: columnId,
       nama: nama.trim(),
-      bobot: Number(bobot)
+      bobot: Number(bobot),
+      isGroup: !!isGroup
     };
+    
+    if (newColumn.isGroup && Array.isArray(subKolom)) {
+      newColumn.subKolom = subKolom.map((sub, i) => ({
+        id: `${columnId}-sub-${Date.now()}-${i}`,
+        nama: sub.nama.trim()
+      }));
+    }
 
     // Tambah kolom ke daftar
     kelas.kolomNilai.push(newColumn);
@@ -55,7 +63,15 @@ export async function POST(request, { params }) {
       );
 
       for (const siswa of kelas.siswa) {
-        const updatedNilai = { ...(siswa.nilai || {}), [columnId]: null };
+        let updatedNilai = { ...(siswa.nilai || {}) };
+        if (newColumn.isGroup && newColumn.subKolom) {
+          newColumn.subKolom.forEach(sub => {
+            updatedNilai[sub.id] = null;
+          });
+        } else {
+          updatedNilai[columnId] = null;
+        }
+
         await sb.from('siswa')
           .update({ nilai: updatedNilai })
           .eq('kelas_id', id)
@@ -90,11 +106,21 @@ export async function PATCH(request, { params }) {
     }
 
     // Pastikan bobot berupa angka
-    const cleanedKolom = kolomNilai.map(col => ({
-      id: col.id,
-      nama: col.nama.trim(),
-      bobot: Number(col.bobot)
-    }));
+    const cleanedKolom = kolomNilai.map(col => {
+      const cleanCol = {
+        id: col.id,
+        nama: col.nama.trim(),
+        bobot: Number(col.bobot),
+        isGroup: !!col.isGroup
+      };
+      if (cleanCol.isGroup && Array.isArray(col.subKolom)) {
+        cleanCol.subKolom = col.subKolom.map(sub => ({
+          id: sub.id || `${cleanCol.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`,
+          nama: sub.nama.trim()
+        }));
+      }
+      return cleanCol;
+    });
 
     await updateKelas(id, { kolomNilai: cleanedKolom }, username);
     return NextResponse.json({ success: true, kolomNilai: cleanedKolom });
@@ -126,16 +152,23 @@ export async function DELETE(request, { params }) {
 
     // Filter keluar kolom yang dihapus
     const initialColumnsLength = kelas.kolomNilai.length;
+    const deletedCol = kelas.kolomNilai.find(col => col.id === kolomId);
     kelas.kolomNilai = kelas.kolomNilai.filter(col => col.id !== kolomId);
 
-    if (kelas.kolomNilai.length === initialColumnsLength) {
+    if (kelas.kolomNilai.length === initialColumnsLength || !deletedCol) {
       return NextResponse.json({ error: 'Kolom tidak ditemukan' }, { status: 404 });
     }
 
     // Hapus data nilai kolom ini dari setiap siswa
     kelas.siswa.forEach(siswa => {
       if (siswa.nilai) {
-        delete siswa.nilai[kolomId];
+        if (deletedCol.isGroup && deletedCol.subKolom) {
+          deletedCol.subKolom.forEach(sub => {
+            delete siswa.nilai[sub.id];
+          });
+        } else {
+          delete siswa.nilai[kolomId];
+        }
       }
     });
 

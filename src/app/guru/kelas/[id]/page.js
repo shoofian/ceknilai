@@ -29,7 +29,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Kolom Nilai
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
-  const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "" }]);
+  const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
   const [kolomError, setKolomError] = useState("");
   
   // Status penyimpanan otomatis tabel nilai
@@ -127,14 +127,38 @@ export default function DetailKelas({ params: paramsPromise }) {
       let jumlahAspekTerisi = 0;
       
       kelas.kolomNilai.forEach(col => {
-        const cellKey = `${student.nisn}-${col.id}`;
-        let sc = student.nilai[col.id];
-        if (temporaryScores[cellKey] !== undefined) {
-          sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
-        }
-        if (sc !== undefined && sc !== null && sc !== "") {
-          totalNilaiTerisi += Number(sc) * (col.bobot / 100);
-          jumlahAspekTerisi++;
+        if (col.isGroup && col.subKolom) {
+          let subTotal = 0;
+          let subFilled = 0;
+          col.subKolom.forEach(sub => {
+            const cellKey = `${student.nisn}-${sub.id}`;
+            let sc = student.nilai[sub.id];
+            if (temporaryScores[cellKey] !== undefined) {
+              sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
+            }
+            if (sc !== undefined && sc !== null && sc !== "") {
+              subTotal += Number(sc);
+              subFilled++;
+            }
+          });
+          if (subFilled === col.subKolom.length && col.subKolom.length > 0) {
+            const avg = subTotal / subFilled;
+            totalNilaiTerisi += avg * (col.bobot / 100);
+            jumlahAspekTerisi++;
+          } else if (subFilled > 0) {
+            const avg = subTotal / subFilled;
+            totalNilaiTerisi += avg * (col.bobot / 100);
+          }
+        } else {
+          const cellKey = `${student.nisn}-${col.id}`;
+          let sc = student.nilai[col.id];
+          if (temporaryScores[cellKey] !== undefined) {
+            sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
+          }
+          if (sc !== undefined && sc !== null && sc !== "") {
+            totalNilaiTerisi += Number(sc) * (col.bobot / 100);
+            jumlahAspekTerisi++;
+          }
         }
       });
       return {
@@ -175,10 +199,30 @@ export default function DetailKelas({ params: paramsPromise }) {
       let total = 0;
       let filledCount = 0;
       kelas.kolomNilai.forEach(col => {
-        const sc = student.nilai[col.id];
-        if (sc !== undefined && sc !== null && sc !== "") {
-          total += Number(sc) * (col.bobot / 100);
-          filledCount++;
+        if (col.isGroup && col.subKolom) {
+          let subTotal = 0;
+          let subFilled = 0;
+          col.subKolom.forEach(sub => {
+            const sc = student.nilai[sub.id];
+            if (sc !== undefined && sc !== null && sc !== "") {
+              subTotal += Number(sc);
+              subFilled++;
+            }
+          });
+          if (subFilled === col.subKolom.length && col.subKolom.length > 0) {
+            const avg = subTotal / subFilled;
+            total += avg * (col.bobot / 100);
+            filledCount++;
+          } else if (subFilled > 0) {
+            const avg = subTotal / subFilled;
+            total += avg * (col.bobot / 100);
+          }
+        } else {
+          const sc = student.nilai[col.id];
+          if (sc !== undefined && sc !== null && sc !== "") {
+            total += Number(sc) * (col.bobot / 100);
+            filledCount++;
+          }
         }
       });
       
@@ -244,7 +288,22 @@ export default function DetailKelas({ params: paramsPromise }) {
     // Per-aspect averages
     const aspectAvg = kelas.kolomNilai.map(col => {
       const scores = kelas.siswa
-        .map(s => ({ nama: s.nama, finalScore: s.finalScore, val: s.nilai[col.id] }))
+        .map(s => {
+          let val = s.nilai[col.id];
+          if (col.isGroup && col.subKolom) {
+            let subTotal = 0;
+            let subFilled = 0;
+            col.subKolom.forEach(sub => {
+              const sc = s.nilai[sub.id];
+              if (sc !== undefined && sc !== null && sc !== "") {
+                subTotal += Number(sc);
+                subFilled++;
+              }
+            });
+            val = subFilled > 0 ? (subTotal / subFilled) : null;
+          }
+          return { nama: s.nama, finalScore: s.finalScore, val };
+        })
         .filter(s => s.val !== undefined && s.val !== null && s.val !== "");
         
       const avg = scores.length > 0
@@ -262,8 +321,26 @@ export default function DetailKelas({ params: paramsPromise }) {
     const problematicStudents = studentScores.map(s => {
       const issues = [];
       kelas.kolomNilai.forEach(col => {
-        const val = s.nilai[col.id];
-        if (val === undefined || val === null || val === "") {
+        let val = s.nilai[col.id];
+        let isEmpty = false;
+        
+        if (col.isGroup && col.subKolom) {
+          let subTotal = 0;
+          let subFilled = 0;
+          col.subKolom.forEach(sub => {
+            const sc = s.nilai[sub.id];
+            if (sc !== undefined && sc !== null && sc !== "") {
+              subTotal += Number(sc);
+              subFilled++;
+            }
+          });
+          val = subFilled > 0 ? (subTotal / subFilled) : null;
+          if (subFilled === 0) isEmpty = true;
+        } else {
+          if (val === undefined || val === null || val === "") isEmpty = true;
+        }
+
+        if (isEmpty) {
           issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
         } else if (Number(val) < kkmVal) {
           issues.push({ aspek: col.nama, status: "Di bawah KKM" });
@@ -667,7 +744,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     // Auto-add new empty row if the last row is typed into
     if (id === newAspects[newAspects.length - 1].id && field === "nama" && value.trim() !== "") {
-      setNewAspects([...updated, { id: Date.now() + Math.random(), nama: "", bobot: "" }]);
+      setNewAspects([...updated, { id: Date.now() + Math.random(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
     }
   };
   
@@ -675,7 +752,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     if (newAspects.length > 1) {
       setNewAspects(newAspects.filter(a => a.id !== id));
     } else {
-      setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]);
+      setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
     }
   };
 
@@ -805,7 +882,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         const res = await fetch(`/api/kelas/${classId}/kolom`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0 }),
+          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0, isGroup: aspect.isGroup, subKolom: aspect.subKolom }),
         });
         if (!res.ok) {
            const data = await res.json();
@@ -824,7 +901,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       });
 
       if (response.ok) {
-        setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Reset form tambah
+        setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah
         await fetchClassDetail();
       } else {
         const data = await response.json();
@@ -913,7 +990,13 @@ export default function DetailKelas({ params: paramsPromise }) {
     // Susun header
     const headers = ["NISN", "Nama", "Tanggal Lahir (YYYY-MM-DD)"];
     kelas.kolomNilai.forEach(col => {
-      headers.push(`${col.nama} (${col.bobot}%)`);
+      if (col.isGroup && col.subKolom?.length > 0) {
+        col.subKolom.forEach(sub => {
+          headers.push(`${col.nama} - ${sub.nama}`);
+        });
+      } else {
+        headers.push(`${col.nama} (${col.bobot}%)`);
+      }
     });
     headers.push("Nilai Akhir");
     headers.push("Predikat");
@@ -925,10 +1008,26 @@ export default function DetailKelas({ params: paramsPromise }) {
         const row = [siswa.nisn, siswa.nama, siswa.tanggalLahir];
         let totalNilaiTerisi = 0;
         kelas.kolomNilai.forEach(col => {
-          const val = siswa.nilai[col.id];
-          row.push(val !== null && val !== undefined ? val : "");
-          if (val !== null && val !== undefined && val !== "") {
-            totalNilaiTerisi += Number(val) * (col.bobot / 100);
+          if (col.isGroup && col.subKolom?.length > 0) {
+            let subTotal = 0;
+            let subFilled = 0;
+            col.subKolom.forEach(sub => {
+              const val = siswa.nilai[sub.id];
+              row.push(val !== null && val !== undefined ? val : "");
+              if (val !== null && val !== undefined && val !== "") {
+                subTotal += Number(val);
+                subFilled++;
+              }
+            });
+            if (subFilled > 0) {
+              totalNilaiTerisi += (subTotal / subFilled) * (col.bobot / 100);
+            }
+          } else {
+            const val = siswa.nilai[col.id];
+            row.push(val !== null && val !== undefined ? val : "");
+            if (val !== null && val !== undefined && val !== "") {
+              totalNilaiTerisi += Number(val) * (col.bobot / 100);
+            }
           }
         });
         
@@ -949,7 +1048,13 @@ export default function DetailKelas({ params: paramsPromise }) {
     } else {
       // Row contoh jika kelas masih kosong
       const placeholder = ["1234567890", "Aditya Pratama", "2010-01-15"];
-      kelas.kolomNilai.forEach(() => placeholder.push(""));
+      kelas.kolomNilai.forEach(col => {
+        if (col.isGroup && col.subKolom?.length > 0) {
+          col.subKolom.forEach(() => placeholder.push(""));
+        } else {
+          placeholder.push("");
+        }
+      });
       placeholder.push(""); // Nilai Akhir
       placeholder.push(""); // Predikat
       rows.push(placeholder);
@@ -958,14 +1063,22 @@ export default function DetailKelas({ params: paramsPromise }) {
     const ws = XLSX.utils.aoa_to_sheet(rows);
     
     // Atur lebar kolom agar rapi dan tidak terpotong (wch = width in characters)
-    ws['!cols'] = [
+    const colWidths = [
       { wch: 18 }, // NISN
       { wch: 28 }, // Nama
       { wch: 25 }, // Tanggal Lahir
-      ...kelas.kolomNilai.map(() => ({ wch: 16 })), // Kolom-kolom aspek nilai
-      { wch: 14 }, // Nilai Akhir
-      { wch: 18 }  // Predikat
     ];
+    kelas.kolomNilai.forEach(col => {
+      if (col.isGroup && col.subKolom?.length > 0) {
+        col.subKolom.forEach(() => colWidths.push({ wch: 16 }));
+      } else {
+        colWidths.push({ wch: 16 });
+      }
+    });
+    colWidths.push({ wch: 14 }); // Nilai Akhir
+    colWidths.push({ wch: 18 }); // Predikat
+    
+    ws['!cols'] = colWidths;
     
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Daftar Nilai Siswa");
@@ -1019,14 +1132,29 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           const nilaiObj = {};
           kelas.kolomNilai.forEach(col => {
-            const headerCol = headers.find(h => h === col.nama || h.startsWith(`${col.nama} (`));
-            const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
-            
-            if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
-              const parsedVal = Number(cols[colIdx]);
-              nilaiObj[col.nama] = isNaN(parsedVal) ? null : parsedVal;
+            if (col.isGroup && col.subKolom?.length > 0) {
+              col.subKolom.forEach(sub => {
+                const headerName = `${col.nama} - ${sub.nama}`;
+                const headerCol = headers.find(h => h === headerName || h.startsWith(`${headerName} (`));
+                const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
+                
+                if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
+                  const parsedVal = Number(cols[colIdx]);
+                  nilaiObj[headerName] = isNaN(parsedVal) ? null : parsedVal;
+                } else {
+                  nilaiObj[headerName] = null;
+                }
+              });
             } else {
-              nilaiObj[col.nama] = null;
+              const headerCol = headers.find(h => h === col.nama || h.startsWith(`${col.nama} (`));
+              const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
+              
+              if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
+                const parsedVal = Number(cols[colIdx]);
+                nilaiObj[col.nama] = isNaN(parsedVal) ? null : parsedVal;
+              } else {
+                nilaiObj[col.nama] = null;
+              }
             }
           });
           
@@ -1855,47 +1983,73 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         {kelas.siswa.length > 0 ? (
           <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}>
-            <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
-              <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
-                <tr>
-                  <th style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
-                    NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
-                  </th>
-                  <th className="sticky-nama" style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
-                    Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
-                  </th>
-                  <th style={{ width: "140px", minWidth: "140px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Tanggal Lahir</th>
-                  
-                  {/* Dynamic Headers based on columns */}
-                  {kelas.kolomNilai.map(col => (
-                    <th key={col.id} style={{ textAlign: "center", minWidth: "100px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
-                      {col.nama} ({col.bobot}%)
-                    </th>
-                  ))}
+            {(() => {
+              const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
+              return (
+                <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
+                  <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
+                    <tr>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
+                        NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                      </th>
+                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                        Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
+                      </th>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Tanggal Lahir</th>
+                      
+                      {/* Dynamic Headers based on columns */}
+                      {kelas.kolomNilai.map(col => {
+                        if (col.isGroup && col.subKolom?.length > 0) {
+                          return (
+                            <th key={col.id} colSpan={col.subKolom.length} style={{ textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21, borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
+                              {col.nama} ({col.bobot}%)
+                            </th>
+                          );
+                        }
+                        return (
+                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "100px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                            {col.nama} ({col.bobot}%)
+                          </th>
+                        );
+                      })}
 
-                  <th style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 21 }} onClick={() => handleSort('finalScore')}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
-                      <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
-                      <button 
-                        onClick={handleTogglePublish}
-                        className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
-                        style={{ 
-                          padding: "4px 8px", 
-                          fontSize: "0.65rem",
-                          borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
-                          color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff",
-                          width: "100%",
-                          whiteSpace: "nowrap"
-                        }}
-                      >
-                        {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Tampilkan"}
-                      </button>
-                    </div>
-                  </th>
-                  <th style={{ textAlign: "center", width: "80px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 21 }} onClick={() => handleSort('finalScore')}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
+                          <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
+                          <button 
+                            onClick={handleTogglePublish}
+                            className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
+                            style={{ 
+                              padding: "4px 8px", 
+                              fontSize: "0.65rem",
+                              borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
+                              color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff",
+                              width: "100%",
+                              whiteSpace: "nowrap"
+                            }}
+                          >
+                            {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Tampilkan"}
+                          </button>
+                        </div>
+                      </th>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "80px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Aksi</th>
+                    </tr>
+                    {hasGroups && (
+                      <tr>
+                        {kelas.kolomNilai.map(col => {
+                          if (col.isGroup && col.subKolom?.length > 0) {
+                            return col.subKolom.map(sub => (
+                              <th key={sub.id} style={{ textAlign: "center", minWidth: "80px", position: "sticky", top: "45px", backgroundColor: "var(--bg-tertiary)", zIndex: 21, fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                                {sub.nama}
+                              </th>
+                            ));
+                          }
+                          return null;
+                        })}
+                      </tr>
+                    )}
+                  </thead>
+                  <tbody>
                 {sortedStudents.map((student) => {
                   
                   // Nilai akhir sudah dihitung di useMemo
@@ -1954,69 +2108,73 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                         {/* Dynamic Inputs for Grades */}
                         {kelas.kolomNilai.map(col => {
-                          const cellKey = `${student.nisn}-${col.id}`;
-                          const currentStatus = saveStatus[cellKey] || "idle";
+                          const colsToRender = col.isGroup && col.subKolom?.length > 0 ? col.subKolom : [col];
+                          
+                          return colsToRender.map(sub => {
+                            const cellKey = `${student.nisn}-${sub.id}`;
+                            const currentStatus = saveStatus[cellKey] || "idle";
 
-                          return (
-                            <td key={col.id} style={{ textAlign: "center", position: "relative" }}>
-                              <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
-                                <input
-                                  id={`grade-${student.nisn}-${col.id}`}
-                                  type="text"
-                                  inputMode="numeric"
-                                  pattern="[0-9]*"
-                                  value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[col.id] !== null && student.nilai[col.id] !== undefined ? student.nilai[col.id] : "")}
-                                  onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                  onBlur={(e) => handleGradeBlur(student.nisn, col.id, e.target.value)}
-                                  onWheel={(e) => e.target.blur()}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      handleGradeBlur(student.nisn, col.id, e.target.value);
-                                      const currentRowIdx = sortedStudents.findIndex(s => s.nisn === student.nisn);
-                                      const nextStudent = sortedStudents[currentRowIdx + 1];
-                                      if (nextStudent) {
-                                        const nextInput = document.getElementById(`grade-${nextStudent.nisn}-${col.id}`);
-                                        if (nextInput) {
-                                          nextInput.focus();
-                                          nextInput.select();
+                            return (
+                              <td key={sub.id} style={{ textAlign: "center", position: "relative" }}>
+                                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
+                                  <input
+                                    id={`grade-${student.nisn}-${sub.id}`}
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[sub.id] !== null && student.nilai[sub.id] !== undefined ? student.nilai[sub.id] : "")}
+                                    onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                    onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleGradeBlur(student.nisn, sub.id, e.target.value);
+                                        const currentRowIdx = sortedStudents.findIndex(s => s.nisn === student.nisn);
+                                        const nextStudent = sortedStudents[currentRowIdx + 1];
+                                        if (nextStudent) {
+                                          const nextInput = document.getElementById(`grade-${nextStudent.nisn}-${sub.id}`);
+                                          if (nextInput) {
+                                            nextInput.focus();
+                                            nextInput.select();
+                                          }
                                         }
                                       }
-                                    }
-                                  }}
-                                  className="form-input"
-                                  style={{
-                                    padding: "6px 8px",
-                                    fontSize: "0.85rem",
-                                    textAlign: "center",
-                                    border: currentStatus === "saved" 
-                                      ? "1px solid var(--success)" 
-                                      : currentStatus === "saving"
-                                        ? "1px solid var(--primary)" 
-                                        : currentStatus === "failed"
-                                          ? "1px solid var(--danger)"
-                                          : "1px solid var(--border-color)",
-                                    backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
-                                    transition: "all 0.15s ease"
-                                  }}
-                                  placeholder="-"
-                                  min={0}
-                                  max={100}
-                                />
+                                    }}
+                                    className="form-input"
+                                    style={{
+                                      padding: "6px 8px",
+                                      fontSize: "0.85rem",
+                                      textAlign: "center",
+                                      border: currentStatus === "saved" 
+                                        ? "1px solid var(--success)" 
+                                        : currentStatus === "saving"
+                                          ? "1px solid var(--primary)" 
+                                          : currentStatus === "failed"
+                                            ? "1px solid var(--danger)"
+                                            : "1px solid var(--border-color)",
+                                      backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
+                                      transition: "all 0.15s ease"
+                                    }}
+                                    placeholder="-"
+                                    min={0}
+                                    max={100}
+                                  />
 
-                                {/* Small status dots for auto-saving indicator */}
-                                {currentStatus === "saving" && (
-                                  <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--primary)", borderRadius: "50%", display: "inline-block", animation: "pulse 0.6s infinite" }} title="Menyimpan..."></span>
-                                )}
-                                {currentStatus === "saved" && (
-                                  <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
-                                )}
-                                {currentStatus === "failed" && (
-                                  <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--danger)", borderRadius: "50%", display: "inline-block" }} title="Gagal Menyimpan"></span>
-                                )}
-                              </div>
-                            </td>
-                          );
+                                  {/* Small status dots for auto-saving indicator */}
+                                  {currentStatus === "saving" && (
+                                    <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--primary)", borderRadius: "50%", display: "inline-block", animation: "pulse 0.6s infinite" }} title="Menyimpan..."></span>
+                                  )}
+                                  {currentStatus === "saved" && (
+                                    <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
+                                  )}
+                                  {currentStatus === "failed" && (
+                                    <span style={{ position: "absolute", right: "-12px", width: "6px", height: "6px", backgroundColor: "var(--danger)", borderRadius: "50%", display: "inline-block" }} title="Gagal Menyimpan"></span>
+                                  )}
+                                </div>
+                              </td>
+                            );
+                          });
                         })}
 
                         {/* Weighted Final Score */}
@@ -2141,35 +2299,108 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </thead>
                   <tbody>
                     {kelas.kolomNilai.map((col) => (
-                      <tr key={col.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
-                        <td style={{ padding: "6px 10px" }}>
-                          <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
-                        </td>
-                        <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
-                        </td>
-                        <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                          <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
-                        </td>
-                      </tr>
+                      <Fragment key={col.id}>
+                        <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : "transparent" }}>
+                          <td style={{ padding: "6px 10px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
+                              <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
+                            </div>
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center", fontWeight: col.isGroup ? "700" : "400" }} />
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                            <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
+                          </td>
+                        </tr>
+                        {col.isGroup && col.subKolom && col.subKolom.map((sub, sIdx) => (
+                          <tr key={sub.id} style={{ borderBottom: sIdx === col.subKolom.length - 1 ? "1px solid var(--border-color)" : "none", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
+                            <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
+                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(245, 158, 11, 0.3)", borderBottom: "2px solid rgba(245, 158, 11, 0.3)", borderRadius: "0 0 0 6px" }}></div>
+                              <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
+                                const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
+                                setKelas({ ...kelas, kolomNilai: newCols });
+                              }} style={{ padding: "3px 8px", fontSize: "0.8rem" }} />
+                            </td>
+                            <td colSpan={2} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span>Rata-rata otomatis</span>
+                                <button onClick={() => {
+                                  if(!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
+                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {col.isGroup && (
+                          <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
+                            <td colSpan={3} style={{ padding: "4px 10px 8px 30px" }}>
+                              <button onClick={() => {
+                                const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "" }] } : c);
+                                setKelas({ ...kelas, kolomNilai: newCols });
+                              }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                     {/* Baris tambah baru (Seamless) */}
                     {newAspects.map((aspect, index) => (
-                      <tr key={aspect.id} style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
-                        <td style={{ padding: "8px 10px" }}>
-                          <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
-                        </td>
-                        <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                          <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
-                        </td>
-                        <td style={{ padding: "8px 10px", textAlign: "center" }}>
-                          {index !== newAspects.length - 1 ? (
-                            <button onClick={() => handleRemoveNewAspect(aspect.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px", fontSize: "0.8rem", minWidth: "30px" }} title="Batal tambah">✖</button>
-                          ) : (
-                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "default" }}>✧</span>
-                          )}
-                        </td>
-                      </tr>
+                      <Fragment key={aspect.id}>
+                        <tr style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
+                          <td style={{ padding: "8px 10px" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                              <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
+                              {aspect.nama && (
+                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer" }}>
+                                  <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
+                                  Jadikan Kelompok Nilai (Sub-Aspek)
+                                </label>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                          </td>
+                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
+                            {index !== newAspects.length - 1 ? (
+                              <button onClick={() => handleRemoveNewAspect(aspect.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px", fontSize: "0.8rem", minWidth: "30px" }} title="Batal tambah">✖</button>
+                            ) : (
+                              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "default" }}>✧</span>
+                            )}
+                          </td>
+                        </tr>
+                        {aspect.isGroup && aspect.subKolom && aspect.subKolom.map((sub, sIdx) => (
+                          <tr key={sub.id} style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
+                            <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
+                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(59, 130, 246, 0.3)", borderBottom: "2px solid rgba(59, 130, 246, 0.3)", borderRadius: "0 0 0 6px" }}></div>
+                              <input type="text" className="form-input" placeholder="Nama sub-aspek (misal: KD 1)" value={sub.nama} onChange={(e) => {
+                                const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
+                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                              }} style={{ padding: "3px 8px", fontSize: "0.8rem" }} />
+                            </td>
+                            <td colSpan={2} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              <button onClick={() => {
+                                const newSub = aspect.subKolom.filter(s => s.id !== sub.id);
+                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                              }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
+                            </td>
+                          </tr>
+                        ))}
+                        {aspect.isGroup && (
+                          <tr style={{ backgroundColor: "rgba(59,130,246,0.02)", borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
+                            <td colSpan={3} style={{ padding: "4px 10px 10px 30px" }}>
+                              <button onClick={() => {
+                                const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "" }];
+                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                              }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
