@@ -105,6 +105,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
   const [activeTab, setActiveTab] = useState('nilai');
+  const [showKehadiran, setShowKehadiran] = useState(false);
 
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
@@ -186,18 +187,17 @@ export default function DetailKelas({ params: paramsPromise }) {
       const pertemuanList = skema.pertemuan || [];
       let complete = filledCount === kelas.kolomNilai.length;
       
+      let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+      pertemuanList.forEach(p => {
+        const val = student.nilai[`_presensi_${p.id}`];
+        if (val && attSummary[val] !== undefined) {
+          attSummary[val]++;
+        }
+      });
+
       if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-        let attTotal = 0;
-        let attCount = 0;
-        pertemuanList.forEach(p => {
-          const val = student.nilai[`_presensi_${p.id}`];
-          if (val) {
-            attCount++;
-            if (val === 'H') attTotal += 100;
-            else if (val === 'S' || val === 'I') attTotal += 50;
-            else if (val === 'A') attTotal += 0;
-          }
-        });
+        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
+        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
         
         // Poin kehadiran rata-rata (hanya dihitung berdasarkan jumlah pertemuan yg sudah diisi)
         const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
@@ -215,7 +215,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         else predikat = skema.statusD || "D";
       }
 
-      return { ...student, finalScore: parseFloat(total.toFixed(2)), complete, predikat, lulus: complete && total >= kkmVal };
+      return { ...student, finalScore: parseFloat(total.toFixed(2)), complete, predikat, lulus: complete && total >= kkmVal, attSummary };
     });
 
     // Ranking: sort descending by finalScore (only complete)
@@ -1415,11 +1415,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                 Daftar siswa yang memiliki nilai kosong atau di bawah KKM ({analyticsData?.kkmVal}). Laporan ini aman dibagikan karena tidak menampilkan angka nilai secara spesifik.
               </p>
             </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginRight: "8px" }}>
+                <input type="checkbox" id="showKehadiranToggle" checked={showKehadiran} onChange={(e) => setShowKehadiran(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "var(--primary)" }} />
+                <label htmlFor="showKehadiranToggle" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "600" }}>Tampilkan Kehadiran</label>
+              </div>
               <button onClick={() => {
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nGuru Pengampu: ${guruProfile?.nama || "-"}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
-                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`}_\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
+                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`}_` +
+                (showKehadiran ? `\n_Kehadiran: H:${s.attSummary.H} I:${s.attSummary.I} S:${s.attSummary.S} A:${s.attSummary.A}_` : ``) +
+                `\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
                 navigator.clipboard.writeText(text);
                 alert("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
@@ -1484,6 +1490,16 @@ export default function DetailKelas({ params: paramsPromise }) {
                     {/* Aspects List */}
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingLeft: "4px" }}>
                       <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "2px" }}>Rincian Kendala Aspek:</div>
+                      {showKehadiran && (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: "4px", marginBottom: "4px" }}>
+                          <span style={{ color: "#e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ color: "#64748b" }}>•</span> Kehadiran
+                          </span>
+                          <span style={{ fontWeight: "700", fontSize: "0.75rem", color: "#94a3b8" }}>
+                            H: {s.attSummary.H} | I: {s.attSummary.I} | S: {s.attSummary.S} | <span style={{color: s.attSummary.A > 0 ? "#fca5a5" : "inherit"}}>A: {s.attSummary.A}</span>
+                          </span>
+                        </div>
+                      )}
                       {s.issues.map((issue, idx) => (
                         <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.85rem", backgroundColor: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: "4px" }}>
                           <span style={{ color: "#e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
