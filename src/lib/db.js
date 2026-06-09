@@ -27,11 +27,16 @@ function mapKelasFromDb(k) {
     archived: !!k.archived,
     isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
     skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
-    kolomNilai: (k.kolom_nilai || []).map(col => ({
-      id: col.id,
-      nama: col.nama,
-      bobot: col.bobot
-    })),
+    kolomNilai: (k.kolom_nilai || []).map(col => {
+      const groupConfig = k.skema_penilaian?.kolomAspekGroup?.[col.id];
+      return {
+        id: col.id,
+        nama: col.nama,
+        bobot: col.bobot,
+        isGroup: groupConfig ? !!groupConfig.isGroup : false,
+        subKolom: groupConfig ? (groupConfig.subKolom || []) : []
+      };
+    }),
     siswa: (k.siswa || []).map(s => ({
       nisn: s.nisn,
       nama: s.nama,
@@ -276,8 +281,27 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
       updates.is_nilai_akhir_generated = updatedFields.isNilaiAkhirGenerated;
     }
 
-    if (updatedFields.skemaPenilaian !== undefined) {
-      updates.skema_penilaian = updatedFields.skemaPenilaian;
+    // Sinkronisasikan kolomAspekGroup di skema_penilaian
+    let currentSkema = updatedFields.skemaPenilaian !== undefined 
+      ? { ...updatedFields.skemaPenilaian } 
+      : { ...(currentKelas.skema_penilaian || {}) };
+      
+    if (updatedFields.kolomNilai !== undefined) {
+      const groupConfigs = {};
+      updatedFields.kolomNilai.forEach(col => {
+        if (col.isGroup) {
+          groupConfigs[col.id] = {
+            isGroup: true,
+            subKolom: col.subKolom || []
+          };
+        }
+      });
+      currentSkema.kolomAspekGroup = groupConfigs;
+      updates.skema_penilaian = currentSkema;
+    } else if (updatedFields.skemaPenilaian !== undefined) {
+      // Pastikan kolomAspekGroup lama dipertahankan saat skemaPenilaian diperbarui
+      currentSkema.kolomAspekGroup = currentKelas.skema_penilaian?.kolomAspekGroup || {};
+      updates.skema_penilaian = currentSkema;
     }
 
     if (Object.keys(updates).length > 0) {

@@ -123,6 +123,40 @@ export async function PATCH(request, { params }) {
     });
 
     await updateKelas(id, { kolomNilai: cleanedKolom }, username);
+
+    // Inisialisasi nilai null untuk semua sub-kolom baru
+    if (kelas.siswa && kelas.siswa.length > 0) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const sb = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        { auth: { persistSession: false } }
+      );
+
+      for (const siswa of kelas.siswa) {
+        let updatedNilai = { ...(siswa.nilai || {}) };
+        let changed = false;
+
+        cleanedKolom.forEach(col => {
+          if (col.isGroup && col.subKolom) {
+            col.subKolom.forEach(sub => {
+              if (updatedNilai[sub.id] === undefined) {
+                updatedNilai[sub.id] = null;
+                changed = true;
+              }
+            });
+          }
+        });
+
+        if (changed) {
+          await sb.from('siswa')
+            .update({ nilai: updatedNilai })
+            .eq('kelas_id', id)
+            .eq('nisn', siswa.nisn);
+        }
+      }
+    }
+
     return NextResponse.json({ success: true, kolomNilai: cleanedKolom });
   } catch (error) {
     console.error('Error in PATCH kolom API:', error);
