@@ -116,6 +116,9 @@ export async function analyzeRaporTemplate(fileBuffer) {
     tpCols.push({ index: idx, name: displayName });
   }
 
+  const headers = rows[headerRowIdx] || [];
+  const hasSubHeaders = firstStudentRowIdx > headerRowIdx + 1;
+
   return {
     headers: headers.map(h => String(h || "").trim()),
     headerRowIdx,
