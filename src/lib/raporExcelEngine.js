@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
  * @returns {Promise<{headers: string[], headerRowIdx: number, tpCols: Array<{index: number, name: string}>, nisnIdx: number, namaIdx: number, nilaiRaporIdx: number, rows: any[][]}>}
  */
 export async function analyzeRaporTemplate(fileBuffer) {
-  const workbook = XLSX.read(fileBuffer, { type: 'array' });
+  const workbook = XLSX.read(fileBuffer, { type: 'array', cellComments: true });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
@@ -69,7 +69,29 @@ export async function analyzeRaporTemplate(fileBuffer) {
     
     // Asumsikan kolom di sebelah kanan nama/nilai yang bukan kolom filter adalah kolom TP
     if (idx > Math.max(namaIdx, nilaiRaporIdx)) {
-      tpCols.push({ index: idx, name: hText });
+      // Ambil komentar sel (jika ada) dari baris header atau sub-header untuk deskripsi TP
+      const cellRefParent = XLSX.utils.encode_cell({ r: headerRowIdx, c: idx });
+      const cellRefSub = XLSX.utils.encode_cell({ r: headerRowIdx + 1, c: idx });
+      const parentCell = worksheet[cellRefParent];
+      const subCell = worksheet[cellRefSub];
+      
+      let commentText = "";
+      if (subCell && subCell.c && subCell.c.length > 0) {
+        commentText = subCell.c[0].t || "";
+      } else if (parentCell && parentCell.c && parentCell.c.length > 0) {
+        commentText = parentCell.c[0].t || "";
+      }
+      
+      let displayName = hText;
+      if (commentText.trim()) {
+        // Hapus nama author (biasanya diakhiri dengan colon & newline, contoh "e-Rapor:\nDescription")
+        const cleanComment = commentText.replace(/^[^\n]+:\n/, "").trim();
+        if (cleanComment) {
+          displayName = `${hText} (${cleanComment})`;
+        }
+      }
+
+      tpCols.push({ index: idx, name: displayName });
     }
   });
 
