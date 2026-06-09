@@ -50,136 +50,71 @@ export async function analyzeRaporTemplate(fileBuffer) {
     throw new Error("Format template Excel tidak valid. Baris header dengan kolom 'NISN' dan 'Nama' tidak ditemukan.");
   }
 
-  // Cari apakah ada sub-headers di bawah header utama (bisa terhalang baris kosong/tersembunyi)
-  let subHeaderRowIdx = -1;
-  const startCol = Math.max(namaIdx, nilaiRaporIdx) + 1;
-  console.log("startCol for TP columns:", startCol);
-  
-  for (let r = headerRowIdx + 1; r < Math.min(rows.length, headerRowIdx + 10); r++) {
+  // 1. Cari baris pertama data siswa
+  let firstStudentRowIdx = -1;
+  for (let r = headerRowIdx + 1; r < rows.length; r++) {
     const row = rows[r];
-    if (!row) {
-      console.log(`Row index ${r} is undefined/empty`);
-      continue;
-    }
+    if (!row || row.length === 0) continue;
     
-    let hasTPInRow = false;
-    for (let col = startCol; col < row.length; col++) {
-      const cellVal = String(row[col] || "").trim();
-      if (cellVal) {
-        const isGrade = /^(t|r|f)$/i.test(cellVal) || !isNaN(cellVal);
-        const isIgnored = /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(cellVal);
-        console.log(`Checking row ${r} col ${col} val: "${cellVal}" -> isGrade: ${isGrade}, isIgnored: ${isIgnored}`);
-        if (!isGrade && !isIgnored) {
-          hasTPInRow = true;
-          console.log(`-> Detected TP in row ${r} col ${col}: "${cellVal}"`);
-          break;
-        }
-      }
-    }
+    const nisnVal = String(row[nisnIdx] || "").trim();
+    const namaVal = String(row[namaIdx] || "").trim();
     
-    if (hasTPInRow) {
-      subHeaderRowIdx = r;
+    const isNisnNumeric = /^\d+$/.test(nisnVal);
+    const isNamaText = namaVal && !/nama|siswa|student/i.test(namaVal);
+    const isNoNumeric = /^\d+$/.test(String(row[0] || "").trim());
+    
+    if ((isNisnNumeric && isNamaText) || (isNoNumeric && namaVal)) {
+      firstStudentRowIdx = r;
       break;
     }
   }
-
-  const hasSubHeaders = subHeaderRowIdx !== -1;
-  console.log("Sub-header row detection result:", { hasSubHeaders, subHeaderRowIdx });
-
-  const headers = [...rows[headerRowIdx]];
-  if (hasSubHeaders) {
-    const subHeaderRow = rows[subHeaderRowIdx];
-    for (let idx = 0; idx < headers.length; idx++) {
-      const subCell = String(subHeaderRow[idx] || "").trim();
-      if (subCell) {
-        headers[idx] = subCell;
-      }
-    }
-  }
-  console.log("Final merged headers:", JSON.stringify(headers));
-  // Cari apakah ada data referensi TP di sheet lain atau di baris lain pada sheet yang sama
-  const tpLookup = {};
   
-  // 1. Scan sheet pertama (main sheet) untuk baris yang berisi UUID dan teks deskripsi
-  rows.forEach(row => {
-    if (!Array.isArray(row)) return;
-    let foundUuid = "";
-    let foundDesc = "";
-    row.forEach(cell => {
-      const text = String(cell || "").trim();
-      // Regex untuk mendeteksi UUID
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text)) {
-        foundUuid = text;
-      } else if (text.length > 15 && !text.includes("-") && !text.includes("/") && !text.includes(":")) {
-        foundDesc = text;
-      }
-    });
-    if (foundUuid && foundDesc) {
-      tpLookup[foundUuid] = foundDesc;
-    }
-  });
-
-  // 2. Scan sheet lain jika ada sheet referensi khusus
-  workbook.SheetNames.forEach(name => {
-    if (name === sheetName) return; // skip sheet utama karena sudah di-scan
-    const refSheet = workbook.Sheets[name];
-    const refRows = XLSX.utils.sheet_to_json(refSheet, { header: 1, defval: "" });
-    refRows.forEach(refRow => {
-      if (!Array.isArray(refRow)) return;
-      let foundUuid = "";
-      let foundDesc = "";
-      refRow.forEach(cell => {
-        const text = String(cell || "").trim();
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text)) {
-          foundUuid = text;
-        } else if (text.length > 15 && !text.includes("-") && !text.includes("/") && !text.includes(":")) {
-          foundDesc = text;
-        }
-      });
-      if (foundUuid && foundDesc) {
-        tpLookup[foundUuid] = foundDesc;
-      }
-    });
-  });
+  if (firstStudentRowIdx === -1) {
+    firstStudentRowIdx = Math.min(rows.length, headerRowIdx + 2); 
+  }
+  console.log("Detected firstStudentRowIdx:", firstStudentRowIdx);
 
   const tpCols = [];
+  const startCol = Math.max(namaIdx, nilaiRaporIdx) + 1;
+  const maxCols = rows[headerRowIdx].length;
 
-  // Cari kolom Tujuan Pembelajaran (TP)
-  headers.forEach((h, idx) => {
-    if (idx === nisnIdx || idx === namaIdx || idx === nilaiRaporIdx) return;
-    // Abaikan kolom indeks umum, predikat, catatan, dll.
-    const hText = String(h || "").trim();
-    if (!hText || /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(hText)) return;
-    
-    // Asumsikan kolom di sebelah kanan nama/nilai yang bukan kolom filter adalah kolom TP
-    if (idx > Math.max(namaIdx, nilaiRaporIdx)) {
-      // Ambil komentar sel (jika ada) dari baris header atau sub-header untuk deskripsi TP
-      const cellRefParent = XLSX.utils.encode_cell({ r: headerRowIdx, c: idx });
-      const cellRefSub = XLSX.utils.encode_cell({ r: hasSubHeaders ? subHeaderRowIdx : headerRowIdx + 1, c: idx });
-      const parentCell = worksheet[cellRefParent];
-      const subCell = worksheet[cellRefSub];
-      
-      let commentText = "";
-      if (subCell && subCell.c && subCell.c.length > 0) {
-        commentText = subCell.c[0].t || "";
-      } else if (parentCell && parentCell.c && parentCell.c.length > 0) {
-        commentText = parentCell.c[0].t || "";
-      }
-      
-      let displayName = hText;
-      if (tpLookup[hText]) {
-        displayName = `${hText} (${tpLookup[hText]})`;
-      } else if (commentText.trim()) {
-        // Hapus nama author (biasanya diakhiri dengan colon & newline, contoh "e-Rapor:\nDescription")
-        const cleanComment = commentText.replace(/^[^\n]+:\n/, "").trim();
-        if (cleanComment) {
-          displayName = `${hText} (${cleanComment})`;
+  for (let idx = startCol; idx < maxCols; idx++) {
+    const colValues = [];
+    for (let r = headerRowIdx; r < firstStudentRowIdx; r++) {
+      const cellVal = String(rows[r]?.[idx] || "").trim();
+      if (cellVal && !colValues.includes(cellVal)) {
+        if (!/^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai|tr|op)$/i.test(cellVal)) {
+          colValues.push(cellVal);
         }
       }
-
-      tpCols.push({ index: idx, name: displayName });
     }
-  });
+    
+    if (colValues.length === 0) continue;
+    
+    let tpCode = "";
+    let uuidVal = "";
+    let description = "";
+    
+    colValues.forEach(val => {
+      if (/^tp\.\d+/i.test(val)) {
+        tpCode = val;
+      } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)) {
+        uuidVal = val;
+      } else if (val.length > 15 && !/tingkat ketercapaian/i.test(val)) {
+        description = val;
+      }
+    });
+    
+    let displayName = tpCode || uuidVal || colValues[colValues.length - 1];
+    
+    if (description) {
+      displayName = `${displayName} (${description})`;
+    } else if (uuidVal && uuidVal !== displayName) {
+      displayName = `${displayName} (${uuidVal})`;
+    }
+    
+    tpCols.push({ index: idx, name: displayName });
+  }
 
   return {
     headers: headers.map(h => String(h || "").trim()),
@@ -235,36 +170,29 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
     throw new Error("Gagal mengurai file Excel saat proses penulisan nilai.");
   }
 
-  // Cari apakah ada sub-headers di bawah header utama (bisa terhalang baris kosong/tersembunyi)
-  let subHeaderRowIdx = -1;
-  const startCol = Math.max(namaIdx, nilaiRaporIdx) + 1;
-  
-  for (let r = headerRowIdx + 1; r < Math.min(rows.length, headerRowIdx + 10); r++) {
+  // Cari index baris pertama siswa
+  let firstStudentRowIdx = -1;
+  for (let r = headerRowIdx + 1; r < rows.length; r++) {
     const row = rows[r];
     if (!row) continue;
+    const nisnVal = String(row[nisnIdx] || "").trim();
+    const namaVal = String(row[namaIdx] || "").trim();
+    const isNisnNumeric = /^\d+$/.test(nisnVal);
+    const isNamaText = namaVal && !/nama|siswa|student/i.test(namaVal);
+    const isNoNumeric = /^\d+$/.test(String(row[0] || "").trim());
     
-    let hasTPInRow = false;
-    for (let col = startCol; col < row.length; col++) {
-      const cellVal = String(row[col] || "").trim();
-      if (cellVal) {
-        const isGrade = /^(t|r|f)$/i.test(cellVal) || !isNaN(cellVal);
-        const isIgnored = /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(cellVal);
-        if (!isGrade && !isIgnored) {
-          hasTPInRow = true;
-          break;
-        }
-      }
-    }
-    
-    if (hasTPInRow) {
-      subHeaderRowIdx = r;
+    if ((isNisnNumeric && isNamaText) || (isNoNumeric && namaVal)) {
+      firstStudentRowIdx = r;
       break;
     }
   }
 
-  const hasSubHeaders = subHeaderRowIdx !== -1;
+  if (firstStudentRowIdx === -1) {
+    firstStudentRowIdx = Math.min(rows.length, headerRowIdx + 2);
+  }
+
   const kkmVal = Number(kkm) || 75;
-  const startRowIdx = hasSubHeaders ? subHeaderRowIdx + 1 : headerRowIdx + 1;
+  const startRowIdx = firstStudentRowIdx;
 
   // Mulai mengisi baris demi baris di bawah header
   for (let r = startRowIdx; r < rows.length; r++) {
