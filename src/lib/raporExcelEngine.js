@@ -11,6 +11,13 @@ export async function analyzeRaporTemplate(fileBuffer) {
   const worksheet = workbook.Sheets[sheetName];
   const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
+  console.log("=== DEBUG: analyzeRaporTemplate ===");
+  console.log("Sheet name:", sheetName);
+  console.log("Total rows found:", rows.length);
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    console.log(`Row index ${i}:`, JSON.stringify(rows[i]));
+  }
+
   let headerRowIdx = -1;
   let nisnIdx = -1;
   let namaIdx = -1;
@@ -36,6 +43,9 @@ export async function analyzeRaporTemplate(fileBuffer) {
     }
   }
 
+  console.log("Detected headerRowIdx:", headerRowIdx);
+  console.log("nisnIdx:", nisnIdx, "namaIdx:", namaIdx, "nilaiRaporIdx:", nilaiRaporIdx);
+
   if (headerRowIdx === -1) {
     throw new Error("Format template Excel tidak valid. Baris header dengan kolom 'NISN' dan 'Nama' tidak ditemukan.");
   }
@@ -43,10 +53,14 @@ export async function analyzeRaporTemplate(fileBuffer) {
   // Cari apakah ada sub-headers di bawah header utama (bisa terhalang baris kosong/tersembunyi)
   let subHeaderRowIdx = -1;
   const startCol = Math.max(namaIdx, nilaiRaporIdx) + 1;
+  console.log("startCol for TP columns:", startCol);
   
   for (let r = headerRowIdx + 1; r < Math.min(rows.length, headerRowIdx + 10); r++) {
     const row = rows[r];
-    if (!row) continue;
+    if (!row) {
+      console.log(`Row index ${r} is undefined/empty`);
+      continue;
+    }
     
     let hasTPInRow = false;
     for (let col = startCol; col < row.length; col++) {
@@ -54,8 +68,10 @@ export async function analyzeRaporTemplate(fileBuffer) {
       if (cellVal) {
         const isGrade = /^(t|r|f)$/i.test(cellVal) || !isNaN(cellVal);
         const isIgnored = /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(cellVal);
+        console.log(`Checking row ${r} col ${col} val: "${cellVal}" -> isGrade: ${isGrade}, isIgnored: ${isIgnored}`);
         if (!isGrade && !isIgnored) {
           hasTPInRow = true;
+          console.log(`-> Detected TP in row ${r} col ${col}: "${cellVal}"`);
           break;
         }
       }
@@ -68,6 +84,8 @@ export async function analyzeRaporTemplate(fileBuffer) {
   }
 
   const hasSubHeaders = subHeaderRowIdx !== -1;
+  console.log("Sub-header row detection result:", { hasSubHeaders, subHeaderRowIdx });
+
   const headers = [...rows[headerRowIdx]];
   if (hasSubHeaders) {
     const subHeaderRow = rows[subHeaderRowIdx];
@@ -78,6 +96,7 @@ export async function analyzeRaporTemplate(fileBuffer) {
       }
     }
   }
+  console.log("Final merged headers:", JSON.stringify(headers));
   // Cari apakah ada data referensi TP di sheet lain atau di baris lain pada sheet yang sama
   const tpLookup = {};
   
