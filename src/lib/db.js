@@ -284,7 +284,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
     // Sinkronisasikan kolomAspekGroup di skema_penilaian
     let currentSkema = updatedFields.skemaPenilaian !== undefined 
       ? { ...updatedFields.skemaPenilaian } 
-      : { ...(currentKelas.skema_penilaian || {}) };
+      : { ...(currentKelas.skemaPenilaian || {}) };
       
     if (updatedFields.kolomNilai !== undefined) {
       const groupConfigs = {};
@@ -300,7 +300,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
       updates.skema_penilaian = currentSkema;
     } else if (updatedFields.skemaPenilaian !== undefined) {
       // Pastikan kolomAspekGroup lama dipertahankan saat skemaPenilaian diperbarui
-      currentSkema.kolomAspekGroup = currentKelas.skema_penilaian?.kolomAspekGroup || {};
+      currentSkema.kolomAspekGroup = currentKelas.skemaPenilaian?.kolomAspekGroup || {};
       updates.skema_penilaian = currentSkema;
     }
 
