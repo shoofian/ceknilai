@@ -205,7 +205,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
             <div style={{ fontSize: "0.74rem", color: "var(--text-muted)", display: "flex", gap: "6px", alignItems: "flex-start", backgroundColor: "rgba(59,130,246,0.03)", padding: "10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.1)" }}>
               <span>💡</span>
               <span>
-                <strong>Smart Fallback Aktif:</strong> Jika nilai rapor siswa &lt; 100 tetapi semua aspek mencapai KKM, sistem otomatis memaksa aspek bernilai terendah menjadi status <strong>"F"</strong> agar file valid diunggah ke e-Rapor.
+                <strong>Smart Fallback Aktif:</strong> Jika nilai rapor siswa &lt; 100 tetapi semua aspek mencapai KKM, sistem otomatis memaksa aspek bernilai terendah menjadi status <strong>"R"</strong> agar file valid diunggah ke e-Rapor.
               </span>
             </div>
 

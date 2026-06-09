@@ -176,8 +176,8 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
         }
       }
 
-      // Tentukan T / F awal berdasarkan KKM
-      let status = "F";
+      // Tentukan T / R awal berdasarkan KKM
+      let status = "R";
       if (isFilled && score >= kkmVal) {
         status = "T";
       }
@@ -189,19 +189,19 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
       }
     });
 
-    // 3. Smart Fallback Rule: Jika nilai akhir < 100, minimal harus ada satu kolom TP bernilai "F"
+    // 3. Smart Fallback Rule: Jika nilai akhir < 100, minimal harus ada satu kolom TP bernilai "R"
     if (finalScore < 100) {
       const allT = Object.keys(tpMapping).every(colIdxStr => tpValues[Number(colIdxStr)] === "T");
       if (allT && mappedAspectScores.length > 0) {
-        // Cari TP dengan nilai aspek paling rendah untuk dipaksa menjadi "F"
+        // Cari TP dengan nilai aspek paling rendah untuk dipaksa menjadi "R"
         mappedAspectScores.sort((a, b) => a.score - b.score);
         const lowestTP = mappedAspectScores[0];
-        tpValues[lowestTP.colIdx] = "F";
+        tpValues[lowestTP.colIdx] = "R";
       } else if (allT) {
-        // Jika tidak ada aspek terisi tapi entah bagaimana all T, paksa TP pertama menjadi "F"
+        // Jika tidak ada aspek terisi tapi entah bagaimana all T, paksa TP pertama menjadi "R"
         const firstTpColIdx = Number(Object.keys(tpMapping)[0]);
         if (!isNaN(firstTpColIdx)) {
-          tpValues[firstTpColIdx] = "F";
+          tpValues[firstTpColIdx] = "R";
         }
       }
     }
