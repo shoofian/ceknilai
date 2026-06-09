@@ -530,6 +530,10 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const kolomNilai = k.kolom_nilai || [];
       const nilaiObj = s.nilai || {};
 
+      // Ambil skema penilaian kustom dari kelas atau gunakan default
+      const skema = k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+      const hiddenAspek = Array.isArray(skema.hiddenAspek) ? skema.hiddenAspek : [];
+
       kolomNilai.forEach(col => {
         const scoreVal = nilaiObj[col.id];
         const isFilled = scoreVal !== undefined && scoreVal !== null && scoreVal !== "";
@@ -543,12 +547,22 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         }
         totalBobot += col.bobot;
 
+        const isHidden = hiddenAspek.includes(col.id);
+        let displayScore = scoreVal;
+        let displayKontribusi = isFilled ? Number(kontribusi.toFixed(2)) : "-";
+
+        if (isHidden && isFilled) {
+          displayScore = score >= (skema.kkm ?? 75) ? "Tuntas" : "Belum Tuntas";
+          displayKontribusi = "-";
+        }
+
         detailNilai.push({
           kolomId: col.id,
           namaKolom: col.nama,
           bobot: col.bobot,
-          nilaiAsli: scoreVal,
-          kontribusi: isFilled ? Number(kontribusi.toFixed(2)) : "-"
+          nilaiAsli: displayScore,
+          kontribusi: displayKontribusi,
+          isTersembunyi: isHidden
         });
       });
 
@@ -556,8 +570,6 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const finalScore = totalNilaiTerisi;
       const finalScoreRounded = Number(finalScore.toFixed(2));
 
-      // Ambil skema penilaian kustom dari kelas atau gunakan default
-      const skema = k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
 
       // Tentukan Predikat berdasarkan Nilai Akhir sesuai Skema Penilaian
       let predikat = 'E';

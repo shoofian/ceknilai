@@ -584,11 +584,20 @@ export default function StudentPortal() {
                               <tr key={col.kolomId}>
                                 <td style={{ fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</td>
                                 <td>{col.bobot}%</td>
-                                <td style={{ fontWeight: "700", color: col.nilaiAsli === null ? "var(--text-muted)" : (col.nilaiAsli >= res.kkm ? "var(--success)" : "var(--text-primary)") }}>
-                                  {col.nilaiAsli === null ? "Belum Diisi" : col.nilaiAsli}
+                                <td style={{ 
+                                  fontWeight: "700", 
+                                  color: col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "Belum Diisi"
+                                    ? "var(--text-muted)" 
+                                    : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                      ? "var(--success)" 
+                                      : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
+                                        ? "var(--danger)"
+                                        : "var(--text-primary)" 
+                                }}>
+                                  {col.nilaiAsli === null || col.nilaiAsli === "" ? "Belum Diisi" : col.nilaiAsli}
                                 </td>
                                 <td style={{ fontWeight: "600", color: "var(--text-secondary)" }}>
-                                  {col.nilaiAsli === null ? "-" : col.kontribusi}
+                                  {col.nilaiAsli === null || col.nilaiAsli === "" ? "-" : col.kontribusi}
                                 </td>
                               </tr>
                             ))}
@@ -729,7 +738,7 @@ export default function StudentPortal() {
                         <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155", flex: 1 }}>
                           <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>4. Grafik Performa</p>
                           {(() => {
-                            const aspects = res.detailNilai.filter(c => c.nilaiAsli !== null);
+                            const aspects = res.detailNilai.filter(c => c.nilaiAsli !== null && typeof c.nilaiAsli === 'number');
                             if (aspects.length < 3) {
                               return (
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -739,7 +748,15 @@ export default function StudentPortal() {
                                         <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
                                         <p style={{ margin: "6px 0 0 0", fontSize: "1rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
                                       </div>
-                                      <div style={{ fontSize: "2.2rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : (col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e") }}>
+                                      <div style={{ 
+                                        fontSize: "2.2rem", 
+                                        fontWeight: "800", 
+                                        color: col.nilaiAsli === null 
+                                          ? "#475569" 
+                                          : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                            ? "#10b981" 
+                                            : "#f43f5e" 
+                                      }}>
                                         {col.nilaiAsli === null ? "-" : col.nilaiAsli}
                                       </div>
                                     </div>
@@ -814,15 +831,47 @@ export default function StudentPortal() {
                                 <div style={{ display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
                                   <p style={{ color: "#64748b", fontSize: "0.95rem", fontWeight: "700", margin: "0 0 8px 0", textTransform: "uppercase", letterSpacing: "0.05em" }}>Legenda Aspek</p>
                                   {res.detailNilai.map((col, i) => (
-                                    <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", backgroundColor: "#0f172a", borderRadius: "12px", border: `1px solid ${col.nilaiAsli === null ? "#1e293b" : col.nilaiAsli >= res.kkm ? "rgba(16,185,129,0.2)" : "rgba(244,63,94,0.2)"}` }}>
+                                    <div key={i} style={{ 
+                                      display: "flex", 
+                                      alignItems: "center", 
+                                      justifyContent: "space-between", 
+                                      padding: "12px 16px", 
+                                      backgroundColor: "#0f172a", 
+                                      borderRadius: "12px", 
+                                      border: `1px solid ${
+                                        col.nilaiAsli === null 
+                                          ? "#1e293b" 
+                                          : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                            ? "rgba(16,185,129,0.2)" 
+                                            : "rgba(244,63,94,0.2)"
+                                      }` 
+                                    }}>
                                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: col.nilaiAsli === null ? "#475569" : "#3b82f6", flexShrink: 0 }} />
+                                        <div style={{ 
+                                          width: "10px", 
+                                          height: "10px", 
+                                          borderRadius: "50%", 
+                                          backgroundColor: col.nilaiAsli === null 
+                                            ? "#475569" 
+                                            : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                              ? "#10b981" 
+                                              : "#f43f5e", 
+                                          flexShrink: 0 
+                                        }} />
                                         <div>
                                           <p style={{ margin: 0, fontSize: "1rem", color: "#cbd5e1", fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</p>
                                           <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", fontWeight: "500" }}>Bobot {col.bobot}%</p>
                                         </div>
                                       </div>
-                                      <span style={{ fontSize: "1.4rem", fontWeight: "800", color: col.nilaiAsli === null ? "#475569" : col.nilaiAsli >= res.kkm ? "#10b981" : "#f43f5e" }}>
+                                      <span style={{ 
+                                        fontSize: "1.4rem", 
+                                        fontWeight: "800", 
+                                        color: col.nilaiAsli === null 
+                                          ? "#475569" 
+                                          : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                            ? "#10b981" 
+                                            : "#f43f5e" 
+                                      }}>
                                         {col.nilaiAsli === null ? "-" : col.nilaiAsli}
                                       </span>
                                     </div>

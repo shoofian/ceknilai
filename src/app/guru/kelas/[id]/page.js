@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
+import RaporIntegrationModal from "@/components/RaporIntegrationModal";
 
 export default function DetailKelas({ params: paramsPromise }) {
   const params = use(paramsPromise);
@@ -97,6 +98,9 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Log Aktifitas Siswa
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedHistorySiswa, setSelectedHistorySiswa] = useState(null);
+
+  // State untuk Integrasi E-Rapor
+  const [raporModalOpen, setRaporModalOpen] = useState(false);
 
   const handleOpenHistory = (student) => {
     setSelectedHistorySiswa(student);
@@ -815,6 +819,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     try {
       const payload = {
         skemaPenilaian: {
+          ...(kelas?.skemaPenilaian || {}),
           A: gradeA,
           B: gradeB,
           C: gradeC,
@@ -867,6 +872,23 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
+  const toggleAspectVisibility = (colId) => {
+    const currentHidden = kelas.skemaPenilaian?.hiddenAspek || [];
+    let newHidden;
+    if (currentHidden.includes(colId)) {
+      newHidden = currentHidden.filter(id => id !== colId);
+    } else {
+      newHidden = [...currentHidden, colId];
+    }
+    setKelas({
+      ...kelas,
+      skemaPenilaian: {
+        ...(kelas.skemaPenilaian || {}),
+        hiddenAspek: newHidden
+      }
+    });
+  };
+
   const saveAllBobot = async () => {
     if (totalBobot !== 100) {
       alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
@@ -900,13 +922,24 @@ export default function DetailKelas({ params: paramsPromise }) {
         body: JSON.stringify({ kolomNilai: kolomToSave }),
       });
 
-      if (response.ok) {
-        setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah
-        await fetchClassDetail();
-      } else {
+      if (!response.ok) {
         const data = await response.json();
-        alert(data.error || "Gagal memperbarui bobot.");
+        throw new Error(data.error || "Gagal memperbarui bobot.");
       }
+
+      // Perbarui skemaPenilaian (termasuk hiddenAspek)
+      const skemaResponse = await fetch(`/api/kelas/${classId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skemaPenilaian: kelas.skemaPenilaian || {} }),
+      });
+      if (!skemaResponse.ok) {
+        const data = await skemaResponse.json();
+        throw new Error(data.error || "Gagal menyimpan konfigurasi tampilan aspek");
+      }
+
+      setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah
+      await fetchClassDetail();
     } catch (err) {
       console.error("Update weights failed", err);
       alert(err.message || "Gagal menyimpan.");
@@ -2256,8 +2289,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                 })}
               </tbody>
             </table>
-          </div>
-        ) : (
+          );
+        })()}
+      </div>
+    ) : (
           <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
             Belum ada siswa di kelas ini. Klik "Tambah Siswa Manual" atau "Impor Nilai dari CSV" untuk mengisi data.
           </div>
@@ -2293,6 +2328,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <thead>
                     <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
                       <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "120px" }}>Tampilkan Ke Siswa</th>
                       <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
                       <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}></th>
                     </tr>
@@ -2306,6 +2342,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                               {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
                               <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
                             </div>
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                            <button
+                              onClick={() => toggleAspectVisibility(col.id)}
+                              className="btn btn-secondary"
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: "0.75rem",
+                                borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
+                                color: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
+                                backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
+                              }}
+                              title={kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "Nilai tersembunyi bagi siswa" : "Nilai ditampilkan bagi siswa"}
+                            >
+                              {kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "🔒 Tersembunyi" : "👁️ Tampil"}
+                            </button>
                           </td>
                           <td style={{ padding: "6px 10px", textAlign: "center" }}>
                             <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center", fontWeight: col.isGroup ? "700" : "400" }} />
@@ -2323,7 +2375,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 setKelas({ ...kelas, kolomNilai: newCols });
                               }} style={{ padding: "3px 8px", fontSize: "0.8rem" }} />
                             </td>
-                            <td colSpan={2} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span>Rata-rata otomatis</span>
                                 <button onClick={() => {
@@ -2337,7 +2389,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         ))}
                         {col.isGroup && (
                           <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
-                            <td colSpan={3} style={{ padding: "4px 10px 8px 30px" }}>
+                            <td colSpan={4} style={{ padding: "4px 10px 8px 30px" }}>
                               <button onClick={() => {
                                 const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "" }] } : c);
                                 setKelas({ ...kelas, kolomNilai: newCols });
@@ -2363,6 +2415,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                             </div>
                           </td>
                           <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>Otomatis Tampil</span>
+                          </td>
+                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
                             <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
                           </td>
                           <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
@@ -2382,7 +2437,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 handleNewAspectChange(aspect.id, 'subKolom', newSub);
                               }} style={{ padding: "3px 8px", fontSize: "0.8rem" }} />
                             </td>
-                            <td colSpan={2} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
                               <button onClick={() => {
                                 const newSub = aspect.subKolom.filter(s => s.id !== sub.id);
                                 handleNewAspectChange(aspect.id, 'subKolom', newSub);
@@ -2392,7 +2447,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         ))}
                         {aspect.isGroup && (
                           <tr style={{ backgroundColor: "rgba(59,130,246,0.02)", borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
-                            <td colSpan={3} style={{ padding: "4px 10px 10px 30px" }}>
+                            <td colSpan={4} style={{ padding: "4px 10px 10px 30px" }}>
                               <button onClick={() => {
                                 const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "" }];
                                 handleNewAspectChange(aspect.id, 'subKolom', newSub);
@@ -2541,6 +2596,15 @@ export default function DetailKelas({ params: paramsPromise }) {
               disabled={kelas.kolomNilai.length === 0}
             />
           </label>
+
+          <button 
+            onClick={() => setRaporModalOpen(true)} 
+            className="btn btn-primary" 
+            style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem", marginTop: "4px" }}
+            disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0}
+          >
+            🔌 Integrasi E-Rapor
+          </button>
 
           {kelas.kolomNilai.length === 0 && (
             <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>
@@ -3472,6 +3536,13 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         </div>
       )}
+
+      <RaporIntegrationModal
+        isOpen={raporModalOpen}
+        onClose={() => setRaporModalOpen(false)}
+        kelas={kelas}
+        students={sortedStudents}
+      />
 
     </>
   );
