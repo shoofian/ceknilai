@@ -40,24 +40,39 @@ export async function analyzeRaporTemplate(fileBuffer) {
     throw new Error("Format template Excel tidak valid. Baris header dengan kolom 'NISN' dan 'Nama' tidak ditemukan.");
   }
 
-  const headers = rows[headerRowIdx].map(h => String(h || "").trim());
+  // Cek apakah ada sub-headers di bawahnya (gabungan baris)
+  const nextRow = rows[headerRowIdx + 1];
+  const hasSubHeaders = nextRow && nextRow.some(cell => typeof cell === 'string' && (/^tp/i.test(cell.trim()) || /^tujuan/i.test(cell.trim())));
+
+  const headers = [...rows[headerRowIdx]];
+  if (hasSubHeaders) {
+    for (let idx = 0; idx < headers.length; idx++) {
+      const subCell = String(nextRow[idx] || "").trim();
+      if (subCell) {
+        headers[idx] = subCell;
+      }
+    }
+  }
+
   const tpCols = [];
 
   // Cari kolom Tujuan Pembelajaran (TP)
   headers.forEach((h, idx) => {
     if (idx === nisnIdx || idx === namaIdx || idx === nilaiRaporIdx) return;
     // Abaikan kolom indeks umum, predikat, catatan, dll.
-    if (!h || /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal)$/i.test(h)) return;
+    const hText = String(h || "").trim();
+    if (!hText || /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(hText)) return;
     
     // Asumsikan kolom di sebelah kanan nama/nilai yang bukan kolom filter adalah kolom TP
     if (idx > Math.max(namaIdx, nilaiRaporIdx)) {
-      tpCols.push({ index: idx, name: h });
+      tpCols.push({ index: idx, name: hText });
     }
   });
 
   return {
-    headers,
+    headers: headers.map(h => String(h || "").trim()),
     headerRowIdx,
+    hasSubHeaders,
     tpCols,
     nisnIdx,
     namaIdx,
@@ -108,10 +123,15 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
     throw new Error("Gagal mengurai file Excel saat proses penulisan nilai.");
   }
 
+  // Cek apakah ada sub-headers
+  const nextRow = rows[headerRowIdx + 1];
+  const hasSubHeaders = nextRow && nextRow.some(cell => typeof cell === 'string' && (/^tp/i.test(cell.trim()) || /^tujuan/i.test(cell.trim())));
+
   const kkmVal = Number(kkm) || 75;
+  const startRowIdx = hasSubHeaders ? headerRowIdx + 2 : headerRowIdx + 1;
 
   // Mulai mengisi baris demi baris di bawah header
-  for (let r = headerRowIdx + 1; r < rows.length; r++) {
+  for (let r = startRowIdx; r < rows.length; r++) {
     const row = rows[r];
     if (!row || row.length === 0) continue;
 
