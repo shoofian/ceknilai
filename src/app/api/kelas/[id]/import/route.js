@@ -92,12 +92,25 @@ export async function POST(request, { params }) {
       // Bersihkan nilai agar sesuai dengan kolomNilai yang ada
       const cleanedNilai = {};
       kelas.kolomNilai.forEach(col => {
-        if (nilai && nilai[col.nama] !== undefined && nilai[col.nama] !== null && nilai[col.nama] !== '') {
-          cleanedNilai[col.id] = Number(nilai[col.nama]);
-        } else if (nilai && nilai[col.id] !== undefined && nilai[col.id] !== null && nilai[col.id] !== '') {
-          cleanedNilai[col.id] = Number(nilai[col.id]);
+        if (col.isGroup && col.subKolom && col.subKolom.length > 0) {
+          col.subKolom.forEach(sub => {
+            const keyName = `${col.nama} - ${sub.nama}`;
+            if (nilai && nilai[keyName] !== undefined && nilai[keyName] !== null && nilai[keyName] !== '') {
+              cleanedNilai[sub.id] = Number(nilai[keyName]);
+            } else if (nilai && nilai[sub.id] !== undefined && nilai[sub.id] !== null && nilai[sub.id] !== '') {
+              cleanedNilai[sub.id] = Number(nilai[sub.id]);
+            } else {
+              cleanedNilai[sub.id] = null;
+            }
+          });
         } else {
-          cleanedNilai[col.id] = null;
+          if (nilai && nilai[col.nama] !== undefined && nilai[col.nama] !== null && nilai[col.nama] !== '') {
+            cleanedNilai[col.id] = Number(nilai[col.nama]);
+          } else if (nilai && nilai[col.id] !== undefined && nilai[col.id] !== null && nilai[col.id] !== '') {
+            cleanedNilai[col.id] = Number(nilai[col.id]);
+          } else {
+            cleanedNilai[col.id] = null;
+          }
         }
       });
 

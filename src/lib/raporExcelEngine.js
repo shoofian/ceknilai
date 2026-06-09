@@ -240,18 +240,28 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
         // Cari apakah ini grup atau aspek biasa
         const aspectDef = kelas.kolomNilai.find(c => c.id === aspectId);
         if (aspectDef && aspectDef.isGroup && aspectDef.subKolom) {
-          // Hitung rata-rata subkolom
+          // Hitung rata-rata subkolom (rata-rata vs persentase kustom)
           let subTotal = 0;
-          let subFilled = 0;
+          let subFilledWeight = 0;
+          let subFilledCount = 0;
           aspectDef.subKolom.forEach(sub => {
             const sc = student.nilai[sub.id];
             if (sc !== undefined && sc !== null && sc !== "") {
-              subTotal += Number(sc);
-              subFilled++;
+              const scNum = Number(sc);
+              if (aspectDef.hitungMetode === "persentase") {
+                const subBobot = sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : 0;
+                subTotal += scNum * subBobot;
+                subFilledWeight += subBobot;
+              } else {
+                subTotal += scNum;
+              }
+              subFilledCount++;
             }
           });
-          if (subFilled > 0) {
-            score = subTotal / subFilled;
+          if (subFilledCount > 0) {
+            score = aspectDef.hitungMetode === "persentase"
+              ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
+              : (subTotal / subFilledCount);
             isFilled = true;
           }
         } else {

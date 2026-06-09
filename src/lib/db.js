@@ -34,7 +34,12 @@ function mapKelasFromDb(k) {
         nama: col.nama,
         bobot: col.bobot,
         isGroup: groupConfig ? !!groupConfig.isGroup : false,
-        subKolom: groupConfig ? (groupConfig.subKolom || []) : []
+        hitungMetode: groupConfig ? (groupConfig.hitungMetode || "rata-rata") : "rata-rata",
+        subKolom: groupConfig ? (groupConfig.subKolom || []).map(sub => ({
+          id: sub.id,
+          nama: sub.nama,
+          bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+        })) : []
       };
     }),
     siswa: (k.siswa || []).map(s => ({
@@ -292,7 +297,12 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
         if (col.isGroup) {
           groupConfigs[col.id] = {
             isGroup: true,
-            subKolom: col.subKolom || []
+            hitungMetode: col.hitungMetode || "rata-rata",
+            subKolom: (col.subKolom || []).map(sub => ({
+              id: sub.id,
+              nama: sub.nama,
+              bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+            }))
           };
         }
       });
@@ -559,8 +569,48 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const hiddenAspek = Array.isArray(skema.hiddenAspek) ? skema.hiddenAspek : [];
 
       kolomNilai.forEach(col => {
-        const scoreVal = nilaiObj[col.id];
-        const isFilled = scoreVal !== undefined && scoreVal !== null && scoreVal !== "";
+        const groupConfig = skema.kolomAspekGroup?.[col.id];
+        const isGroup = groupConfig ? !!groupConfig.isGroup : false;
+        const hitungMetode = groupConfig ? (groupConfig.hitungMetode || "rata-rata") : "rata-rata";
+        const subKolom = groupConfig ? (groupConfig.subKolom || []) : [];
+
+        let scoreVal = null;
+        let isFilled = false;
+
+        if (isGroup && subKolom.length > 0) {
+          let subTotal = 0;
+          let subFilledWeight = 0;
+          let subFilledCount = 0;
+
+          subKolom.forEach(sub => {
+            const sc = nilaiObj[sub.id];
+            if (sc !== undefined && sc !== null && sc !== "") {
+              const scNum = Number(sc);
+              if (hitungMetode === "persentase") {
+                const subBobot = sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : 0;
+                subTotal += scNum * subBobot;
+                subFilledWeight += subBobot;
+              } else {
+                subTotal += scNum;
+              }
+              subFilledCount++;
+            }
+          });
+
+          if (subFilledCount > 0) {
+            isFilled = true;
+            if (hitungMetode === "persentase") {
+              scoreVal = subFilledWeight > 0 ? (subTotal / subFilledWeight) : 0;
+            } else {
+              scoreVal = subTotal / subFilledCount;
+            }
+          }
+        } else {
+          const rawVal = nilaiObj[col.id];
+          isFilled = rawVal !== undefined && rawVal !== null && rawVal !== "";
+          scoreVal = isFilled ? Number(rawVal) : null;
+        }
+
         const score = isFilled ? Number(scoreVal) : 0;
         const kontribusi = score * (col.bobot / 100);
         
@@ -572,12 +622,14 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         totalBobot += col.bobot;
 
         const isHidden = hiddenAspek.includes(col.id);
-        let displayScore = scoreVal;
+        let displayScore = isFilled ? Number(score.toFixed(2)) : "-";
         let displayKontribusi = isFilled ? Number(kontribusi.toFixed(2)) : "-";
 
         if (isHidden && isFilled) {
           displayScore = score >= (skema.kkm ?? 75) ? "Tuntas" : "Belum Tuntas";
           displayKontribusi = "-";
+        } else if (!isFilled) {
+          displayScore = "-";
         }
 
         detailNilai.push({

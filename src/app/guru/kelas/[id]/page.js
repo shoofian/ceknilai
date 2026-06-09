@@ -122,6 +122,61 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSortConfig({ key, direction });
   };
 
+  const getColScore = (student, col, tempScores = null) => {
+    if (col.isGroup && col.subKolom) {
+      let subTotal = 0;
+      let subFilledCount = 0;
+      let subFilledWeight = 0;
+      
+      col.subKolom.forEach(sub => {
+        let sc = student.nilai[sub.id];
+        if (tempScores) {
+          const cellKey = `${student.nisn}-${sub.id}`;
+          if (tempScores[cellKey] !== undefined) {
+            sc = tempScores[cellKey] === "" ? null : Number(tempScores[cellKey]);
+          }
+        }
+        if (sc !== undefined && sc !== null && sc !== "") {
+          const scNum = Number(sc);
+          if (col.hitungMetode === "persentase") {
+            const subBobot = sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : 0;
+            subTotal += scNum * subBobot;
+            subFilledWeight += subBobot;
+          } else {
+            subTotal += scNum;
+          }
+          subFilledCount++;
+        }
+      });
+      
+      if (subFilledCount === 0) return { score: null, isFilled: false, isAllFilled: false };
+      
+      const score = col.hitungMetode === "persentase"
+        ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
+        : (subTotal / subFilledCount);
+        
+      return {
+        score,
+        isFilled: true,
+        isAllFilled: subFilledCount === col.subKolom.length
+      };
+    } else {
+      let sc = student.nilai[col.id];
+      if (tempScores) {
+        const cellKey = `${student.nisn}-${col.id}`;
+        if (tempScores[cellKey] !== undefined) {
+          sc = tempScores[cellKey] === "" ? null : Number(tempScores[cellKey]);
+        }
+      }
+      const isFilled = sc !== undefined && sc !== null && sc !== "";
+      return {
+        score: isFilled ? Number(sc) : null,
+        isFilled,
+        isAllFilled: isFilled
+      };
+    }
+  };
+
   const sortedStudents = useMemo(() => {
     if (!kelas?.siswa) return [];
     
@@ -131,36 +186,10 @@ export default function DetailKelas({ params: paramsPromise }) {
       let jumlahAspekTerisi = 0;
       
       kelas.kolomNilai.forEach(col => {
-        if (col.isGroup && col.subKolom) {
-          let subTotal = 0;
-          let subFilled = 0;
-          col.subKolom.forEach(sub => {
-            const cellKey = `${student.nisn}-${sub.id}`;
-            let sc = student.nilai[sub.id];
-            if (temporaryScores[cellKey] !== undefined) {
-              sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
-            }
-            if (sc !== undefined && sc !== null && sc !== "") {
-              subTotal += Number(sc);
-              subFilled++;
-            }
-          });
-          if (subFilled === col.subKolom.length && col.subKolom.length > 0) {
-            const avg = subTotal / subFilled;
-            totalNilaiTerisi += avg * (col.bobot / 100);
-            jumlahAspekTerisi++;
-          } else if (subFilled > 0) {
-            const avg = subTotal / subFilled;
-            totalNilaiTerisi += avg * (col.bobot / 100);
-          }
-        } else {
-          const cellKey = `${student.nisn}-${col.id}`;
-          let sc = student.nilai[col.id];
-          if (temporaryScores[cellKey] !== undefined) {
-            sc = temporaryScores[cellKey] === "" ? null : Number(temporaryScores[cellKey]);
-          }
-          if (sc !== undefined && sc !== null && sc !== "") {
-            totalNilaiTerisi += Number(sc) * (col.bobot / 100);
+        const { score, isFilled, isAllFilled } = getColScore(student, col, temporaryScores);
+        if (isFilled) {
+          totalNilaiTerisi += score * (col.bobot / 100);
+          if (isAllFilled) {
             jumlahAspekTerisi++;
           }
         }
@@ -203,28 +232,10 @@ export default function DetailKelas({ params: paramsPromise }) {
       let total = 0;
       let filledCount = 0;
       kelas.kolomNilai.forEach(col => {
-        if (col.isGroup && col.subKolom) {
-          let subTotal = 0;
-          let subFilled = 0;
-          col.subKolom.forEach(sub => {
-            const sc = student.nilai[sub.id];
-            if (sc !== undefined && sc !== null && sc !== "") {
-              subTotal += Number(sc);
-              subFilled++;
-            }
-          });
-          if (subFilled === col.subKolom.length && col.subKolom.length > 0) {
-            const avg = subTotal / subFilled;
-            total += avg * (col.bobot / 100);
-            filledCount++;
-          } else if (subFilled > 0) {
-            const avg = subTotal / subFilled;
-            total += avg * (col.bobot / 100);
-          }
-        } else {
-          const sc = student.nilai[col.id];
-          if (sc !== undefined && sc !== null && sc !== "") {
-            total += Number(sc) * (col.bobot / 100);
+        const { score, isFilled, isAllFilled } = getColScore(student, col, null);
+        if (isFilled) {
+          total += score * (col.bobot / 100);
+          if (isAllFilled) {
             filledCount++;
           }
         }
@@ -293,20 +304,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     const aspectAvg = kelas.kolomNilai.map(col => {
       const scores = kelas.siswa
         .map(s => {
-          let val = s.nilai[col.id];
-          if (col.isGroup && col.subKolom) {
-            let subTotal = 0;
-            let subFilled = 0;
-            col.subKolom.forEach(sub => {
-              const sc = s.nilai[sub.id];
-              if (sc !== undefined && sc !== null && sc !== "") {
-                subTotal += Number(sc);
-                subFilled++;
-              }
-            });
-            val = subFilled > 0 ? (subTotal / subFilled) : null;
-          }
-          return { nama: s.nama, finalScore: s.finalScore, val };
+          const { score, isFilled } = getColScore(s, col, null);
+          return { nama: s.nama, finalScore: s.finalScore, val: isFilled ? score : null };
         })
         .filter(s => s.val !== undefined && s.val !== null && s.val !== "");
         
@@ -325,24 +324,9 @@ export default function DetailKelas({ params: paramsPromise }) {
     const problematicStudents = studentScores.map(s => {
       const issues = [];
       kelas.kolomNilai.forEach(col => {
-        let val = s.nilai[col.id];
-        let isEmpty = false;
-        
-        if (col.isGroup && col.subKolom) {
-          let subTotal = 0;
-          let subFilled = 0;
-          col.subKolom.forEach(sub => {
-            const sc = s.nilai[sub.id];
-            if (sc !== undefined && sc !== null && sc !== "") {
-              subTotal += Number(sc);
-              subFilled++;
-            }
-          });
-          val = subFilled > 0 ? (subTotal / subFilled) : null;
-          if (subFilled === 0) isEmpty = true;
-        } else {
-          if (val === undefined || val === null || val === "") isEmpty = true;
-        }
+        const { score, isFilled } = getColScore(s, col, null);
+        let isEmpty = !isFilled;
+        let val = isFilled ? score : null;
 
         if (isEmpty) {
           issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
@@ -743,7 +727,20 @@ export default function DetailKelas({ params: paramsPromise }) {
   // === HANDLERS KOLOM NILAI ===
 
   const handleNewAspectChange = (id, field, value) => {
-    const updated = newAspects.map(a => a.id === id ? { ...a, [field]: value } : a);
+    const updated = newAspects.map(a => {
+      if (a.id === id) {
+        if (field === 'isGroup') {
+          return {
+            ...a,
+            isGroup: value,
+            subKolom: value ? (a.subKolom || []) : [],
+            hitungMetode: value ? (a.hitungMetode || "rata-rata") : "rata-rata"
+          };
+        }
+        return { ...a, [field]: value };
+      }
+      return a;
+    });
     setNewAspects(updated);
 
     // Auto-add new empty row if the last row is typed into
@@ -890,6 +887,37 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const saveAllBobot = async () => {
+    // Validasi bobot kelompok sub-aspek kustom
+    for (const col of kelas.kolomNilai) {
+      if (col.isGroup && col.hitungMetode === "persentase") {
+        const sum = (col.subKolom || []).reduce((s, sub) => s + (Number(sub.bobot) || 0), 0);
+        if (sum !== 100) {
+          alert(`⚠️ Gagal menyimpan: Aspek kelompok "${col.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-aspeknya saat ini adalah ${sum}% (harus pas 100%).`);
+          return;
+        }
+        // Pastikan tidak ada nama sub-aspek yang kosong
+        if ((col.subKolom || []).some(sub => sub.nama.trim() === "")) {
+          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-aspek yang kosong pada kelompok "${col.nama}".`);
+          return;
+        }
+      }
+    }
+
+    const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
+    for (const aspect of validNewAspects) {
+      if (aspect.isGroup && aspect.hitungMetode === "persentase") {
+        const sum = (aspect.subKolom || []).reduce((s, sub) => s + (Number(sub.bobot) || 0), 0);
+        if (sum !== 100) {
+          alert(`⚠️ Gagal menyimpan: Aspek kelompok baru "${aspect.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-aspeknya saat ini adalah ${sum}% (harus pas 100%).`);
+          return;
+        }
+        if ((aspect.subKolom || []).some(sub => sub.nama.trim() === "")) {
+          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-aspek yang kosong pada kelompok baru "${aspect.nama}".`);
+          return;
+        }
+      }
+    }
+
     if (totalBobot !== 100) {
       alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
     }
@@ -1034,25 +1062,18 @@ export default function DetailKelas({ params: paramsPromise }) {
         let totalNilaiTerisi = 0;
         kelas.kolomNilai.forEach(col => {
           if (col.isGroup && col.subKolom?.length > 0) {
-            let subTotal = 0;
-            let subFilled = 0;
             col.subKolom.forEach(sub => {
               const val = siswa.nilai[sub.id];
               row.push(val !== null && val !== undefined ? val : "");
-              if (val !== null && val !== undefined && val !== "") {
-                subTotal += Number(val);
-                subFilled++;
-              }
             });
-            if (subFilled > 0) {
-              totalNilaiTerisi += (subTotal / subFilled) * (col.bobot / 100);
-            }
           } else {
             const val = siswa.nilai[col.id];
             row.push(val !== null && val !== undefined ? val : "");
-            if (val !== null && val !== undefined && val !== "") {
-              totalNilaiTerisi += Number(val) * (col.bobot / 100);
-            }
+          }
+          
+          const { score, isFilled } = getColScore(siswa, col, null);
+          if (isFilled) {
+            totalNilaiTerisi += score * (col.bobot / 100);
           }
         });
         
@@ -2347,7 +2368,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                                       return {
                                         ...c,
                                         isGroup: nextIsGroup,
-                                        subKolom: nextIsGroup ? (c.subKolom || []) : []
+                                        subKolom: nextIsGroup ? (c.subKolom || []) : [],
+                                        hitungMetode: nextIsGroup ? (c.hitungMetode || "rata-rata") : "rata-rata"
                                       };
                                     }
                                     return c;
@@ -2356,6 +2378,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 }} style={{ accentColor: "var(--primary)", width: "13px", height: "13px" }} />
                                 Kelompok Nilai (Sub-Aspek/KD)
                               </label>
+                              {col.isGroup && (
+                                <div style={{ marginTop: "4px", marginLeft: "50px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
+                                  <select
+                                    value={col.hitungMetode || "rata-rata"}
+                                    onChange={(e) => {
+                                      const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, hitungMetode: e.target.value } : c);
+                                      setKelas({ ...kelas, kolomNilai: newCols });
+                                    }}
+                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                                  >
+                                    <option value="rata-rata">Rata-rata Otomatis</option>
+                                    <option value="persentase">Bobot Kustom (%)</option>
+                                  </select>
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td style={{ padding: "6px 10px", textAlign: "center" }}>
@@ -2385,14 +2423,34 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <tr key={sub.id} style={{ borderBottom: sIdx === col.subKolom.length - 1 ? "1px solid var(--border-color)" : "none", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
                             <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
                               <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(245, 158, 11, 0.3)", borderBottom: "2px solid rgba(245, 158, 11, 0.3)", borderRadius: "0 0 0 6px" }}></div>
-                              <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
-                                const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
-                                setKelas({ ...kelas, kolomNilai: newCols });
-                              }} style={{ padding: "3px 8px", fontSize: "0.8rem" }} />
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
+                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
+                                {col.hitungMetode === "persentase" && (
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="form-input"
+                                    placeholder="%"
+                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                    onChange={(e) => {
+                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                        const val = e.target.value === "" ? null : Number(e.target.value);
+                                        const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
+                                        setKelas({ ...kelas, kolomNilai: newCols });
+                                      }
+                                    }}
+                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
+                                  />
+                                )}
+                              </div>
                             </td>
                             <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span>Rata-rata otomatis</span>
+                                <span>{col.hitungMetode === "persentase" ? "Kontribusi bobot kustom" : "Rata-rata otomatis"}</span>
                                 <button onClick={() => {
                                   if(!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
                                   const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
@@ -2405,10 +2463,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {col.isGroup && (
                           <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
                             <td colSpan={4} style={{ padding: "4px 10px 8px 30px" }}>
-                              <button onClick={() => {
-                                const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "" }] } : c);
-                                setKelas({ ...kelas, kolomNilai: newCols });
-                              }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <button onClick={() => {
+                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "", bobot: "" }] } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                                {col.hitungMetode === "persentase" && (
+                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
+                                    Total Bobot Sub-Aspek: {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )}
@@ -2425,6 +2490,19 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
                                 Jadikan Kelompok Nilai (Sub-Aspek/KD)
                               </label>
+                              {aspect.isGroup && (
+                                <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
+                                  <select
+                                    value={aspect.hitungMetode || "rata-rata"}
+                                    onChange={(e) => handleNewAspectChange(aspect.id, 'hitungMetode', e.target.value)}
+                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                                  >
+                                    <option value="rata-rata">Rata-rata Otomatis</option>
+                                    <option value="persentase">Bobot Kustom (%)</option>
+                                  </select>
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
@@ -2445,10 +2523,30 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <tr key={sub.id} style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
                             <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
                               <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(59, 130, 246, 0.3)", borderBottom: "2px solid rgba(59, 130, 246, 0.3)", borderRadius: "0 0 0 6px" }}></div>
-                              <input type="text" className="form-input" placeholder="Nama sub-aspek (misal: KD 1)" value={sub.nama} onChange={(e) => {
-                                const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
-                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                              }} style={{ padding: "3px 8px", fontSize: "0.8rem" }} />
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input type="text" className="form-input" placeholder="Nama sub-aspek (misal: KD 1)" value={sub.nama} onChange={(e) => {
+                                  const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
+                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
+                                {aspect.hitungMetode === "persentase" && (
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="form-input"
+                                    placeholder="%"
+                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                    onChange={(e) => {
+                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                        const val = e.target.value === "" ? null : Number(e.target.value);
+                                        const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
+                                        handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                                      }
+                                    }}
+                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
+                                  />
+                                )}
+                              </div>
                             </td>
                             <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
                               <button onClick={() => {
@@ -2461,10 +2559,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {aspect.isGroup && (
                           <tr style={{ backgroundColor: "rgba(59,130,246,0.02)", borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
                             <td colSpan={4} style={{ padding: "4px 10px 10px 30px" }}>
-                              <button onClick={() => {
-                                const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "" }];
-                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                              }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <button onClick={() => {
+                                  const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "", bobot: "" }];
+                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                                {aspect.hitungMetode === "persentase" && (
+                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
+                                    Total Bobot: {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         )}
