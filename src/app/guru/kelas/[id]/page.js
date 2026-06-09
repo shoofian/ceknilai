@@ -102,9 +102,48 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State untuk Integrasi E-Rapor
   const [raporModalOpen, setRaporModalOpen] = useState(false);
 
+  // States untuk Gabung Aspek ke Kelompok
+  const [selectedForGroup, setSelectedForGroup] = useState(new Set());
+  const [mergeModalOpen, setMergeModalOpen] = useState(false);
+  const [mergeGroupName, setMergeGroupName] = useState("");
+  const [isMerging, setIsMerging] = useState(false);
+
   const handleOpenHistory = (student) => {
     setSelectedHistorySiswa(student);
     setHistoryModalOpen(true);
+  };
+
+  const handleMergeToGroup = async () => {
+    if (!mergeGroupName.trim()) {
+      alert("Masukkan nama kelompok terlebih dahulu!");
+      return;
+    }
+    if (selectedForGroup.size < 2) {
+      alert("Pilih minimal 2 aspek untuk digabung!");
+      return;
+    }
+    setIsMerging(true);
+    try {
+      const response = await fetch(`/api/kelas/${classId}/kolom/merge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          groupName: mergeGroupName.trim(),
+          colIds: Array.from(selectedForGroup)
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Gagal menggabungkan aspek");
+      setMergeModalOpen(false);
+      setMergeGroupName("");
+      setSelectedForGroup(new Set());
+      await fetchClassDetail();
+    } catch (err) {
+      console.error("Merge failed", err);
+      alert(err.message || "Terjadi kesalahan.");
+    } finally {
+      setIsMerging(false);
+    }
   };
 
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
@@ -2339,11 +2378,27 @@ export default function DetailKelas({ params: paramsPromise }) {
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
                 <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1rem" }}>💡</span>
-                  <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Anda dapat mengelompokkan beberapa aspek nilai (misalnya KD 3.1, KD 3.2 di bawah satu grup "Tugas") dengan mencentang pilihan <strong>"Kelompok Nilai (Sub-Aspek/KD)"</strong> pada aspek yang diinginkan. Rata-rata dari sub-aspek tersebut akan dihitung otomatis.</span>
+                  <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Centang <strong>"Kelompok Nilai"</strong> pada aspek untuk membuat sub-aspek baru. Atau, <strong>centang beberapa aspek mandiri</strong> yang sudah ada dan klik <strong>"🔗 Gabung ke Kelompok"</strong> untuk menggabungkan aspek beserta nilainya tanpa kehilangan data.</span>
                 </div>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
+                      <th style={{ textAlign: "center", padding: "8px 6px", width: "32px" }}>
+                        <input
+                          type="checkbox"
+                          title="Pilih semua aspek mandiri"
+                          style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
+                          checked={kelas.kolomNilai.filter(c => !c.isGroup).length > 0 && kelas.kolomNilai.filter(c => !c.isGroup).every(c => selectedForGroup.has(c.id))}
+                          onChange={(e) => {
+                            const eligibleIds = kelas.kolomNilai.filter(c => !c.isGroup).map(c => c.id);
+                            if (e.target.checked) {
+                              setSelectedForGroup(new Set(eligibleIds));
+                            } else {
+                              setSelectedForGroup(new Set());
+                            }
+                          }}
+                        />
+                      </th>
                       <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
                       <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "120px" }}>Tampilkan Ke Siswa</th>
                       <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
@@ -2353,13 +2408,30 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <tbody>
                     {kelas.kolomNilai.map((col) => (
                       <Fragment key={col.id}>
-                        <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : "transparent" }}>
+                        <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : selectedForGroup.has(col.id) ? "rgba(59,130,246,0.06)" : "transparent" }}>
+                          <td style={{ padding: "6px 6px", textAlign: "center", verticalAlign: "top", paddingTop: "12px" }}>
+                            {!col.isGroup && (
+                              <input
+                                type="checkbox"
+                                checked={selectedForGroup.has(col.id)}
+                                onChange={(e) => {
+                                  const next = new Set(selectedForGroup);
+                                  if (e.target.checked) next.add(col.id);
+                                  else next.delete(col.id);
+                                  setSelectedForGroup(next);
+                                }}
+                                style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
+                                title="Pilih untuk digabung ke kelompok"
+                              />
+                            )}
+                          </td>
                           <td style={{ padding: "6px 10px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
                                 <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
                               </div>
+
                               <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginLeft: col.isGroup ? "50px" : "0" }}>
                                 <input type="checkbox" checked={col.isGroup} onChange={(e) => {
                                   const newCols = kelas.kolomNilai.map(c => {
@@ -2421,7 +2493,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </tr>
                         {col.isGroup && col.subKolom && col.subKolom.map((sub, sIdx) => (
                           <tr key={sub.id} style={{ borderBottom: sIdx === col.subKolom.length - 1 ? "1px solid var(--border-color)" : "none", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
-                            <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
+                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
+                            <td colSpan={2} style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
                               <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(245, 158, 11, 0.3)", borderBottom: "2px solid rgba(245, 158, 11, 0.3)", borderRadius: "0 0 0 6px" }}></div>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
@@ -2462,6 +2535,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         ))}
                         {col.isGroup && (
                           <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
+                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
                             <td colSpan={4} style={{ padding: "4px 10px 8px 30px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                                 <button onClick={() => {
@@ -2483,6 +2557,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     {newAspects.map((aspect, index) => (
                       <Fragment key={aspect.id}>
                         <tr style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
+                          <td style={{ padding: 0 }} />{/* empty checkbox column */}
                           <td style={{ padding: "8px 10px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                               <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
@@ -2580,6 +2655,31 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                 {kolomError && (
                   <p style={{ color: "var(--danger)", fontSize: "0.82rem", margin: "0", padding: "6px 10px", backgroundColor: "var(--danger-glow)" }}>{kolomError}</p>
+                )}
+
+                {/* Merge Toolbar — muncul saat 2+ aspek mandiri dipilih */}
+                {selectedForGroup.size >= 2 && (
+                  <div className="animate-fade-in" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "rgba(59,130,246,0.08)", borderTop: "1px solid rgba(59,130,246,0.2)", flexWrap: "wrap", gap: "8px" }}>
+                    <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--primary)" }}>
+                      🔲 {selectedForGroup.size} aspek dipilih
+                    </span>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <button
+                        onClick={() => setSelectedForGroup(new Set())}
+                        className="btn btn-secondary"
+                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                      >
+                        Batal Pilih
+                      </button>
+                      <button
+                        onClick={() => { setMergeGroupName(""); setMergeModalOpen(true); }}
+                        className="btn btn-primary"
+                        style={{ padding: "4px 12px", fontSize: "0.78rem", fontWeight: "700" }}
+                      >
+                        🔗 Gabung ke Kelompok
+                      </button>
+                    </div>
+                  </div>
                 )}
 
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
@@ -3661,6 +3761,84 @@ export default function DetailKelas({ params: paramsPromise }) {
         kelas={kelas}
         students={sortedStudents}
       />
+
+      {/* Modal Gabung Aspek ke Kelompok */}
+      {mergeModalOpen && (() => {
+        const selectedCols = kelas.kolomNilai.filter(c => selectedForGroup.has(c.id));
+        const totalBobot = selectedCols.reduce((sum, c) => sum + (Number(c.bobot) || 0), 0);
+        return (
+          <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "16px" }}>
+            <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "500px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>🔗 Gabung Aspek ke Kelompok</h3>
+                <button onClick={() => setMergeModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.4rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1 }}>×</button>
+              </div>
+
+              <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", backgroundColor: "rgba(59,130,246,0.06)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                <strong>💡 Cara Kerja:</strong> Aspek-aspek yang dipilih akan menjadi sub-aspek dalam kelompok baru. Semua data nilai siswa yang sudah ada <strong>tetap terjaga</strong> — tidak ada data yang hilang.
+              </div>
+
+              {/* Daftar aspek yang akan digabung */}
+              <div>
+                <p style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>Aspek yang akan digabung:</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {selectedCols.map(c => {
+                    const bobotNorm = totalBobot > 0 ? Math.round((c.bobot / totalBobot) * 10000) / 100 : 0;
+                    return (
+                      <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", fontSize: "0.83rem" }}>
+                        <span style={{ fontWeight: "600" }}>{c.nama}</span>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>bobot asli: {c.bobot}%</span>
+                          <span style={{ color: "var(--primary)", fontWeight: "700", fontSize: "0.75rem" }}>→ {bobotNorm}% dalam grup</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: "8px", padding: "6px 10px", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", fontSize: "0.8rem", display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--text-secondary)" }}>Bobot kelompok di nilai akhir:</span>
+                  <strong style={{ color: totalBobot === 100 ? "var(--success)" : "var(--text-primary)" }}>{totalBobot}%</strong>
+                </div>
+              </div>
+
+              {/* Input nama kelompok */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: "700" }}>Nama Kelompok Baru</label>
+                <input
+                  id="merge-group-name-input"
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: Pengetahuan, Keterampilan, ..."
+                  value={mergeGroupName}
+                  onChange={(e) => setMergeGroupName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && mergeGroupName.trim()) handleMergeToGroup(); }}
+                  style={{ padding: "8px 12px", fontSize: "0.9rem" }}
+                  autoFocus
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+                <button onClick={() => setMergeModalOpen(false)} className="btn btn-secondary" disabled={isMerging}>Batal</button>
+                <button
+                  onClick={handleMergeToGroup}
+                  className="btn btn-primary"
+                  disabled={isMerging || !mergeGroupName.trim()}
+                  style={{ display: "flex", alignItems: "center", gap: "6px", minWidth: "120px", justifyContent: "center" }}
+                >
+                  {isMerging ? (
+                    <>
+                      <span style={{ display: "inline-block", width: "12px", height: "12px", border: "2px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                      Menggabung...
+                    </>
+                  ) : (
+                    <>🔗 Konfirmasi &amp; Gabung</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </>
   );
