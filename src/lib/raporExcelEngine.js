@@ -40,23 +40,39 @@ export async function analyzeRaporTemplate(fileBuffer) {
     throw new Error("Format template Excel tidak valid. Baris header dengan kolom 'NISN' dan 'Nama' tidak ditemukan.");
   }
 
-  // Cek apakah ada sub-headers di bawahnya (gabungan baris)
-  const nextRow = rows[headerRowIdx + 1];
-  let hasSubHeaders = false;
-  if (nextRow) {
-    const nisnVal = String(nextRow[nisnIdx] || "").trim().toLowerCase();
-    const namaVal = String(nextRow[namaIdx] || "").trim().toLowerCase();
-    const isNisnHeaderOrEmpty = !nisnVal || /nisn/i.test(nisnVal);
-    const isNamaHeaderOrEmpty = !namaVal || /nama|siswa/i.test(namaVal);
-    if (isNisnHeaderOrEmpty && isNamaHeaderOrEmpty) {
-      hasSubHeaders = nextRow.some(cell => String(cell || "").trim() !== "");
+  // Cari apakah ada sub-headers di bawah header utama (bisa terhalang baris kosong/tersembunyi)
+  let subHeaderRowIdx = -1;
+  const startCol = Math.max(namaIdx, nilaiRaporIdx) + 1;
+  
+  for (let r = headerRowIdx + 1; r < Math.min(rows.length, headerRowIdx + 10); r++) {
+    const row = rows[r];
+    if (!row) continue;
+    
+    let hasTPInRow = false;
+    for (let col = startCol; col < row.length; col++) {
+      const cellVal = String(row[col] || "").trim();
+      if (cellVal) {
+        const isGrade = /^(t|r|f)$/i.test(cellVal) || !isNaN(cellVal);
+        const isIgnored = /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(cellVal);
+        if (!isGrade && !isIgnored) {
+          hasTPInRow = true;
+          break;
+        }
+      }
+    }
+    
+    if (hasTPInRow) {
+      subHeaderRowIdx = r;
+      break;
     }
   }
 
+  const hasSubHeaders = subHeaderRowIdx !== -1;
   const headers = [...rows[headerRowIdx]];
   if (hasSubHeaders) {
+    const subHeaderRow = rows[subHeaderRowIdx];
     for (let idx = 0; idx < headers.length; idx++) {
-      const subCell = String(nextRow[idx] || "").trim();
+      const subCell = String(subHeaderRow[idx] || "").trim();
       if (subCell) {
         headers[idx] = subCell;
       }
@@ -120,7 +136,7 @@ export async function analyzeRaporTemplate(fileBuffer) {
     if (idx > Math.max(namaIdx, nilaiRaporIdx)) {
       // Ambil komentar sel (jika ada) dari baris header atau sub-header untuk deskripsi TP
       const cellRefParent = XLSX.utils.encode_cell({ r: headerRowIdx, c: idx });
-      const cellRefSub = XLSX.utils.encode_cell({ r: headerRowIdx + 1, c: idx });
+      const cellRefSub = XLSX.utils.encode_cell({ r: hasSubHeaders ? subHeaderRowIdx : headerRowIdx + 1, c: idx });
       const parentCell = worksheet[cellRefParent];
       const subCell = worksheet[cellRefSub];
       
@@ -200,21 +216,36 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
     throw new Error("Gagal mengurai file Excel saat proses penulisan nilai.");
   }
 
-  // Cek apakah ada sub-headers
-  const nextRow = rows[headerRowIdx + 1];
-  let hasSubHeaders = false;
-  if (nextRow) {
-    const nisnVal = String(nextRow[nisnIdx] || "").trim().toLowerCase();
-    const namaVal = String(nextRow[namaIdx] || "").trim().toLowerCase();
-    const isNisnHeaderOrEmpty = !nisnVal || /nisn/i.test(nisnVal);
-    const isNamaHeaderOrEmpty = !namaVal || /nama|siswa/i.test(namaVal);
-    if (isNisnHeaderOrEmpty && isNamaHeaderOrEmpty) {
-      hasSubHeaders = nextRow.some(cell => String(cell || "").trim() !== "");
+  // Cari apakah ada sub-headers di bawah header utama (bisa terhalang baris kosong/tersembunyi)
+  let subHeaderRowIdx = -1;
+  const startCol = Math.max(namaIdx, nilaiRaporIdx) + 1;
+  
+  for (let r = headerRowIdx + 1; r < Math.min(rows.length, headerRowIdx + 10); r++) {
+    const row = rows[r];
+    if (!row) continue;
+    
+    let hasTPInRow = false;
+    for (let col = startCol; col < row.length; col++) {
+      const cellVal = String(row[col] || "").trim();
+      if (cellVal) {
+        const isGrade = /^(t|r|f)$/i.test(cellVal) || !isNaN(cellVal);
+        const isIgnored = /^(no|nomor|predikat|keterangan|aksi|catatan|tgl|tanggal|validasi|nilai)$/i.test(cellVal);
+        if (!isGrade && !isIgnored) {
+          hasTPInRow = true;
+          break;
+        }
+      }
+    }
+    
+    if (hasTPInRow) {
+      subHeaderRowIdx = r;
+      break;
     }
   }
 
+  const hasSubHeaders = subHeaderRowIdx !== -1;
   const kkmVal = Number(kkm) || 75;
-  const startRowIdx = hasSubHeaders ? headerRowIdx + 2 : headerRowIdx + 1;
+  const startRowIdx = hasSubHeaders ? subHeaderRowIdx + 1 : headerRowIdx + 1;
 
   // Mulai mengisi baris demi baris di bawah header
   for (let r = startRowIdx; r < rows.length; r++) {
