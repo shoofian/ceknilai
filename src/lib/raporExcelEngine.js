@@ -41,12 +41,17 @@ export async function analyzeRaporTemplate(fileBuffer) {
   }
 
   // Cek apakah ada sub-headers di bawahnya (gabungan baris)
-  // Baris sub-header ditandai dengan kosongnya kolom NISN dan Nama Siswa (karena di-merge secara vertikal),
-  // sementara baris tersebut memiliki data di kolom TP.
   const nextRow = rows[headerRowIdx + 1];
-  const hasSubHeaders = nextRow && 
-    (!String(nextRow[nisnIdx] || "").trim() && !String(nextRow[namaIdx] || "").trim()) &&
-    nextRow.some(cell => String(cell || "").trim() !== "");
+  let hasSubHeaders = false;
+  if (nextRow) {
+    const nisnVal = String(nextRow[nisnIdx] || "").trim().toLowerCase();
+    const namaVal = String(nextRow[namaIdx] || "").trim().toLowerCase();
+    const isNisnHeaderOrEmpty = !nisnVal || /nisn/i.test(nisnVal);
+    const isNamaHeaderOrEmpty = !namaVal || /nama|siswa/i.test(namaVal);
+    if (isNisnHeaderOrEmpty && isNamaHeaderOrEmpty) {
+      hasSubHeaders = nextRow.some(cell => String(cell || "").trim() !== "");
+    }
+  }
 
   const headers = [...rows[headerRowIdx]];
   if (hasSubHeaders) {
@@ -57,6 +62,50 @@ export async function analyzeRaporTemplate(fileBuffer) {
       }
     }
   }
+  // Cari apakah ada data referensi TP di sheet lain atau di baris lain pada sheet yang sama
+  const tpLookup = {};
+  
+  // 1. Scan sheet pertama (main sheet) untuk baris yang berisi UUID dan teks deskripsi
+  rows.forEach(row => {
+    if (!Array.isArray(row)) return;
+    let foundUuid = "";
+    let foundDesc = "";
+    row.forEach(cell => {
+      const text = String(cell || "").trim();
+      // Regex untuk mendeteksi UUID
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text)) {
+        foundUuid = text;
+      } else if (text.length > 15 && !text.includes("-") && !text.includes("/") && !text.includes(":")) {
+        foundDesc = text;
+      }
+    });
+    if (foundUuid && foundDesc) {
+      tpLookup[foundUuid] = foundDesc;
+    }
+  });
+
+  // 2. Scan sheet lain jika ada sheet referensi khusus
+  workbook.SheetNames.forEach(name => {
+    if (name === sheetName) return; // skip sheet utama karena sudah di-scan
+    const refSheet = workbook.Sheets[name];
+    const refRows = XLSX.utils.sheet_to_json(refSheet, { header: 1, defval: "" });
+    refRows.forEach(refRow => {
+      if (!Array.isArray(refRow)) return;
+      let foundUuid = "";
+      let foundDesc = "";
+      refRow.forEach(cell => {
+        const text = String(cell || "").trim();
+        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(text)) {
+          foundUuid = text;
+        } else if (text.length > 15 && !text.includes("-") && !text.includes("/") && !text.includes(":")) {
+          foundDesc = text;
+        }
+      });
+      if (foundUuid && foundDesc) {
+        tpLookup[foundUuid] = foundDesc;
+      }
+    });
+  });
 
   const tpCols = [];
 
@@ -83,7 +132,9 @@ export async function analyzeRaporTemplate(fileBuffer) {
       }
       
       let displayName = hText;
-      if (commentText.trim()) {
+      if (tpLookup[hText]) {
+        displayName = `${hText} (${tpLookup[hText]})`;
+      } else if (commentText.trim()) {
         // Hapus nama author (biasanya diakhiri dengan colon & newline, contoh "e-Rapor:\nDescription")
         const cleanComment = commentText.replace(/^[^\n]+:\n/, "").trim();
         if (cleanComment) {
@@ -151,9 +202,16 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
 
   // Cek apakah ada sub-headers
   const nextRow = rows[headerRowIdx + 1];
-  const hasSubHeaders = nextRow && 
-    (!String(nextRow[nisnIdx] || "").trim() && !String(nextRow[namaIdx] || "").trim()) &&
-    nextRow.some(cell => String(cell || "").trim() !== "");
+  let hasSubHeaders = false;
+  if (nextRow) {
+    const nisnVal = String(nextRow[nisnIdx] || "").trim().toLowerCase();
+    const namaVal = String(nextRow[namaIdx] || "").trim().toLowerCase();
+    const isNisnHeaderOrEmpty = !nisnVal || /nisn/i.test(nisnVal);
+    const isNamaHeaderOrEmpty = !namaVal || /nama|siswa/i.test(namaVal);
+    if (isNisnHeaderOrEmpty && isNamaHeaderOrEmpty) {
+      hasSubHeaders = nextRow.some(cell => String(cell || "").trim() !== "");
+    }
+  }
 
   const kkmVal = Number(kkm) || 75;
   const startRowIdx = hasSubHeaders ? headerRowIdx + 2 : headerRowIdx + 1;
