@@ -919,23 +919,15 @@ export default function DetailKelas({ params: paramsPromise }) {
       const response = await fetch(`/api/kelas/${classId}/kolom`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kolomNilai: kolomToSave }),
+        body: JSON.stringify({ 
+          kolomNilai: kolomToSave,
+          skemaPenilaian: kelas.skemaPenilaian || {}
+        }),
       });
 
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || "Gagal memperbarui bobot.");
-      }
-
-      // Perbarui skemaPenilaian (termasuk hiddenAspek)
-      const skemaResponse = await fetch(`/api/kelas/${classId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skemaPenilaian: kelas.skemaPenilaian || {} }),
-      });
-      if (!skemaResponse.ok) {
-        const data = await skemaResponse.json();
-        throw new Error(data.error || "Gagal menyimpan konfigurasi tampilan aspek");
       }
 
       setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah

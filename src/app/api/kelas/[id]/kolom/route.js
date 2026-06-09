@@ -94,7 +94,7 @@ export async function PATCH(request, { params }) {
     }
 
     const { id } = await params;
-    const { kolomNilai } = await request.json();
+    const { kolomNilai, skemaPenilaian } = await request.json();
 
     if (!Array.isArray(kolomNilai)) {
       return NextResponse.json({ error: 'Data kolom nilai tidak valid' }, { status: 400 });
@@ -122,7 +122,7 @@ export async function PATCH(request, { params }) {
       return cleanCol;
     });
 
-    await updateKelas(id, { kolomNilai: cleanedKolom }, username);
+    await updateKelas(id, { kolomNilai: cleanedKolom, skemaPenilaian }, username);
 
     // Inisialisasi nilai null untuk semua sub-kolom baru
     if (kelas.siswa && kelas.siswa.length > 0) {
