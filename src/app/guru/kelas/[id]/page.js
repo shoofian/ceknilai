@@ -2324,6 +2324,10 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Inline card aspek — muncul di bawah tombolnya */}
             {kolomModalOpen && (
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
+                <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "1rem" }}>💡</span>
+                  <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Anda dapat mengelompokkan beberapa aspek nilai (misalnya KD 3.1, KD 3.2 di bawah satu grup "Tugas") dengan mencentang pilihan <strong>"Kelompok Nilai (Sub-Aspek/KD)"</strong> pada aspek yang diinginkan. Rata-rata dari sub-aspek tersebut akan dihitung otomatis.</span>
+                </div>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
@@ -2338,9 +2342,28 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <Fragment key={col.id}>
                         <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : "transparent" }}>
                           <td style={{ padding: "6px 10px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
-                              <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
+                                <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
+                              </div>
+                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginLeft: col.isGroup ? "50px" : "0" }}>
+                                <input type="checkbox" checked={col.isGroup} onChange={(e) => {
+                                  const newCols = kelas.kolomNilai.map(c => {
+                                    if (c.id === col.id) {
+                                      const nextIsGroup = e.target.checked;
+                                      return {
+                                        ...c,
+                                        isGroup: nextIsGroup,
+                                        subKolom: nextIsGroup ? (c.subKolom || []) : []
+                                      };
+                                    }
+                                    return c;
+                                  });
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} style={{ accentColor: "var(--primary)", width: "13px", height: "13px" }} />
+                                Kelompok Nilai (Sub-Aspek/KD)
+                              </label>
                             </div>
                           </td>
                           <td style={{ padding: "6px 10px", textAlign: "center" }}>
@@ -2406,12 +2429,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <td style={{ padding: "8px 10px" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                               <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
-                              {aspect.nama && (
-                                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer" }}>
-                                  <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
-                                  Jadikan Kelompok Nilai (Sub-Aspek)
-                                </label>
-                              )}
+                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginTop: "4px" }}>
+                                <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
+                                Jadikan Kelompok Nilai (Sub-Aspek/KD)
+                              </label>
                             </div>
                           </td>
                           <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
