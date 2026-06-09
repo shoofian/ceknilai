@@ -41,8 +41,12 @@ export async function analyzeRaporTemplate(fileBuffer) {
   }
 
   // Cek apakah ada sub-headers di bawahnya (gabungan baris)
+  // Baris sub-header ditandai dengan kosongnya kolom NISN dan Nama Siswa (karena di-merge secara vertikal),
+  // sementara baris tersebut memiliki data di kolom TP.
   const nextRow = rows[headerRowIdx + 1];
-  const hasSubHeaders = nextRow && nextRow.some(cell => typeof cell === 'string' && (/^tp/i.test(cell.trim()) || /^tujuan/i.test(cell.trim())));
+  const hasSubHeaders = nextRow && 
+    (!String(nextRow[nisnIdx] || "").trim() && !String(nextRow[namaIdx] || "").trim()) &&
+    nextRow.some(cell => String(cell || "").trim() !== "");
 
   const headers = [...rows[headerRowIdx]];
   if (hasSubHeaders) {
@@ -125,7 +129,9 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
 
   // Cek apakah ada sub-headers
   const nextRow = rows[headerRowIdx + 1];
-  const hasSubHeaders = nextRow && nextRow.some(cell => typeof cell === 'string' && (/^tp/i.test(cell.trim()) || /^tujuan/i.test(cell.trim())));
+  const hasSubHeaders = nextRow && 
+    (!String(nextRow[nisnIdx] || "").trim() && !String(nextRow[namaIdx] || "").trim()) &&
+    nextRow.some(cell => String(cell || "").trim() !== "");
 
   const kkmVal = Number(kkm) || 75;
   const startRowIdx = hasSubHeaders ? headerRowIdx + 2 : headerRowIdx + 1;
