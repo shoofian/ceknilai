@@ -64,31 +64,8 @@ function insertOrPatchCell(xml, cellRef, value, isString) {
     `<c\\b[^>]*\\br="${esc}"[^>]*>.*?</c>`,
     "s"
   );
-
-  const existingMatch = existingPattern.exec(xml);
-  if (existingMatch) {
-    const existingCellXml = existingMatch[0];
-
-    // Jika sel memiliki formula <f>, jangan hapus — hanya update nilai <v>
-    // agar Excel tetap bisa menghitung formula tersebut
-    if (/<f[\s>]/.test(existingCellXml)) {
-      const escapedVal = escapeXml(String(value));
-      let patched;
-      if (existingCellXml.includes('</v>')) {
-        // Sudah ada <v>...</v> → ganti isinya saja
-        patched = existingCellXml.replace(/<v>.*?<\/v>/s, `<v>${escapedVal}</v>`);
-      } else {
-        // Belum ada <v> → sisipkan sebelum </c>
-        patched = existingCellXml.replace(/<\/c>$/, `<v>${escapedVal}</v></c>`);
-      }
-      return (
-        xml.slice(0, existingMatch.index) +
-        patched +
-        xml.slice(existingMatch.index + existingCellXml.length)
-      );
-    }
-
-    // Tidak ada formula → ganti seluruh sel dengan nilai statis
+  if (existingPattern.test(xml)) {
+    // Ganti seluruh sel (termasuk formula jika ada) dengan nilai statis
     return xml.replace(existingPattern, newCellXml);
   }
 
@@ -391,42 +368,43 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
     const mappedAspectScores = [];
 
     Object.keys(tpMapping).forEach((colIdxStr) => {
-      const colIdx  = Number(colIdxStr);
+      const colIdx   = Number(colIdxStr);
       const aspectId = tpMapping[colIdx];
+
+      // Kolom tidak dipetakan → lewati, jangan tulis apapun ke sel tersebut
+      if (!aspectId) return;
 
       let isFilled = false;
       let score    = 0;
 
-      if (aspectId) {
-        const aspectDef = kelas.kolomNilai.find((c) => c.id === aspectId);
-        if (aspectDef && aspectDef.isGroup && aspectDef.subKolom) {
-          let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
-          aspectDef.subKolom.forEach((sub) => {
-            const sc = student.nilai[sub.id];
-            if (sc !== undefined && sc !== null && sc !== "") {
-              const scNum = Number(sc);
-              if (aspectDef.hitungMetode === "persentase") {
-                const w = sub.bobot != null ? Number(sub.bobot) : 0;
-                subTotal += scNum * w;
-                subFilledWeight += w;
-              } else {
-                subTotal += scNum;
-              }
-              subFilledCount++;
-            }
-          });
-          if (subFilledCount > 0) {
-            score = aspectDef.hitungMetode === "persentase"
-              ? subFilledWeight > 0 ? subTotal / subFilledWeight : 0
-              : subTotal / subFilledCount;
-            isFilled = true;
-          }
-        } else {
-          const sc = student.nilai[aspectId];
+      const aspectDef = kelas.kolomNilai.find((c) => c.id === aspectId);
+      if (aspectDef && aspectDef.isGroup && aspectDef.subKolom) {
+        let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
+        aspectDef.subKolom.forEach((sub) => {
+          const sc = student.nilai[sub.id];
           if (sc !== undefined && sc !== null && sc !== "") {
-            score = Number(sc);
-            isFilled = true;
+            const scNum = Number(sc);
+            if (aspectDef.hitungMetode === "persentase") {
+              const w = sub.bobot != null ? Number(sub.bobot) : 0;
+              subTotal += scNum * w;
+              subFilledWeight += w;
+            } else {
+              subTotal += scNum;
+            }
+            subFilledCount++;
           }
+        });
+        if (subFilledCount > 0) {
+          score = aspectDef.hitungMetode === "persentase"
+            ? subFilledWeight > 0 ? subTotal / subFilledWeight : 0
+            : subTotal / subFilledCount;
+          isFilled = true;
+        }
+      } else {
+        const sc = student.nilai[aspectId];
+        if (sc !== undefined && sc !== null && sc !== "") {
+          score = Number(sc);
+          isFilled = true;
         }
       }
 
