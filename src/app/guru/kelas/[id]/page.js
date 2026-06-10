@@ -1715,9 +1715,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
                     </div>
 
-                    {/* Rincian Nilai per Aspek & Sub-Aspek */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Rincian Nilai per Aspek:</div>
+                    {/* Rincian Kendala Aspek */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>Rincian Kendala Aspek:</div>
                       {showKehadiran && (
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", backgroundColor: "rgba(0,0,0,0.25)", padding: "7px 12px", borderRadius: "4px", marginBottom: "4px", borderLeft: "3px solid #475569" }}>
                           <span style={{ color: "#94a3b8", fontWeight: "600" }}>📋 Kehadiran</span>
@@ -1726,63 +1726,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                           </span>
                         </div>
                       )}
-                      {kelas.kolomNilai.map(col => {
-                        const { score, isFilled } = getColScore(s, col, null);
-                        const isIssue = !isFilled || (isFilled && score < analyticsData?.kkmVal);
+                      {s.issues.map((issue, idx) => {
+                        const isKosong = issue.status.includes("Kosong");
                         return (
-                          <div key={col.id}>
-                            {/* Baris Aspek Utama */}
-                            <div style={{
-                              display: "flex", justifyContent: "space-between", alignItems: "center",
-                              fontSize: "0.82rem", padding: "7px 12px", borderRadius: col.isGroup && col.subKolom?.length > 0 ? "4px 4px 0 0" : "4px",
-                              backgroundColor: isIssue ? (isFilled ? "rgba(239,68,68,0.12)" : "rgba(251,191,36,0.08)") : "rgba(0,0,0,0.2)",
-                              borderLeft: `3px solid ${isIssue ? (isFilled ? "#ef4444" : "#fbbf24") : "#334155"}`,
+                          <div key={idx} style={{
+                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                            fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
+                            backgroundColor: isKosong ? "rgba(251,191,36,0.08)" : "rgba(239,68,68,0.12)",
+                            borderLeft: `3px solid ${isKosong ? "#fbbf24" : "#ef4444"}`
+                          }}>
+                            <span style={{ color: "#e2e8f0", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ color: isKosong ? "#fbbf24" : "#ef4444" }}>•</span> {issue.aspek}
+                            </span>
+                            <span style={{ 
+                              fontWeight: "700", fontSize: "0.75rem",
+                              color: isKosong ? "#fcd34d" : "#fca5a5"
                             }}>
-                              <span style={{ color: "#e2e8f0", fontWeight: col.isGroup && col.subKolom?.length > 0 ? "700" : "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                                {col.isGroup && col.subKolom?.length > 0 && (
-                                  <span style={{ fontSize: "0.65rem", backgroundColor: "rgba(59,130,246,0.2)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)", padding: "1px 4px", borderRadius: "3px" }}>GRUP</span>
-                                )}
-                                {col.nama}
-                                {col.isGroup && col.subKolom?.length > 0 && isFilled && col.hitungMetode !== "persentase" && (
-                                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500" }}>(rata-rata)</span>
-                                )}
-                              </span>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <span style={{ fontWeight: "700", color: !isFilled ? "#fcd34d" : score >= analyticsData?.kkmVal ? "#34d399" : "#fca5a5" }}>
-                                  {!isFilled ? "Kosong" : Number(score.toFixed(2))}
-                                </span>
-                                <span style={{ fontSize: "0.7rem", color: "#475569" }}>{col.bobot}%</span>
-                              </div>
-                            </div>
-                            {/* Baris Sub-Aspek (jika grup) */}
-                            {col.isGroup && col.subKolom?.length > 0 && (
-                              <div style={{ borderLeft: "3px solid #1e3a5f", marginBottom: "2px" }}>
-                                {col.subKolom.map((sub, sIdx) => {
-                                  const sc = s.nilai[sub.id];
-                                  const isSFilled = sc !== undefined && sc !== null && sc !== "";
-                                  const scNum = isSFilled ? Number(sc) : null;
-                                  const subIsIssue = !isSFilled || (isSFilled && scNum < analyticsData?.kkmVal);
-                                  return (
-                                    <div key={sub.id} style={{
-                                      display: "flex", justifyContent: "space-between", alignItems: "center",
-                                      fontSize: "0.79rem", padding: "6px 12px 6px 20px",
-                                      backgroundColor: subIsIssue ? (isSFilled ? "rgba(239,68,68,0.07)" : "rgba(251,191,36,0.05)") : "rgba(0,0,0,0.15)",
-                                      borderBottom: sIdx < col.subKolom.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
-                                      borderRadius: sIdx === col.subKolom.length - 1 ? "0 0 4px 4px" : "0",
-                                    }}>
-                                      <span style={{ color: "#94a3b8", display: "flex", alignItems: "center", gap: "6px" }}>
-                                        <span style={{ color: "#334155" }}>↳</span>
-                                        {sub.nama}
-                                        {sub.bobot != null && <span style={{ fontSize: "0.68rem", color: "#475569" }}>({sub.bobot}% dalam grup)</span>}
-                                      </span>
-                                      <span style={{ fontWeight: "700", color: !isSFilled ? "#fcd34d" : scNum >= analyticsData?.kkmVal ? "#34d399" : "#fca5a5" }}>
-                                        {!isSFilled ? "Kosong" : scNum}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            )}
+                              {issue.status}
+                            </span>
                           </div>
                         );
                       })}
