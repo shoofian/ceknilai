@@ -26,6 +26,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [nisn, setNisn] = useState("");
   const [namaSiswa, setNamaSiswa] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
+  const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
 
   // States untuk Kolom Nilai
@@ -234,9 +235,10 @@ export default function DetailKelas({ params: paramsPromise }) {
           }
         }
       });
+      const finalScore = totalNilaiTerisi + (Number(student.nilai?._katrol) || 0);
       return {
         ...student,
-        finalScore: totalNilaiTerisi,
+        finalScore: finalScore,
         isSelesai: jumlahAspekTerisi === kelas.kolomNilai.length,
         jumlahAspekTerisi
       };
@@ -305,6 +307,9 @@ export default function DetailKelas({ params: paramsPromise }) {
         // Jika ada pertemuan, anggap "complete" jika setidaknya semua nilai akademik terisi
         // (atau bisa juga mewajibkan semua presensi terisi, tapi ini lebih fleksibel)
       }
+      
+      // Tambahkan Nilai Katrol jika ada
+      total += (Number(student.nilai?._katrol) || 0);
 
       let predikat = "-";
       if (complete) {
@@ -555,6 +560,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setOldNisn(null);
     setNamaSiswa("");
     setTanggalLahir("");
+    setNilaiKatrol("");
     setSiswaError("");
     setSiswaModalOpen(true);
   };
@@ -718,6 +724,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNisn(siswa.nisn);
     setNamaSiswa(siswa.nama);
     setTanggalLahir(siswa.tanggalLahir);
+    setNilaiKatrol(siswa.nilai?._katrol !== undefined ? siswa.nilai._katrol : "");
     setSiswaError("");
     setSiswaModalOpen(true);
   };
@@ -731,17 +738,27 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     try {
       let response;
+      const _katrol = nilaiKatrol !== "" && nilaiKatrol !== null && nilaiKatrol !== undefined ? Number(nilaiKatrol) : null;
       if (isEditingSiswa) {
         response = await fetch(`/api/kelas/${classId}/siswa/${oldNisn}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: namaSiswa.trim(), tanggalLahir }),
+          body: JSON.stringify({ 
+            nama: namaSiswa.trim(), 
+            tanggalLahir,
+            nilai: { _katrol }
+          }),
         });
       } else {
         response = await fetch(`/api/kelas/${classId}/siswa`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nisn: nisn.trim(), nama: namaSiswa.trim(), tanggalLahir }),
+          body: JSON.stringify({ 
+            nisn: nisn.trim(), 
+            nama: namaSiswa.trim(), 
+            tanggalLahir,
+            nilai: { _katrol }
+          }),
         });
       }
 
@@ -1493,7 +1510,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <td style={{ textAlign: "center", fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
                       <td style={{ textAlign: "center" }}>
                         {s.complete ? (
-                          <span style={{ fontWeight: "800", fontSize: "1.1rem", color: s.finalScore >= analyticsData.kkmVal ? "var(--success)" : "var(--danger)" }}>{s.finalScore}</span>
+                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                            <span style={{ fontWeight: "800", fontSize: "1.1rem", color: s.finalScore >= analyticsData.kkmVal ? "var(--success)" : "var(--danger)" }}>{s.finalScore}</span>
+                            {s.nilai?._katrol ? (
+                              <span style={{ 
+                                fontSize: "0.62rem", 
+                                backgroundColor: "rgba(16, 185, 129, 0.15)", 
+                                color: "#34d399", 
+                                border: "1px solid rgba(16, 185, 129, 0.25)", 
+                                padding: "0 4px", 
+                                borderRadius: "3px",
+                                fontWeight: "700" 
+                              }} title="Nilai Katrol (Rahasia)">
+                                🔒 {Number(s.nilai._katrol) > 0 ? `+${s.nilai._katrol}` : s.nilai._katrol}
+                              </span>
+                            ) : null}
+                          </div>
                         ) : (
                           <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>Belum Lengkap</span>
                         )}
@@ -2287,7 +2319,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td style={{ textAlign: "center", fontWeight: "800", color: kelas.isNilaiAkhirGenerated ? "var(--primary)" : "var(--text-muted)", backgroundColor: "rgba(59,130,246,0.02)", padding: "10px 12px" }}>
                           {kelas.isNilaiAkhirGenerated ? (
                             <div>
-                              {finalScore.toFixed(2)}
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span>{finalScore.toFixed(2)}</span>
+                                {student.nilai?._katrol ? (
+                                  <span style={{ 
+                                    fontSize: "0.62rem", 
+                                    backgroundColor: "rgba(16, 185, 129, 0.15)", 
+                                    color: "#34d399", 
+                                    border: "1px solid rgba(16, 185, 129, 0.25)", 
+                                    padding: "0 4px", 
+                                    borderRadius: "3px",
+                                    fontWeight: "700" 
+                                  }} title="Nilai Katrol (Rahasia)">
+                                    🔒 {Number(student.nilai._katrol) > 0 ? `+${student.nilai._katrol}` : student.nilai._katrol}
+                                  </span>
+                                ) : null}
+                              </div>
                               {!isSelesai && kelas.kolomNilai.length > 0 && (
                                 <div style={{ fontSize: "0.62rem", color: "var(--text-secondary)", fontWeight: "600", marginTop: "2px", opacity: 0.8 }} title="Nilai kumulatif terisi">
                                   Aktual ({jumlahAspekTerisi}/{kelas.kolomNilai.length})
@@ -2878,6 +2925,25 @@ export default function DetailKelas({ params: paramsPromise }) {
                   onChange={(e) => setTanggalLahir(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  🔒 Katrol / Penyesuaian Nilai Akhir <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500" }}>(Rahasia)</span>
+                </label>
+                <input
+                  type="number"
+                  placeholder="Contoh: 5 (menambah 5 poin ke Nilai Akhir)"
+                  className="form-input"
+                  value={nilaiKatrol}
+                  onChange={(e) => setNilaiKatrol(e.target.value)}
+                  min={-100}
+                  max={100}
+                  step="any"
+                />
+                <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
+                  Tambahan poin langsung ke Nilai Akhir. Hanya guru yang melihat rincian katrol ini. Siswa hanya akan melihat Nilai Akhir yang sudah didongkrak.
+                </span>
               </div>
 
               {siswaError && (

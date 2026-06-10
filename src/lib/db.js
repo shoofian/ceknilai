@@ -667,8 +667,8 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         });
       });
 
-      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual)
-      const finalScore = totalNilaiTerisi;
+      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual) + Nilai Katrol (jika ada)
+      const finalScore = totalNilaiTerisi + (Number(nilaiObj._katrol) || 0);
       const finalScoreRounded = Number(finalScore.toFixed(2));
 
 
