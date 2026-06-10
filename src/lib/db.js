@@ -617,7 +617,17 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         if (isFilled) {
           totalNilaiTerisi += kontribusi;
           totalBobotTerisi += col.bobot;
-          jumlahAspekTerisi++;
+          // Untuk kolom grup, hitung setiap sub-aspek yang terisi secara individual
+          // agar progres "X/Y aspek terisi" mencerminkan jumlah sub-aspek yang sudah diisi
+          if (isGroup && subKolom.length > 0) {
+            // subFilledCount sudah dihitung di blok isGroup di atas, ambil ulang
+            jumlahAspekTerisi += subKolom.filter(sub => {
+              const sc = nilaiObj[sub.id];
+              return sc !== undefined && sc !== null && sc !== "";
+            }).length;
+          } else {
+            jumlahAspekTerisi++;
+          }
         }
         totalBobot += col.bobot;
 
@@ -671,7 +681,38 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
             let studentScore = 0;
             let filled = false;
             kolomNilai.forEach(col => {
-              const v = (ss.nilai || {})[col.id];
+              // Tangani kolom grup: hitung rata-rata dari sub-aspek
+              const colGroupConfig = skema.kolomAspekGroup?.[col.id];
+              const colIsGroup = colGroupConfig ? !!colGroupConfig.isGroup : false;
+              const colHitungMetode = colGroupConfig ? (colGroupConfig.hitungMetode || "rata-rata") : "rata-rata";
+              const colSubKolom = colGroupConfig ? (colGroupConfig.subKolom || []) : [];
+
+              let v = null;
+              if (colIsGroup && colSubKolom.length > 0) {
+                let subTotal = 0, subFilledCount = 0, subFilledWeight = 0;
+                colSubKolom.forEach(sub => {
+                  const sc = (ss.nilai || {})[sub.id];
+                  if (sc !== undefined && sc !== null && sc !== "") {
+                    const scNum = Number(sc);
+                    if (colHitungMetode === "persentase") {
+                      const subBobot = sub.bobot != null ? Number(sub.bobot) : 0;
+                      subTotal += scNum * subBobot;
+                      subFilledWeight += subBobot;
+                    } else {
+                      subTotal += scNum;
+                    }
+                    subFilledCount++;
+                  }
+                });
+                if (subFilledCount > 0) {
+                  v = colHitungMetode === "persentase"
+                    ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
+                    : subTotal / subFilledCount;
+                }
+              } else {
+                v = (ss.nilai || {})[col.id];
+              }
+
               if (v !== undefined && v !== null && v !== "") {
                 studentScore += Number(v) * (col.bobot / 100);
                 filled = true;
@@ -713,7 +754,13 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         rataRataKelas,
         isLengkap: totalBobot === 100,
         jumlahAspekTerisi,
-        totalAspekCount: kolomNilai.length,
+        // Hitung total daun aspek: sub-aspek dihitung satu per satu untuk kolom grup
+        totalAspekCount: kolomNilai.reduce((sum, col) => {
+          const gc = skema.kolomAspekGroup?.[col.id];
+          const isG = gc ? !!gc.isGroup : false;
+          const subs = gc ? (gc.subKolom || []) : [];
+          return sum + (isG && subs.length > 0 ? subs.length : 1);
+        }, 0),
         totalBobotTerisi
       });
     }
