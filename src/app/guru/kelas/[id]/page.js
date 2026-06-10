@@ -2428,8 +2428,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* ===== MODAL: Atur Aspek & Bobot ===== */}
       {kolomModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
@@ -2438,7 +2438,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
 
             <div style={{ overflowY: "auto", flex: 1 }}>
-              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
+              <div className="animate-fade-in" style={{ overflow: "hidden" }}>
                 <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1rem" }}>💡</span>
                   <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Centang <strong>"Kelompok Nilai"</strong> pada aspek untuk membuat sub-aspek baru. Atau, <strong>centang beberapa aspek mandiri</strong> yang sudah ada dan klik <strong>"🔗 Gabung ke Kelompok"</strong> untuk menggabungkan aspek beserta nilainya tanpa kehilangan data.</span>
@@ -2745,7 +2745,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </div>
                 )}
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 12px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "0.85rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
                       Total: {totalBobot}%
@@ -2793,8 +2793,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* ===== MODAL: Atur Rentang Nilai & KKM ===== */}
       {rangeModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
@@ -2802,7 +2802,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
-            <div style={{ overflowY: "auto", flex: 1 }}>
+            <div style={{ overflowY: "auto", flex: 1, padding: "24px" }}>
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px", overflowX: "auto" }}>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0, minWidth: "300px" }}>
                   Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
