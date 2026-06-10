@@ -2427,39 +2427,17 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* ===== MODAL: Atur Aspek & Bobot ===== */}
       {kolomModalOpen && (
-        <div
-          className="animate-fade-in"
-          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
-          onClick={(e) => { if (e.target === e.currentTarget) { setKolomModalOpen(false); setFabOpen(false); } }}
-        >
-          {/* Overlay gelap tipis */}
-          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} />
-
-          {/* Panel modal pop-up */}
-          <div style={{
-            position: "relative", zIndex: 1,
-            backgroundColor: "var(--bg-primary)",
-            borderRadius: "16px",
-            border: "1px solid var(--border-color)",
-            width: "100%",
-            maxWidth: "850px",
-            maxHeight: "90vh",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.4)"
-          }}>
-            {/* Header Drawer */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
               <div>
-                <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h4>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "2px 0 0 0" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
               </div>
               <button onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
-            {/* Scrollable content */}
-            <div style={{ overflowY: "auto", flex: 1, padding: "20px" }}>
+            <div style={{ overflowY: "auto", flex: 1 }}>
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
                 <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1rem" }}>💡</span>
@@ -2814,39 +2792,17 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* ===== MODAL: Atur Rentang Nilai & KKM ===== */}
       {rangeModalOpen && (
-        <div
-          className="animate-fade-in"
-          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
-          onClick={(e) => { if (e.target === e.currentTarget) { setRangeModalOpen(false); setFabOpen(false); } }}
-        >
-          {/* Overlay gelap tipis */}
-          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} />
-
-          {/* Panel modal pop-up */}
-          <div style={{
-            position: "relative", zIndex: 1,
-            backgroundColor: "var(--bg-primary)",
-            borderRadius: "16px",
-            border: "1px solid var(--border-color)",
-            width: "100%",
-            maxWidth: "500px",
-            maxHeight: "90vh",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.4)"
-          }}>
-            {/* Header Drawer */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
               <div>
-                <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h4>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "2px 0 0 0" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
               </div>
               <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
-            {/* Scrollable content */}
-            <div style={{ overflowY: "auto", flex: 1, padding: "20px" }}>
+            <div style={{ overflowY: "auto", flex: 1 }}>
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px", overflowX: "auto" }}>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0, minWidth: "300px" }}>
                   Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
