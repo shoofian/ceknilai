@@ -363,14 +363,25 @@ export default function DetailKelas({ params: paramsPromise }) {
     const problematicStudents = studentScores.map(s => {
       const issues = [];
       kelas.kolomNilai.forEach(col => {
-        const { score, isFilled } = getColScore(s, col, null);
-        let isEmpty = !isFilled;
-        let val = isFilled ? score : null;
-
-        if (isEmpty) {
-          issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
-        } else if (Number(val) < kkmVal) {
-          issues.push({ aspek: col.nama, status: "Di bawah KKM" });
+        if (col.isGroup && col.subKolom?.length > 0) {
+          // Untuk kolom grup: periksa tiap sub-aspek secara individual
+          col.subKolom.forEach(sub => {
+            const sc = s.nilai[sub.id];
+            const isSFilled = sc !== undefined && sc !== null && sc !== "";
+            const aspekLabel = `${col.nama} › ${sub.nama}`;
+            if (!isSFilled) {
+              issues.push({ aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
+            } else if (Number(sc) < kkmVal) {
+              issues.push({ aspek: aspekLabel, status: "Di bawah KKM" });
+            }
+          });
+        } else {
+          const { score, isFilled } = getColScore(s, col, null);
+          if (!isFilled) {
+            issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
+          } else if (Number(score) < kkmVal) {
+            issues.push({ aspek: col.nama, status: "Di bawah KKM" });
+          }
         }
       });
       return { ...s, issues };

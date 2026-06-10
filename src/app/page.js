@@ -575,31 +575,64 @@ export default function StudentPortal() {
                             <tr>
                               <th>Komponen Nilai</th>
                               <th>Bobot</th>
-                              <th>Nilai Asli</th>
-                              <th>Kontribusi Nilai</th>
+                              <th>Nilai</th>
+                              <th>Kontribusi</th>
                             </tr>
                           </thead>
                           <tbody>
                             {res.detailNilai.map((col) => (
-                              <tr key={col.kolomId}>
-                                <td style={{ fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</td>
-                                <td>{col.bobot}%</td>
-                                <td style={{ 
-                                  fontWeight: "700", 
-                                  color: col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "Belum Diisi"
-                                    ? "var(--text-muted)" 
-                                    : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
-                                      ? "var(--success)" 
-                                      : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
-                                        ? "var(--danger)"
-                                        : "var(--text-primary)" 
-                                }}>
-                                  {col.nilaiAsli === null || col.nilaiAsli === "" ? "Belum Diisi" : col.nilaiAsli}
-                                </td>
-                                <td style={{ fontWeight: "600", color: "var(--text-secondary)" }}>
-                                  {col.nilaiAsli === null || col.nilaiAsli === "" ? "-" : col.kontribusi}
-                                </td>
-                              </tr>
+                              <>
+                                {/* Baris aspek utama / grup */}
+                                <tr key={col.kolomId} style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: "none" } : {}}>
+                                  <td style={{ fontWeight: col.isGroup ? "800" : "600" }}>
+                                    {col.isGroup && <span style={{ fontSize: "0.7rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid var(--primary)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>GRUP</span>}
+                                    {col.namaKolom}
+                                  </td>
+                                  <td>{col.bobot}%</td>
+                                  <td style={{
+                                    fontWeight: "700",
+                                    color: col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-"
+                                      ? "var(--text-muted)"
+                                      : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                        ? "var(--success)"
+                                        : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
+                                          ? "var(--danger)"
+                                          : "var(--text-primary)"
+                                  }}>
+                                    {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli}
+                                    {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && (
+                                      <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>(rata-rata)</span>
+                                    )}
+                                  </td>
+                                  <td style={{ fontWeight: "600", color: "var(--text-secondary)" }}>
+                                    {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "-" : col.kontribusi}
+                                  </td>
+                                </tr>
+
+                                {/* Baris sub-aspek (indent, hanya jika isGroup) */}
+                                {col.isGroup && col.subDetail?.map((sub) => (
+                                  <tr key={sub.subId} style={{ backgroundColor: "var(--bg-secondary)", opacity: 0.9 }}>
+                                    <td style={{ paddingLeft: "2.5rem", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", borderLeft: "3px solid var(--primary)" }}>
+                                      ↳ {sub.nama}
+                                    </td>
+                                    <td style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                                      {sub.bobot != null ? `${sub.bobot}%` : "—"}
+                                    </td>
+                                    <td style={{
+                                      fontWeight: "700",
+                                      fontSize: "0.88rem",
+                                      color: sub.nilaiAsli === null
+                                        ? "var(--text-muted)"
+                                        : sub.nilaiAsli >= res.kkm
+                                          ? "var(--success)"
+                                          : "var(--danger)"
+                                    }}>
+                                      {sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli}
+                                    </td>
+                                    <td style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>—</td>
+                                  </tr>
+                                ))}
+                              </>
                             ))}
                           </tbody>
                         </table>

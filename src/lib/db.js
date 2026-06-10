@@ -642,13 +642,27 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
           displayScore = "-";
         }
 
+        // Bangun subDetail agar UI bisa menampilkan nilai tiap sub-aspek secara individual
+        const subDetail = (isGroup && subKolom.length > 0) ? subKolom.map(sub => {
+          const sc = nilaiObj[sub.id];
+          const isSFilled = sc !== undefined && sc !== null && sc !== "";
+          return {
+            subId: sub.id,
+            nama: sub.nama,
+            bobot: sub.bobot,
+            nilaiAsli: isSFilled ? Number(sc) : null,
+          };
+        }) : [];
+
         detailNilai.push({
           kolomId: col.id,
           namaKolom: col.nama,
           bobot: col.bobot,
           nilaiAsli: displayScore,
           kontribusi: displayKontribusi,
-          isTersembunyi: isHidden
+          isTersembunyi: isHidden,
+          isGroup: isGroup && subKolom.length > 0,
+          subDetail,
         });
       });
 
