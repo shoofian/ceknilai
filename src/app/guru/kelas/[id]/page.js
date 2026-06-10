@@ -2425,28 +2425,29 @@ export default function DetailKelas({ params: paramsPromise }) {
       </>
       )}
 
-      {/* ===== DRAWER: Atur Aspek & Bobot ===== */}
+      {/* ===== MODAL: Atur Aspek & Bobot ===== */}
       {kolomModalOpen && (
         <div
           className="animate-fade-in"
-          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
           onClick={(e) => { if (e.target === e.currentTarget) { setKolomModalOpen(false); setFabOpen(false); } }}
         >
           {/* Overlay gelap tipis */}
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} />
 
-          {/* Panel drawer dari bawah */}
+          {/* Panel modal pop-up */}
           <div style={{
             position: "relative", zIndex: 1,
             backgroundColor: "var(--bg-primary)",
-            borderRadius: "20px 20px 0 0",
+            borderRadius: "16px",
             border: "1px solid var(--border-color)",
-            borderBottom: "none",
-            maxHeight: "85vh",
+            width: "100%",
+            maxWidth: "850px",
+            maxHeight: "90vh",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            boxShadow: "0 -8px 40px rgba(0,0,0,0.4)"
+            boxShadow: "0 10px 40px rgba(0,0,0,0.4)"
           }}>
             {/* Header Drawer */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
@@ -2811,28 +2812,29 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* ===== DRAWER: Atur Rentang Nilai & KKM ===== */}
+      {/* ===== MODAL: Atur Rentang Nilai & KKM ===== */}
       {rangeModalOpen && (
         <div
           className="animate-fade-in"
-          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
           onClick={(e) => { if (e.target === e.currentTarget) { setRangeModalOpen(false); setFabOpen(false); } }}
         >
           {/* Overlay gelap tipis */}
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} />
 
-          {/* Panel drawer dari bawah */}
+          {/* Panel modal pop-up */}
           <div style={{
             position: "relative", zIndex: 1,
             backgroundColor: "var(--bg-primary)",
-            borderRadius: "20px 20px 0 0",
+            borderRadius: "16px",
             border: "1px solid var(--border-color)",
-            borderBottom: "none",
-            maxHeight: "85vh",
+            width: "100%",
+            maxWidth: "500px",
+            maxHeight: "90vh",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            boxShadow: "0 -8px 40px rgba(0,0,0,0.4)"
+            boxShadow: "0 10px 40px rgba(0,0,0,0.4)"
           }}>
             {/* Header Drawer */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
