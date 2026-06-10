@@ -971,7 +971,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         const res = await fetch(`/api/kelas/${classId}/kolom`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0, isGroup: aspect.isGroup, subKolom: aspect.subKolom }),
+          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0, isGroup: aspect.isGroup, hitungMetode: aspect.hitungMetode || 'rata-rata', subKolom: aspect.subKolom }),
         });
         if (!res.ok) {
            const data = await res.json();

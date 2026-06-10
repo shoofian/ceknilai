@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
     }
 
     const { id } = await params;
-    const { nama, bobot, isGroup, subKolom } = await request.json();
+    const { nama, bobot, isGroup, subKolom, hitungMetode } = await request.json();
 
     if (!nama || bobot === undefined) {
       return NextResponse.json(
@@ -39,9 +39,12 @@ export async function POST(request, { params }) {
     };
     
     if (newColumn.isGroup && Array.isArray(subKolom)) {
+      // Simpan hitungMetode agar metode perhitungan (rata-rata / persentase) terjaga
+      newColumn.hitungMetode = hitungMetode || 'rata-rata';
       newColumn.subKolom = subKolom.map((sub, i) => ({
         id: `${columnId}-sub-${Date.now()}-${i}`,
-        nama: sub.nama.trim()
+        nama: sub.nama.trim(),
+        bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
       }));
     }
 
@@ -113,11 +116,16 @@ export async function PATCH(request, { params }) {
         bobot: Number(col.bobot),
         isGroup: !!col.isGroup
       };
-      if (cleanCol.isGroup && Array.isArray(col.subKolom)) {
-        cleanCol.subKolom = col.subKolom.map(sub => ({
-          id: sub.id || `${cleanCol.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`,
-          nama: sub.nama.trim()
-        }));
+      if (cleanCol.isGroup) {
+        // Simpan hitungMetode agar metode perhitungan (rata-rata / persentase) terjaga
+        cleanCol.hitungMetode = col.hitungMetode || 'rata-rata';
+        if (Array.isArray(col.subKolom)) {
+          cleanCol.subKolom = col.subKolom.map(sub => ({
+            id: sub.id || `${cleanCol.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`,
+            nama: sub.nama.trim(),
+            bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+          }));
+        }
       }
       return cleanCol;
     });
