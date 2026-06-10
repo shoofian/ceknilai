@@ -64,7 +64,31 @@ function insertOrPatchCell(xml, cellRef, value, isString) {
     `<c\\b[^>]*\\br="${esc}"[^>]*>.*?</c>`,
     "s"
   );
-  if (existingPattern.test(xml)) {
+
+  const existingMatch = existingPattern.exec(xml);
+  if (existingMatch) {
+    const existingCellXml = existingMatch[0];
+
+    // Jika sel memiliki formula <f>, jangan hapus — hanya update nilai <v>
+    // agar Excel tetap bisa menghitung formula tersebut
+    if (/<f[\s>]/.test(existingCellXml)) {
+      const escapedVal = escapeXml(String(value));
+      let patched;
+      if (existingCellXml.includes('</v>')) {
+        // Sudah ada <v>...</v> → ganti isinya saja
+        patched = existingCellXml.replace(/<v>.*?<\/v>/s, `<v>${escapedVal}</v>`);
+      } else {
+        // Belum ada <v> → sisipkan sebelum </c>
+        patched = existingCellXml.replace(/<\/c>$/, `<v>${escapedVal}</v></c>`);
+      }
+      return (
+        xml.slice(0, existingMatch.index) +
+        patched +
+        xml.slice(existingMatch.index + existingCellXml.length)
+      );
+    }
+
+    // Tidak ada formula → ganti seluruh sel dengan nilai statis
     return xml.replace(existingPattern, newCellXml);
   }
 
@@ -436,18 +460,49 @@ export function fillRaporExcel(fileBuffer, kelas, students, tpMapping, kkm) {
   // ── 8. Repack zip — pastikan [Content_Types].xml tetap pertama ─────────────
   const patchedFiles = {};
 
-  // Prioritaskan [Content_Types].xml agar dibaca pertama oleh Excel
+  // Helper: strip semua referensi ke calcChain.xml dari XML string
+  function stripCalcChainRef(xml) {
+    // Hapus <Override PartName="/xl/calcChain.xml" ... /> dari [Content_Types].xml
+    xml = xml.replace(
+      /<Override[^>]*PartName=["'][^"']*calcChain\.xml["'][^>]*\/?>/gi,
+      ""
+    );
+    // Hapus <Relationship ... Target="calcChain.xml" ... /> dari workbook.xml.rels
+    xml = xml.replace(
+      /<Relationship[^>]*Target=["'][^"']*calcChain\.xml["'][^>]*\/?>/gi,
+      ""
+    );
+    return xml;
+  }
+
+  // Prioritaskan [Content_Types].xml — strip referensi calcChain di dalamnya
   const contentTypesKey = allKeys.find((k) =>
     /^\[Content_Types\]\.xml$/i.test(k)
   );
   if (contentTypesKey) {
-    patchedFiles[contentTypesKey] = unzipped[contentTypesKey];
+    const ctXml = stripCalcChainRef(decoder.decode(unzipped[contentTypesKey]));
+    patchedFiles[contentTypesKey] = encoder.encode(ctXml);
   }
+
+  // Key untuk workbook.xml.rels
+  const wbRelsKey = allKeys.find((k) =>
+    /xl\/_rels\/workbook\.xml\.rels$/i.test(k)
+  );
 
   for (const key of allKeys) {
     if (key === contentTypesKey) continue; // sudah diatas
-    patchedFiles[key] =
-      key === sheetKey ? encoder.encode(sheetXml) : unzipped[key];
+
+    // Hapus calcChain.xml sepenuhnya — Excel regenerasi otomatis saat dibuka
+    if (/xl\/calcChain\.xml$/i.test(key)) continue;
+
+    if (key === wbRelsKey) {
+      // Hapus <Relationship> yang menunjuk calcChain.xml
+      const relsXml = stripCalcChainRef(decoder.decode(unzipped[key]));
+      patchedFiles[key] = encoder.encode(relsXml);
+    } else {
+      patchedFiles[key] =
+        key === sheetKey ? encoder.encode(sheetXml) : unzipped[key];
+    }
   }
 
   const zipped = zipSync(patchedFiles, { level: 6 });
