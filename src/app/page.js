@@ -600,7 +600,7 @@ export default function StudentPortal() {
                                           : "var(--text-primary)"
                                   }}>
                                     {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli}
-                                    {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && (
+                                    {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && col.hitungMetode !== "persentase" && (
                                       <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>(rata-rata)</span>
                                     )}
                                   </td>

@@ -1743,7 +1743,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                   <span style={{ fontSize: "0.65rem", backgroundColor: "rgba(59,130,246,0.2)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)", padding: "1px 4px", borderRadius: "3px" }}>GRUP</span>
                                 )}
                                 {col.nama}
-                                {col.isGroup && col.subKolom?.length > 0 && isFilled && (
+                                {col.isGroup && col.subKolom?.length > 0 && isFilled && col.hitungMetode !== "persentase" && (
                                   <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500" }}>(rata-rata)</span>
                                 )}
                               </span>

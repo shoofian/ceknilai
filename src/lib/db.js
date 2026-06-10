@@ -662,6 +662,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
           kontribusi: displayKontribusi,
           isTersembunyi: isHidden,
           isGroup: isGroup && subKolom.length > 0,
+          hitungMetode,
           subDetail,
         });
       });
