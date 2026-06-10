@@ -2425,441 +2425,6 @@ export default function DetailKelas({ params: paramsPromise }) {
       </>
       )}
 
-      {/* ===== MODAL: Atur Aspek & Bobot ===== */}
-      {kolomModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
-              <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h3>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
-              </div>
-              <button onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
-            </div>
-
-            <div style={{ overflowY: "auto", flex: 1 }}>
-              <div className="animate-fade-in" style={{ overflow: "hidden" }}>
-                <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: "1rem" }}>💡</span>
-                  <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Centang <strong>"Kelompok Nilai"</strong> pada aspek untuk membuat sub-aspek baru. Atau, <strong>centang beberapa aspek mandiri</strong> yang sudah ada dan klik <strong>"🔗 Gabung ke Kelompok"</strong> untuk menggabungkan aspek beserta nilainya tanpa kehilangan data.</span>
-                </div>
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
-                      <th style={{ textAlign: "center", padding: "8px 6px", width: "32px" }}>
-                        <input
-                          type="checkbox"
-                          title="Pilih semua aspek mandiri"
-                          style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
-                          checked={kelas.kolomNilai.filter(c => !c.isGroup).length > 0 && kelas.kolomNilai.filter(c => !c.isGroup).every(c => selectedForGroup.has(c.id))}
-                          onChange={(e) => {
-                            const eligibleIds = kelas.kolomNilai.filter(c => !c.isGroup).map(c => c.id);
-                            if (e.target.checked) {
-                              setSelectedForGroup(new Set(eligibleIds));
-                            } else {
-                              setSelectedForGroup(new Set());
-                            }
-                          }}
-                        />
-                      </th>
-                      <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "120px" }}>Tampilkan Ke Siswa</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {kelas.kolomNilai.map((col) => (
-                      <Fragment key={col.id}>
-                        <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : selectedForGroup.has(col.id) ? "rgba(59,130,246,0.06)" : "transparent" }}>
-                          <td style={{ padding: "6px 6px", textAlign: "center", verticalAlign: "top", paddingTop: "12px" }}>
-                            {!col.isGroup && (
-                              <input
-                                type="checkbox"
-                                checked={selectedForGroup.has(col.id)}
-                                onChange={(e) => {
-                                  const next = new Set(selectedForGroup);
-                                  if (e.target.checked) next.add(col.id);
-                                  else next.delete(col.id);
-                                  setSelectedForGroup(next);
-                                }}
-                                style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
-                                title="Pilih untuk digabung ke kelompok"
-                              />
-                            )}
-                          </td>
-                          <td style={{ padding: "6px 10px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
-                                <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
-                              </div>
-
-                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginLeft: col.isGroup ? "50px" : "0" }}>
-                                <input type="checkbox" checked={col.isGroup} onChange={(e) => {
-                                  const newCols = kelas.kolomNilai.map(c => {
-                                    if (c.id === col.id) {
-                                      const nextIsGroup = e.target.checked;
-                                      return {
-                                        ...c,
-                                        isGroup: nextIsGroup,
-                                        subKolom: nextIsGroup ? (c.subKolom || []) : [],
-                                        hitungMetode: nextIsGroup ? (c.hitungMetode || "rata-rata") : "rata-rata"
-                                      };
-                                    }
-                                    return c;
-                                  });
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} style={{ accentColor: "var(--primary)", width: "13px", height: "13px" }} />
-                                Kelompok Nilai (Sub-Aspek/KD)
-                              </label>
-                              {col.isGroup && (
-                                <div style={{ marginTop: "4px", marginLeft: "50px", display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
-                                  <select
-                                    value={col.hitungMetode || "rata-rata"}
-                                    onChange={(e) => {
-                                      const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, hitungMetode: e.target.value } : c);
-                                      setKelas({ ...kelas, kolomNilai: newCols });
-                                    }}
-                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
-                                  >
-                                    <option value="rata-rata">Rata-rata Otomatis</option>
-                                    <option value="persentase">Bobot Kustom (%)</option>
-                                  </select>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                            <button
-                              onClick={() => toggleAspectVisibility(col.id)}
-                              className="btn btn-secondary"
-                              style={{
-                                padding: "4px 8px",
-                                fontSize: "0.75rem",
-                                borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
-                                color: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
-                                backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
-                              }}
-                              title={kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "Nilai tersembunyi bagi siswa" : "Nilai ditampilkan bagi siswa"}
-                            >
-                              {kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "🔒 Tersembunyi" : "👁️ Tampil"}
-                            </button>
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center", fontWeight: col.isGroup ? "700" : "400" }} />
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                            <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
-                          </td>
-                        </tr>
-                        {col.isGroup && col.subKolom && col.subKolom.map((sub, sIdx) => (
-                          <tr key={sub.id} style={{ borderBottom: sIdx === col.subKolom.length - 1 ? "1px solid var(--border-color)" : "none", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
-                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
-                            <td colSpan={2} style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
-                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(245, 158, 11, 0.3)", borderBottom: "2px solid rgba(245, 158, 11, 0.3)", borderRadius: "0 0 0 6px" }}></div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
-                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
-                                {col.hitungMetode === "persentase" && (
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    className="form-input"
-                                    placeholder="%"
-                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
-                                    onChange={(e) => {
-                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
-                                        const val = e.target.value === "" ? null : Number(e.target.value);
-                                        const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
-                                        setKelas({ ...kelas, kolomNilai: newCols });
-                                      }
-                                    }}
-                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
-                                  />
-                                )}
-                              </div>
-                            </td>
-                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span>{col.hitungMetode === "persentase" ? "Kontribusi bobot kustom" : "Rata-rata otomatis"}</span>
-                                <button onClick={() => {
-                                  if(!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
-                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {col.isGroup && (
-                          <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
-                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
-                            <td colSpan={4} style={{ padding: "4px 10px 8px 30px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                <button onClick={() => {
-                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "", bobot: "" }] } : c);
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
-                                {col.hitungMetode === "persentase" && (
-                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
-                                    Total Bobot Sub-Aspek: {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                    {/* Baris tambah baru (Seamless) */}
-                    {newAspects.map((aspect, index) => (
-                      <Fragment key={aspect.id}>
-                        <tr style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
-                          <td style={{ padding: 0 }} />{/* empty checkbox column */}
-                          <td style={{ padding: "8px 10px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                              <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
-                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginTop: "4px" }}>
-                                <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
-                                Jadikan Kelompok Nilai (Sub-Aspek/KD)
-                              </label>
-                              {aspect.isGroup && (
-                                <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
-                                  <select
-                                    value={aspect.hitungMetode || "rata-rata"}
-                                    onChange={(e) => handleNewAspectChange(aspect.id, 'hitungMetode', e.target.value)}
-                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
-                                  >
-                                    <option value="rata-rata">Rata-rata Otomatis</option>
-                                    <option value="persentase">Bobot Kustom (%)</option>
-                                  </select>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
-                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>Otomatis Tampil</span>
-                          </td>
-                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
-                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
-                          </td>
-                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
-                            {index !== newAspects.length - 1 ? (
-                              <button onClick={() => handleRemoveNewAspect(aspect.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px", fontSize: "0.8rem", minWidth: "30px" }} title="Batal tambah">✖</button>
-                            ) : (
-                              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "default" }}>✧</span>
-                            )}
-                          </td>
-                        </tr>
-                        {aspect.isGroup && aspect.subKolom && aspect.subKolom.map((sub, sIdx) => (
-                          <tr key={sub.id} style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
-                            <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
-                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(59, 130, 246, 0.3)", borderBottom: "2px solid rgba(59, 130, 246, 0.3)", borderRadius: "0 0 0 6px" }}></div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <input type="text" className="form-input" placeholder="Nama sub-aspek (misal: KD 1)" value={sub.nama} onChange={(e) => {
-                                  const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
-                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
-                                {aspect.hitungMetode === "persentase" && (
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    className="form-input"
-                                    placeholder="%"
-                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
-                                    onChange={(e) => {
-                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
-                                        const val = e.target.value === "" ? null : Number(e.target.value);
-                                        const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
-                                        handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                                      }
-                                    }}
-                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
-                                  />
-                                )}
-                              </div>
-                            </td>
-                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              <button onClick={() => {
-                                const newSub = aspect.subKolom.filter(s => s.id !== sub.id);
-                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                              }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
-                            </td>
-                          </tr>
-                        ))}
-                        {aspect.isGroup && (
-                          <tr style={{ backgroundColor: "rgba(59,130,246,0.02)", borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
-                            <td colSpan={4} style={{ padding: "4px 10px 10px 30px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                <button onClick={() => {
-                                  const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "", bobot: "" }];
-                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
-                                {aspect.hitungMetode === "persentase" && (
-                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
-                                    Total Bobot: {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
-
-                {kolomError && (
-                  <p style={{ color: "var(--danger)", fontSize: "0.82rem", margin: "0", padding: "6px 10px", backgroundColor: "var(--danger-glow)" }}>{kolomError}</p>
-                )}
-
-                {/* Merge Toolbar — muncul saat 2+ aspek mandiri dipilih */}
-                {selectedForGroup.size >= 2 && (
-                  <div className="animate-fade-in" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "rgba(59,130,246,0.08)", borderTop: "1px solid rgba(59,130,246,0.2)", flexWrap: "wrap", gap: "8px" }}>
-                    <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--primary)" }}>
-                      🔲 {selectedForGroup.size} aspek dipilih
-                    </span>
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      <button
-                        onClick={() => setSelectedForGroup(new Set())}
-                        className="btn btn-secondary"
-                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
-                      >
-                        Batal Pilih
-                      </button>
-                      <button
-                        onClick={() => { setMergeGroupName(""); setMergeModalOpen(true); }}
-                        className="btn btn-primary"
-                        style={{ padding: "4px 12px", fontSize: "0.78rem", fontWeight: "700" }}
-                      >
-                        🔗 Gabung ke Kelompok
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "0.85rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
-                      Total: {totalBobot}%
-                    </span>
-                    <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
-                      {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                    <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
-                      📋 Salin dari Kelas Lain
-                    </button>
-                    <button
-                      onClick={saveAllBobot}
-                      className="btn btn-primary"
-                      style={{ padding: "5px 16px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
-                      disabled={isSavingBobot}
-                    >
-                      {isSavingBobot ? (
-                        <>
-                          <span style={{
-                            display: "inline-block",
-                            width: "13px",
-                            height: "13px",
-                            border: "2px solid rgba(255,255,255,0.4)",
-                            borderTopColor: "#fff",
-                            borderRadius: "50%",
-                            animation: "spin 0.7s linear infinite",
-                            flexShrink: 0
-                          }} />
-                          Menyimpan...
-                        </>
-                      ) : (
-                        <>💾 Simpan</>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ===== MODAL: Atur Rentang Nilai & KKM ===== */}
-      {rangeModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
-              <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h3>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
-              </div>
-              <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
-            </div>
-
-            <div style={{ overflowY: "auto", flex: 1, padding: "24px" }}>
-              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px", overflowX: "auto" }}>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0, minWidth: "300px" }}>
-                  Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
-                </p>
-                
-                {/* Header grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
-                </div>
-                
-                {/* A */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
-                  <input type="number" className="form-input" value={gradeA} min={0} max={100} onChange={e => setGradeA(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* B */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
-                  <input type="number" className="form-input" value={gradeB} min={0} max={100} onChange={e => setGradeB(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* C */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
-                  <input type="number" className="form-input" value={gradeC} min={0} max={100} onChange={e => setGradeC(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* D */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
-                  <input type="number" className="form-input" value={gradeD} min={0} max={100} onChange={e => setGradeD(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* KKM */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
-                  <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
-                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
-                </div>
-                
-                {/* Actions */}
-                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
-                  <button onClick={() => setRangeModalOpen(false)} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
-                  <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ===== FAB + Dropdown Menu ===== */}
       {/* Backdrop klik-luar untuk tutup FAB */}
       {fabOpen && (
@@ -4007,6 +3572,443 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         );
       })()}
+
+      {/* ===== MODAL: Atur Aspek & Bobot ===== */}
+      {kolomModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
+              </div>
+              <button onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+            </div>
+
+            <div style={{ overflowY: "auto", flex: 1 }}>
+              <div className="animate-fade-in" style={{ overflow: "hidden" }}>
+                <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "1rem" }}>💡</span>
+                  <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Centang <strong>"Kelompok Nilai"</strong> pada aspek untuk membuat sub-aspek baru. Atau, <strong>centang beberapa aspek mandiri</strong> yang sudah ada dan klik <strong>"🔗 Gabung ke Kelompok"</strong> untuk menggabungkan aspek beserta nilainya tanpa kehilangan data.</span>
+                </div>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
+                      <th style={{ textAlign: "center", padding: "8px 6px", width: "32px" }}>
+                        <input
+                          type="checkbox"
+                          title="Pilih semua aspek mandiri"
+                          style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
+                          checked={kelas.kolomNilai.filter(c => !c.isGroup).length > 0 && kelas.kolomNilai.filter(c => !c.isGroup).every(c => selectedForGroup.has(c.id))}
+                          onChange={(e) => {
+                            const eligibleIds = kelas.kolomNilai.filter(c => !c.isGroup).map(c => c.id);
+                            if (e.target.checked) {
+                              setSelectedForGroup(new Set(eligibleIds));
+                            } else {
+                              setSelectedForGroup(new Set());
+                            }
+                          }}
+                        />
+                      </th>
+                      <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "120px" }}>Tampilkan Ke Siswa</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
+                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kelas.kolomNilai.map((col) => (
+                      <Fragment key={col.id}>
+                        <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : selectedForGroup.has(col.id) ? "rgba(59,130,246,0.06)" : "transparent" }}>
+                          <td style={{ padding: "6px 6px", textAlign: "center", verticalAlign: "top", paddingTop: "12px" }}>
+                            {!col.isGroup && (
+                              <input
+                                type="checkbox"
+                                checked={selectedForGroup.has(col.id)}
+                                onChange={(e) => {
+                                  const next = new Set(selectedForGroup);
+                                  if (e.target.checked) next.add(col.id);
+                                  else next.delete(col.id);
+                                  setSelectedForGroup(next);
+                                }}
+                                style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
+                                title="Pilih untuk digabung ke kelompok"
+                              />
+                            )}
+                          </td>
+                          <td style={{ padding: "6px 10px" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
+                                <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
+                              </div>
+
+                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginLeft: col.isGroup ? "50px" : "0" }}>
+                                <input type="checkbox" checked={col.isGroup} onChange={(e) => {
+                                  const newCols = kelas.kolomNilai.map(c => {
+                                    if (c.id === col.id) {
+                                      const nextIsGroup = e.target.checked;
+                                      return {
+                                        ...c,
+                                        isGroup: nextIsGroup,
+                                        subKolom: nextIsGroup ? (c.subKolom || []) : [],
+                                        hitungMetode: nextIsGroup ? (c.hitungMetode || "rata-rata") : "rata-rata"
+                                      };
+                                    }
+                                    return c;
+                                  });
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} style={{ accentColor: "var(--primary)", width: "13px", height: "13px" }} />
+                                Kelompok Nilai (Sub-Aspek/KD)
+                              </label>
+                              {col.isGroup && (
+                                <div style={{ marginTop: "4px", marginLeft: "50px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
+                                  <select
+                                    value={col.hitungMetode || "rata-rata"}
+                                    onChange={(e) => {
+                                      const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, hitungMetode: e.target.value } : c);
+                                      setKelas({ ...kelas, kolomNilai: newCols });
+                                    }}
+                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                                  >
+                                    <option value="rata-rata">Rata-rata Otomatis</option>
+                                    <option value="persentase">Bobot Kustom (%)</option>
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                            <button
+                              onClick={() => toggleAspectVisibility(col.id)}
+                              className="btn btn-secondary"
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: "0.75rem",
+                                borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
+                                color: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
+                                backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
+                              }}
+                              title={kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "Nilai tersembunyi bagi siswa" : "Nilai ditampilkan bagi siswa"}
+                            >
+                              {kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "🔒 Tersembunyi" : "👁️ Tampil"}
+                            </button>
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center", fontWeight: col.isGroup ? "700" : "400" }} />
+                          </td>
+                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
+                            <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
+                          </td>
+                        </tr>
+                        {col.isGroup && col.subKolom && col.subKolom.map((sub, sIdx) => (
+                          <tr key={sub.id} style={{ borderBottom: sIdx === col.subKolom.length - 1 ? "1px solid var(--border-color)" : "none", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
+                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
+                            <td colSpan={2} style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
+                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(245, 158, 11, 0.3)", borderBottom: "2px solid rgba(245, 158, 11, 0.3)", borderRadius: "0 0 0 6px" }}></div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
+                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
+                                {col.hitungMetode === "persentase" && (
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="form-input"
+                                    placeholder="%"
+                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                    onChange={(e) => {
+                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                        const val = e.target.value === "" ? null : Number(e.target.value);
+                                        const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
+                                        setKelas({ ...kelas, kolomNilai: newCols });
+                                      }
+                                    }}
+                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
+                                  />
+                                )}
+                              </div>
+                            </td>
+                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <span>{col.hitungMetode === "persentase" ? "Kontribusi bobot kustom" : "Rata-rata otomatis"}</span>
+                                <button onClick={() => {
+                                  if(!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
+                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {col.isGroup && (
+                          <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
+                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
+                            <td colSpan={4} style={{ padding: "4px 10px 8px 30px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <button onClick={() => {
+                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "", bobot: "" }] } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                                {col.hitungMetode === "persentase" && (
+                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
+                                    Total Bobot Sub-Aspek: {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))}
+                    {/* Baris tambah baru (Seamless) */}
+                    {newAspects.map((aspect, index) => (
+                      <Fragment key={aspect.id}>
+                        <tr style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
+                          <td style={{ padding: 0 }} />{/* empty checkbox column */}
+                          <td style={{ padding: "8px 10px" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                              <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
+                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginTop: "4px" }}>
+                                <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
+                                Jadikan Kelompok Nilai (Sub-Aspek/KD)
+                              </label>
+                              {aspect.isGroup && (
+                                <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
+                                  <select
+                                    value={aspect.hitungMetode || "rata-rata"}
+                                    onChange={(e) => handleNewAspectChange(aspect.id, 'hitungMetode', e.target.value)}
+                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                                  >
+                                    <option value="rata-rata">Rata-rata Otomatis</option>
+                                    <option value="persentase">Bobot Kustom (%)</option>
+                                  </select>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>Otomatis Tampil</span>
+                          </td>
+                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
+                          </td>
+                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
+                            {index !== newAspects.length - 1 ? (
+                              <button onClick={() => handleRemoveNewAspect(aspect.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px", fontSize: "0.8rem", minWidth: "30px" }} title="Batal tambah">✖</button>
+                            ) : (
+                              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "default" }}>✧</span>
+                            )}
+                          </td>
+                        </tr>
+                        {aspect.isGroup && aspect.subKolom && aspect.subKolom.map((sub, sIdx) => (
+                          <tr key={sub.id} style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
+                            <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
+                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(59, 130, 246, 0.3)", borderBottom: "2px solid rgba(59, 130, 246, 0.3)", borderRadius: "0 0 0 6px" }}></div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input type="text" className="form-input" placeholder="Nama sub-aspek (misal: KD 1)" value={sub.nama} onChange={(e) => {
+                                  const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
+                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
+                                {aspect.hitungMetode === "persentase" && (
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="form-input"
+                                    placeholder="%"
+                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                    onChange={(e) => {
+                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                        const val = e.target.value === "" ? null : Number(e.target.value);
+                                        const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
+                                        handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                                      }
+                                    }}
+                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
+                                  />
+                                )}
+                              </div>
+                            </td>
+                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              <button onClick={() => {
+                                const newSub = aspect.subKolom.filter(s => s.id !== sub.id);
+                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                              }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
+                            </td>
+                          </tr>
+                        ))}
+                        {aspect.isGroup && (
+                          <tr style={{ backgroundColor: "rgba(59,130,246,0.02)", borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
+                            <td colSpan={4} style={{ padding: "4px 10px 10px 30px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <button onClick={() => {
+                                  const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "", bobot: "" }];
+                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
+                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
+                                {aspect.hitungMetode === "persentase" && (
+                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
+                                    Total Bobot: {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+
+                {kolomError && (
+                  <p style={{ color: "var(--danger)", fontSize: "0.82rem", margin: "0", padding: "6px 10px", backgroundColor: "var(--danger-glow)" }}>{kolomError}</p>
+                )}
+
+                {/* Merge Toolbar — muncul saat 2+ aspek mandiri dipilih */}
+                {selectedForGroup.size >= 2 && (
+                  <div className="animate-fade-in" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "rgba(59,130,246,0.08)", borderTop: "1px solid rgba(59,130,246,0.2)", flexWrap: "wrap", gap: "8px" }}>
+                    <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--primary)" }}>
+                      🔲 {selectedForGroup.size} aspek dipilih
+                    </span>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <button
+                        onClick={() => setSelectedForGroup(new Set())}
+                        className="btn btn-secondary"
+                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+                      >
+                        Batal Pilih
+                      </button>
+                      <button
+                        onClick={() => { setMergeGroupName(""); setMergeModalOpen(true); }}
+                        className="btn btn-primary"
+                        style={{ padding: "4px 12px", fontSize: "0.78rem", fontWeight: "700" }}
+                      >
+                        🔗 Gabung ke Kelompok
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "0.85rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
+                      Total: {totalBobot}%
+                    </span>
+                    <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
+                      {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
+                      📋 Salin dari Kelas Lain
+                    </button>
+                    <button
+                      onClick={saveAllBobot}
+                      className="btn btn-primary"
+                      style={{ padding: "5px 16px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
+                      disabled={isSavingBobot}
+                    >
+                      {isSavingBobot ? (
+                        <>
+                          <span style={{
+                            display: "inline-block",
+                            width: "13px",
+                            height: "13px",
+                            border: "2px solid rgba(255,255,255,0.4)",
+                            borderTopColor: "#fff",
+                            borderRadius: "50%",
+                            animation: "spin 0.7s linear infinite",
+                            flexShrink: 0
+                          }} />
+                          Menyimpan...
+                        </>
+                      ) : (
+                        <>💾 Simpan</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* ===== MODAL: Atur Rentang Nilai & KKM ===== */}
+      {rangeModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h3>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
+              </div>
+              <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+            </div>
+
+            <div style={{ overflowY: "auto", flex: 1, padding: "24px" }}>
+              <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px", overflowX: "auto" }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0, minWidth: "300px" }}>
+                  Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
+                </p>
+                
+                {/* Header grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
+                </div>
+                
+                {/* A */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
+                  <input type="number" className="form-input" value={gradeA} min={0} max={100} onChange={e => setGradeA(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* B */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
+                  <input type="number" className="form-input" value={gradeB} min={0} max={100} onChange={e => setGradeB(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* C */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
+                  <input type="number" className="form-input" value={gradeC} min={0} max={100} onChange={e => setGradeC(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* D */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
+                  <input type="number" className="form-input" value={gradeD} min={0} max={100} onChange={e => setGradeD(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* KKM */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
+                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
+                </div>
+                
+                {/* Actions */}
+                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
+                  <button onClick={() => setRangeModalOpen(false)} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
+                  <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
     </>
   );
