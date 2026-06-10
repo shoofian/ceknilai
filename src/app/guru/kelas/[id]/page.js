@@ -1219,26 +1219,29 @@ export default function DetailKelas({ params: paramsPromise }) {
           kelas.kolomNilai.forEach(col => {
             if (col.isGroup && col.subKolom?.length > 0) {
               col.subKolom.forEach(sub => {
+                // Coba match header dengan format "NamaGrup - NamaSub"
                 const headerName = `${col.nama} - ${sub.nama}`;
                 const headerCol = headers.find(h => h === headerName || h.startsWith(`${headerName} (`));
                 const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
-                
+
                 if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
                   const parsedVal = Number(cols[colIdx]);
-                  nilaiObj[headerName] = isNaN(parsedVal) ? null : parsedVal;
+                  // Simpan dengan sub.id sebagai key agar API tidak perlu matching nama
+                  nilaiObj[sub.id] = isNaN(parsedVal) ? null : parsedVal;
                 } else {
-                  nilaiObj[headerName] = null;
+                  nilaiObj[sub.id] = null;
                 }
               });
             } else {
               const headerCol = headers.find(h => h === col.nama || h.startsWith(`${col.nama} (`));
               const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
-              
+
               if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
                 const parsedVal = Number(cols[colIdx]);
-                nilaiObj[col.nama] = isNaN(parsedVal) ? null : parsedVal;
+                // Simpan dengan col.id sebagai key agar API tidak perlu matching nama
+                nilaiObj[col.id] = isNaN(parsedVal) ? null : parsedVal;
               } else {
-                nilaiObj[col.nama] = null;
+                nilaiObj[col.id] = null;
               }
             }
           });

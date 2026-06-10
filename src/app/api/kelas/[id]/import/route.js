@@ -94,20 +94,26 @@ export async function POST(request, { params }) {
       kelas.kolomNilai.forEach(col => {
         if (col.isGroup && col.subKolom && col.subKolom.length > 0) {
           col.subKolom.forEach(sub => {
-            const keyName = `${col.nama} - ${sub.nama}`;
-            if (nilai && nilai[keyName] !== undefined && nilai[keyName] !== null && nilai[keyName] !== '') {
-              cleanedNilai[sub.id] = Number(nilai[keyName]);
-            } else if (nilai && nilai[sub.id] !== undefined && nilai[sub.id] !== null && nilai[sub.id] !== '') {
+            // Prioritas 1: nilai dikirim langsung dengan sub.id sebagai key
+            if (nilai && nilai[sub.id] !== undefined && nilai[sub.id] !== null && nilai[sub.id] !== '') {
               cleanedNilai[sub.id] = Number(nilai[sub.id]);
+            // Prioritas 2 (backward compat): nilai dikirim dengan format "NamaGrup - NamaSub"
             } else {
-              cleanedNilai[sub.id] = null;
+              const keyName = `${col.nama} - ${sub.nama}`;
+              if (nilai && nilai[keyName] !== undefined && nilai[keyName] !== null && nilai[keyName] !== '') {
+                cleanedNilai[sub.id] = Number(nilai[keyName]);
+              } else {
+                cleanedNilai[sub.id] = null;
+              }
             }
           });
         } else {
-          if (nilai && nilai[col.nama] !== undefined && nilai[col.nama] !== null && nilai[col.nama] !== '') {
-            cleanedNilai[col.id] = Number(nilai[col.nama]);
-          } else if (nilai && nilai[col.id] !== undefined && nilai[col.id] !== null && nilai[col.id] !== '') {
+          // Prioritas 1: nilai dikirim langsung dengan col.id sebagai key
+          if (nilai && nilai[col.id] !== undefined && nilai[col.id] !== null && nilai[col.id] !== '') {
             cleanedNilai[col.id] = Number(nilai[col.id]);
+          // Prioritas 2 (backward compat): nilai dikirim dengan col.nama sebagai key
+          } else if (nilai && nilai[col.nama] !== undefined && nilai[col.nama] !== null && nilai[col.nama] !== '') {
+            cleanedNilai[col.id] = Number(nilai[col.nama]);
           } else {
             cleanedNilai[col.id] = null;
           }
