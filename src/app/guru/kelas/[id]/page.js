@@ -30,6 +30,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Kolom Nilai
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
   const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
   const [kolomError, setKolomError] = useState("");
   
@@ -2410,30 +2411,54 @@ export default function DetailKelas({ params: paramsPromise }) {
         )}
       </div>
 
-      {/* Grid: Left - Configuration Card, Right - Operations Card */}
-      <div className="grid-cols-2" style={{ gridTemplateColumns: "1.4fr 0.6fr", alignItems: "start" }}>
+      {/* placeholder div agar tab konfigurasi tidak kosong total */}
+      <div className="glass-card" id="konfigurasi-kelas" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px 24px", marginTop: "24px", background: "linear-gradient(135deg, rgba(59,130,246,0.05), rgba(124,58,237,0.05))", border: "1px solid rgba(59,130,246,0.15)" }}>
+        <div style={{ fontSize: "2.5rem", flexShrink: 0 }}>⚙️</div>
+        <div>
+          <h4 style={{ fontSize: "1rem", fontWeight: "800", margin: "0 0 4px 0" }}>Konfigurasi &amp; Operasi Data</h4>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0 }}>
+            Gunakan tombol <strong style={{ color: "var(--primary)" }}>⚙️</strong> di pojok kanan bawah layar untuk mengatur aspek &amp; bobot, rentang nilai, impor/ekspor Excel, dan operasi data lainnya.
+          </p>
+        </div>
+      </div>
 
-        {/* LEFT COLUMN: glass-card konfigurasi kelas */}
-        <div className="glass-card" id="konfigurasi-kelas" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div>
-            <h4 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "4px" }}>⚙️ Konfigurasi Kelas</h4>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Kelola aspek penilaian, bobot, dan skema nilai.</p>
-          </div>
+      </>
+      )}
 
-          {/* Tombol-tombol konfigurasi */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {/* Button toggle Atur Aspek */}
-            <button
-              onClick={() => setKolomModalOpen(!kolomModalOpen)}
-              className="btn btn-secondary"
-              style={{ width: "100%", justifyContent: "space-between", fontSize: "0.9rem", padding: "11px 16px" }}
-            >
-              <span>⚙️ Atur Aspek &amp; Bobot Nilai</span>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{kolomModalOpen ? "▲ Tutup" : "▼ Buka"}</span>
-            </button>
+      {/* ===== DRAWER: Atur Aspek & Bobot ===== */}
+      {kolomModalOpen && (
+        <div
+          className="animate-fade-in"
+          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setKolomModalOpen(false); setFabOpen(false); } }}
+        >
+          {/* Overlay gelap tipis */}
+          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} />
 
-            {/* Inline card aspek — muncul di bawah tombolnya */}
-            {kolomModalOpen && (
+          {/* Panel drawer dari bawah */}
+          <div style={{
+            position: "relative", zIndex: 1,
+            backgroundColor: "var(--bg-primary)",
+            borderRadius: "20px 20px 0 0",
+            border: "1px solid var(--border-color)",
+            borderBottom: "none",
+            maxHeight: "85vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            boxShadow: "0 -8px 40px rgba(0,0,0,0.4)"
+          }}>
+            {/* Header Drawer */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+              <div>
+                <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h4>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "2px 0 0 0" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
+              </div>
+              <button onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{ overflowY: "auto", flex: 1, padding: "20px" }}>
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
                 <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1rem" }}>💡</span>
@@ -2781,20 +2806,45 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+        </div>
+      )}
 
-            {/* Tombol Atur Rentang Nilai & KKM */}
-            <button
-              onClick={() => setRangeModalOpen(!rangeModalOpen)}
-              className="btn btn-secondary"
-              style={{ width: "100%", justifyContent: "space-between", fontSize: "0.9rem", padding: "11px 16px" }}
-            >
-              <span>📊 Atur Rentang Nilai &amp; KKM</span>
-              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{rangeModalOpen ? "▲ Tutup" : "▼ Buka"}</span>
-            </button>
+      {/* ===== DRAWER: Atur Rentang Nilai & KKM ===== */}
+      {rangeModalOpen && (
+        <div
+          className="animate-fade-in"
+          style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setRangeModalOpen(false); setFabOpen(false); } }}
+        >
+          {/* Overlay gelap tipis */}
+          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }} onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} />
 
-            {/* Inline card rentang nilai — muncul di bawah tombolnya */}
-            {rangeModalOpen && (
+          {/* Panel drawer dari bawah */}
+          <div style={{
+            position: "relative", zIndex: 1,
+            backgroundColor: "var(--bg-primary)",
+            borderRadius: "20px 20px 0 0",
+            border: "1px solid var(--border-color)",
+            borderBottom: "none",
+            maxHeight: "85vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            boxShadow: "0 -8px 40px rgba(0,0,0,0.4)"
+          }}>
+            {/* Header Drawer */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+              <div>
+                <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h4>
+                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: "2px 0 0 0" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
+              </div>
+              <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+            </div>
+
+            {/* Scrollable content */}
+            <div style={{ overflowY: "auto", flex: 1, padding: "20px" }}>
               <div className="animate-fade-in" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "16px", backgroundColor: "var(--bg-secondary)", display: "flex", flexDirection: "column", gap: "14px", overflowX: "auto" }}>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0, minWidth: "300px" }}>
                   Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
@@ -2847,57 +2897,148 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        </div>{/* end LEFT COLUMN */}
-
-
-        <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <h4 style={{ fontSize: "1.15rem", fontWeight: "700" }}>🛠️ Operasi Data</h4>
-          
-          <button onClick={handleOpenAddSiswa} className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem" }}>
-            👤 Tambah Siswa Manual
-          </button>
-          
-          <button onClick={downloadExcelTemplate} className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem" }} disabled={kelas.kolomNilai.length === 0}>
-            📥 Ekspor / Unduh Nilai Excel (.xlsx)
-          </button>
-
-          <label className="btn btn-secondary" style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem", cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer" }}>
-            📤 Impor Nilai dari Excel
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              style={{ display: "none" }}
-              onChange={handleExcelUpload}
-              disabled={kelas.kolomNilai.length === 0}
-            />
-          </label>
-
-          <button 
-            onClick={() => setRaporModalOpen(true)} 
-            className="btn btn-primary" 
-            style={{ width: "100%", justifyContent: "flex-start", fontSize: "0.9rem", marginTop: "4px" }}
-            disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0}
-          >
-            🔌 Integrasi E-Rapor
-          </button>
-
-          {kelas.kolomNilai.length === 0 && (
-            <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-              * Tambah minimal 1 Aspek Nilai terlebih dahulu untuk membuka fitur Template &amp; Impor Excel.
-            </p>
-          )}
         </div>
-
-      </div>
-
-      </>
       )}
 
+      {/* ===== FAB + Dropdown Menu ===== */}
+      {/* Backdrop klik-luar untuk tutup FAB */}
+      {fabOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 148 }}
+          onClick={() => setFabOpen(false)}
+        />
+      )}
+
+      <div style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
+
+        {/* Dropdown menu */}
+        {fabOpen && (
+          <div
+            className="animate-fade-in"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border-color)",
+              borderRadius: "14px",
+              boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)",
+              overflow: "hidden",
+              minWidth: "240px",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            {/* Grup Konfigurasi */}
+            <div style={{ padding: "8px 14px 4px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>⚙️ Konfigurasi</div>
+            {[
+              { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); } },
+              { icon: "📊", label: "Atur Rentang & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); } },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  width: "100%", padding: "10px 16px",
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "var(--text-primary)", fontSize: "0.88rem", fontWeight: "600",
+                  textAlign: "left", transition: "background 0.15s",
+                }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+
+            {/* Divider */}
+            <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "4px 0" }} />
+
+            {/* Grup Operasi Data */}
+            <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
+            {[
+              { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: false },
+              { icon: "📥", label: "Ekspor Excel (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
+              { icon: "🔌", label: "Integrasi E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
+            ].map((item) => (
+              <button
+                key={item.label}
+                onClick={item.onClick}
+                disabled={item.disabled}
+                style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  width: "100%", padding: "10px 16px",
+                  background: "none", border: "none",
+                  cursor: item.disabled ? "not-allowed" : "pointer",
+                  color: item.disabled ? "var(--text-muted)" : item.accent ? "var(--primary)" : "var(--text-primary)",
+                  fontSize: "0.88rem", fontWeight: item.accent ? "700" : "600",
+                  textAlign: "left", opacity: item.disabled ? 0.5 : 1, transition: "background 0.15s",
+                }}
+                onMouseEnter={e => { if (!item.disabled) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+            {/* Tombol Impor Excel (pakai label karena file input) */}
+            <label
+              style={{
+                display: "flex", alignItems: "center", gap: "10px",
+                width: "100%", padding: "10px 16px",
+                cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer",
+                color: kelas.kolomNilai.length === 0 ? "var(--text-muted)" : "var(--text-primary)",
+                fontSize: "0.88rem", fontWeight: "600",
+                opacity: kelas.kolomNilai.length === 0 ? 0.5 : 1,
+                transition: "background 0.15s",
+                marginBottom: "4px",
+              }}
+              onMouseEnter={e => { if (kelas.kolomNilai.length > 0) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
+            >
+              <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>📤</span>
+              Impor Nilai dari Excel
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                style={{ display: "none" }}
+                onChange={(e) => { handleExcelUpload(e); setFabOpen(false); }}
+                disabled={kelas.kolomNilai.length === 0}
+              />
+            </label>
+          </div>
+        )}
+
+        {/* Tombol FAB utama */}
+        <button
+          id="fab-konfigurasi"
+          onClick={() => setFabOpen(prev => !prev)}
+          style={{
+            width: "54px", height: "54px",
+            borderRadius: "50%",
+            background: fabOpen
+              ? "linear-gradient(135deg, #ef4444, #dc2626)"
+              : "linear-gradient(135deg, var(--primary), #7c3aed)",
+            border: "none",
+            cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "1.35rem",
+            boxShadow: fabOpen
+              ? "0 4px 20px rgba(239,68,68,0.5), 0 0 0 4px rgba(239,68,68,0.15)"
+              : "0 4px 20px rgba(59,130,246,0.5), 0 0 0 4px rgba(59,130,246,0.15)",
+            transition: "all 0.2s ease",
+            transform: fabOpen ? "rotate(45deg)" : "rotate(0deg)",
+            flexShrink: 0,
+          }}
+          title={fabOpen ? "Tutup menu" : "Konfigurasi & Operasi Data"}
+        >
+          {fabOpen ? "✕" : "⚙️"}
+        </button>
       </div>
 
-      {/* Off-Screen Dashboard for Overview Kelas Export (1080x1920 - 16:9 Portrait) */}
+      </div>
+
+            {/* Off-Screen Dashboard for Overview Kelas Export (1080x1920 - 16:9 Portrait) */}
       <div id={`export-class-dashboard-${classId}`} style={{
         position: "absolute", left: "-9999px", top: 0, width: "1080px", height: "1920px", overflow: "hidden",
         backgroundColor: "#0f172a", padding: "80px 100px", 
