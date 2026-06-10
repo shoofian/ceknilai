@@ -3241,7 +3241,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <th>Nama</th>
                     <th>Tanggal Lahir</th>
                     {kelas.kolomNilai.map(col => (
-                      <th key={col.id} style={{ textAlign: "center" }}>{col.nama}</th>
+                      col.isGroup && col.subKolom?.length > 0
+                        ? col.subKolom.map(sub => (
+                            <th key={sub.id} style={{ textAlign: "center" }}>{col.nama} - {sub.nama}</th>
+                          ))
+                        : <th key={col.id} style={{ textAlign: "center" }}>{col.nama}</th>
                     ))}
                   </tr>
                 </thead>
@@ -3252,9 +3256,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <td style={{ fontWeight: "700" }}>{ps.nama}</td>
                       <td>{ps.tanggalLahir}</td>
                       {kelas.kolomNilai.map(col => (
-                        <td key={col.id} style={{ textAlign: "center", fontWeight: "700" }}>
-                          {ps.nilai[col.nama] !== null && ps.nilai[col.nama] !== undefined ? ps.nilai[col.nama] : "-"}
-                        </td>
+                        col.isGroup && col.subKolom?.length > 0
+                          ? col.subKolom.map(sub => (
+                              <td key={sub.id} style={{ textAlign: "center", fontWeight: "700" }}>
+                                {ps.nilai[sub.id] !== null && ps.nilai[sub.id] !== undefined ? ps.nilai[sub.id] : "-"}
+                              </td>
+                            ))
+                          : <td key={col.id} style={{ textAlign: "center", fontWeight: "700" }}>
+                              {ps.nilai[col.id] !== null && ps.nilai[col.id] !== undefined ? ps.nilai[col.id] : "-"}
+                            </td>
                       ))}
                     </tr>
                   ))}
