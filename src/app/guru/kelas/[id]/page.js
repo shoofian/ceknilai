@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, use, useMemo, Fragment } from "react";
 import Modal from '@/components/Modal';
@@ -2143,14 +2143,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className="btn btn-outline" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
-                ⚖️ Atur Aspek &amp; Bobot
+                ⚖️ Atur Aspek & Bobot
               </button>
               <button 
                 onClick={() => setRangeModalOpen(true)} 
                 className="btn btn-outline" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
-                📊 Atur Rentang &amp; KKM
+                📊 Atur Rentang & KKM
               </button>
             </div>
           </div>
@@ -2175,7 +2175,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className="btn btn-secondary" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
-                📥 Ekspor Excel
+                📥 Ekspor data siswa
               </button>
               
               <label
@@ -2188,7 +2188,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   margin: 0
                 }}
               >
-                <span>📤</span> Impor Excel
+                <span>📤</span> Impor data siswa
                 <input
                   type="file"
                   accept=".xlsx, .xls"
@@ -2204,7 +2204,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className="btn btn-primary" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
-                🔌 Integrasi E-Rapor
+                📋 Ekspor ke E-Rapor
               </button>
             </div>
           </div>
@@ -2588,8 +2588,8 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
             {[
               { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: false },
-              { icon: "📥", label: "Ekspor Excel (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
-              { icon: "🔌", label: "Integrasi E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
+              { icon: "📥", label: "Ekspor data siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
+              { icon: "🔌", label: "Ekspor ke E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
             ].map((item) => (
               <button
                 key={item.label}
@@ -3629,7 +3629,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <span style={{ fontSize: "1.4rem" }}>📖</span>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Panduan Fitur &amp; Dokumentasi</h3>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Panduan Fitur & Dokumentasi</h3>
               </div>
               <button onClick={() => setPanduanModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
             </div>
@@ -3639,11 +3639,11 @@ export default function DetailKelas({ params: paramsPromise }) {
               {/* Sidebar Navigation */}
               <div style={{ width: "200px", borderRight: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", padding: "16px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                 {[
-                  { id: "aspek", label: "⚖️ Aspek &amp; Bobot" },
-                  { id: "kkm", label: "📊 Rentang &amp; KKM" },
+                  { id: "aspek", label: "⚖️ Aspek & Bobot" },
+                  { id: "kkm", label: "📊 Rentang & KKM" },
                   { id: "siswa", label: "👤 Tambah Siswa" },
-                  { id: "ekspor", label: "📤 Ekspor &amp; Impor" },
-                  { id: "erapor", label: "🔌 Integrasi E-Rapor" },
+                  { id: "ekspor", label: "📤 Ekspor & Impor" },
+                  { id: "erapor", label: "📋 Ekspor ke E-Rapor" },
                   { id: "katrol", label: "🔒 Nilai Katrol" }
                 ].map(item => (
                   <button
@@ -3669,7 +3669,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {panduanActiveTab === "aspek" && (
                   <>
                     <div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#60a5fa" }}>⚖️ Fitur: Atur Aspek &amp; Bobot Nilai</h4>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#60a5fa" }}>⚖️ Fitur: Atur Aspek & Bobot Nilai</h4>
                       <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
                         Fitur ini digunakan untuk mengonfigurasi komponen penilaian mata pelajaran Anda (seperti Tugas, UTS, UAS, atau Kehadiran) lengkap dengan porsi bobot masing-masing komponen. Total keseluruhan bobot wajib berjumlah <strong>100%</strong> agar penilaian dapat dikalkulasi secara valid.
                       </p>
@@ -3679,7 +3679,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Klik tombol <strong>⚖️ Atur Aspek &amp; Bobot</strong> pada Panel Kontrol.</li>
+                          <li>Klik tombol <strong>⚖️ Atur Aspek & Bobot</strong> pada Panel Kontrol.</li>
                           <li>Tentukan nama komponen (misal: "Tugas Mandiri") dan isi bobotnya (misal: "20").</li>
                           <li>Jika aspek tersebut merupakan kelompok/grup (misal: grup "Tugas" yang memiliki sub-komponen "Tugas 1, Tugas 2"), nyalakan opsi <strong>Grup Aspek</strong> lalu tambahkan sub-aspek di bawahnya.</li>
                           <li>Tentukan metode perhitungan grup aspek: <strong>Rata-rata Otomatis</strong> (mengkalkulasi rata-rata sub-aspek) atau <strong>Persentase</strong> (setiap sub-aspek memiliki bobot tersendiri dalam grup tersebut).</li>
@@ -3700,7 +3700,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                     <div>
                       <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_aspek_bobot.png" alt="Pratinjau Aspek &amp; Bobot" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                      <img src="/panduan_aspek_bobot.png" alt="Pratinjau Aspek dan Bobot" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
                     </div>
                   </>
                 )}
@@ -3708,7 +3708,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {panduanActiveTab === "kkm" && (
                   <>
                     <div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#34d399" }}>📊 Fitur: Atur Rentang Nilai &amp; KKM</h4>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#34d399" }}>📊 Fitur: Atur Rentang Nilai & KKM</h4>
                       <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
                         Fitur ini digunakan untuk menetapkan standar kelulusan Kriteria Ketuntasan Minimal (KKM) serta batas rentang nilai untuk menentukan predikat (A, B, C, D) yang akan didapatkan siswa berdasarkan Nilai Akhir mereka.
                       </p>
@@ -3718,7 +3718,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Klik tombol <strong>📊 Atur Rentang &amp; KKM</strong> pada Panel Kontrol.</li>
+                          <li>Klik tombol <strong>📊 Atur Rentang & KKM</strong> pada Panel Kontrol.</li>
                           <li>Masukkan batas nilai minimal KKM (misalnya: 75). Siswa dengan Nilai Akhir di bawah KKM ini otomatis dinyatakan "Belum Tuntas".</li>
                           <li>Atur batas nilai minimal untuk predikat A, B, C, dan D (misalnya: A &ge; 85, B &ge; 75, C &ge; 65, D &ge; 50). Batasan harus berurutan secara logis (A &gt; B &gt; C &gt; D).</li>
                           <li>Anda juga dapat memodifikasi penamaan label predikat/status jika diinginkan (misal predikat A berlabel "Sangat Baik").</li>
@@ -3738,7 +3738,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                     <div>
                       <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_kkm_rentang.png" alt="Pratinjau KKM &amp; Rentang" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                      <img src="/panduan_kkm_rentang.png" alt="Pratinjau KKM dan Rentang" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
                     </div>
                   </>
                 )}
@@ -3783,7 +3783,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {panduanActiveTab === "ekspor" && (
                   <>
                     <div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#38bdf8" }}>📤 Fitur: Ekspor &amp; Impor Excel (.xlsx)</h4>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#38bdf8" }}>📤 Fitur: Ekspor & Impor Data Siswa (.xlsx)</h4>
                       <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
                         Fitur impor-ekspor ini mempermudah guru untuk memproses nilai siswa dalam jumlah banyak sekaligus menggunakan aplikasi spreadsheet desktop (seperti Microsoft Excel atau Google Sheets).
                       </p>
@@ -3793,7 +3793,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📥 Cara Ekspor Data:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Klik tombol <strong>📥 Ekspor Excel</strong> pada Panel Kontrol.</li>
+                          <li>Klik tombol <strong>📥 Ekspor data siswa</strong> pada Panel Kontrol.</li>
                           <li>Sistem otomatis mendownload file spreadsheet yang memuat NISN, Nama, dan kolom aspek penilaian yang telah Anda buat sebelumnya.</li>
                           <li>Buka file tersebut di Excel dan Anda dapat mengisi nilai siswa secara luring (offline) dengan lebih nyaman.</li>
                         </ol>
@@ -3801,10 +3801,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📤 Cara Impor Data Kembali:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Setelah mengisi nilai di Excel offline, klik tombol <strong>📤 Impor Excel</strong> pada Panel Kontrol.</li>
+                          <li>Setelah mengisi nilai di Excel offline, klik tombol <strong>📤 Impor data siswa</strong> pada Panel Kontrol.</li>
                           <li>Pilih file Excel yang telah Anda isi nilainya tadi.</li>
                           <li>Sistem akan menampilkan <strong>Pratinjau Impor</strong> yang menunjukkan data nilai lama vs data nilai baru.</li>
-                          <li>Periksa kebenaran data, lalu klik <strong>Konfirmasi &amp; Simpan Impor</strong>. Seluruh nilai di spreadsheet akan diperbarui seketika.</li>
+                          <li>Periksa kebenaran data, lalu klik <strong>Konfirmasi & Simpan Impor</strong>. Seluruh nilai di spreadsheet akan diperbarui seketika.</li>
                         </ol>
                       </div>
                     </div>
@@ -3818,7 +3818,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {panduanActiveTab === "erapor" && (
                   <>
                     <div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#a78bfa" }}>🔌 Fitur: Integrasi E-Rapor Sekolah</h4>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#a78bfa" }}>📋 Fitur: Ekspor ke E-Rapor Sekolah</h4>
                       <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
                         Fitur ini membantu guru memindahkan nilai akhir semester dari CekNilai ke format template e-Rapor resmi (dari kementerian) secara otomatis, lengkap dengan deskripsi ketercapaian Tujuan Pembelajaran (TP).
                       </p>
@@ -3829,10 +3829,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
                           <li>Unduh template file Excel e-Rapor kosongan dari aplikasi e-Rapor resmi sekolah Anda.</li>
-                          <li>Klik tombol <strong>🔌 Integrasi E-Rapor</strong> pada Panel Kontrol CekNilai.</li>
+                          <li>Klik tombol <strong>📋 Ekspor ke E-Rapor</strong> pada Panel Kontrol CekNilai.</li>
                           <li>Unggah file template e-Rapor yang telah Anda unduh tadi ke area upload yang tersedia.</li>
                           <li>Petakan setiap kolom TP di e-Rapor dengan kolom aspek di CekNilai (misal: TP 1 diambil dari aspek UTS, TP 2 diambil dari Tugas).</li>
-                          <li>Klik <strong>Isi &amp; Unduh Rapor Excel</strong>. Nilai dan capaian kompetensi terisi otomatis di file e-Rapor Anda.</li>
+                          <li>Klik <strong>Isi & Unduh Rapor Excel</strong>. Nilai dan capaian kompetensi terisi otomatis di file e-Rapor Anda.</li>
                         </ol>
                       </div>
                       <div>
@@ -3845,7 +3845,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                     <div>
                       <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_integrasi_erapor.png" alt="Pratinjau Integrasi E-Rapor" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                      <img src="/panduan_integrasi_erapor.png" alt="Pratinjau Ekspor ke E-Rapor" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
                     </div>
                   </>
                 )}
@@ -3905,7 +3905,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Footer */}
             <div style={{ padding: "14px 24px", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "flex-end", backgroundColor: "var(--bg-secondary)" }}>
               <button onClick={() => setPanduanModalOpen(false)} className="btn btn-primary" style={{ padding: "8px 20px", fontSize: "0.85rem" }}>
-                Mengerti &amp; Tutup
+                Mengerti & Tutup
               </button>
             </div>
           </div>
@@ -3981,7 +3981,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       Menggabung...
                     </>
                   ) : (
-                    <>🔗 Konfirmasi &amp; Gabung</>
+                    <>🔗 Konfirmasi & Gabung</>
                   )}
                 </button>
               </div>
@@ -3996,7 +3996,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek &amp; Bobot Nilai</h3>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek & Bobot Nilai</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
               </div>
               <button onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
@@ -4362,7 +4362,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai &amp; KKM</h3>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai & KKM</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
               </div>
               <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>

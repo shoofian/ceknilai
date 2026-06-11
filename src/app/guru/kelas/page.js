@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -402,7 +402,7 @@ export default function KelolaKelas() {
               {/* Action buttons */}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
                 <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "0.9rem" }}>
-                  ⚙️ Kelola Nilai &amp; Siswa
+                  ⚙️ Kelola Nilai & Siswa
                 </Link>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px" }}>

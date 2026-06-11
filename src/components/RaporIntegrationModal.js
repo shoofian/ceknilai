@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { analyzeRaporTemplate, fillRaporExcel } from "@/lib/raporExcelEngine";
 
 export default function RaporIntegrationModal({ isOpen, onClose, kelas, students }) {
@@ -99,7 +99,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <span style={{ fontSize: "1.4rem" }}>🔌</span>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Integrasi &amp; Perekapan E-Rapor</h3>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Ekspor & Perekapan ke E-Rapor</h3>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
         </div>
@@ -215,7 +215,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
                 Batal
               </button>
               <button onClick={handleProcess} className="btn btn-primary" style={{ padding: "8px 16px", fontSize: "0.85rem" }}>
-                💾 Isi &amp; Unduh Rapor Excel
+                💾 Isi & Unduh Rapor Excel
               </button>
             </div>
           </div>

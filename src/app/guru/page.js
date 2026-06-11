@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -196,7 +196,7 @@ export default function GuruDashboard() {
                 2
               </div>
               <div>
-                <h5 style={{ fontSize: "0.9rem", fontWeight: "700" }}>Atur Kolom Nilai &amp; Bobot Persentase</h5>
+                <h5 style={{ fontSize: "0.9rem", fontWeight: "700" }}>Atur Kolom Nilai & Bobot Persentase</h5>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
                   Masukkan komponen penilaian (UTS, UAS, Tugas) beserta bobot masing-masing. Total bobot otomatis dihitung menuju 100%.
                 </p>
@@ -220,7 +220,7 @@ export default function GuruDashboard() {
                 4
               </div>
               <div>
-                <h5 style={{ fontSize: "0.9rem", fontWeight: "700" }}>Cetak &amp; Cari Nilai</h5>
+                <h5 style={{ fontSize: "0.9rem", fontWeight: "700" }}>Cetak & Cari Nilai</h5>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
                   Cetak laporan nilai per kelas yang rapi, dan biarkan siswa mengakses nilainya di portal pencarian siswa mandiri.
                 </p>

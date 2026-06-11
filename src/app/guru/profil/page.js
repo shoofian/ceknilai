@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 
@@ -133,14 +133,14 @@ export default function ProfilGuru() {
         {/* Left Side: Profile & Password Form */}
         <div className="glass-card">
           <h4 style={{ fontSize: "1.2rem", fontWeight: "800", marginBottom: "24px", display: "flex", alignItems: "center", gap: "8px" }}>
-            👤 Sunting Profil &amp; Akun
+            👤 Sunting Profil & Akun
           </h4>
 
           <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
             {/* Nama Lengkap */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Nama Lengkap &amp; Gelar</label>
+              <label className="form-label">Nama Lengkap & Gelar</label>
               <input
                 type="text"
                 placeholder="Contoh: Budi Santoso, S.Pd."
