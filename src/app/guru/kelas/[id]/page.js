@@ -3644,10 +3644,41 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={() => setPanduanModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
             </div>
 
+            {/* Inline CSS untuk layout responsif Modal Panduan */}
+            <style>{`
+              @media (max-width: 768px) {
+                .panduan-layout {
+                  flex-direction: column !important;
+                }
+                .panduan-sidebar {
+                  width: 100% !important;
+                  border-right: none !important;
+                  border-bottom: 1px solid var(--border-color) !important;
+                  flex-direction: row !important;
+                  overflow-x: auto !important;
+                  white-space: nowrap !important;
+                  padding: 10px 16px !important;
+                  gap: 8px !important;
+                }
+                .panduan-sidebar button {
+                  width: auto !important;
+                  flex-shrink: 0 !important;
+                  padding: 8px 12px !important;
+                }
+                .panduan-body {
+                  padding: 16px !important;
+                }
+                .panduan-grid {
+                  grid-template-columns: 1fr !important;
+                  gap: 16px !important;
+                }
+              }
+            `}</style>
+
             {/* Main Content Area */}
-            <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+            <div className="panduan-layout" style={{ display: "flex", flex: 1, overflow: "hidden" }}>
               {/* Sidebar Navigation */}
-              <div style={{ width: "200px", borderRight: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", padding: "16px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div className="panduan-sidebar" style={{ width: "200px", borderRight: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", padding: "16px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                 {[
                   { id: "aspek", label: "⚖️ Aspek & Bobot" },
                   { id: "kkm", label: "📊 Rentang & KKM" },
@@ -3675,7 +3706,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
 
               {/* Guide Contents */}
-              <div style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div className="panduan-body" style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px" }}>
                 {panduanActiveTab === "aspek" && (
                   <>
                     <div>
@@ -3684,8 +3715,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                         Fitur ini digunakan untuk mengonfigurasi komponen penilaian mata pelajaran Anda (seperti Tugas, UTS, UAS, atau Kehadiran) lengkap dengan porsi bobot masing-masing komponen. Total keseluruhan bobot wajib berjumlah <strong>100%</strong> agar penilaian dapat dikalkulasi secara valid.
                       </p>
                     </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+ 
+                    <div className="panduan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
@@ -3707,11 +3738,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </p>
                       </div>
                     </div>
-
-                    <div>
-                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_aspek_bobot.png" alt="Pratinjau Aspek dan Bobot" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
-                    </div>
                   </>
                 )}
 
@@ -3724,7 +3750,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </p>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div className="panduan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
@@ -3738,17 +3764,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Contoh Penggunaan:</h5>
                         <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
-                          Jika KKM diatur 75 dan KKM Predikat B diatur 75:<br />
+                          Jika KKM diatur 75 and KKM Predikat B diatur 75:<br />
                           - Siswa mendapat Nilai Akhir <strong>74.5</strong>: Predikat C (Belum Tuntas).<br />
                           - Siswa mendapat Nilai Akhir <strong>78.0</strong>: Predikat B (Lulus/Tuntas).<br />
                           - Siswa mendapat Nilai Akhir <strong>88.0</strong>: Predikat A (Lulus/Tuntas).
                         </p>
                       </div>
-                    </div>
-
-                    <div>
-                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_kkm_rentang.png" alt="Pratinjau KKM dan Rentang" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
                     </div>
                   </>
                 )}
@@ -3762,7 +3783,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </p>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div className="panduan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
@@ -3782,11 +3803,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </p>
                       </div>
                     </div>
-
-                    <div>
-                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_tambah_siswa.png" alt="Pratinjau Tambah Siswa" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
-                    </div>
                   </>
                 )}
 
@@ -3799,7 +3815,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </p>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div className="panduan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📥 Cara Ekspor Data:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
@@ -3834,7 +3850,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </p>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div className="panduan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
@@ -3852,11 +3868,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </p>
                       </div>
                     </div>
-
-                    <div>
-                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
-                      <img src="/panduan_integrasi_erapor.png" alt="Pratinjau Ekspor ke E-Rapor" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
-                    </div>
                   </>
                 )}
 
@@ -3869,7 +3880,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </p>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    <div className="panduan-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
