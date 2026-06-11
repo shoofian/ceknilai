@@ -103,6 +103,12 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [initialKolomNilai, setInitialKolomNilai] = useState([]);
   const [deletedKolomIds, setDeletedKolomIds] = useState([]);
 
+  // States untuk Katrol Nilai Baru
+  const [katrolModalOpen, setKatrolModalOpen] = useState(false);
+  const [katrolSiswa, setKatrolSiswa] = useState(null);
+  const [katrolValue, setKatrolValue] = useState("");
+  const [isSavingKatrol, setIsSavingKatrol] = useState(false);
+
   useEffect(() => {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
@@ -758,15 +764,13 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     try {
       let response;
-      const _katrol = nilaiKatrol !== "" && nilaiKatrol !== null && nilaiKatrol !== undefined ? Number(nilaiKatrol) : null;
       if (isEditingSiswa) {
         response = await fetch(`/api/kelas/${classId}/siswa/${oldNisn}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             nama: namaSiswa.trim(), 
-            tanggalLahir,
-            nilai: { _katrol }
+            tanggalLahir
           }),
         });
       } else {
@@ -776,8 +780,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           body: JSON.stringify({ 
             nisn: nisn.trim(), 
             nama: namaSiswa.trim(), 
-            tanggalLahir,
-            nilai: { _katrol }
+            tanggalLahir
           }),
         });
       }
@@ -2552,11 +2555,40 @@ export default function DetailKelas({ params: paramsPromise }) {
                         })}
 
                         {/* Weighted Final Score */}
-                        <td style={{ textAlign: "center", fontWeight: "800", color: kelas.isNilaiAkhirGenerated ? "var(--primary)" : "var(--text-muted)", backgroundColor: "rgba(59,130,246,0.02)", padding: "10px 12px" }}>
+                        <td 
+                          onClick={() => {
+                            if (kelas.isNilaiAkhirGenerated) {
+                              setKatrolSiswa(student);
+                              setKatrolValue(student.nilai?._katrol !== undefined && student.nilai?._katrol !== null ? student.nilai._katrol.toString() : "");
+                              setKatrolModalOpen(true);
+                            }
+                          }}
+                          style={{ 
+                            textAlign: "center", 
+                            fontWeight: "800", 
+                            color: kelas.isNilaiAkhirGenerated ? "var(--primary)" : "var(--text-muted)", 
+                            backgroundColor: "rgba(59,130,246,0.02)", 
+                            padding: "10px 12px",
+                            cursor: kelas.isNilaiAkhirGenerated ? "pointer" : "default",
+                            position: "relative"
+                          }}
+                          title={kelas.isNilaiAkhirGenerated ? "Klik untuk penyesuaian nilai akhir (Katrol Rahasia)" : ""}
+                        >
+                          <style>{`
+                            .final-score-cell:hover .hover-lock {
+                              opacity: 0.75 !important;
+                              color: var(--primary) !important;
+                            }
+                          `}</style>
                           {kelas.isNilaiAkhirGenerated ? (
                             <div>
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                                <span>{finalScore.toFixed(2)}</span>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }} className="final-score-cell">
+                                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                  {finalScore.toFixed(2)}
+                                  {!student.nilai?._katrol && (
+                                    <span style={{ fontSize: "0.68rem", opacity: 0.15, transition: "opacity 0.2s" }} className="hover-lock"> 🔒</span>
+                                  )}
+                                </span>
                                 {student.nilai?._katrol ? (
                                   <span style={{ 
                                     fontSize: "0.62rem", 
@@ -3152,25 +3184,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                   onChange={(e) => setTanggalLahir(e.target.value)}
                   required
                 />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  🔒 Katrol / Penyesuaian Nilai Akhir <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500" }}>(Rahasia)</span>
-                </label>
-                <input
-                  type="number"
-                  placeholder="Contoh: 5 (menambah 5 poin ke Nilai Akhir)"
-                  className="form-input"
-                  value={nilaiKatrol}
-                  onChange={(e) => setNilaiKatrol(e.target.value)}
-                  min={-100}
-                  max={100}
-                  step="any"
-                />
-                <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
-                  Tambahan poin langsung ke Nilai Akhir. Hanya guru yang melihat rincian katrol ini. Siswa hanya akan melihat Nilai Akhir yang sudah didongkrak.
-                </span>
               </div>
 
               {siswaError && (
@@ -4620,6 +4633,98 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
                   <button onClick={() => setRangeModalOpen(false)} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
                   <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MODAL: Atur Nilai Katrol (Rahasia) ===== */}
+      {katrolModalOpen && katrolSiswa && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "20px 24px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", margin: 0 }}>🔒 Katrol / Penyesuaian Nilai</h3>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>Set nilai tambahan khusus secara rahasia.</p>
+              </div>
+              <button onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+            </div>
+
+            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>{katrolSiswa.nama}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>NISN: {katrolSiswa.nisn}</span>
+                <div style={{ borderTop: "1px solid var(--border-color)", marginTop: "8px", paddingTop: "8px", display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                  <span>Nilai Aktual (Murni):</span>
+                  <strong>{((katrolSiswa.finalScore || 0) - (Number(katrolSiswa.nilai?._katrol) || 0)).toFixed(2)}</strong>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginTop: "4px" }}>
+                  <span>Nilai Akhir Saat Ini:</span>
+                  <strong style={{ color: "var(--primary)" }}>{katrolSiswa.finalScore?.toFixed(2) ?? "0.00"}</strong>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
+                  🔒 Tambahan Poin Katrol (Rahasia)
+                </label>
+                <input
+                  type="number"
+                  className="form-input"
+                  placeholder="Contoh: 5 (menambah 5 poin)"
+                  value={katrolValue}
+                  onChange={(e) => setKatrolValue(e.target.value)}
+                  style={{ padding: "8px 12px", fontSize: "0.9rem" }}
+                  autoFocus
+                />
+                <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  *Nilai katrol ditambahkan langsung ke Nilai Akhir siswa, bersifat tersembunyi bagi siswa di portal pencarian.
+                </span>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
+                <button 
+                  onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); }} 
+                  className="btn btn-secondary" 
+                  style={{ padding: "6px 14px", fontSize: "0.82rem" }}
+                  disabled={isSavingKatrol}
+                >
+                  Batal
+                </button>
+                <button 
+                  onClick={async () => {
+                    setIsSavingKatrol(true);
+                    try {
+                      const _katrol = katrolValue !== "" && katrolValue !== null && katrolValue !== undefined ? Number(katrolValue) : null;
+                      const response = await fetch(`/api/kelas/${classId}/siswa/${katrolSiswa.nisn}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                          nilai: { _katrol }
+                        }),
+                      });
+                      
+                      if (!response.ok) {
+                        const data = await response.json();
+                        throw new Error(data.error || "Gagal menyimpan nilai katrol");
+                      }
+                      
+                      setKatrolModalOpen(false);
+                      setKatrolSiswa(null);
+                      fetchClassDetail();
+                    } catch (err) {
+                      alert(err.message || "Gagal menyimpan.");
+                    } finally {
+                      setIsSavingKatrol(false);
+                    }
+                  }} 
+                  className="btn btn-primary" 
+                  style={{ padding: "6px 16px", fontSize: "0.82rem", minWidth: "90px", display: "flex", justifyContent: "center" }}
+                  disabled={isSavingKatrol}
+                >
+                  {isSavingKatrol ? "Menyimpan..." : "Simpan"}
+                </button>
               </div>
             </div>
           </div>
