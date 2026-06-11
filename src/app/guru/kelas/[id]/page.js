@@ -2175,7 +2175,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className="btn btn-secondary" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
-                📥 Ekspor data siswa
+                📥 Ekspor Data Siswa
               </button>
               
               <label
@@ -2188,7 +2188,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   margin: 0
                 }}
               >
-                <span>📤</span> Impor data siswa
+                <span>📤</span> Impor Data Siswa
                 <input
                   type="file"
                   accept=".xlsx, .xls"
@@ -2588,7 +2588,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
             {[
               { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: false },
-              { icon: "📥", label: "Ekspor data siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
+              { icon: "📥", label: "Ekspor Data Siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
               { icon: "🔌", label: "Ekspor ke E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
             ].map((item) => (
               <button
@@ -3793,7 +3793,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📥 Cara Ekspor Data:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Klik tombol <strong>📥 Ekspor data siswa</strong> pada Panel Kontrol.</li>
+                          <li>Klik tombol <strong>📥 Ekspor Data Siswa</strong> pada Panel Kontrol.</li>
                           <li>Sistem otomatis mendownload file spreadsheet yang memuat NISN, Nama, dan kolom aspek penilaian yang telah Anda buat sebelumnya.</li>
                           <li>Buka file tersebut di Excel dan Anda dapat mengisi nilai siswa secara luring (offline) dengan lebih nyaman.</li>
                         </ol>
@@ -3801,7 +3801,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📤 Cara Impor Data Kembali:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Setelah mengisi nilai di Excel offline, klik tombol <strong>📤 Impor data siswa</strong> pada Panel Kontrol.</li>
+                          <li>Setelah mengisi nilai di Excel offline, klik tombol <strong>📤 Impor Data Siswa</strong> pada Panel Kontrol.</li>
                           <li>Pilih file Excel yang telah Anda isi nilainya tadi.</li>
                           <li>Sistem akan menampilkan <strong>Pratinjau Impor</strong> yang menunjukkan data nilai lama vs data nilai baru.</li>
                           <li>Periksa kebenaran data, lalu klik <strong>Konfirmasi & Simpan Impor</strong>. Seluruh nilai di spreadsheet akan diperbarui seketika.</li>
