@@ -4228,34 +4228,40 @@ export default function DetailKelas({ params: paramsPromise }) {
                                   if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
                                     if (confirm(`Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`)) {
                                       
-                                      // Hitung pembagian bobot proporsional
-                                      const promotedCols = col.subKolom.map(sub => {
-                                        let calculatedBobot = 0;
-                                        if (col.hitungMetode === "persentase") {
-                                          const subWeightPercent = Number(sub.bobot) || 0;
-                                          calculatedBobot = Number(((subWeightPercent / 100) * (Number(col.bobot) || 0)).toFixed(1));
-                                        } else {
-                                          calculatedBobot = Number(((Number(col.bobot) || 0) / col.subKolom.length).toFixed(1));
-                                        }
+                                      // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
+                                      const B = Number(col.bobot) || 0;
+                                      const N = col.subKolom.length;
+                                      let distributedBobots = [];
 
+                                      if (col.hitungMetode !== "persentase") {
+                                        // Rata-rata: Bagi rata ke bilangan bulat terdekat
+                                        const base = Math.floor(B / N);
+                                        const remainder = B % N;
+                                        distributedBobots = col.subKolom.map((_, idx) => base + (idx < remainder ? 1 : 0));
+                                      } else {
+                                        // Kustom/Persentase: Gunakan Largest Remainder Method
+                                        const w = col.subKolom.map(sub => (Number(sub.bobot) || 0) / 100 * B);
+                                        const f = w.map(val => Math.floor(val));
+                                        const sumF = f.reduce((sum, val) => sum + val, 0);
+                                        const remainder = B - sumF;
+                                        const fracs = w.map((val, idx) => ({ idx, frac: val - f[idx] }));
+                                        fracs.sort((a, b) => b.frac - a.frac);
+                                        for (let i = 0; i < remainder; i++) {
+                                          f[fracs[i % N].idx] += 1;
+                                        }
+                                        distributedBobots = f;
+                                      }
+
+                                      const promotedCols = col.subKolom.map((sub, idx) => {
                                         return {
                                           id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
                                           nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
-                                          bobot: calculatedBobot,
+                                          bobot: distributedBobots[idx],
                                           isGroup: false,
                                           subKolom: [],
                                           hitungMetode: "rata-rata"
                                         };
                                       });
-
-                                      // Masukkan ID kelompok induk ke antrean delete jika ia kolom asli dari DB
-                                      const isExisting = initialKolomNilai.some(c => c.id === col.id);
-                                      if (isExisting) {
-                                        setDeletedKolomIds(prev => {
-                                          if (!prev.includes(col.id)) return [...prev, col.id];
-                                          return prev;
-                                        });
-                                      }
 
                                       // Ganti kolom kelompok dengan kumpulan kolom pecahan baru
                                       const updatedCols = [];
