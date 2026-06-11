@@ -4201,9 +4201,62 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                               <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginLeft: col.isGroup ? "50px" : "0" }}>
                                 <input type="checkbox" checked={col.isGroup} onChange={(e) => {
+                                  const nextIsGroup = e.target.checked;
+                                  
+                                  // Jika centang dihilangkan dan ada sub-aspek di dalamnya
+                                  if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
+                                    if (confirm(`Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`)) {
+                                      
+                                      // Hitung pembagian bobot proporsional
+                                      const promotedCols = col.subKolom.map(sub => {
+                                        let calculatedBobot = 0;
+                                        if (col.hitungMetode === "persentase") {
+                                          const subWeightPercent = Number(sub.bobot) || 0;
+                                          calculatedBobot = Number(((subWeightPercent / 100) * (Number(col.bobot) || 0)).toFixed(1));
+                                        } else {
+                                          calculatedBobot = Number(((Number(col.bobot) || 0) / col.subKolom.length).toFixed(1));
+                                        }
+
+                                        return {
+                                          id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
+                                          nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
+                                          bobot: calculatedBobot,
+                                          isGroup: false,
+                                          subKolom: [],
+                                          hitungMetode: "rata-rata"
+                                        };
+                                      });
+
+                                      // Masukkan ID kelompok induk ke antrean delete jika ia kolom asli dari DB
+                                      const isExisting = initialKolomNilai.some(c => c.id === col.id);
+                                      if (isExisting) {
+                                        setDeletedKolomIds(prev => {
+                                          if (!prev.includes(col.id)) return [...prev, col.id];
+                                          return prev;
+                                        });
+                                      }
+
+                                      // Ganti kolom kelompok dengan kumpulan kolom pecahan baru
+                                      const updatedCols = [];
+                                      for (const c of kelas.kolomNilai) {
+                                        if (c.id === col.id) {
+                                          updatedCols.push(...promotedCols);
+                                        } else {
+                                          updatedCols.push(c);
+                                        }
+                                      }
+
+                                      setKelas({ ...kelas, kolomNilai: updatedCols });
+                                      alert(`💡 Berhasil membongkar kelompok!\nSub-aspek berikut kini menjadi aspek mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
+                                      return;
+                                    } else {
+                                      // Batalkan uncheck
+                                      return;
+                                    }
+                                  }
+
                                   const newCols = kelas.kolomNilai.map(c => {
                                     if (c.id === col.id) {
-                                      const nextIsGroup = e.target.checked;
                                       return {
                                         ...c,
                                         isGroup: nextIsGroup,
