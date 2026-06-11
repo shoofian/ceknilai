@@ -272,6 +272,7 @@ a:hover {
 }
 
 .btn-primary:hover {
+  color: #ffffff;
   background-color: var(--primary-hover);
   box-shadow: 0 0 15px var(--primary-glow);
   transform: translateY(-1px);
@@ -284,6 +285,7 @@ a:hover {
 }
 
 .btn-secondary:hover {
+  color: var(--text-primary);
   background-color: var(--border-color);
 }
 
@@ -293,6 +295,7 @@ a:hover {
 }
 
 .btn-success:hover {
+  color: #ffffff;
   box-shadow: 0 0 15px var(--success-glow);
 }
 
@@ -302,6 +305,7 @@ a:hover {
 }
 
 .btn-danger:hover {
+  color: #ffffff;
   box-shadow: 0 0 15px var(--danger-glow);
 }
 
