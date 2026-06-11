@@ -101,12 +101,21 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [availableClasses, setAvailableClasses] = useState([]);
   const [fetchingClasses, setFetchingClasses] = useState(false);
   const [initialKolomNilai, setInitialKolomNilai] = useState([]);
+  const [deletedKolomIds, setDeletedKolomIds] = useState([]);
 
   useEffect(() => {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
+      setDeletedKolomIds([]);
     }
   }, [kolomModalOpen]);
+
+  const handleCloseKolomModal = () => {
+    setKolomModalOpen(false);
+    setFabOpen(false);
+    setDeletedKolomIds([]);
+    fetchClassDetail(); // Restore original database state
+  };
 
   // States untuk Log Aktifitas Siswa
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -867,21 +876,29 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleDeleteKolom = async (colId, colName) => {
-    if (confirm(`⚠️ PERINGATAN!\nApakah Anda yakin ingin menghapus kolom nilai "${colName}"?\nSemua nilai siswa pada aspek ini akan DIHAPUS secara permanen!`)) {
-      try {
-        const response = await fetch(`/api/kelas/${classId}/kolom?id=${colId}`, {
-          method: "DELETE",
-        });
-        if (response.ok) {
-          fetchClassDetail();
-        } else {
-          const data = await response.json();
-          alert(data.error || "Gagal menghapus kolom.");
-        }
-      } catch (err) {
-        console.error("Delete column failed", err);
+  const handleDeleteKolom = (colId, colName) => {
+    const hasData = kelas.siswa.some(s => s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
+    if (hasData) {
+      if (!confirm(`⚠️ PERINGATAN!\nAspek "${colName}" sudah memiliki data nilai siswa!\n\nJika dihapus, nilai siswa di aspek ini akan dihapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda yakin ingin menghapus secara visual dari daftar?`)) {
+        return;
       }
+    } else {
+      if (!confirm(`Apakah Anda yakin ingin menghapus aspek "${colName}"?`)) {
+        return;
+      }
+    }
+    
+    // Remove locally
+    const updated = kelas.kolomNilai.filter(c => c.id !== colId);
+    setKelas({ ...kelas, kolomNilai: updated });
+    
+    // Add to deletion queue if it is an existing column from DB
+    const isExisting = initialKolomNilai.some(c => c.id === colId);
+    if (isExisting) {
+      setDeletedKolomIds(prev => {
+        if (!prev.includes(colId)) return [...prev, colId];
+        return prev;
+      });
     }
   };
 
@@ -1005,6 +1022,18 @@ export default function DetailKelas({ params: paramsPromise }) {
     const changedToGroup = [];
     const changedToSingle = [];
     const deletedSubAspects = [];
+    const deletedColumnsWithValues = [];
+
+    // Detect deleted columns with values
+    for (const colId of deletedKolomIds) {
+      const initial = initialKolomNilai.find(c => c.id === colId);
+      if (initial) {
+        const hasData = kelas.siswa.some(s => s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
+        if (hasData) {
+          deletedColumnsWithValues.push(initial.nama);
+        }
+      }
+    }
 
     for (const col of kelas.kolomNilai) {
       const initial = initialKolomNilai.find(c => c.id === col.id);
@@ -1039,9 +1068,14 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
     }
 
-    if (changedToGroup.length > 0 || changedToSingle.length > 0 || deletedSubAspects.length > 0) {
+    if (changedToGroup.length > 0 || changedToSingle.length > 0 || deletedSubAspects.length > 0 || deletedColumnsWithValues.length > 0) {
       let warningMessage = "⚠️ PERINGATAN KESELAMATAN DATA NILAI!\n\n" +
         "Sistem mendeteksi adanya perubahan struktur aspek yang berpotensi menghilangkan nilai siswa yang sudah diisi:\n\n";
+
+      if (deletedColumnsWithValues.length > 0) {
+        warningMessage += `• Aspek berikut telah dihapus secara permanen: \n  - ${deletedColumnsWithValues.join("\n  - ")}\n` +
+          "  (Seluruh nilai siswa di aspek ini akan dihapus secara permanen!)\n\n";
+      }
 
       if (changedToGroup.length > 0) {
         warningMessage += `• Aspek tunggal berikut diubah menjadi kelompok: ${changedToGroup.join(", ")}\n` +
@@ -1067,6 +1101,17 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     setIsSavingBobot(true);
     try {
+      // Execute local delete queue first
+      for (const colId of deletedKolomIds) {
+        const resDelete = await fetch(`/api/kelas/${classId}/kolom?id=${colId}`, {
+          method: "DELETE",
+        });
+        if (!resDelete.ok) {
+          const deleteData = await resDelete.json();
+          throw new Error(deleteData.error || `Gagal menghapus aspek ${colId}`);
+        }
+      }
+
       // Buat aspek-aspek baru terlebih dahulu
       const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
       let updatedKolomNilai = [...kelas.kolomNilai]; // Salin state lama
@@ -1101,7 +1146,9 @@ export default function DetailKelas({ params: paramsPromise }) {
         throw new Error(data.error || "Gagal memperbarui bobot.");
       }
 
+      setDeletedKolomIds([]);
       setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah
+      setKolomModalOpen(false); // Close modal on success
       await fetchClassDetail();
     } catch (err) {
       console.error("Update weights failed", err);
@@ -4091,7 +4138,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek & Bobot Nilai</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
               </div>
-              <button onClick={() => { setKolomModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+              <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
             <div style={{ overflowY: "auto", flex: 1 }}>
@@ -4419,6 +4466,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </span>
                   </div>
                   <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
+                      Batal & Tutup
+                    </button>
                     <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
                       📋 Salin dari Kelas Lain
                     </button>
