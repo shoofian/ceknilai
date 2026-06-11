@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, use, useMemo, Fragment } from "react";
 import Modal from '@/components/Modal';
@@ -2134,6 +2134,33 @@ export default function DetailKelas({ params: paramsPromise }) {
           flexDirection: "column",
           gap: "12px"
         }}>
+
+          {/* Section: Panduan & Bantuan — paling atas agar mudah ditemukan */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "#fbbf24", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>💡 Bantuan</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <button 
+                onClick={() => { setPanduanActiveTab("aspek"); setPanduanModalOpen(true); }} 
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  fontSize: "0.82rem", fontWeight: "700",
+                  padding: "7px 16px", borderRadius: "8px", border: "none", cursor: "pointer",
+                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  color: "#fff",
+                  boxShadow: "0 0 14px rgba(251, 191, 36, 0.45)",
+                  transition: "box-shadow 0.2s, transform 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 0 22px rgba(251,191,36,0.7)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 0 14px rgba(251,191,36,0.45)"; e.currentTarget.style.transform = "translateY(0)"; }}
+              >
+                💡 Panduan & Cara Penggunaan Fitur
+              </button>
+            </div>
+          </div>
+
+          {/* Border Divider */}
+          <div style={{ height: "1px", backgroundColor: "rgba(255, 255, 255, 0.06)" }}></div>
+
           {/* Section: Konfigurasi */}
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
@@ -2205,23 +2232,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
                 📋 Ekspor ke E-Rapor
-              </button>
-            </div>
-          </div>
-
-          {/* Border Divider */}
-          <div style={{ height: "1px", backgroundColor: "rgba(255, 255, 255, 0.06)" }}></div>
-
-          {/* Section: Panduan & Bantuan */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>📖 Panduan</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              <button 
-                onClick={() => { setPanduanActiveTab("aspek"); setPanduanModalOpen(true); }} 
-                className="btn btn-outline" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", borderColor: "rgba(59, 130, 246, 0.4)", color: "#93c5fd" }}
-              >
-                📖 Pelajari Panduan Penggunaan Fitur
               </button>
             </div>
           </div>
