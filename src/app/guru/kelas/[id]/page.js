@@ -1420,7 +1420,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
             <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "500" }}>
-              💡 <strong>Langkah cepat:</strong> Gunakan tombol "Atur Aspek & Bobot Nilai" di bagian bawah untuk menambahkan kolom aspek baru.
+              💡 <strong>Langkah cepat:</strong> Klik tombol "Mulai Atur Aspek Sekarang" di sebelah kanan untuk menambahkan aspek/kolom baru.
             </span>
             <button
               onClick={() => {
@@ -2119,6 +2119,93 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         </div>
 
+        {/* Panel Kontrol Kelas (Quick Actions) */}
+        <div id="konfigurasi-kelas" style={{
+          margin: "0 24px 20px 24px",
+          padding: "16px",
+          backgroundColor: "rgba(30, 41, 59, 0.4)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          borderRadius: "12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px"
+        }}>
+          {/* Section: Konfigurasi */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <button 
+                onClick={() => setKolomModalOpen(true)} 
+                className="btn btn-outline" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+              >
+                ⚖️ Atur Aspek &amp; Bobot
+              </button>
+              <button 
+                onClick={() => setRangeModalOpen(true)} 
+                className="btn btn-outline" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+              >
+                📊 Atur Rentang &amp; KKM
+              </button>
+            </div>
+          </div>
+
+          {/* Border Divider */}
+          <div style={{ height: "1px", backgroundColor: "rgba(255, 255, 255, 0.06)" }}></div>
+
+          {/* Section: Operasi Data */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>🛠️ Operasi Data</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+              <button 
+                onClick={handleOpenAddSiswa} 
+                className="btn btn-secondary" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+              >
+                👤 Tambah Siswa
+              </button>
+              <button 
+                onClick={downloadExcelTemplate} 
+                disabled={kelas.kolomNilai.length === 0} 
+                className="btn btn-secondary" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+              >
+                📥 Ekspor Excel
+              </button>
+              
+              <label
+                className={`btn btn-secondary ${kelas.kolomNilai.length === 0 ? "disabled" : ""}`}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                  fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px",
+                  cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer",
+                  opacity: kelas.kolomNilai.length === 0 ? 0.5 : 1,
+                  margin: 0
+                }}
+              >
+                <span>📤</span> Impor Excel
+                <input
+                  type="file"
+                  accept=".xlsx, .xls"
+                  style={{ display: "none" }}
+                  onChange={handleExcelUpload}
+                  disabled={kelas.kolomNilai.length === 0}
+                />
+              </label>
+
+              <button 
+                onClick={() => setRaporModalOpen(true)} 
+                disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0} 
+                className="btn btn-primary" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+              >
+                🔌 Integrasi E-Rapor
+              </button>
+            </div>
+          </div>
+        </div>
+
         {kelas.siswa.length > 0 ? (
           <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}>
             {(() => {
@@ -2419,16 +2506,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         )}
       </div>
 
-      {/* placeholder div agar tab konfigurasi tidak kosong total */}
-      <div className="glass-card" id="konfigurasi-kelas" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px 24px", marginTop: "24px", background: "linear-gradient(135deg, rgba(59,130,246,0.05), rgba(124,58,237,0.05))", border: "1px solid rgba(59,130,246,0.15)" }}>
-        <div style={{ fontSize: "2.5rem", flexShrink: 0 }}>⚙️</div>
-        <div>
-          <h4 style={{ fontSize: "1rem", fontWeight: "800", margin: "0 0 4px 0" }}>Konfigurasi &amp; Operasi Data</h4>
-          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0 }}>
-            Gunakan tombol <strong style={{ color: "var(--primary)" }}>⚙️</strong> di pojok kanan bawah layar untuk mengatur aspek &amp; bobot, rentang nilai, impor/ekspor Excel, dan operasi data lainnya.
-          </p>
-        </div>
-      </div>
+
 
       </>
       )}
