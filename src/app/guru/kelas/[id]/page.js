@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, use, useMemo, Fragment } from "react";
 import Modal from '@/components/Modal';
@@ -39,7 +39,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
 
 
-  // States untuk Rentang Nilai
+  // States untuk Status Nilai
   const [rangeModalOpen, setRangeModalOpen] = useState(false);
   const [gradeA, setGradeA] = useState(85);
   const [gradeB, setGradeB] = useState(75);
@@ -2177,7 +2177,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className="btn btn-outline" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
-                📊 Atur Rentang & KKM
+                📊 Atur Status & KKM
               </button>
             </div>
           </div>
@@ -2571,7 +2571,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ padding: "8px 14px 4px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>⚙️ Konfigurasi</div>
             {[
               { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); } },
-              { icon: "📊", label: "Atur Rentang & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); } },
+              { icon: "📊", label: "Atur Status & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); } },
             ].map((item) => (
               <button
                 key={item.label}
@@ -3681,7 +3681,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <div className="panduan-sidebar" style={{ width: "200px", borderRight: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", padding: "16px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                 {[
                   { id: "aspek", label: "⚖️ Aspek & Bobot" },
-                  { id: "kkm", label: "📊 Rentang & KKM" },
+                  { id: "kkm", label: "📊 Status & KKM" },
                   { id: "siswa", label: "👤 Tambah Siswa" },
                   { id: "ekspor", label: "📤 Ekspor & Impor" },
                   { id: "erapor", label: "📋 Ekspor ke E-Rapor" },
@@ -3744,7 +3744,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {panduanActiveTab === "kkm" && (
                   <>
                     <div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#34d399" }}>📊 Fitur: Atur Rentang Nilai & KKM</h4>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#34d399" }}>📊 Fitur: Atur Status Nilai & KKM</h4>
                       <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
                         Fitur ini digunakan untuk menetapkan standar kelulusan Kriteria Ketuntasan Minimal (KKM) serta batas rentang nilai untuk menentukan predikat (A, B, C, D) yang akan didapatkan siswa berdasarkan Nilai Akhir mereka.
                       </p>
@@ -3754,7 +3754,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Klik tombol <strong>📊 Atur Rentang & KKM</strong> pada Panel Kontrol.</li>
+                          <li>Klik tombol <strong>📊 Atur Status & KKM</strong> pada Panel Kontrol.</li>
                           <li>Masukkan batas nilai minimal KKM (misalnya: 75). Siswa dengan Nilai Akhir di bawah KKM ini otomatis dinyatakan "Belum Tuntas".</li>
                           <li>Atur batas nilai minimal untuk predikat A, B, C, dan D (misalnya: A &ge; 85, B &ge; 75, C &ge; 65, D &ge; 50). Batasan harus berurutan secara logis (A &gt; B &gt; C &gt; D).</li>
                           <li>Anda juga dapat memodifikasi penamaan label predikat/status jika diinginkan (misal predikat A berlabel "Sangat Baik").</li>
@@ -4377,13 +4377,13 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
 
-      {/* ===== MODAL: Atur Rentang Nilai & KKM ===== */}
+      {/* ===== MODAL: Atur Status Nilai & KKM ===== */}
       {rangeModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
           <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Rentang Nilai & KKM</h3>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Status Nilai & KKM</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
               </div>
               <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
