@@ -78,6 +78,10 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [pertemuanKegiatan, setPertemuanKegiatan] = useState("");
   const [agendaCollapsed, setAgendaCollapsed] = useState(true);
 
+  // States untuk Panduan Bantuan
+  const [panduanModalOpen, setPanduanModalOpen] = useState(false);
+  const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
+
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
 
@@ -2204,6 +2208,23 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
             </div>
           </div>
+
+          {/* Border Divider */}
+          <div style={{ height: "1px", backgroundColor: "rgba(255, 255, 255, 0.06)" }}></div>
+
+          {/* Section: Panduan & Bantuan */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>📖 Panduan</span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <button 
+                onClick={() => { setPanduanActiveTab("aspek"); setPanduanModalOpen(true); }} 
+                className="btn btn-outline" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", borderColor: "rgba(59, 130, 246, 0.4)", color: "#93c5fd" }}
+              >
+                📖 Pelajari Panduan Penggunaan Fitur
+              </button>
+            </div>
+          </div>
         </div>
 
         {kelas.siswa.length > 0 ? (
@@ -3599,6 +3620,297 @@ export default function DetailKelas({ params: paramsPromise }) {
         kelas={kelas}
         students={sortedStudents}
       />
+
+      {/* ============= MODAL PANDUAN PENGGUNAAN FITUR ============= */}
+      {panduanModalOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1200, padding: "16px" }}>
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", height: "85vh", display: "flex", flexDirection: "column", gap: 0, overflow: "hidden", padding: 0 }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "1.4rem" }}>📖</span>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Panduan Fitur &amp; Dokumentasi</h3>
+              </div>
+              <button onClick={() => setPanduanModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
+            </div>
+
+            {/* Main Content Area */}
+            <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+              {/* Sidebar Navigation */}
+              <div style={{ width: "200px", borderRight: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", padding: "16px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
+                {[
+                  { id: "aspek", label: "⚖️ Aspek &amp; Bobot" },
+                  { id: "kkm", label: "📊 Rentang &amp; KKM" },
+                  { id: "siswa", label: "👤 Tambah Siswa" },
+                  { id: "ekspor", label: "📤 Ekspor &amp; Impor" },
+                  { id: "erapor", label: "🔌 Integrasi E-Rapor" },
+                  { id: "katrol", label: "🔒 Nilai Katrol" }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => setPanduanActiveTab(item.id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "8px",
+                      width: "100%", padding: "10px 12px", borderRadius: "6px",
+                      background: panduanActiveTab === item.id ? "rgba(59, 130, 246, 0.15)" : "none",
+                      border: "none", cursor: "pointer",
+                      color: panduanActiveTab === item.id ? "#60a5fa" : "var(--text-secondary)",
+                      fontSize: "0.82rem", fontWeight: "700", textAlign: "left",
+                      transition: "all 0.15s"
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Guide Contents */}
+              <div style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+                {panduanActiveTab === "aspek" && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#60a5fa" }}>⚖️ Fitur: Atur Aspek &amp; Bobot Nilai</h4>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
+                        Fitur ini digunakan untuk mengonfigurasi komponen penilaian mata pelajaran Anda (seperti Tugas, UTS, UAS, atau Kehadiran) lengkap dengan porsi bobot masing-masing komponen. Total keseluruhan bobot wajib berjumlah <strong>100%</strong> agar penilaian dapat dikalkulasi secara valid.
+                      </p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Klik tombol <strong>⚖️ Atur Aspek &amp; Bobot</strong> pada Panel Kontrol.</li>
+                          <li>Tentukan nama komponen (misal: "Tugas Mandiri") dan isi bobotnya (misal: "20").</li>
+                          <li>Jika aspek tersebut merupakan kelompok/grup (misal: grup "Tugas" yang memiliki sub-komponen "Tugas 1, Tugas 2"), nyalakan opsi <strong>Grup Aspek</strong> lalu tambahkan sub-aspek di bawahnya.</li>
+                          <li>Tentukan metode perhitungan grup aspek: <strong>Rata-rata Otomatis</strong> (mengkalkulasi rata-rata sub-aspek) atau <strong>Persentase</strong> (setiap sub-aspek memiliki bobot tersendiri dalam grup tersebut).</li>
+                          <li>Pastikan total bobot dari seluruh aspek utama bernilai 100%, lalu klik <strong>Simpan Perubahan</strong>.</li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Contoh Penggunaan:</h5>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
+                          Mata pelajaran Informatika diatur memiliki 3 aspek utama:<br />
+                          1. <strong>Tugas (Grup - Rata-rata)</strong>: Bobot 30% (Sub-aspek: Tugas 1, Tugas 2).<br />
+                          2. <strong>UTS (Tunggal)</strong>: Bobot 30%.<br />
+                          3. <strong>UAS (Tunggal)</strong>: Bobot 40%.<br />
+                          Total bobot aspek utama: 30% + 30% + 40% = 100%.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
+                      <img src="/panduan_aspek_bobot.png" alt="Pratinjau Aspek &amp; Bobot" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                    </div>
+                  </>
+                )}
+
+                {panduanActiveTab === "kkm" && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#34d399" }}>📊 Fitur: Atur Rentang Nilai &amp; KKM</h4>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
+                        Fitur ini digunakan untuk menetapkan standar kelulusan Kriteria Ketuntasan Minimal (KKM) serta batas rentang nilai untuk menentukan predikat (A, B, C, D) yang akan didapatkan siswa berdasarkan Nilai Akhir mereka.
+                      </p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Klik tombol <strong>📊 Atur Rentang &amp; KKM</strong> pada Panel Kontrol.</li>
+                          <li>Masukkan batas nilai minimal KKM (misalnya: 75). Siswa dengan Nilai Akhir di bawah KKM ini otomatis dinyatakan "Belum Tuntas".</li>
+                          <li>Atur batas nilai minimal untuk predikat A, B, C, dan D (misalnya: A &ge; 85, B &ge; 75, C &ge; 65, D &ge; 50). Batasan harus berurutan secara logis (A &gt; B &gt; C &gt; D).</li>
+                          <li>Anda juga dapat memodifikasi penamaan label predikat/status jika diinginkan (misal predikat A berlabel "Sangat Baik").</li>
+                          <li>Klik <strong>Simpan Pengaturan</strong> untuk menerapkan perubahan.</li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Contoh Penggunaan:</h5>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
+                          Jika KKM diatur 75 dan KKM Predikat B diatur 75:<br />
+                          - Siswa mendapat Nilai Akhir <strong>74.5</strong>: Predikat C (Belum Tuntas).<br />
+                          - Siswa mendapat Nilai Akhir <strong>78.0</strong>: Predikat B (Lulus/Tuntas).<br />
+                          - Siswa mendapat Nilai Akhir <strong>88.0</strong>: Predikat A (Lulus/Tuntas).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
+                      <img src="/panduan_kkm_rentang.png" alt="Pratinjau KKM &amp; Rentang" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                    </div>
+                  </>
+                )}
+
+                {panduanActiveTab === "siswa" && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#fb7185" }}>👤 Fitur: Tambah Siswa Manual</h4>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
+                        Fitur ini digunakan oleh guru untuk menambahkan profil siswa ke dalam kelas secara satu per satu secara langsung (manual), atau mengoreksi biodata siswa yang sudah ada.
+                      </p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Klik tombol <strong>👤 Tambah Siswa</strong> pada Panel Kontrol.</li>
+                          <li>Masukkan <strong>NISN Siswa</strong> (10 digit numerik unik).</li>
+                          <li>Ketikkan <strong>Nama Lengkap Siswa</strong> secara benar.</li>
+                          <li>Pilih <strong>Tanggal Lahir</strong> siswa (ini akan menjadi password default bagi siswa untuk mengakses portal pencarian nilai mereka).</li>
+                          <li>Klik <strong>Simpan</strong>. Data siswa baru akan langsung muncul di baris spreadsheet.</li>
+                          <li>Untuk mengedit, klik tombol pensil <code>✏️</code> pada baris siswa yang bersangkutan.</li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Contoh Penggunaan:</h5>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
+                          Menambahkan siswa bernama <strong>Aditya Pratama</strong> dengan NISN <strong>1020304050</strong> dan tanggal lahir <strong>20 Mei 2010</strong>.<br />
+                          Setelah disimpan, Aditya dapat melihat rincian nilainya secara mandiri di portal siswa dengan memasukkan NISN dan tanggal lahir tersebut.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
+                      <img src="/panduan_tambah_siswa.png" alt="Pratinjau Tambah Siswa" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                    </div>
+                  </>
+                )}
+
+                {panduanActiveTab === "ekspor" && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#38bdf8" }}>📤 Fitur: Ekspor &amp; Impor Excel (.xlsx)</h4>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
+                        Fitur impor-ekspor ini mempermudah guru untuk memproses nilai siswa dalam jumlah banyak sekaligus menggunakan aplikasi spreadsheet desktop (seperti Microsoft Excel atau Google Sheets).
+                      </p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📥 Cara Ekspor Data:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Klik tombol <strong>📥 Ekspor Excel</strong> pada Panel Kontrol.</li>
+                          <li>Sistem otomatis mendownload file spreadsheet yang memuat NISN, Nama, dan kolom aspek penilaian yang telah Anda buat sebelumnya.</li>
+                          <li>Buka file tersebut di Excel dan Anda dapat mengisi nilai siswa secara luring (offline) dengan lebih nyaman.</li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📤 Cara Impor Data Kembali:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Setelah mengisi nilai di Excel offline, klik tombol <strong>📤 Impor Excel</strong> pada Panel Kontrol.</li>
+                          <li>Pilih file Excel yang telah Anda isi nilainya tadi.</li>
+                          <li>Sistem akan menampilkan <strong>Pratinjau Impor</strong> yang menunjukkan data nilai lama vs data nilai baru.</li>
+                          <li>Periksa kebenaran data, lalu klik <strong>Konfirmasi &amp; Simpan Impor</strong>. Seluruh nilai di spreadsheet akan diperbarui seketika.</li>
+                        </ol>
+                      </div>
+                    </div>
+
+                    <div style={{ backgroundColor: "rgba(56, 189, 248, 0.05)", border: "1px solid rgba(56, 189, 248, 0.15)", borderRadius: "8px", padding: "12px", fontSize: "0.78rem" }}>
+                      <strong>⚠️ Catatan Penting:</strong> Pastikan Anda tidak mengubah struktur nama kolom (Header) UTS, UAS, atau Tugas di file Excel hasil ekspor. Struktur baris NISN siswa juga harus tetap dipertahankan agar pencocokan data saat impor tidak gagal.
+                    </div>
+                  </>
+                )}
+
+                {panduanActiveTab === "erapor" && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#a78bfa" }}>🔌 Fitur: Integrasi E-Rapor Sekolah</h4>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
+                        Fitur ini membantu guru memindahkan nilai akhir semester dari CekNilai ke format template e-Rapor resmi (dari kementerian) secara otomatis, lengkap dengan deskripsi ketercapaian Tujuan Pembelajaran (TP).
+                      </p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Unduh template file Excel e-Rapor kosongan dari aplikasi e-Rapor resmi sekolah Anda.</li>
+                          <li>Klik tombol <strong>🔌 Integrasi E-Rapor</strong> pada Panel Kontrol CekNilai.</li>
+                          <li>Unggah file template e-Rapor yang telah Anda unduh tadi ke area upload yang tersedia.</li>
+                          <li>Petakan setiap kolom TP di e-Rapor dengan kolom aspek di CekNilai (misal: TP 1 diambil dari aspek UTS, TP 2 diambil dari Tugas).</li>
+                          <li>Klik <strong>Isi &amp; Unduh Rapor Excel</strong>. Nilai dan capaian kompetensi terisi otomatis di file e-Rapor Anda.</li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Keunggulan Integrasi:</h5>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
+                          Sistem mendeteksi secara otomatis NISN siswa dan memetakan nilai rapor dengan aman. Jika ada nilai rapor siswa di bawah 100 namun semua aspek KKM tercapai, sistem secara cerdas akan memberikan status ketercapaian optimal secara otomatis agar template valid diunggah kembali ke sistem sekolah.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "8px" }}>📸 Pratinjau Tampilan:</h5>
+                      <img src="/panduan_integrasi_erapor.png" alt="Pratinjau Integrasi E-Rapor" style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border-color)", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }} />
+                    </div>
+                  </>
+                )}
+
+                {panduanActiveTab === "katrol" && (
+                  <>
+                    <div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#fcd34d" }}>🔒 Fitur: Nilai Katrol Rahasia</h4>
+                      <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
+                        Nilai Katrol adalah nilai penyesuaian khusus yang diberikan oleh guru kepada siswa tertentu untuk mendongkrak Nilai Akhir mereka tanpa memodifikasi nilai akademik aslinya. Fitur ini bersifat rahasia (hanya diketahui oleh guru pengampu).
+                      </p>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
+                        <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
+                          <li>Klik tombol pensil <code>✏️</code> (Edit Profil Siswa) pada baris siswa yang nilainya ingin Anda dongkrak.</li>
+                          <li>Di bagian bawah formulir modal, temukan kolom <strong>🔒 Katrol / Penyesuaian Nilai Akhir (Rahasia)</strong>.</li>
+                          <li>Masukkan jumlah poin tambahan yang ingin Anda berikan (contoh: isi <code>5</code> untuk mendongkrak nilai akhir sebesar 5 poin).</li>
+                          <li>Klik <strong>Simpan</strong>.</li>
+                        </ol>
+                      </div>
+                      <div>
+                        <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>👁️ Visibilitas Nilai:</h5>
+                        <ul style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.5", margin: 0 }}>
+                          <li><strong>Di Halaman Guru:</strong> Guru akan melihat Nilai Akhir yang sudah bertambah disertai dengan tanda gembok hijau kecil <strong>`🔒 +5`</strong> sebagai pengingat.</li>
+                          <li><strong>Di Portal Siswa:</strong> Siswa hanya melihat Nilai Akhir yang sudah terdongkrak bulat tanpa tahu adanya nilai tambahan rahasia tersebut.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: "16px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)" }}>Contoh Simulasi Nilai Katrol:</span>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: "6px", fontSize: "0.8rem" }}>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span style={{ fontWeight: "700" }}>Rudi Hermawan</span>
+                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Nilai Aktual: 71.00 (Belum Tuntas)</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                            <span>Katrol</span>
+                            <strong style={{ color: "#34d399" }}>🔒 +4</strong>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                            <span style={{ fontWeight: "800", color: "var(--success)", fontSize: "1rem" }}>75.00</span>
+                            <span style={{ fontSize: "0.65rem", backgroundColor: "rgba(16,185,129,0.15)", color: "#34d399", padding: "1px 4px", borderRadius: "3px" }}>LULUS</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: "14px 24px", borderTop: "1px solid var(--border-color)", display: "flex", justifyContent: "flex-end", backgroundColor: "var(--bg-secondary)" }}>
+              <button onClick={() => setPanduanModalOpen(false)} className="btn btn-primary" style={{ padding: "8px 20px", fontSize: "0.85rem" }}>
+                Mengerti &amp; Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Gabung Aspek ke Kelompok */}
       {mergeModalOpen && (() => {
