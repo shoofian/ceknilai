@@ -2358,7 +2358,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         </div>
 
-        {kelas.siswa.length > 0 ? (
+        {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
           <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}>
             {(() => {
               const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
@@ -2427,12 +2427,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                     )}
                   </thead>
                   <tbody>
-                {sortedStudents.map((student) => {
-                  
-                  // Nilai akhir sudah dihitung di useMemo
-                  const finalScore = student.finalScore;
-                  const isSelesai = student.isSelesai;
-                  const jumlahAspekTerisi = student.jumlahAspekTerisi;
+                  {kelas.siswa.length > 0 ? (
+                    sortedStudents.map((student) => {
+                      
+                      // Nilai akhir sudah dihitung di useMemo
+                      const finalScore = student.finalScore;
+                      const isSelesai = student.isSelesai;
+                      const jumlahAspekTerisi = student.jumlahAspekTerisi;
 
                   return (
                     <Fragment key={student.nisn}>
@@ -2674,17 +2675,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                       )}
                     </Fragment>
                   );
-                })}
-              </tbody>
-            </table>
-          );
-        })()}
-      </div>
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                    Belum ada data siswa di kelas ini. Silakan klik tombol <strong>👤 Tambah Siswa</strong> pada Panel Kontrol untuk memulai pengisian nilai.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        );
+      })()}
+    </div>
     ) : (
-          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-            Belum ada siswa di kelas ini. Klik "Tambah Siswa Manual" atau "Impor Nilai dari CSV" untuk mengisi data.
-          </div>
-        )}
+      <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+        Belum ada siswa dan aspek nilai di kelas ini. Silakan atur aspek nilai atau tambah siswa terlebih dahulu.
+      </div>
+    )}
       </div>
 
 
