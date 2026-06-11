@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, use, useMemo, Fragment } from "react";
 import Modal from '@/components/Modal';
@@ -100,6 +100,13 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [availableClasses, setAvailableClasses] = useState([]);
   const [fetchingClasses, setFetchingClasses] = useState(false);
+  const [initialKolomNilai, setInitialKolomNilai] = useState([]);
+
+  useEffect(() => {
+    if (kolomModalOpen && kelas) {
+      setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
+    }
+  }, [kolomModalOpen]);
 
   // States untuk Log Aktifitas Siswa
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -992,6 +999,70 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     if (totalBobot !== 100) {
       alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
+    }
+
+    // Safety check for data loss
+    const changedToGroup = [];
+    const changedToSingle = [];
+    const deletedSubAspects = [];
+
+    for (const col of kelas.kolomNilai) {
+      const initial = initialKolomNilai.find(c => c.id === col.id);
+      if (initial) {
+        // 1. Single -> Group
+        if (!initial.isGroup && col.isGroup) {
+          const hasData = kelas.siswa.some(s => s.nilai[col.id] !== undefined && s.nilai[col.id] !== null && s.nilai[col.id] !== "");
+          if (hasData) {
+            changedToGroup.push(col.nama);
+          }
+        }
+        // 2. Group -> Single
+        if (initial.isGroup && !col.isGroup) {
+          const subIds = (initial.subKolom || []).map(s => s.id);
+          const hasData = kelas.siswa.some(s => subIds.some(sid => s.nilai[sid] !== undefined && s.nilai[sid] !== null && s.nilai[sid] !== ""));
+          if (hasData) {
+            changedToSingle.push(col.nama);
+          }
+        }
+        // 3. Deleted Sub-columns inside group
+        if (initial.isGroup && col.isGroup) {
+          for (const initialSub of (initial.subKolom || [])) {
+            const stillExists = (col.subKolom || []).some(s => s.id === initialSub.id);
+            if (!stillExists) {
+              const hasData = kelas.siswa.some(s => s.nilai[initialSub.id] !== undefined && s.nilai[initialSub.id] !== null && s.nilai[initialSub.id] !== "");
+              if (hasData) {
+                deletedSubAspects.push(`Sub-aspek "${initialSub.nama}" di kelompok "${col.nama}"`);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (changedToGroup.length > 0 || changedToSingle.length > 0 || deletedSubAspects.length > 0) {
+      let warningMessage = "⚠️ PERINGATAN KESELAMATAN DATA NILAI!\n\n" +
+        "Sistem mendeteksi adanya perubahan struktur aspek yang berpotensi menghilangkan nilai siswa yang sudah diisi:\n\n";
+
+      if (changedToGroup.length > 0) {
+        warningMessage += `• Aspek tunggal berikut diubah menjadi kelompok: ${changedToGroup.join(", ")}\n` +
+          "  (Nilai mandiri saat ini tidak akan terbaca karena nilai harus diisi ulang pada sub-aspek yang baru)\n\n";
+      }
+
+      if (changedToSingle.length > 0) {
+        warningMessage += `• Aspek kelompok berikut diubah menjadi tunggal: ${changedToSingle.join(", ")}\n` +
+          "  (Seluruh sub-aspek beserta nilainya di dalamnya akan dihapus secara permanen!)\n\n";
+      }
+
+      if (deletedSubAspects.length > 0) {
+        warningMessage += `• Sub-aspek berikut telah dihapus: \n  - ${deletedSubAspects.join("\n  - ")}\n` +
+          "  (Seluruh nilai siswa di sub-aspek tersebut akan dihapus secara permanen!)\n\n";
+      }
+
+      warningMessage += "Apakah Anda yakin ingin melanjutkan dan menyimpan perubahan ini?";
+      
+      if (!confirm(warningMessage)) {
+        return; // Batalkan penyimpanan
+      }
     }
 
     setIsSavingBobot(true);
@@ -4174,7 +4245,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span>{col.hitungMetode === "persentase" ? "Kontribusi bobot kustom" : "Rata-rata otomatis"}</span>
                                 <button onClick={() => {
-                                  if(!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
+                                  const hasData = kelas.siswa.some(s => s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
+                                  if (hasData) {
+                                    if (!confirm(`⚠️ PERINGATAN!\nSub-aspek "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-aspek ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
+                                      return;
+                                    }
+                                  } else {
+                                    if (!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
+                                  }
                                   const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
                                   setKelas({ ...kelas, kolomNilai: newCols });
                                 }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
