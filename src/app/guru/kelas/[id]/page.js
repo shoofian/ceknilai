@@ -4262,7 +4262,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* ===== MODAL: Atur Aspek & Bobot ===== */}
       {kolomModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "850px", height: "80vh", maxHeight: "750px", minHeight: "min(550px, 90vh)", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek & Bobot Nilai</h3>
