@@ -4367,10 +4367,10 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* ===== MODAL: Atur Aspek & Bobot ===== */}
       {kolomModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "850px", height: "80vh", maxHeight: "750px", minHeight: "min(550px, 90vh)", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
+          <div className="glass-card aspect-modal-card animate-fade-in">
+            <div className="aspect-modal-header">
               <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek & Bobot Nilai</h3>
+                <h3>⚖️ Atur Aspek & Bobot Nilai</h3>
                 <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
               </div>
               <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
@@ -4379,7 +4379,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div className="aspect-modal-container">
               {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
               <div className="aspect-sidebar-panel">
-                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="aspect-sidebar-header">
                   <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Daftar Aspek ({kelas.kolomNilai.length + newAspects.filter(a => a.nama.trim() !== "").length})</span>
                   <input
                     type="checkbox"
@@ -4552,9 +4552,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                   const isNew = newAspects.some(a => a.id === activeAspectId);
 
                   return (
-                    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    <div className="animate-fade-in aspect-content-detail">
                       {/* Name & Weight Row */}
-                      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
+                      <div className="aspect-form-row">
                         <div className="form-group" style={{ margin: 0 }}>
                           <label className="form-label">Nama Aspek Penilaian</label>
                           <input
@@ -4590,7 +4590,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </div>
 
                       {/* Visibility & DB Info Row */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", backgroundColor: "var(--bg-primary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)" }}>
+                      <div className="aspect-visibility-row">
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                           <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>Visibilitas Nilai</span>
                           <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
@@ -4669,9 +4669,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {/* Calculation Method Selection */}
                           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <label className="form-label">Metode Perhitungan Sub-Aspek</label>
-                            <div className="selection-card-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "8px" }}>
+                            <div className="selection-card-grid sub-method-grid">
                               <div
-                                className={`selection-card ${activeAspect.hitungMetode !== "persentase" ? "active" : ""}`}
+                                className={`selection-card sub-method-card ${activeAspect.hitungMetode !== "persentase" ? "active" : ""}`}
                                 onClick={() => {
                                   if (isNew) {
                                     handleNewAspectChange(activeAspect.id, 'hitungMetode', 'rata-rata');
@@ -4680,17 +4680,16 @@ export default function DetailKelas({ params: paramsPromise }) {
                                     setKelas({ ...kelas, kolomNilai: newCols });
                                   }
                                 }}
-                                style={{ padding: "12px", gap: "10px" }}
                               >
-                                <span className="selection-card-icon" style={{ fontSize: "1.4rem" }}>🧮</span>
+                                <span className="selection-card-icon">🧮</span>
                                 <div className="selection-card-content">
-                                  <span className="selection-card-title" style={{ fontSize: "0.88rem" }}>Rata-rata Otomatis</span>
-                                  <span className="selection-card-desc" style={{ fontSize: "0.72rem" }}>Nilai grup = rata-rata dari sub-aspek yang terisi.</span>
+                                  <span className="selection-card-title">Rata-rata Otomatis</span>
+                                  <span className="selection-card-desc">Nilai grup = rata-rata dari sub-aspek yang terisi.</span>
                                 </div>
                               </div>
 
                               <div
-                                className={`selection-card ${activeAspect.hitungMetode === "persentase" ? "active" : ""}`}
+                                className={`selection-card sub-method-card ${activeAspect.hitungMetode === "persentase" ? "active" : ""}`}
                                 onClick={() => {
                                   if (isNew) {
                                     handleNewAspectChange(activeAspect.id, 'hitungMetode', 'persentase');
@@ -4699,12 +4698,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                                     setKelas({ ...kelas, kolomNilai: newCols });
                                   }
                                 }}
-                                style={{ padding: "12px", gap: "10px" }}
                               >
-                                <span className="selection-card-icon" style={{ fontSize: "1.4rem" }}>⚖️</span>
+                                <span className="selection-card-icon">⚖️</span>
                                 <div className="selection-card-content">
-                                  <span className="selection-card-title" style={{ fontSize: "0.88rem" }}>Bobot Kustom (%)</span>
-                                  <span className="selection-card-desc" style={{ fontSize: "0.72rem" }}>Setiap sub-aspek memiliki porsi bobot berbeda (harus 100%).</span>
+                                  <span className="selection-card-title">Bobot Kustom (%)</span>
+                                  <span className="selection-card-desc">Setiap sub-aspek memiliki porsi bobot berbeda (harus 100%).</span>
                                 </div>
                               </div>
                             </div>
@@ -4712,7 +4710,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                           {/* Sub-Aspects List Manager */}
                           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                               <label className="form-label" style={{ margin: 0 }}>Daftar Sub-Aspek Penilaian</label>
                               {activeAspect.hitungMetode === "persentase" && (
                                 <span
@@ -4827,7 +4825,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
 
             {/* Footer */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "12px", borderBottomLeftRadius: "var(--radius-md)", borderBottomRightRadius: "var(--radius-md)" }}>
+            <div className="aspect-modal-footer">
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ fontSize: "0.88rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
                   Total Bobot: {totalBobot}%
@@ -4836,16 +4834,16 @@ export default function DetailKelas({ params: paramsPromise }) {
                   {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
                 </span>
               </div>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+              <div className="aspect-modal-footer-buttons">
                 <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
                   Batal & Tutup
                 </button>
-                <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
+                <button onClick={handleOpenDuplicate} className="btn btn-secondary btn-salin-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
                   📋 Salin dari Kelas Lain
                 </button>
                 <button
                   onClick={saveAllBobot}
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-simpan-aspek"
                   style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
                   disabled={isSavingBobot}
                 >

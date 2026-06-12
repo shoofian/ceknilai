@@ -800,8 +800,133 @@ a:hover {
   margin-top: 4px;
 }
 
+/* Aspect Modal Card */
+.aspect-modal-card {
+  width: 100%;
+  max-width: 850px;
+  height: 80vh;
+  max-height: 750px;
+  min-height: min(550px, 90vh);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Aspect Modal Header */
+.aspect-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border-color);
+  padding: 24px 24px 16px 24px;
+}
+
+.aspect-modal-header h3 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+/* Aspect Sidebar Header */
+.aspect-sidebar-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Aspect Modal Footer */
+.aspect-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.aspect-modal-footer-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Aspect Form Layout */
+.aspect-form-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.aspect-content-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Custom Sub-Method Layout */
+.sub-method-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.sub-method-card {
+  padding: 12px !important;
+  gap: 10px !important;
+}
+
+.sub-method-card .selection-card-icon {
+  font-size: 1.4rem !important;
+}
+
+.sub-method-card .selection-card-title {
+  font-size: 0.88rem !important;
+}
+
+.sub-method-card .selection-card-desc {
+  font-size: 0.72rem !important;
+}
+
+/* Visibility Row */
+.aspect-visibility-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  gap: 12px;
+}
+
 /* Responsive Modal Atur Aspek (Mobile) */
 @media (max-width: 768px) {
+  .aspect-modal-card {
+    height: 90vh;
+    max-height: 90vh;
+    min-height: 0;
+  }
+
+  .aspect-modal-header {
+    padding: 16px 16px 12px 16px;
+  }
+
+  .aspect-modal-header h3 {
+    font-size: 1.20rem !important;
+  }
+
+  .aspect-sidebar-header {
+    padding: 10px 12px;
+  }
+
   .aspect-modal-container {
     flex-direction: column;
     overflow-y: auto;
@@ -816,11 +941,82 @@ a:hover {
   }
   
   .aspect-sidebar-list {
-    max-height: 220px;
+    max-height: 200px;
     overflow-y: auto;
+    padding: 12px;
   }
   
   .aspect-content-panel {
     overflow-y: visible;
+    padding: 16px;
+  }
+
+  .aspect-content-detail {
+    gap: 16px;
+  }
+
+  .selection-card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+
+  .selection-card {
+    padding: 12px;
+  }
+
+  .selection-card-icon {
+    font-size: 1.5rem;
+  }
+
+  .sub-method-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .aspect-visibility-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .aspect-visibility-row button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .aspect-modal-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .aspect-modal-footer > div:first-child {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .aspect-modal-footer-buttons {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px !important;
+    width: 100%;
+  }
+
+  .aspect-modal-footer-buttons button {
+    width: 100%;
+    padding: 10px 8px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .btn-salin-kelas {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .aspect-form-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 }
