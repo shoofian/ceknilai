@@ -35,6 +35,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
   const [kolomError, setKolomError] = useState("");
   const [activeAspectId, setActiveAspectId] = useState(null);
+  const [initialHiddenAspek, setInitialHiddenAspek] = useState([]);
+  const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
   
   // Status penyimpanan otomatis tabel nilai
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
@@ -113,6 +115,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   useEffect(() => {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
+      setInitialHiddenAspek(JSON.parse(JSON.stringify(kelas.skemaPenilaian?.hiddenAspek || [])));
       setDeletedKolomIds([]);
       if (kelas.kolomNilai && kelas.kolomNilai.length > 0) {
         setActiveAspectId(kelas.kolomNilai[0].id);
@@ -125,8 +128,51 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   }, [kolomModalOpen]);
 
+  const hasUnsavedChanges = () => {
+    if (deletedKolomIds.length > 0) return true;
+
+    const activeNewAspects = newAspects.filter(a => a.nama.trim() !== "" || (a.bobot !== "" && a.bobot !== 0) || (a.subKolom && a.subKolom.length > 0));
+    if (activeNewAspects.length > 0) return true;
+
+    if (kelas.kolomNilai.length !== initialKolomNilai.length) return true;
+    for (let i = 0; i < kelas.kolomNilai.length; i++) {
+      const col = kelas.kolomNilai[i];
+      const initCol = initialKolomNilai.find(c => c.id === col.id);
+      if (!initCol) return true;
+      if (col.nama !== initCol.nama) return true;
+      if (Number(col.bobot) !== Number(initCol.bobot)) return true;
+      if (col.isGroup !== initCol.isGroup) return true;
+      if (col.hitungMetode !== initCol.hitungMetode) return true;
+      
+      const sub = col.subKolom || [];
+      const initSub = initCol.subKolom || [];
+      if (sub.length !== initSub.length) return true;
+      for (let j = 0; j < sub.length; j++) {
+        const s = sub[j];
+        const isSub = initSub.find(x => x.id === s.id);
+        if (!isSub) return true;
+        if (s.nama !== isSub.nama) return true;
+        if (Number(s.bobot) !== Number(isSub.bobot)) return true;
+      }
+    }
+
+    const currentHidden = kelas.skemaPenilaian?.hiddenAspek || [];
+    if (JSON.stringify(currentHidden) !== JSON.stringify(initialHiddenAspek)) return true;
+
+    return false;
+  };
+
   const handleCloseKolomModal = () => {
+    if (hasUnsavedChanges()) {
+      setShowUnsavedConfirm(true);
+    } else {
+      forceCloseKolomModal();
+    }
+  };
+
+  const forceCloseKolomModal = () => {
     setKolomModalOpen(false);
+    setShowUnsavedConfirm(false);
     setFabOpen(false);
     setDeletedKolomIds([]);
     fetchClassDetail(); // Restore original database state
@@ -4763,6 +4809,54 @@ export default function DetailKelas({ params: paramsPromise }) {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MODAL KONFIRMASI PERUBAHAN BELUM DISIMPAN ===== */}
+      {showUnsavedConfirm && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "2rem" }}>⚠️</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>Perubahan Belum Disimpan</h4>
+                <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Anda telah membuat perubahan pada konfigurasi aspek nilai.</span>
+              </div>
+            </div>
+            
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+              Apakah Anda ingin menyimpan perubahan tersebut sebelum menutup pengaturan aspek?
+            </p>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+              <button
+                onClick={() => {
+                  setShowUnsavedConfirm(false);
+                  saveAllBobot();
+                }}
+                className="btn btn-primary"
+                style={{ width: "100%", padding: "10px", fontSize: "0.85rem", fontWeight: "700" }}
+              >
+                💾 Ya, Simpan Perubahan
+              </button>
+              <button
+                onClick={forceCloseKolomModal}
+                className="btn btn-danger"
+                style={{ width: "100%", padding: "10px", fontSize: "0.85rem", fontWeight: "700", backgroundColor: "rgba(239, 68, 68, 0.1)", color: "var(--danger)", border: "1px solid rgba(239, 68, 68, 0.2)" }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--danger)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)"; e.currentTarget.style.color = "var(--danger)"; }}
+              >
+                🗑️ Buang Perubahan
+              </button>
+              <button
+                onClick={() => setShowUnsavedConfirm(false)}
+                className="btn btn-secondary"
+                style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}
+              >
+                Batal
+              </button>
             </div>
           </div>
         </div>
