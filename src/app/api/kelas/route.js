@@ -42,7 +42,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
-    const { nama, mataPelajaran, tahunAjaran, semester } = await request.json();
+    const { nama, mataPelajaran, tahunAjaran, semester, kolomNilai, siswa, skemaPenilaian } = await request.json();
     if (!nama) {
       return NextResponse.json({ error: 'Nama kelas harus diisi' }, { status: 400 });
     }
@@ -56,8 +56,9 @@ export async function POST(request) {
         mataPelajaran,
         tahunAjaran: tahunAjaran || '2025/2026',
         semester: semester || 'Ganjil',
-        kolomNilai: [],
-        siswa: []
+        kolomNilai: kolomNilai || [],
+        siswa: siswa || [],
+        skemaPenilaian
       }, username);
 
       return NextResponse.json({ success: true, kelas: newKelas });

@@ -37,6 +37,30 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [activeAspectId, setActiveAspectId] = useState(null);
   const [initialHiddenAspek, setInitialHiddenAspek] = useState([]);
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "OK",
+    cancelText: "Batal",
+    isDanger: false,
+    onConfirm: null
+  });
+
+  const triggerConfirm = (message, onConfirm, options = {}) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: options.title || "Konfirmasi",
+      message: message,
+      confirmText: options.confirmText || "OK",
+      cancelText: options.cancelText || "Batal",
+      isDanger: !!options.isDanger,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
   
   // Status penyimpanan otomatis tabel nilai
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
@@ -853,21 +877,29 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const handleDeleteSiswa = async (studentNisn, studentName) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus siswa "${studentName}" (NISN: ${studentNisn}) dari kelas ini? Semua nilainya akan terhapus.`)) {
-      try {
-        const response = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
-          method: "DELETE",
-        });
-        if (response.ok) {
-          fetchClassDetail();
-        } else {
-          const data = await response.json();
-          alert(data.error || "Gagal menghapus siswa.");
+    triggerConfirm(
+      `Apakah Anda yakin ingin menghapus siswa "${studentName}" (NISN: ${studentNisn}) dari kelas ini? Semua nilainya akan terhapus secara permanen.`,
+      async () => {
+        try {
+          const response = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+            method: "DELETE",
+          });
+          if (response.ok) {
+            fetchClassDetail();
+          } else {
+            const data = await response.json();
+            alert(data.error || "Gagal menghapus siswa.");
+          }
+        } catch (err) {
+          console.error("Delete student failed", err);
         }
-      } catch (err) {
-        console.error("Delete student failed", err);
+      },
+      {
+        title: "🗑️ Hapus Siswa",
+        confirmText: "Ya, Hapus",
+        isDanger: true
       }
-    }
+    );
   };
 
   // === HANDLERS KOLOM NILAI ===
@@ -916,66 +948,70 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleToggleGroupType = (col, nextIsGroup) => {
     // Jika centang dihilangkan dan ada sub-aspek di dalamnya
     if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
-      if (confirm(`Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`)) {
-        
-        // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
-        const B = Number(col.bobot) || 0;
-        const N = col.subKolom.length;
-        let distributedBobots = [];
+      triggerConfirm(
+        `Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`,
+        () => {
+          // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
+          const B = Number(col.bobot) || 0;
+          const N = col.subKolom.length;
+          let distributedBobots = [];
 
-        if (col.hitungMetode !== "persentase") {
-          // Rata-rata: Bagi rata ke bilangan bulat terdekat
-          const base = Math.floor(B / N);
-          const remainder = B % N;
-          distributedBobots = col.subKolom.map((_, idx) => base + (idx < remainder ? 1 : 0));
-        } else {
-          // Kustom/Persentase: Gunakan Largest Remainder Method
-          const w = col.subKolom.map(sub => (Number(sub.bobot) || 0) / 100 * B);
-          const f = w.map(val => Math.floor(val));
-          const sumF = f.reduce((sum, val) => sum + val, 0);
-          const remainder = B - sumF;
-          const fracs = w.map((val, idx) => ({ idx, frac: val - f[idx] }));
-          fracs.sort((a, b) => b.frac - a.frac);
-          for (let i = 0; i < remainder; i++) {
-            f[fracs[i % N].idx] += 1;
-          }
-          distributedBobots = f;
-        }
-
-        const promotedCols = col.subKolom.map((sub, idx) => {
-          return {
-            id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
-            nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
-            bobot: distributedBobots[idx],
-            isGroup: false,
-            subKolom: [],
-            hitungMetode: "rata-rata"
-          };
-        });
-
-        // Ganti kolom kelompok dengan kumpulan kolom pecahan baru
-        const updatedCols = [];
-        for (const c of kelas.kolomNilai) {
-          if (c.id === col.id) {
-            updatedCols.push(...promotedCols);
+          if (col.hitungMetode !== "persentase") {
+            // Rata-rata: Bagi rata ke bilangan bulat terdekat
+            const base = Math.floor(B / N);
+            const remainder = B % N;
+            distributedBobots = col.subKolom.map((_, idx) => base + (idx < remainder ? 1 : 0));
           } else {
-            updatedCols.push(c);
+            // Kustom/Persentase: Gunakan Largest Remainder Method
+            const w = col.subKolom.map(sub => (Number(sub.bobot) || 0) / 100 * B);
+            const f = w.map(val => Math.floor(val));
+            const sumF = f.reduce((sum, val) => sum + val, 0);
+            const remainder = B - sumF;
+            const fracs = w.map((val, idx) => ({ idx, frac: val - f[idx] }));
+            fracs.sort((a, b) => b.frac - a.frac);
+            for (let i = 0; i < remainder; i++) {
+              f[fracs[i % N].idx] += 1;
+            }
+            distributedBobots = f;
           }
-        }
 
-        setKelas({ ...kelas, kolomNilai: updatedCols });
-        
-        // Auto select the first promoted aspect
-        if (promotedCols.length > 0) {
-          setActiveAspectId(promotedCols[0].id);
-        }
+          const promotedCols = col.subKolom.map((sub, idx) => {
+            return {
+              id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
+              nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
+              bobot: distributedBobots[idx],
+              isGroup: false,
+              subKolom: [],
+              hitungMetode: "rata-rata"
+            };
+          });
 
-        alert(`💡 Berhasil membongkar kelompok!\nSub-aspek berikut kini menjadi aspek mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
-        return;
-      } else {
-        // Batalkan uncheck
-        return;
-      }
+          // Ganti kolom kelompok dengan kumpulan kolom pecahan baru
+          const updatedCols = [];
+          for (const c of kelas.kolomNilai) {
+            if (c.id === col.id) {
+              updatedCols.push(...promotedCols);
+            } else {
+              updatedCols.push(c);
+            }
+          }
+
+          setKelas({ ...kelas, kolomNilai: updatedCols });
+          
+          // Auto select the first promoted aspect
+          if (promotedCols.length > 0) {
+            setActiveAspectId(promotedCols[0].id);
+          }
+
+          alert(`💡 Berhasil membongkar kelompok!\nSub-aspek berikut kini menjadi aspek mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
+        },
+        {
+          title: "Bongkar Kelompok",
+          confirmText: "Ya, Bongkar",
+          isDanger: true
+        }
+      );
+      return;
     }
 
     const newCols = kelas.kolomNilai.map(c => {
@@ -1012,51 +1048,74 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const handleDuplicateFromClass = (sourceClass) => {
-    if (confirm(`⚠️ PERHATIAN!\nApakah Anda yakin ingin menyalin aspek dari kelas "${sourceClass.nama}"?\nAspek penilaian yang ada di tabel saat ini akan TERHAPUS dan tertiban (overwrite) dengan yang baru.`)) {
-      const copiedColumns = sourceClass.kolomNilai.map(col => ({
-        ...col,
-        id: 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5)
-      }));
-      setKelas({ ...kelas, kolomNilai: copiedColumns });
-      setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Bersihkan newAspects
-      setDuplicateModalOpen(false);
-    }
+    triggerConfirm(
+      `Apakah Anda yakin ingin menyalin aspek dari kelas "${sourceClass.nama}"?\n\nAspek penilaian yang ada di tabel saat ini akan TERHAPUS dan tertiban (overwrite) dengan yang baru.`,
+      () => {
+        const copiedColumns = sourceClass.kolomNilai.map(col => ({
+          ...col,
+          id: 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5)
+        }));
+        setKelas({ ...kelas, kolomNilai: copiedColumns });
+        setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Bersihkan newAspects
+        setDuplicateModalOpen(false);
+      },
+      {
+        title: "⚠️ PERHATIAN!",
+        confirmText: "Ya, Salin Aspek",
+        isDanger: true
+      }
+    );
   };
 
   const handleDeleteKolom = (colId, colName) => {
     const hasData = kelas.siswa.some(s => s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
-    if (hasData) {
-      if (!confirm(`⚠️ PERINGATAN!\nAspek "${colName}" sudah memiliki data nilai siswa!\n\nJika dihapus, nilai siswa di aspek ini akan dihapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda yakin ingin menghapus secara visual dari daftar?`)) {
-        return;
-      }
-    } else {
-      if (!confirm(`Apakah Anda yakin ingin menghapus aspek "${colName}"?`)) {
-        return;
-      }
-    }
     
-    // Remove locally
-    const updated = kelas.kolomNilai.filter(c => c.id !== colId);
-    setKelas({ ...kelas, kolomNilai: updated });
-    
-    // Add to deletion queue if it is an existing column from DB
-    const isExisting = initialKolomNilai.some(c => c.id === colId);
-    if (isExisting) {
-      setDeletedKolomIds(prev => {
-        if (!prev.includes(colId)) return [...prev, colId];
-        return prev;
-      });
-    }
+    const executeDelete = () => {
+      // Remove locally
+      const updated = kelas.kolomNilai.filter(c => c.id !== colId);
+      setKelas({ ...kelas, kolomNilai: updated });
+      
+      // Add to deletion queue if it is an existing column from DB
+      const isExisting = initialKolomNilai.some(c => c.id === colId);
+      if (isExisting) {
+        setDeletedKolomIds(prev => {
+          if (!prev.includes(colId)) return [...prev, colId];
+          return prev;
+        });
+      }
 
-    // Auto select another aspect if we deleted the active one
-    if (activeAspectId === colId) {
-      if (updated.length > 0) {
-        setActiveAspectId(updated[0].id);
-      } else if (newAspects.length > 0) {
-        setActiveAspectId(newAspects[0].id);
-      } else {
-        setActiveAspectId(null);
+      // Auto select another aspect if we deleted the active one
+      if (activeAspectId === colId) {
+        if (updated.length > 0) {
+          setActiveAspectId(updated[0].id);
+        } else if (newAspects.length > 0) {
+          setActiveAspectId(newAspects[0].id);
+        } else {
+          setActiveAspectId(null);
+        }
       }
+    };
+
+    if (hasData) {
+      triggerConfirm(
+        `Aspek "${colName}" sudah memiliki data nilai siswa!\n\nJika dihapus, nilai siswa di aspek ini akan dihapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda yakin ingin menghapus secara visual dari daftar?`,
+        executeDelete,
+        {
+          title: "⚠️ PERINGATAN!",
+          confirmText: "Ya, Hapus",
+          isDanger: true
+        }
+      );
+    } else {
+      triggerConfirm(
+        `Apakah Anda yakin ingin menghapus aspek "${colName}"?`,
+        executeDelete,
+        {
+          title: "Hapus Aspek",
+          confirmText: "Ya, Hapus",
+          isDanger: true
+        }
+      );
     }
   };
 
@@ -5023,6 +5082,52 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
+
+      {/* ===== GLOBAL CUSTOM CONFIRMATION MODAL ===== */}
+      {confirmConfig.isOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+              <span style={{ fontSize: "2rem", lineHeight: "1" }}>{confirmConfig.title.includes("⚠️") || confirmConfig.isDanger ? "⚠️" : "❓"}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
+                  {confirmConfig.title.replace("⚠️", "").trim() || "Konfirmasi"}
+                </h4>
+              </div>
+            </div>
+            
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line" }}>
+              {confirmConfig.message}
+            </p>
+            
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "12px" }}>
+              <button
+                type="button"
+                onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                className="btn btn-secondary"
+                style={{ padding: "8px 16px", fontSize: "0.82rem" }}
+              >
+                {confirmConfig.cancelText}
+              </button>
+              <button
+                type="button"
+                onClick={confirmConfig.onConfirm}
+                className={confirmConfig.isDanger ? "btn btn-danger" : "btn btn-primary"}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: "0.82rem",
+                  fontWeight: "700",
+                  backgroundColor: confirmConfig.isDanger ? "var(--danger)" : "var(--primary)",
+                  color: "#fff",
+                  border: confirmConfig.isDanger ? "1px solid var(--danger)" : "1px solid var(--primary)"
+                }}
+              >
+                {confirmConfig.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );

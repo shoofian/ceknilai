@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -23,6 +23,18 @@ export default function KelolaKelas() {
   const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" }]);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
+
+  // Duplicate Class States
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [sourceClass, setSourceClass] = useState(null);
+  const [dupNama, setDupNama] = useState("");
+  const [dupMataPelajaran, setDupMataPelajaran] = useState("");
+  const [dupTahunAjaran, setDupTahunAjaran] = useState("");
+  const [dupSemester, setDupSemester] = useState("Ganjil");
+  const [copyStudents, setCopyStudents] = useState(true);
+  const [copyGrades, setCopyGrades] = useState(false);
+  const [dupError, setDupError] = useState("");
+  const [isDuplicating, setIsDuplicating] = useState(false);
 
   const fetchKelas = async () => {
     try {
@@ -139,6 +151,83 @@ export default function KelolaKelas() {
       } catch (err) {
         console.error("Delete failed", err);
       }
+    }
+  };
+
+  const handleOpenDuplicate = (k) => {
+    setSourceClass(k);
+    setDupNama(`${k.nama} (Salinan)`);
+    setDupMataPelajaran(k.mataPelajaran || "Informatika");
+    setDupTahunAjaran(k.tahunAjaran);
+    setDupSemester(k.semester || "Ganjil");
+    setCopyStudents(true);
+    setCopyGrades(false);
+    setDupError("");
+    setIsDuplicating(false);
+    setDuplicateModalOpen(true);
+  };
+
+  const handleDuplicateSubmit = async (e) => {
+    e.preventDefault();
+    if (!dupNama.trim()) {
+      setDupError("Nama kelas baru harus diisi.");
+      return;
+    }
+    if (!dupMataPelajaran.trim()) {
+      setDupError("Mata pelajaran harus diisi.");
+      return;
+    }
+    if (!dupTahunAjaran.trim()) {
+      setDupError("Tahun ajaran harus diisi.");
+      return;
+    }
+
+    setIsDuplicating(true);
+    setDupError("");
+
+    try {
+      let studentsPayload = [];
+      if (copyStudents && sourceClass.siswa) {
+        studentsPayload = sourceClass.siswa.map((s) => {
+          let nilaiPayload = {};
+          if (copyGrades) {
+            nilaiPayload = { ...s.nilai };
+          }
+          return {
+            nisn: s.nisn,
+            nama: s.nama,
+            tanggalLahir: s.tanggalLahir,
+            nilai: nilaiPayload,
+            catatan: s.catatan || ""
+          };
+        });
+      }
+
+      const response = await fetch("/api/kelas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nama: dupNama.trim(),
+          mataPelajaran: dupMataPelajaran.trim(),
+          tahunAjaran: dupTahunAjaran.trim(),
+          semester: dupSemester.trim(),
+          kolomNilai: sourceClass.kolomNilai || [],
+          siswa: studentsPayload,
+          skemaPenilaian: sourceClass.skemaPenilaian || null
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Gagal menduplikasi kelas");
+      }
+
+      setDuplicateModalOpen(false);
+      fetchKelas();
+    } catch (err) {
+      setDupError(err.message || "Terjadi kesalahan saat menduplikasi kelas.");
+    } finally {
+      setIsDuplicating(false);
     }
   };
 
@@ -405,14 +494,17 @@ export default function KelolaKelas() {
                   ⚙️ Kelola Nilai & Siswa
                 </Link>
                 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "8px" }}>
-                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.8rem", width: "100%", justifyContent: "center" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "8px" }}>
+                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Edit Kelas">
                     ✏️ Edit
                   </button>
-                  <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.8rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center" }}>
+                  <button onClick={() => handleOpenDuplicate(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Duplikat Kelas">
+                    📋 Duplikat
+                  </button>
+                  <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center" }} title="Arsipkan Kelas">
                     📁 Arsipkan
                   </button>
-                  <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px 12px", fontSize: "0.8rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", justifyContent: "center" }} title="Hapus Kelas">
+                  <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px 10px", fontSize: "0.85rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", justifyContent: "center" }} title="Hapus Kelas">
                     🗑️
                   </button>
                 </div>
@@ -625,6 +717,155 @@ export default function KelolaKelas() {
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={isBulkImporting}>
                   {isBulkImporting ? "Mengimpor..." : "🚀 Simpan & Impor Kelas"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Glassmorphism Modal for Duplicate Class */}
+      {duplicateModalOpen && sourceClass && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            zIndex: 200,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "450px", border: "1px solid var(--primary)", boxShadow: "0 20px 40px rgba(59,130,246,0.2)" }}>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "8px", color: "var(--primary)" }}>
+              📋 Duplikat Kelas
+            </h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "20px" }}>
+              Salin konfigurasi kelas <strong>{sourceClass.nama}</strong> ke kelas baru.
+            </p>
+
+            <form onSubmit={handleDuplicateSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Kelas Baru</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Kelas XI-IPA 2 (Salinan)"
+                  className="form-input"
+                  value={dupNama}
+                  onChange={(e) => setDupNama(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Mata Pelajaran</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Informatika"
+                  className="form-input"
+                  value={dupMataPelajaran}
+                  onChange={(e) => setDupMataPelajaran(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tahun Ajaran</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 2025/2026"
+                  className="form-input"
+                  value={dupTahunAjaran}
+                  onChange={(e) => setDupTahunAjaran(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Semester</label>
+                <select
+                  className="form-input"
+                  value={dupSemester}
+                  onChange={(e) => setDupSemester(e.target.value)}
+                  required
+                  style={{ 
+                    appearance: "auto", 
+                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    color: "var(--text-primary)", 
+                    border: "1px solid var(--border-color)" 
+                  }}
+                >
+                  <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
+                  <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
+                </select>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "14px", backgroundColor: "rgba(255,255,255,0.03)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <input
+                    type="checkbox"
+                    id="copyStudents"
+                    checked={copyStudents}
+                    onChange={(e) => {
+                      setCopyStudents(e.target.checked);
+                      if (!e.target.checked) setCopyGrades(false);
+                    }}
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      accentColor: "var(--primary)",
+                      cursor: "pointer"
+                    }}
+                  />
+                  <label htmlFor="copyStudents" style={{ fontSize: "0.85rem", fontWeight: "600", cursor: "pointer", color: "var(--text-primary)" }}>
+                    👥 Salin Daftar Siswa ({sourceClass?.siswa?.length || 0} Siswa)
+                  </label>
+                </div>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0 0 0 26px" }}>
+                  Menyalin daftar nama dan NISN siswa ke kelas baru.
+                </p>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "4px", opacity: copyStudents ? 1 : 0.5 }}>
+                  <input
+                    type="checkbox"
+                    id="copyGrades"
+                    checked={copyGrades}
+                    disabled={!copyStudents}
+                    onChange={(e) => setCopyGrades(e.target.checked)}
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      accentColor: "var(--primary)",
+                      cursor: copyStudents ? "pointer" : "not-allowed"
+                    }}
+                  />
+                  <label htmlFor="copyGrades" style={{ fontSize: "0.85rem", fontWeight: "600", cursor: copyStudents ? "pointer" : "not-allowed", color: "var(--text-primary)" }}>
+                    📊 Salin Nilai Siswa
+                  </label>
+                </div>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", margin: "0 0 0 26px" }}>
+                  Menyalin semua entri nilai siswa yang sudah ada ke kelas baru.
+                </p>
+              </div>
+
+              {dupError && (
+                <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
+                  ❌ {dupError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button type="button" onClick={() => setDuplicateModalOpen(false)} className="btn btn-secondary" disabled={isDuplicating}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={isDuplicating}>
+                  {isDuplicating ? "Menduplikasi..." : "🚀 Simpan & Duplikat"}
                 </button>
               </div>
             </form>
