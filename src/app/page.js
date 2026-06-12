@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -771,15 +771,42 @@ export default function StudentPortal() {
                         <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155", flex: 1 }}>
                           <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>4. Grafik Performa</p>
                           {(() => {
-                            const aspects = res.detailNilai.filter(c => c.nilaiAsli !== null && typeof c.nilaiAsli === 'number');
-                            if (aspects.length < 3) {
+                            const chartItems = [];
+                            res.detailNilai.forEach(col => {
+                              const aspectName = col.namaKomom || col.namaKolom || "";
+                              if (col.isGroup && col.subDetail && col.subDetail.length > 0) {
+                                col.subDetail.forEach(sub => {
+                                  if (sub.nilaiAsli !== null && typeof sub.nilaiAsli === 'number') {
+                                    chartItems.push({
+                                      nama: `${aspectName} - ${sub.nama || "Sub-Aspek"}`,
+                                      nilaiAsli: sub.nilaiAsli,
+                                      bobot: sub.bobot,
+                                      isSub: true
+                                    });
+                                  }
+                                });
+                              } else {
+                                if (col.nilaiAsli !== null && typeof col.nilaiAsli === 'number') {
+                                  chartItems.push({
+                                    nama: aspectName,
+                                    nilaiAsli: col.nilaiAsli,
+                                    bobot: col.bobot,
+                                    isSub: false
+                                  });
+                                }
+                              }
+                            });
+
+                            if (chartItems.length < 3) {
                               return (
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                                  {res.detailNilai.map(col => (
-                                    <div key={col.kolomId} style={{ backgroundColor: "#0f172a", padding: "20px", borderRadius: "16px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  {chartItems.map((col, idx) => (
+                                    <div key={idx} style={{ backgroundColor: "#0f172a", padding: "20px", borderRadius: "16px", border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                       <div>
-                                        <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#e2e8f0" }}>{col.namaKomom || col.namaKolom}</h4>
-                                        <p style={{ margin: "6px 0 0 0", fontSize: "1rem", color: "#64748b", fontWeight: "600" }}>Bobot {col.bobot}%</p>
+                                        <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#e2e8f0" }}>{col.nama}</h4>
+                                        <p style={{ margin: "6px 0 0 0", fontSize: "1rem", color: "#64748b", fontWeight: "600" }}>
+                                          {col.isSub ? `Sub-Aspek (Bobot ${col.bobot}%)` : `Bobot {col.bobot}%`}
+                                        </p>
                                       </div>
                                       <div style={{ 
                                         fontSize: "2.2rem", 
@@ -797,7 +824,7 @@ export default function StudentPortal() {
                                 </div>
                               );
                             }
-                            const N = aspects.length;
+                            const N = chartItems.length;
                             const CX = 270, CY = 250, R = 200;
                             const toXY = (i, val) => {
                               const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
@@ -820,29 +847,29 @@ export default function StudentPortal() {
                                         fill="none" stroke={level === 100 ? "#475569" : "#1e3a5f"} strokeWidth={level === 100 ? "1.5" : "1"}
                                       />
                                     ))}
-                                    {aspects.map((_, i) => {
+                                    {chartItems.map((_, i) => {
                                       const [x, y] = toXY(i, 100);
                                       return <line key={i} x1={CX} y1={CY} x2={x} y2={y} stroke="#334155" strokeWidth="1" />;
                                     })}
                                     <polygon
-                                      points={aspects.map((col, i) => toXY(i, col.nilaiAsli).join(",")).join(" ")}
+                                      points={chartItems.map((col, i) => toXY(i, col.nilaiAsli).join(",")).join(" ")}
                                       fill="rgba(59,130,246,0.2)" stroke="#3b82f6" strokeWidth="2.5"
                                     />
-                                    {aspects.map((col, i) => {
+                                    {chartItems.map((col, i) => {
                                       const [x, y] = toXY(i, col.nilaiAsli);
                                       return <circle key={i} cx={x} cy={y} r="6" fill="#3b82f6" stroke="#f8fafc" strokeWidth="2.5" />;
                                     })}
-                                    {aspects.map((col, i) => {
+                                    {chartItems.map((col, i) => {
                                       const [x, y] = toXY(i, col.nilaiAsli);
                                       const offsetY = y < CY ? -14 : 20;
                                       return <text key={i} x={x} y={y + offsetY} fill="#38bdf8" fontSize="16" fontWeight="800" textAnchor="middle">{col.nilaiAsli}</text>;
                                     })}
-                                    {aspects.map((col, i) => {
+                                    {chartItems.map((col, i) => {
                                       const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                                       const lr = R + 38;
                                       const lx = CX + lr * Math.cos(angle);
                                       const ly = CY + lr * Math.sin(angle);
-                                      const label = col.namaKomom || col.namaKolom || "";
+                                      const label = col.nama;
                                       const words = label.split(" ");
                                       const lineH = 18;
                                       return (
@@ -863,7 +890,7 @@ export default function StudentPortal() {
                                 </div>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
                                   <p style={{ color: "#64748b", fontSize: "0.95rem", fontWeight: "700", margin: "0 0 8px 0", textTransform: "uppercase", letterSpacing: "0.05em" }}>Legenda Aspek</p>
-                                  {res.detailNilai.map((col, i) => (
+                                  {chartItems.map((col, i) => (
                                     <div key={i} style={{ 
                                       display: "flex", 
                                       alignItems: "center", 
@@ -892,8 +919,10 @@ export default function StudentPortal() {
                                           flexShrink: 0 
                                         }} />
                                         <div>
-                                          <p style={{ margin: 0, fontSize: "1rem", color: "#cbd5e1", fontWeight: "600" }}>{col.namaKomom || col.namaKolom}</p>
-                                          <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", fontWeight: "500" }}>Bobot {col.bobot}%</p>
+                                          <p style={{ margin: 0, fontSize: "1rem", color: "#cbd5e1", fontWeight: "600" }}>{col.nama}</p>
+                                          <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", fontWeight: "500" }}>
+                                            {col.isSub ? `Sub-Aspek (Bobot ${col.bobot}%)` : `Bobot ${col.bobot}%`}
+                                          </p>
                                         </div>
                                       </div>
                                       <span style={{ 
