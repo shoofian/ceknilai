@@ -34,6 +34,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [fabOpen, setFabOpen] = useState(false);
   const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
   const [kolomError, setKolomError] = useState("");
+  const [activeAspectId, setActiveAspectId] = useState(null);
   
   // Status penyimpanan otomatis tabel nilai
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
@@ -113,6 +114,14 @@ export default function DetailKelas({ params: paramsPromise }) {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
       setDeletedKolomIds([]);
+      if (kelas.kolomNilai && kelas.kolomNilai.length > 0) {
+        setActiveAspectId(kelas.kolomNilai[0].id);
+        setNewAspects([]);
+      } else {
+        const newId = `new-aspect-${Date.now()}`;
+        setNewAspects([{ id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] }]);
+        setActiveAspectId(newId);
+      }
     }
   }, [kolomModalOpen]);
 
@@ -833,19 +842,108 @@ export default function DetailKelas({ params: paramsPromise }) {
       return a;
     });
     setNewAspects(updated);
-
-    // Auto-add new empty row if the last row is typed into
-    if (id === newAspects[newAspects.length - 1].id && field === "nama" && value.trim() !== "") {
-      setNewAspects([...updated, { id: Date.now() + Math.random(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
-    }
   };
   
   const handleRemoveNewAspect = (id) => {
-    if (newAspects.length > 1) {
-      setNewAspects(newAspects.filter(a => a.id !== id));
-    } else {
-      setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
+    const updated = newAspects.filter(a => a.id !== id);
+    setNewAspects(updated);
+
+    // Auto select another aspect if we deleted the active one
+    if (activeAspectId === id) {
+      if (kelas.kolomNilai.length > 0) {
+        setActiveAspectId(kelas.kolomNilai[0].id);
+      } else if (updated.length > 0) {
+        setActiveAspectId(updated[0].id);
+      } else {
+        setActiveAspectId(null);
+      }
     }
+  };
+
+  const handleAddBlankAspect = () => {
+    const newId = `new-aspect-${Date.now()}`;
+    const newAspect = { id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] };
+    setNewAspects(prev => [...prev, newAspect]);
+    setActiveAspectId(newId);
+  };
+
+  const handleToggleGroupType = (col, nextIsGroup) => {
+    // Jika centang dihilangkan dan ada sub-aspek di dalamnya
+    if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
+      if (confirm(`Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`)) {
+        
+        // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
+        const B = Number(col.bobot) || 0;
+        const N = col.subKolom.length;
+        let distributedBobots = [];
+
+        if (col.hitungMetode !== "persentase") {
+          // Rata-rata: Bagi rata ke bilangan bulat terdekat
+          const base = Math.floor(B / N);
+          const remainder = B % N;
+          distributedBobots = col.subKolom.map((_, idx) => base + (idx < remainder ? 1 : 0));
+        } else {
+          // Kustom/Persentase: Gunakan Largest Remainder Method
+          const w = col.subKolom.map(sub => (Number(sub.bobot) || 0) / 100 * B);
+          const f = w.map(val => Math.floor(val));
+          const sumF = f.reduce((sum, val) => sum + val, 0);
+          const remainder = B - sumF;
+          const fracs = w.map((val, idx) => ({ idx, frac: val - f[idx] }));
+          fracs.sort((a, b) => b.frac - a.frac);
+          for (let i = 0; i < remainder; i++) {
+            f[fracs[i % N].idx] += 1;
+          }
+          distributedBobots = f;
+        }
+
+        const promotedCols = col.subKolom.map((sub, idx) => {
+          return {
+            id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
+            nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
+            bobot: distributedBobots[idx],
+            isGroup: false,
+            subKolom: [],
+            hitungMetode: "rata-rata"
+          };
+        });
+
+        // Ganti kolom kelompok dengan kumpulan kolom pecahan baru
+        const updatedCols = [];
+        for (const c of kelas.kolomNilai) {
+          if (c.id === col.id) {
+            updatedCols.push(...promotedCols);
+          } else {
+            updatedCols.push(c);
+          }
+        }
+
+        setKelas({ ...kelas, kolomNilai: updatedCols });
+        
+        // Auto select the first promoted aspect
+        if (promotedCols.length > 0) {
+          setActiveAspectId(promotedCols[0].id);
+        }
+
+        alert(`💡 Berhasil membongkar kelompok!\nSub-aspek berikut kini menjadi aspek mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
+        return;
+      } else {
+        // Batalkan uncheck
+        return;
+      }
+    }
+
+    const newCols = kelas.kolomNilai.map(c => {
+      if (c.id === col.id) {
+        return {
+          ...c,
+          isGroup: nextIsGroup,
+          subKolom: nextIsGroup ? (c.subKolom || []) : [],
+          hitungMetode: nextIsGroup ? (c.hitungMetode || "rata-rata") : "rata-rata"
+        };
+      }
+      return c;
+    });
+    setKelas({ ...kelas, kolomNilai: newCols });
   };
 
   const handleOpenDuplicate = async () => {
@@ -902,6 +1000,17 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (!prev.includes(colId)) return [...prev, colId];
         return prev;
       });
+    }
+
+    // Auto select another aspect if we deleted the active one
+    if (activeAspectId === colId) {
+      if (updated.length > 0) {
+        setActiveAspectId(updated[0].id);
+      } else if (newAspects.length > 0) {
+        setActiveAspectId(newAspects[0].id);
+      } else {
+        setActiveAspectId(null);
+      }
     }
   };
 
@@ -4153,7 +4262,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* ===== MODAL: Atur Aspek & Bobot ===== */}
       {kolomModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "850px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
               <div>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>⚖️ Atur Aspek & Bobot Nilai</h3>
@@ -4162,422 +4271,497 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
-            <div style={{ overflowY: "auto", flex: 1 }}>
-              <div className="animate-fade-in" style={{ overflowX: "auto" }}>
-                <div style={{ padding: "10px 14px", backgroundColor: "rgba(59,130,246,0.04)", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-secondary)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: "1rem" }}>💡</span>
-                  <span><strong>Fitur Pengelompokan Aspek (KD/TP):</strong> Centang <strong>"Kelompok Nilai"</strong> pada aspek untuk membuat sub-aspek baru. Atau, <strong>centang beberapa aspek mandiri</strong> yang sudah ada dan klik <strong>"🔗 Gabung ke Kelompok"</strong> untuk menggabungkan aspek beserta nilainya tanpa kehilangan data.</span>
+            <div className="aspect-modal-container">
+              {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
+              <div className="aspect-sidebar-panel">
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Daftar Aspek ({kelas.kolomNilai.length + newAspects.filter(a => a.nama.trim() !== "").length})</span>
+                  <input
+                    type="checkbox"
+                    title="Pilih semua aspek mandiri"
+                    style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
+                    checked={kelas.kolomNilai.filter(c => !c.isGroup).length > 0 && kelas.kolomNilai.filter(c => !c.isGroup).every(c => selectedForGroup.has(c.id))}
+                    onChange={(e) => {
+                      const eligibleIds = kelas.kolomNilai.filter(c => !c.isGroup).map(c => c.id);
+                      if (e.target.checked) {
+                        setSelectedForGroup(new Set(eligibleIds));
+                      } else {
+                        setSelectedForGroup(new Set());
+                      }
+                    }}
+                  />
                 </div>
-                <table style={{ width: "100%", minWidth: "650px", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "2px solid var(--border-color)" }}>
-                      <th style={{ textAlign: "center", padding: "8px 6px", width: "32px" }}>
-                        <input
-                          type="checkbox"
-                          title="Pilih semua aspek mandiri"
-                          style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
-                          checked={kelas.kolomNilai.filter(c => !c.isGroup).length > 0 && kelas.kolomNilai.filter(c => !c.isGroup).every(c => selectedForGroup.has(c.id))}
-                          onChange={(e) => {
-                            const eligibleIds = kelas.kolomNilai.filter(c => !c.isGroup).map(c => c.id);
-                            if (e.target.checked) {
-                              setSelectedForGroup(new Set(eligibleIds));
-                            } else {
-                              setSelectedForGroup(new Set());
-                            }
-                          }}
-                        />
-                      </th>
-                      <th style={{ textAlign: "left", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Aspek</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "120px" }}>Tampilkan Ke Siswa</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "100px" }}>Bobot (%)</th>
-                      <th style={{ textAlign: "center", padding: "8px 10px", fontSize: "0.78rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700", width: "60px" }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {kelas.kolomNilai.map((col) => (
-                      <Fragment key={col.id}>
-                        <tr style={{ borderBottom: col.isGroup ? "none" : "1px solid var(--border-color)", backgroundColor: col.isGroup ? "rgba(245, 158, 11, 0.05)" : selectedForGroup.has(col.id) ? "rgba(59,130,246,0.06)" : "transparent" }}>
-                          <td style={{ padding: "6px 6px", textAlign: "center", verticalAlign: "top", paddingTop: "12px" }}>
+                
+                <div className="aspect-sidebar-list">
+                  {/* Existing Aspects */}
+                  {kelas.kolomNilai.map((col) => {
+                    const isActive = col.id === activeAspectId;
+                    return (
+                      <div
+                        key={col.id}
+                        className={`aspect-item-card ${isActive ? "active" : ""}`}
+                        onClick={() => setActiveAspectId(col.id)}
+                      >
+                        <div className="aspect-item-card-header">
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
                             {!col.isGroup && (
                               <input
                                 type="checkbox"
                                 checked={selectedForGroup.has(col.id)}
+                                onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => {
                                   const next = new Set(selectedForGroup);
                                   if (e.target.checked) next.add(col.id);
                                   else next.delete(col.id);
                                   setSelectedForGroup(next);
                                 }}
-                                style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
+                                style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer", flexShrink: 0 }}
                                 title="Pilih untuk digabung ke kelompok"
                               />
                             )}
-                          </td>
-                          <td style={{ padding: "6px 10px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                {col.isGroup && <span style={{ fontSize: "0.75rem", color: "var(--warning)", fontWeight: "700", border: "1px solid var(--warning)", padding: "2px 4px", borderRadius: "4px" }}>GRUP</span>}
-                                <input type="text" className="form-input" value={col.nama} onChange={(e) => handleColumnNameChange(col.id, e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem", fontWeight: col.isGroup ? "700" : "400" }} />
+                            <span className="aspect-item-card-title">{col.nama || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>(Tanpa Nama)</span>}</span>
+                          </div>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteKolom(col.id, col.nama);
+                            }}
+                            style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                            title="Hapus aspek"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                        
+                        <div className="aspect-item-card-meta">
+                          <span className="badge badge-primary" style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                            {col.bobot || 0}%
+                          </span>
+                          {col.isGroup ? (
+                            <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                              Kelompok ({col.subKolom?.length || 0})
+                            </span>
+                          ) : (
+                            <span className="badge badge-success" style={{ fontSize: "0.6rem", padding: "1px 6px", backgroundColor: "rgba(16,185,129,0.04)" }}>
+                              Tunggal
+                            </span>
+                          )}
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginLeft: "auto" }}>
+                            {kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "🔒" : "👁️"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* New Aspects */}
+                  {newAspects.map((aspect) => {
+                    const isActive = aspect.id === activeAspectId;
+                    return (
+                      <div
+                        key={aspect.id}
+                        className={`aspect-item-card ${isActive ? "active" : ""}`}
+                        style={{ borderStyle: "dashed", borderColor: isActive ? "var(--primary)" : "var(--success)" }}
+                        onClick={() => setActiveAspectId(aspect.id)}
+                      >
+                        <div className="aspect-item-card-header">
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                            <span className="badge badge-success" style={{ fontSize: "0.6rem", padding: "1px 4px", flexShrink: 0 }}>BARU</span>
+                            <span className="aspect-item-card-title">{aspect.nama || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>+ Aspek Baru</span>}</span>
+                          </div>
+                          
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveNewAspect(aspect.id);
+                            }}
+                            style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                            title="Hapus aspek baru"
+                          >
+                            ✖
+                          </button>
+                        </div>
+                        
+                        <div className="aspect-item-card-meta">
+                          <span className="badge badge-primary" style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                            {aspect.bobot || 0}%
+                          </span>
+                          {aspect.isGroup ? (
+                            <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                              Kelompok ({aspect.subKolom?.length || 0})
+                            </span>
+                          ) : (
+                            <span className="badge badge-success" style={{ fontSize: "0.6rem", padding: "1px 6px", backgroundColor: "rgba(16,185,129,0.04)" }}>
+                              Tunggal
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  
+                  {/* Button Add New Aspect */}
+                  <button
+                    onClick={handleAddBlankAspect}
+                    className="btn btn-secondary"
+                    style={{ borderStyle: "dashed", borderColor: "var(--primary)", color: "var(--primary)", padding: "10px", fontSize: "0.82rem", fontWeight: "700", width: "100%", marginTop: "10px" }}
+                  >
+                    ➕ Tambah Aspek Baru
+                  </button>
+                </div>
+
+                {/* Merge Toolbar — muncul jika 2+ aspek mandiri dipilih */}
+                {selectedForGroup.size >= 2 && (
+                  <div className="animate-fade-in" style={{ padding: "12px", backgroundColor: "rgba(59,130,246,0.08)", borderTop: "1px solid rgba(59,130,246,0.2)", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--primary)" }}>🔲 {selectedForGroup.size} Terpilih</span>
+                      <button onClick={() => setSelectedForGroup(new Set())} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "0.75rem", cursor: "pointer", textDecoration: "underline" }}>Batal</button>
+                    </div>
+                    <button
+                      onClick={() => { setMergeGroupName(""); setMergeModalOpen(true); }}
+                      className="btn btn-primary"
+                      style={{ padding: "6px 10px", fontSize: "0.75rem", fontWeight: "700", width: "100%" }}
+                    >
+                      🔗 Gabung ke Kelompok
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* --- PANEL KANAN: CONFIG DETAIL --- */}
+              <div className="aspect-content-panel">
+                {(() => {
+                  const activeAspect = kelas.kolomNilai.find(c => c.id === activeAspectId) || newAspects.find(a => a.id === activeAspectId);
+                  
+                  if (!activeAspect) {
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyItems: "center", justifyContent: "center", flex: 1, color: "var(--text-muted)", padding: "40px", textAlign: "center" }}>
+                        <span style={{ fontSize: "3rem", marginBottom: "16px" }}>⚖️</span>
+                        <h4 style={{ fontWeight: "700", color: "var(--text-primary)", marginBottom: "8px" }}>Belum Ada Aspek Terpilih</h4>
+                        <p style={{ fontSize: "0.82rem", maxWidth: "300px" }}>Pilih salah satu aspek penilaian di sebelah kiri untuk dikonfigurasi, atau buat aspek baru.</p>
+                      </div>
+                    );
+                  }
+
+                  const isNew = newAspects.some(a => a.id === activeAspectId);
+
+                  return (
+                    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                      {/* Name & Weight Row */}
+                      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label className="form-label">Nama Aspek Penilaian</label>
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Contoh: UTS, UAS, Tugas, Praktikum..."
+                            value={activeAspect.nama}
+                            onChange={(e) => {
+                              if (isNew) handleNewAspectChange(activeAspect.id, 'nama', e.target.value);
+                              else handleColumnNameChange(activeAspect.id, e.target.value);
+                            }}
+                            style={{ padding: "10px 14px" }}
+                          />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label className="form-label">Bobot Nilai (%)</label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            className="form-input"
+                            placeholder="%"
+                            value={activeAspect.bobot}
+                            onChange={(e) => {
+                              if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                if (isNew) handleNewAspectChange(activeAspect.id, 'bobot', e.target.value);
+                                else handleBobotChange(activeAspect.id, e.target.value);
+                              }
+                            }}
+                            style={{ padding: "10px 14px", textAlign: "center" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Visibility & DB Info Row */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", backgroundColor: "var(--bg-primary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>Visibilitas Nilai</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                            {isNew ? "Aspek baru akan otomatis ditampilkan setelah disimpan." : "Tentukan apakah siswa dapat melihat nilai aspek ini di portal mereka."}
+                          </span>
+                        </div>
+                        {isNew ? (
+                          <span className="badge badge-success" style={{ fontSize: "0.7rem", backgroundColor: "rgba(16,185,129,0.08)" }}>Otomatis Tampil</span>
+                        ) : (
+                          <button
+                            onClick={() => toggleAspectVisibility(activeAspect.id)}
+                            className="btn btn-secondary"
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "0.78rem",
+                              fontWeight: "700",
+                              borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "var(--danger)" : "var(--success)",
+                              color: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "var(--danger)" : "var(--success)",
+                              backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
+                            }}
+                          >
+                            {kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "🔒 Tersembunyi (Siswa)" : "👁️ Tampil (Siswa)"}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Tipe Aspek Selector (Single vs Group) */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <label className="form-label">Tipe Struktur Aspek</label>
+                        <div className="selection-card-grid">
+                          {/* Option 1: Single */}
+                          <div
+                            className={`selection-card ${!activeAspect.isGroup ? "active" : ""}`}
+                            onClick={() => {
+                              if (activeAspect.isGroup) {
+                                if (isNew) {
+                                  handleNewAspectChange(activeAspect.id, 'isGroup', false);
+                                } else {
+                                  handleToggleGroupType(activeAspect, false);
+                                }
+                              }
+                            }}
+                          >
+                            <span className="selection-card-icon">🎯</span>
+                            <div className="selection-card-content">
+                              <span className="selection-card-title">Aspek Tunggal</span>
+                              <span className="selection-card-desc">Satu nilai tunggal di spreadsheet. Bagus untuk: UTS, UAS, Keaktifan.</span>
+                            </div>
+                          </div>
+
+                          {/* Option 2: Group */}
+                          <div
+                            className={`selection-card ${activeAspect.isGroup ? "active" : ""}`}
+                            onClick={() => {
+                              if (!activeAspect.isGroup) {
+                                if (isNew) {
+                                  handleNewAspectChange(activeAspect.id, 'isGroup', true);
+                                } else {
+                                  handleToggleGroupType(activeAspect, true);
+                                }
+                              }
+                            }}
+                          >
+                            <span className="selection-card-icon">📂</span>
+                            <div className="selection-card-content">
+                              <span className="selection-card-title">Kelompok Nilai (Grup)</span>
+                              <span className="selection-card-desc">Wadah untuk beberapa sub-aspek. Bagus untuk: Kumpulan Tugas Harian, KD 1 - KD 4.</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Group Calculation & Sub-Aspects (Only if Group) */}
+                      {activeAspect.isGroup && (
+                        <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                          {/* Calculation Method Selection */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <label className="form-label">Metode Perhitungan Sub-Aspek</label>
+                            <div className="selection-card-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "8px" }}>
+                              <div
+                                className={`selection-card ${activeAspect.hitungMetode !== "persentase" ? "active" : ""}`}
+                                onClick={() => {
+                                  if (isNew) {
+                                    handleNewAspectChange(activeAspect.id, 'hitungMetode', 'rata-rata');
+                                  } else {
+                                    const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, hitungMetode: 'rata-rata' } : c);
+                                    setKelas({ ...kelas, kolomNilai: newCols });
+                                  }
+                                }}
+                                style={{ padding: "12px", gap: "10px" }}
+                              >
+                                <span className="selection-card-icon" style={{ fontSize: "1.4rem" }}>🧮</span>
+                                <div className="selection-card-content">
+                                  <span className="selection-card-title" style={{ fontSize: "0.88rem" }}>Rata-rata Otomatis</span>
+                                  <span className="selection-card-desc" style={{ fontSize: "0.72rem" }}>Nilai grup = rata-rata dari sub-aspek yang terisi.</span>
+                                </div>
                               </div>
 
-                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginLeft: col.isGroup ? "50px" : "0" }}>
-                                <input type="checkbox" checked={col.isGroup} onChange={(e) => {
-                                  const nextIsGroup = e.target.checked;
-                                  
-                                  // Jika centang dihilangkan dan ada sub-aspek di dalamnya
-                                  if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
-                                    if (confirm(`Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`)) {
-                                      
-                                      // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
-                                      const B = Number(col.bobot) || 0;
-                                      const N = col.subKolom.length;
-                                      let distributedBobots = [];
-
-                                      if (col.hitungMetode !== "persentase") {
-                                        // Rata-rata: Bagi rata ke bilangan bulat terdekat
-                                        const base = Math.floor(B / N);
-                                        const remainder = B % N;
-                                        distributedBobots = col.subKolom.map((_, idx) => base + (idx < remainder ? 1 : 0));
-                                      } else {
-                                        // Kustom/Persentase: Gunakan Largest Remainder Method
-                                        const w = col.subKolom.map(sub => (Number(sub.bobot) || 0) / 100 * B);
-                                        const f = w.map(val => Math.floor(val));
-                                        const sumF = f.reduce((sum, val) => sum + val, 0);
-                                        const remainder = B - sumF;
-                                        const fracs = w.map((val, idx) => ({ idx, frac: val - f[idx] }));
-                                        fracs.sort((a, b) => b.frac - a.frac);
-                                        for (let i = 0; i < remainder; i++) {
-                                          f[fracs[i % N].idx] += 1;
-                                        }
-                                        distributedBobots = f;
-                                      }
-
-                                      const promotedCols = col.subKolom.map((sub, idx) => {
-                                        return {
-                                          id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
-                                          nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
-                                          bobot: distributedBobots[idx],
-                                          isGroup: false,
-                                          subKolom: [],
-                                          hitungMetode: "rata-rata"
-                                        };
-                                      });
-
-                                      // Ganti kolom kelompok dengan kumpulan kolom pecahan baru
-                                      const updatedCols = [];
-                                      for (const c of kelas.kolomNilai) {
-                                        if (c.id === col.id) {
-                                          updatedCols.push(...promotedCols);
-                                        } else {
-                                          updatedCols.push(c);
-                                        }
-                                      }
-
-                                      setKelas({ ...kelas, kolomNilai: updatedCols });
-                                      alert(`💡 Berhasil membongkar kelompok!\nSub-aspek berikut kini menjadi aspek mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
-                                      return;
-                                    } else {
-                                      // Batalkan uncheck
-                                      return;
-                                    }
+                              <div
+                                className={`selection-card ${activeAspect.hitungMetode === "persentase" ? "active" : ""}`}
+                                onClick={() => {
+                                  if (isNew) {
+                                    handleNewAspectChange(activeAspect.id, 'hitungMetode', 'persentase');
+                                  } else {
+                                    const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, hitungMetode: 'persentase' } : c);
+                                    setKelas({ ...kelas, kolomNilai: newCols });
                                   }
-
-                                  const newCols = kelas.kolomNilai.map(c => {
-                                    if (c.id === col.id) {
-                                      return {
-                                        ...c,
-                                        isGroup: nextIsGroup,
-                                        subKolom: nextIsGroup ? (c.subKolom || []) : [],
-                                        hitungMetode: nextIsGroup ? (c.hitungMetode || "rata-rata") : "rata-rata"
-                                      };
-                                    }
-                                    return c;
-                                  });
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} style={{ accentColor: "var(--primary)", width: "13px", height: "13px" }} />
-                                Kelompok Nilai (Sub-Aspek/KD)
-                              </label>
-                              {col.isGroup && (
-                                <div style={{ marginTop: "4px", marginLeft: "50px", display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
-                                  <select
-                                    value={col.hitungMetode || "rata-rata"}
-                                    onChange={(e) => {
-                                      const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, hitungMetode: e.target.value } : c);
-                                      setKelas({ ...kelas, kolomNilai: newCols });
-                                    }}
-                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
-                                  >
-                                    <option value="rata-rata">Rata-rata Otomatis</option>
-                                    <option value="persentase">Bobot Kustom (%)</option>
-                                  </select>
+                                }}
+                                style={{ padding: "12px", gap: "10px" }}
+                              >
+                                <span className="selection-card-icon" style={{ fontSize: "1.4rem" }}>⚖️</span>
+                                <div className="selection-card-content">
+                                  <span className="selection-card-title" style={{ fontSize: "0.88rem" }}>Bobot Kustom (%)</span>
+                                  <span className="selection-card-desc" style={{ fontSize: "0.72rem" }}>Setiap sub-aspek memiliki porsi bobot berbeda (harus 100%).</span>
                                 </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Sub-Aspects List Manager */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <label className="form-label" style={{ margin: 0 }}>Daftar Sub-Aspek Penilaian</label>
+                              {activeAspect.hitungMetode === "persentase" && (
+                                <span
+                                  className="badge"
+                                  style={{
+                                    fontSize: "0.7rem",
+                                    fontWeight: "700",
+                                    backgroundColor: (activeAspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success-glow)" : "var(--warning-glow)",
+                                    color: (activeAspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)",
+                                    border: (activeAspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(245,158,11,0.2)"
+                                  }}
+                                >
+                                  Total Bobot: {(activeAspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(activeAspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
+                                </span>
                               )}
                             </div>
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                            <button
-                              onClick={() => toggleAspectVisibility(col.id)}
-                              className="btn btn-secondary"
-                              style={{
-                                padding: "4px 8px",
-                                fontSize: "0.75rem",
-                                borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
-                                color: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "var(--danger)" : "var(--success)",
-                                backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
-                              }}
-                              title={kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "Nilai tersembunyi bagi siswa" : "Nilai ditampilkan bagi siswa"}
-                            >
-                              {kelas.skemaPenilaian?.hiddenAspek?.includes(col.id) ? "🔒 Tersembunyi" : "👁️ Tampil"}
-                            </button>
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" value={col.bobot} min={0} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleBobotChange(col.id, e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center", fontWeight: col.isGroup ? "700" : "400" }} />
-                          </td>
-                          <td style={{ padding: "6px 10px", textAlign: "center" }}>
-                            <button onClick={() => handleDeleteKolom(col.id, col.nama)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px" }} title="Hapus aspek">🗑️</button>
-                          </td>
-                        </tr>
-                        {col.isGroup && col.subKolom && col.subKolom.map((sub, sIdx) => (
-                          <tr key={sub.id} style={{ borderBottom: sIdx === col.subKolom.length - 1 ? "1px solid var(--border-color)" : "none", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
-                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
-                            <td colSpan={2} style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
-                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(245, 158, 11, 0.3)", borderBottom: "2px solid rgba(245, 158, 11, 0.3)", borderRadius: "0 0 0 6px" }}></div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <input type="text" className="form-input" value={sub.nama} onChange={(e) => {
-                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
-                                {col.hitungMetode === "persentase" && (
+
+                            <div className="sub-aspect-list">
+                              {(activeAspect.subKolom || []).map((sub, sIdx) => (
+                                <div key={sub.id} className="sub-aspect-row">
                                   <input
                                     type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
                                     className="form-input"
-                                    placeholder="%"
-                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                    placeholder="Contoh: Tugas 1, Kuis 1, KD 3.1..."
+                                    value={sub.nama}
                                     onChange={(e) => {
-                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
-                                        const val = e.target.value === "" ? null : Number(e.target.value);
-                                        const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
+                                      if (isNew) {
+                                        const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
+                                        handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                      } else {
+                                        const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
                                         setKelas({ ...kelas, kolomNilai: newCols });
                                       }
                                     }}
-                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
+                                    style={{ padding: "6px 12px", fontSize: "0.85rem", flex: 1 }}
                                   />
-                                )}
-                              </div>
-                            </td>
-                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <span>{col.hitungMetode === "persentase" ? "Kontribusi bobot kustom" : "Rata-rata otomatis"}</span>
-                                <button onClick={() => {
-                                  const hasData = kelas.siswa.some(s => s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
-                                  if (hasData) {
-                                    if (!confirm(`⚠️ PERINGATAN!\nSub-aspek "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-aspek ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
-                                      return;
-                                    }
-                                  } else {
-                                    if (!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
-                                  }
-                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {col.isGroup && (
-                          <tr style={{ borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>
-                            <td style={{ padding: 0 }} />{/* empty checkbox column */}
-                            <td colSpan={4} style={{ padding: "4px 10px 8px 30px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                <button onClick={() => {
-                                  const newCols = kelas.kolomNilai.map(c => c.id === col.id ? { ...c, subKolom: [...(c.subKolom || []), { id: `${c.id}-sub-new-${Date.now()}`, nama: "", bobot: "" }] } : c);
-                                  setKelas({ ...kelas, kolomNilai: newCols });
-                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
-                                {col.hitungMetode === "persentase" && (
-                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
-                                    Total Bobot Sub-Aspek: {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(col.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                    {/* Baris tambah baru (Seamless) */}
-                    {newAspects.map((aspect, index) => (
-                      <Fragment key={aspect.id}>
-                        <tr style={{ borderTop: index === 0 ? "2px dashed var(--border-color)" : "none", backgroundColor: "rgba(59,130,246,0.03)" }}>
-                          <td style={{ padding: 0 }} />{/* empty checkbox column */}
-                          <td style={{ padding: "8px 10px" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                              <input type="text" className="form-input" placeholder="+ Nama aspek baru" value={aspect.nama} onChange={(e) => handleNewAspectChange(aspect.id, 'nama', e.target.value)} style={{ padding: "5px 8px", fontSize: "0.88rem" }} />
-                              <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", color: "var(--text-secondary)", cursor: "pointer", marginTop: "4px" }}>
-                                <input type="checkbox" checked={aspect.isGroup} onChange={(e) => handleNewAspectChange(aspect.id, 'isGroup', e.target.checked)} style={{ accentColor: "var(--primary)", width: "14px", height: "14px" }} />
-                                Jadikan Kelompok Nilai (Sub-Aspek/KD)
-                              </label>
-                              {aspect.isGroup && (
-                                <div style={{ marginTop: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Metode Hitung:</span>
-                                  <select
-                                    value={aspect.hitungMetode || "rata-rata"}
-                                    onChange={(e) => handleNewAspectChange(aspect.id, 'hitungMetode', e.target.value)}
-                                    style={{ padding: "2px 6px", fontSize: "0.72rem", borderRadius: "4px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}
-                                  >
-                                    <option value="rata-rata">Rata-rata Otomatis</option>
-                                    <option value="persentase">Bobot Kustom (%)</option>
-                                  </select>
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
-                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>Otomatis Tampil</span>
-                          </td>
-                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
-                            <input type="text" inputMode="numeric" pattern="[0-9]*" className="form-input" placeholder="%" value={aspect.bobot} min={1} max={100} onChange={(e) => { if (e.target.value === "" || /^\d*$/.test(e.target.value)) handleNewAspectChange(aspect.id, 'bobot', e.target.value); }} style={{ padding: "5px 8px", fontSize: "0.88rem", textAlign: "center" }} />
-                          </td>
-                          <td style={{ padding: "8px 10px", textAlign: "center", verticalAlign: "top" }}>
-                            {index !== newAspects.length - 1 ? (
-                              <button onClick={() => handleRemoveNewAspect(aspect.id)} className="btn btn-secondary" style={{ color: "var(--danger)", padding: "3px 8px", fontSize: "0.8rem", minWidth: "30px" }} title="Batal tambah">✖</button>
-                            ) : (
-                              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", cursor: "default" }}>✧</span>
-                            )}
-                          </td>
-                        </tr>
-                        {aspect.isGroup && aspect.subKolom && aspect.subKolom.map((sub, sIdx) => (
-                          <tr key={sub.id} style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
-                            <td style={{ padding: "4px 10px 4px 30px", position: "relative" }}>
-                              <div style={{ position: "absolute", left: "14px", top: "-10px", bottom: "16px", width: "10px", borderLeft: "2px solid rgba(59, 130, 246, 0.3)", borderBottom: "2px solid rgba(59, 130, 246, 0.3)", borderRadius: "0 0 0 6px" }}></div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <input type="text" className="form-input" placeholder="Nama sub-aspek (misal: KD 1)" value={sub.nama} onChange={(e) => {
-                                  const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
-                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                                }} style={{ padding: "3px 8px", fontSize: "0.8rem", flex: 1 }} />
-                                {aspect.hitungMetode === "persentase" && (
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    className="form-input"
-                                    placeholder="%"
-                                    value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
-                                    onChange={(e) => {
-                                      if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
-                                        const val = e.target.value === "" ? null : Number(e.target.value);
-                                        const newSub = aspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
-                                        handleNewAspectChange(aspect.id, 'subKolom', newSub);
+
+                                  {activeAspect.hitungMetode === "persentase" && (
+                                    <input
+                                      type="text"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      className="form-input"
+                                      placeholder="%"
+                                      value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                      onChange={(e) => {
+                                        if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                          const val = e.target.value === "" ? null : Number(e.target.value);
+                                          if (isNew) {
+                                            const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
+                                            handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                          } else {
+                                            const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
+                                            setKelas({ ...kelas, kolomNilai: newCols });
+                                          }
+                                        }
+                                      }}
+                                      style={{ padding: "6px 8px", fontSize: "0.85rem", width: "55px", textAlign: "center" }}
+                                    />
+                                  )}
+
+                                  <button
+                                    onClick={() => {
+                                      if (isNew) {
+                                        const newSub = activeAspect.subKolom.filter(s => s.id !== sub.id);
+                                        handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                      } else {
+                                        const hasData = kelas.siswa.some(s => s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
+                                        if (hasData) {
+                                          if (!confirm(`⚠️ PERINGATAN!\nSub-aspek "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-aspek ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
+                                            return;
+                                          }
+                                        } else {
+                                          if (!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
+                                        }
+                                        const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
+                                        setKelas({ ...kelas, kolomNilai: newCols });
                                       }
                                     }}
-                                    style={{ padding: "3px 8px", fontSize: "0.8rem", width: "45px", textAlign: "center" }}
-                                  />
-                                )}
-                              </div>
-                            </td>
-                            <td colSpan={3} style={{ padding: "4px 10px", textAlign: "left", fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              <button onClick={() => {
-                                const newSub = aspect.subKolom.filter(s => s.id !== sub.id);
-                                handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                              }} style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.8rem", padding: "0" }}>✖</button>
-                            </td>
-                          </tr>
-                        ))}
-                        {aspect.isGroup && (
-                          <tr style={{ backgroundColor: "rgba(59,130,246,0.02)", borderBottom: "1px solid rgba(59,130,246,0.1)" }}>
-                            <td colSpan={4} style={{ padding: "4px 10px 10px 30px" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                <button onClick={() => {
-                                  const newSub = [...(aspect.subKolom || []), { id: Date.now()+Math.random(), nama: "", bobot: "" }];
-                                  handleNewAspectChange(aspect.id, 'subKolom', newSub);
-                                }} className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "3px 8px", color: "var(--primary)" }}>+ Tambah Sub-Aspek</button>
-                                {aspect.hitungMetode === "persentase" && (
-                                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: (aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "var(--success)" : "var(--warning)" }}>
-                                    Total Bobot: {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0)}% {(aspect.subKolom || []).reduce((sum, s) => sum + (Number(s.bobot) || 0), 0) === 100 ? "✓ Pas" : "⚠️ Harus 100%"}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
+                                    style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1rem", padding: "4px" }}
+                                    title="Hapus sub-aspek"
+                                  >
+                                    ✖
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
 
-                {kolomError && (
-                  <p style={{ color: "var(--danger)", fontSize: "0.82rem", margin: "0", padding: "6px 10px", backgroundColor: "var(--danger-glow)" }}>{kolomError}</p>
-                )}
-
-                {/* Merge Toolbar — muncul saat 2+ aspek mandiri dipilih */}
-                {selectedForGroup.size >= 2 && (
-                  <div className="animate-fade-in" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", backgroundColor: "rgba(59,130,246,0.08)", borderTop: "1px solid rgba(59,130,246,0.2)", flexWrap: "wrap", gap: "8px" }}>
-                    <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--primary)" }}>
-                      🔲 {selectedForGroup.size} aspek dipilih
-                    </span>
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      <button
-                        onClick={() => setSelectedForGroup(new Set())}
-                        className="btn btn-secondary"
-                        style={{ padding: "4px 10px", fontSize: "0.78rem" }}
-                      >
-                        Batal Pilih
-                      </button>
-                      <button
-                        onClick={() => { setMergeGroupName(""); setMergeModalOpen(true); }}
-                        className="btn btn-primary"
-                        style={{ padding: "4px 12px", fontSize: "0.78rem", fontWeight: "700" }}
-                      >
-                        🔗 Gabung ke Kelompok
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "0.85rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
-                      Total: {totalBobot}%
-                    </span>
-                    <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
-                      {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-                    <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
-                      Batal & Tutup
-                    </button>
-                    <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
-                      📋 Salin dari Kelas Lain
-                    </button>
-                    <button
-                      onClick={saveAllBobot}
-                      className="btn btn-primary"
-                      style={{ padding: "5px 16px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
-                      disabled={isSavingBobot}
-                    >
-                      {isSavingBobot ? (
-                        <>
-                          <span style={{
-                            display: "inline-block",
-                            width: "13px",
-                            height: "13px",
-                            border: "2px solid rgba(255,255,255,0.4)",
-                            borderTopColor: "#fff",
-                            borderRadius: "50%",
-                            animation: "spin 0.7s linear infinite",
-                            flexShrink: 0
-                          }} />
-                          Menyimpan...
-                        </>
-                      ) : (
-                        <>💾 Simpan</>
+                            <button
+                              onClick={() => {
+                                const newSubObj = { id: `sub-new-${Date.now()}-${Math.random()}`, nama: "", bobot: "" };
+                                if (isNew) {
+                                  const newSub = [...(activeAspect.subKolom || []), newSubObj];
+                                  handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                } else {
+                                  const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: [...(c.subKolom || []), newSubObj] } : c);
+                                  setKelas({ ...kelas, kolomNilai: newCols });
+                                }
+                              }}
+                              className="btn btn-secondary"
+                              style={{ fontSize: "0.78rem", padding: "6px 12px", color: "var(--primary)", width: "max-content", marginTop: "8px" }}
+                            >
+                              ➕ Tambah Sub-Aspek
+                            </button>
+                          </div>
+                        </div>
                       )}
-                    </button>
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", flexWrap: "wrap", gap: "12px", borderBottomLeftRadius: "var(--radius-md)", borderBottomRightRadius: "var(--radius-md)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
+                  Total Bobot: {totalBobot}%
+                </span>
+                <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
+                  {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+                <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
+                  Batal & Tutup
+                </button>
+                <button onClick={handleOpenDuplicate} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
+                  📋 Salin dari Kelas Lain
+                </button>
+                <button
+                  onClick={saveAllBobot}
+                  className="btn btn-primary"
+                  style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
+                  disabled={isSavingBobot}
+                >
+                  {isSavingBobot ? (
+                    <>
+                      <span style={{
+                        display: "inline-block",
+                        width: "13px",
+                        height: "13px",
+                        border: "2px solid rgba(255,255,255,0.4)",
+                        borderTopColor: "#fff",
+                        borderRadius: "50%",
+                        animation: "spin 0.7s linear infinite",
+                        flexShrink: 0
+                      }} />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>💾 Simpan</>
+                  )}
+                </button>
               </div>
             </div>
           </div>
