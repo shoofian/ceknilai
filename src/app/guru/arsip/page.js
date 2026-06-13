@@ -94,11 +94,14 @@ export default function ArsipKelas() {
 
               {/* Actions */}
               <div style={{ display: "flex", gap: "8px", marginTop: "auto" }}>
-                <button onClick={() => handleRestore(k.id, k.nama)} className="btn btn-primary" style={{ flex: 2, fontSize: "0.85rem", padding: "10px" }}>
-                  ♻️ Pulihkan Kelas
+                <Link href={`/guru/kelas/${k.id}`} className="btn btn-secondary" style={{ flex: 1.5, fontSize: "0.85rem", padding: "10px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                  👁️ Lihat Kelas
+                </Link>
+                <button onClick={() => handleRestore(k.id, k.nama)} className="btn btn-primary" style={{ flex: 1.2, fontSize: "0.85rem", padding: "10px" }}>
+                  ♻️ Pulihkan
                 </button>
-                <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ flex: 1, padding: "10px", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", backgroundColor: "var(--danger-glow)" }} title="Hapus Permanen">
-                  🗑️ Hapus
+                <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "10px", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", backgroundColor: "var(--danger-glow)", display: "inline-flex", alignItems: "center", justifyContent: "center" }} title="Hapus Permanen">
+                  🗑️
                 </button>
               </div>
             </div>

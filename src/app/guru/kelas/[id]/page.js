@@ -620,7 +620,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // Efek untuk memunculkan onboarding modal
   useEffect(() => {
-    if (kelas && Array.isArray(kelas.siswa) && kelas.siswa.length === 0 && Array.isArray(kelas.kolomNilai) && kelas.kolomNilai.length === 0) {
+    if (kelas && !kelas.archived && Array.isArray(kelas.siswa) && kelas.siswa.length === 0 && Array.isArray(kelas.kolomNilai) && kelas.kolomNilai.length === 0) {
       const seen = sessionStorage.getItem(`onboarding_seen_${classId}`);
       if (!seen) {
         setOnboardingModalOpen(true);
@@ -1684,6 +1684,28 @@ export default function DetailKelas({ params: paramsPromise }) {
         <span style={{ color: "var(--text-primary)" }}>{kelas.nama}</span>
       </div>
 
+      {/* Warning Banner for Archived Class */}
+      {kelas.archived && (
+        <div style={{
+          padding: "16px 20px",
+          borderRadius: "var(--radius-sm)",
+          backgroundColor: "rgba(100, 116, 139, 0.1)",
+          border: "1px solid var(--border-color)",
+          color: "var(--text-secondary)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          fontSize: "0.9rem",
+          fontWeight: "600",
+          boxShadow: "var(--shadow-sm)"
+        }} className="animate-fade-in">
+          <span style={{ fontSize: "1.4rem" }}>📁</span>
+          <div>
+            <strong>Kelas ini telah diarsipkan.</strong> Anda hanya dapat melihat data kelas dan tidak dapat melakukan pengeditan atau perubahan nilai.
+          </div>
+        </div>
+      )}
+
       {/* Main Header Card */}
       <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
         <div style={{ flex: "1 1 min-content" }}>
@@ -2609,6 +2631,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
                           <button 
                             onClick={handleTogglePublish}
+                            disabled={kelas.archived}
                             className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
                             style={{ 
                               padding: "4px 8px", 
@@ -2616,7 +2639,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                               borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
                               color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff",
                               width: "100%",
-                              whiteSpace: "nowrap"
+                              whiteSpace: "nowrap",
+                              opacity: kelas.archived ? 0.5 : 1,
+                              cursor: kelas.archived ? "not-allowed" : "pointer"
                             }}
                           >
                             {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Tampilkan"}
@@ -2733,6 +2758,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                         }
                                       }
                                     }}
+                                    disabled={kelas.archived}
                                     className="form-input"
                                     style={{
                                       padding: "6px 8px",
@@ -2746,7 +2772,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                                             ? "1px solid var(--danger)"
                                             : "1px solid var(--border-color)",
                                       backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
-                                      transition: "all 0.15s ease"
+                                      transition: "all 0.15s ease",
+                                      cursor: kelas.archived ? "not-allowed" : "text"
                                     }}
                                     placeholder="-"
                                     min={0}
@@ -2772,7 +2799,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {/* Weighted Final Score */}
                         <td 
                           onClick={() => {
-                            if (kelas.isNilaiAkhirGenerated) {
+                            if (kelas.isNilaiAkhirGenerated && !kelas.archived) {
                               setKatrolSiswa(student);
                               setKatrolValue(student.nilai?._katrol !== undefined && student.nilai?._katrol !== null ? student.nilai._katrol.toString() : "");
                               setKatrolModalOpen(true);
@@ -2784,10 +2811,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                             color: kelas.isNilaiAkhirGenerated ? "var(--primary)" : "var(--text-muted)", 
                             backgroundColor: "rgba(59,130,246,0.02)", 
                             padding: "10px 12px",
-                            cursor: kelas.isNilaiAkhirGenerated ? "pointer" : "default",
+                            cursor: (kelas.isNilaiAkhirGenerated && !kelas.archived) ? "pointer" : "default",
                             position: "relative"
                           }}
-                          title={kelas.isNilaiAkhirGenerated ? "Klik untuk penyesuaian nilai akhir (Katrol Rahasia)" : ""}
+                          title={(kelas.isNilaiAkhirGenerated && !kelas.archived) ? "Klik untuk penyesuaian nilai akhir (Katrol Rahasia)" : ""}
                         >
                           <style>{`
                             .final-score-cell:hover .hover-lock {
@@ -2840,10 +2867,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", border: "1px solid var(--bg-primary)" }} title="Siswa sudah pernah melihat nilainya"></span>
                               )}
                             </div>
-                            <button onClick={() => handleOpenEditSiswa(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem" }} title="Edit Profil Siswa">
+                            <button 
+                              onClick={() => handleOpenEditSiswa(student)} 
+                              className="btn btn-secondary" 
+                              style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }} 
+                              title={kelas.archived ? "Tidak dapat mengedit kelas terarsip" : "Edit Profil Siswa"}
+                              disabled={kelas.archived}
+                            >
                               ✏️
                             </button>
-                            <button onClick={() => handleDeleteSiswa(student.nisn, student.nama)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--danger)" }} title="Hapus Siswa">
+                            <button 
+                              onClick={() => handleDeleteSiswa(student.nisn, student.nama)} 
+                              className="btn btn-secondary" 
+                              style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--danger)", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }} 
+                              title={kelas.archived ? "Tidak dapat menghapus siswa kelas terarsip" : "Hapus Siswa"}
+                              disabled={kelas.archived}
+                            >
                               🗑️
                             </button>
                           </div>
@@ -2859,18 +2898,19 @@ export default function DetailKelas({ params: paramsPromise }) {
                               <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
                                 <textarea
                                   className="form-input"
-                                  placeholder="Tulis bimbingan akademik, keterangan ketidakhadiran, atau umpan balik lainnya di sini..."
+                                  placeholder={kelas.archived ? "Kelas diarsipkan, catatan tidak dapat diubah" : "Tulis bimbingan akademik, keterangan ketidakhadiran, atau umpan balik lainnya di sini..."}
                                   value={catatanDraft[student.nisn] !== undefined ? catatanDraft[student.nisn] : (student.catatan || "")}
                                   onChange={(e) => setCatatanDraft({ ...catatanDraft, [student.nisn]: e.target.value })}
                                   rows={2}
-                                  style={{ padding: "8px 12px", fontSize: "0.85rem", resize: "vertical", width: "100%", minHeight: "50px", margin: 0 }}
+                                  disabled={kelas.archived}
+                                  style={{ padding: "8px 12px", fontSize: "0.85rem", resize: "vertical", width: "100%", minHeight: "50px", margin: 0, cursor: kelas.archived ? "not-allowed" : "text" }}
                                 />
                                 <div style={{ display: "flex", gap: "6px" }}>
                                   <button
                                     onClick={() => saveCatatan(student.nisn)}
                                     className="btn btn-primary"
-                                    disabled={savingCatatan[student.nisn]}
-                                    style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                                    disabled={savingCatatan[student.nisn] || kelas.archived}
+                                    style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }}
                                   >
                                     {savingCatatan[student.nisn] ? "Menyimpan..." : "💾 Simpan"}
                                   </button>
@@ -2942,20 +2982,23 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Grup Konfigurasi */}
             <div style={{ padding: "8px 14px 4px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>⚙️ Konfigurasi</div>
             {[
-              { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); } },
-              { icon: "📊", label: "Atur Status & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); } },
+              { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); }, disabled: kelas.archived },
+              { icon: "📊", label: "Atur Status & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); }, disabled: kelas.archived },
             ].map((item) => (
               <button
                 key={item.label}
                 onClick={item.onClick}
+                disabled={item.disabled}
                 style={{
                   display: "flex", alignItems: "center", gap: "10px",
                   width: "100%", padding: "10px 16px",
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "var(--text-primary)", fontSize: "0.88rem", fontWeight: "600",
-                  textAlign: "left", transition: "background 0.15s",
+                  background: "none", border: "none",
+                  cursor: item.disabled ? "not-allowed" : "pointer",
+                  color: item.disabled ? "var(--text-muted)" : "var(--text-primary)",
+                  fontSize: "0.88rem", fontWeight: "600",
+                  textAlign: "left", opacity: item.disabled ? 0.5 : 1, transition: "background 0.15s",
                 }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"}
+                onMouseEnter={e => { if (!item.disabled) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
               >
                 <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>{item.icon}</span>
@@ -2969,7 +3012,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Grup Operasi Data */}
             <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
             {[
-              { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: false },
+              { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: kelas.archived },
               { icon: "📥", label: "Ekspor Data Siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
               { icon: "🔌", label: "Ekspor ke E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
             ].map((item) => (
@@ -2998,14 +3041,14 @@ export default function DetailKelas({ params: paramsPromise }) {
               style={{
                 display: "flex", alignItems: "center", gap: "10px",
                 width: "100%", padding: "10px 16px",
-                cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer",
-                color: kelas.kolomNilai.length === 0 ? "var(--text-muted)" : "var(--text-primary)",
+                cursor: (kelas.kolomNilai.length === 0 || kelas.archived) ? "not-allowed" : "pointer",
+                color: (kelas.kolomNilai.length === 0 || kelas.archived) ? "var(--text-muted)" : "var(--text-primary)",
                 fontSize: "0.88rem", fontWeight: "600",
-                opacity: kelas.kolomNilai.length === 0 ? 0.5 : 1,
+                opacity: (kelas.kolomNilai.length === 0 || kelas.archived) ? 0.5 : 1,
                 transition: "background 0.15s",
                 marginBottom: "4px",
               }}
-              onMouseEnter={e => { if (kelas.kolomNilai.length > 0) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+              onMouseEnter={e => { if (kelas.kolomNilai.length > 0 && !kelas.archived) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
               onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
             >
               <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>📤</span>
@@ -3015,7 +3058,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 accept=".xlsx, .xls"
                 style={{ display: "none" }}
                 onChange={(e) => { handleExcelUpload(e); setFabOpen(false); }}
-                disabled={kelas.kolomNilai.length === 0}
+                disabled={kelas.kolomNilai.length === 0 || kelas.archived}
               />
             </label>
           </div>
