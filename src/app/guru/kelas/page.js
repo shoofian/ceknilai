@@ -24,6 +24,11 @@ export default function KelolaKelas() {
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
+  // Dapodik Upload Modal States
+  const [dapodikUploadModalOpen, setDapodikUploadModalOpen] = useState(false);
+  const [dapodikUploadError, setDapodikUploadError] = useState("");
+  const [dragActive, setDragActive] = useState(false);
+
   // Duplicate Class States
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [sourceClass, setSourceClass] = useState(null);
@@ -154,7 +159,7 @@ export default function KelolaKelas() {
     }
   };
 
-  const handleOpenDuplicate = (k) => {
+  const handleDuplicateOpen = (k) => {
     setSourceClass(k);
     setDupNama(`${k.nama} (Salinan)`);
     setDupMataPelajaran(k.mataPelajaran || "Informatika");
@@ -163,7 +168,6 @@ export default function KelolaKelas() {
     setCopyStudents(true);
     setCopyGrades(false);
     setDupError("");
-    setIsDuplicating(false);
     setDuplicateModalOpen(true);
   };
 
@@ -177,26 +181,22 @@ export default function KelolaKelas() {
       setDupError("Mata pelajaran harus diisi.");
       return;
     }
-    if (!dupTahunAjaran.trim()) {
-      setDupError("Tahun ajaran harus diisi.");
-      return;
-    }
 
     setIsDuplicating(true);
     setDupError("");
 
     try {
       let studentsPayload = [];
-      if (copyStudents && sourceClass.siswa) {
+      if (copyStudents && sourceClass.siswa && sourceClass.siswa.length > 0) {
         studentsPayload = sourceClass.siswa.map((s) => {
           let nilaiPayload = {};
-          if (copyGrades) {
-            nilaiPayload = { ...s.nilai };
+          if (copyGrades && s.nilai) {
+            nilaiPayload = s.nilai;
           }
           return {
             nisn: s.nisn,
             nama: s.nama,
-            tanggalLahir: s.tanggalLahir,
+            tanggalLahir: s.tanggalLahir || "-",
             nilai: nilaiPayload,
             catatan: s.catatan || ""
           };
@@ -231,9 +231,9 @@ export default function KelolaKelas() {
     }
   };
 
-  const handleDapodikUpload = async (e) => {
-    const file = e.target.files[0];
+  const processDapodikFile = async (file) => {
     if (!file) return;
+    setDapodikUploadError("");
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -245,7 +245,7 @@ export default function KelolaKelas() {
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
         if (rows.length < 2) {
-          alert("Berkas Excel/CSV kosong atau format tidak sesuai.");
+          setDapodikUploadError("Berkas Excel/CSV kosong atau format tidak sesuai.");
           return;
         }
 
@@ -276,7 +276,7 @@ export default function KelolaKelas() {
         }
 
         if (headerRowIndex === -1) {
-          alert("Gagal menemukan baris header dengan kolom NISN, Nama, atau Rombel di dalam berkas. Pastikan file Dapodik sudah benar.");
+          setDapodikUploadError("Gagal menemukan baris header dengan kolom NISN, Nama, atau Rombel di dalam berkas. Pastikan file Dapodik sudah benar.");
           return;
         }
 
@@ -299,7 +299,7 @@ export default function KelolaKelas() {
         }
 
         if (extractedStudents.length === 0) {
-          alert("Tidak ada data siswa yang valid.");
+          setDapodikUploadError("Tidak ada data siswa yang valid.");
           return;
         }
 
@@ -307,7 +307,6 @@ export default function KelolaKelas() {
         const classArray = Array.from(uniqueClasses).sort();
         setParsedClasses(classArray);
 
-        // Hanya berikan satu baris form kosong di awal, sesuai permintaan user
         const initialForms = [{
           id: Date.now(),
           nama: "",
@@ -318,15 +317,34 @@ export default function KelolaKelas() {
         }];
 
         setBulkForms(initialForms);
-        setBulkModalOpen(true);
+        setDapodikUploadModalOpen(false); // Close the upload/instruction modal
+        setBulkModalOpen(true); // Open the configuration modal
         setBulkError("");
-        e.target.value = null; // reset input
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan saat memproses berkas.");
+        setDapodikUploadError("Terjadi kesalahan saat memproses berkas.");
       }
     };
     reader.readAsBinaryString(file);
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processDapodikFile(e.dataTransfer.files[0]);
+    }
   };
 
   const handleBulkFormChange = (id, field, value) => {
@@ -419,10 +437,9 @@ export default function KelolaKelas() {
           <p className="page-subtitle">Buat dan kelola kelas aktif untuk tahun ajaran berjalan.</p>
         </div>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <label className="btn btn-secondary" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <button onClick={() => { setDapodikUploadModalOpen(true); setDapodikUploadError(""); }} className="btn btn-secondary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
             📥 Impor Kelas Dapodik
-            <input type="file" accept=".csv, .xlsx, .xls" style={{ display: "none" }} onChange={handleDapodikUpload} />
-          </label>
+          </button>
           <button onClick={handleOpenAdd} className="btn btn-primary">
             ➕ Tambah Kelas Baru
           </button>
@@ -869,6 +886,100 @@ export default function KelolaKelas() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Dapodik Import Guide & Upload */}
+      {dapodikUploadModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 300,
+            backdropFilter: "blur(6px)"
+          }}
+          className="animate-fade-in"
+        >
+          <div className="glass-card modal-content-scroll" style={{ width: "90%", maxWidth: "600px", padding: "26px", display: "flex", flexDirection: "column", gap: "18px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--primary)", boxShadow: "0 20px 40px rgba(59,130,246,0.2)" }}>
+            
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.4rem" }}>📥</span>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Impor Kelas Dapodik</h3>
+              </div>
+              <button onClick={() => { setDapodikUploadModalOpen(false); setDapodikUploadError(""); }} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
+            </div>
+
+            {/* Petunjuk Penggunaan */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <h4 style={{ fontSize: "1.02rem", fontWeight: "800", color: "var(--text-primary)" }}>📋 Petunjuk Penggunaan:</h4>
+              <ol style={{ fontSize: "0.82rem", color: "var(--text-secondary)", paddingLeft: "18px", lineHeight: "1.6", display: "flex", flexDirection: "column", gap: "6px" }}>
+                <li>Unduh data peserta didik dari <strong>aplikasi Dapodik</strong> sekolah Anda (format berkas yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>).</li>
+                <li>Pastikan berkas tersebut memiliki kolom header penting yaitu <strong>NISN</strong>, <strong>Nama Siswa</strong> (atau Nama/Peserta Didik), dan <strong>Rombel</strong> (atau Kelas/Rombongan Belajar).</li>
+                <li>Unggah berkas tersebut pada area unggahan di bawah ini.</li>
+                <li>Sistem akan mendeteksi daftar rombel secara otomatis, lalu Anda dapat mengatur penamaan kelas target sebelum disimpan ke CekNilai.</li>
+              </ol>
+            </div>
+
+            {/* Error Banner */}
+            {dapodikUploadError && (
+              <div style={{ padding: "12px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.82rem", border: "1px solid rgba(239, 68, 68, 0.15)" }}>
+                ❌ {dapodikUploadError}
+              </div>
+            )}
+
+            {/* Upload Area */}
+            <div
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDragLeave={handleDrag}
+              onDrop={handleDrop}
+              style={{
+                position: "relative",
+                border: dragActive ? "2px dashed var(--primary)" : "2px dashed var(--border-color)",
+                borderRadius: "var(--radius-sm)",
+                padding: "40px 20px",
+                backgroundColor: dragActive ? "rgba(59,130,246,0.08)" : "rgba(59,130,246,0.02)",
+                cursor: "pointer",
+                textAlign: "center",
+                transition: "var(--transition)"
+              }}
+            >
+              <input
+                type="file"
+                accept=".csv, .xlsx, .xls"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    processDapodikFile(e.target.files[0]);
+                  }
+                }}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" }}
+              />
+              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>📁</div>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", display: "block" }}>
+                Klik atau seret berkas Dapodik ke sini
+              </span>
+              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
+                Mendukung format .xlsx, .xls, atau .csv
+              </span>
+            </div>
+
+            {/* Footer / Action buttons */}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
+              <button type="button" onClick={() => { setDapodikUploadModalOpen(false); setDapodikUploadError(""); }} className="btn btn-secondary" style={{ fontSize: "0.85rem" }}>
+                Batal
+              </button>
+            </div>
+
           </div>
         </div>
       )}
