@@ -923,8 +923,7 @@ export default function KelolaKelas() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <h4 style={{ fontSize: "1.02rem", fontWeight: "800", color: "var(--text-primary)" }}>📋 Petunjuk Penggunaan:</h4>
               <ol style={{ fontSize: "0.82rem", color: "var(--text-secondary)", paddingLeft: "18px", lineHeight: "1.6", display: "flex", flexDirection: "column", gap: "6px" }}>
-                <li>Unduh data peserta didik dari <strong>aplikasi Dapodik</strong> sekolah Anda (format berkas yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>).</li>
-                <li>Pastikan berkas tersebut memiliki kolom header penting yaitu <strong>NISN</strong>, <strong>Nama Siswa</strong> (atau Nama/Peserta Didik), dan <strong>Rombel</strong> (atau Kelas/Rombongan Belajar).</li>
+                <li>Unduh data peserta didik dari <strong>aplikasi Dapodik</strong> sekolah Anda (format berkas yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>). Berkas data ini bisa Anda dapatkan dengan meminta bantuan <strong>operator atau admin sekolah</strong> Anda.</li>
                 <li>Unggah berkas tersebut pada area unggahan di bawah ini.</li>
                 <li>Sistem akan mendeteksi daftar rombel secara otomatis, lalu Anda dapat mengatur penamaan kelas target sebelum disimpan ke CekNilai.</li>
               </ol>
