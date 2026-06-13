@@ -2097,49 +2097,62 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <div key={s.nisn} style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
                     <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: "0 0 12px 0", color: "#f8fafc" }}>{i + 1}. {s.nama}</h4>
                     
-                    {/* Final Score Status Ribbon */}
-                    <div style={{ 
-                      display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "6px", marginBottom: "16px", fontSize: "0.85rem", fontWeight: "600",
-                      backgroundColor: s.finalScore >= analyticsData?.kkmVal ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
-                      color: s.finalScore >= analyticsData?.kkmVal ? "#34d399" : "#fca5a5",
-                      border: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? "rgba(52, 211, 153, 0.2)" : "rgba(248, 113, 113, 0.2)"}`
+                    {/* Status & Detail Kendala Box */}
+                    <div style={{
+                      backgroundColor: s.finalScore >= analyticsData?.kkmVal ? "rgba(16, 185, 129, 0.03)" : "rgba(239, 68, 68, 0.03)",
+                      border: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? "rgba(52, 211, 153, 0.15)" : "rgba(248, 113, 113, 0.15)"}`,
+                      borderRadius: "8px",
+                      overflow: "hidden"
                     }}>
-                      <span>{s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️"}</span>
-                      <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
-                    </div>
+                      {/* Final Score Status Header */}
+                      <div style={{ 
+                        display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", fontSize: "0.85rem", fontWeight: "600",
+                        backgroundColor: s.finalScore >= analyticsData?.kkmVal ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)",
+                        color: s.finalScore >= analyticsData?.kkmVal ? "#34d399" : "#fca5a5",
+                        borderBottom: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? "rgba(52, 211, 153, 0.1)" : "rgba(248, 113, 113, 0.1)"}`
+                      }}>
+                        <span>{s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️"}</span>
+                        <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
+                      </div>
 
-                    {/* Rincian Kendala Aspek */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>Rincian Kendala Aspek:</div>
-                      {showKehadiran && (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", backgroundColor: "rgba(0,0,0,0.25)", padding: "7px 12px", borderRadius: "4px", marginBottom: "4px", borderLeft: "3px solid #475569" }}>
-                          <span style={{ color: "#94a3b8", fontWeight: "600" }}>📋 Kehadiran</span>
-                          <span style={{ fontWeight: "700", fontSize: "0.75rem", color: "#94a3b8" }}>
-                            H: {s.attSummary.H} | I: {s.attSummary.I} | S: {s.attSummary.S} | <span style={{ color: s.attSummary.A > 0 ? "#fca5a5" : "inherit" }}>A: {s.attSummary.A}</span>
-                          </span>
+                      {/* Rincian Kendala Aspek (Nested inside status box) */}
+                      <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                          <span>↳</span> Rincian Detail Kendala Aspek:
                         </div>
-                      )}
-                      {s.issues.map((issue, idx) => {
-                        const isKosong = issue.status.includes("Kosong");
-                        return (
-                          <div key={idx} style={{
-                            display: "flex", justifyContent: "space-between", alignItems: "center",
-                            fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
-                            backgroundColor: isKosong ? "rgba(251,191,36,0.08)" : "rgba(239,68,68,0.12)",
-                            borderLeft: `3px solid ${isKosong ? "#fbbf24" : "#ef4444"}`
-                          }}>
-                            <span style={{ color: "#e2e8f0", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                              <span style={{ color: isKosong ? "#fbbf24" : "#ef4444" }}>•</span> {issue.aspek}
-                            </span>
-                            <span style={{ 
-                              fontWeight: "700", fontSize: "0.75rem",
-                              color: isKosong ? "#fcd34d" : "#fca5a5"
-                            }}>
-                              {issue.status}
-                            </span>
-                          </div>
-                        );
-                      })}
+                        
+                        <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(255, 255, 255, 0.08)", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {showKehadiran && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", backgroundColor: "rgba(0,0,0,0.25)", padding: "7px 12px", borderRadius: "4px", borderLeft: "3px solid #475569" }}>
+                              <span style={{ color: "#94a3b8", fontWeight: "600" }}>📋 Kehadiran</span>
+                              <span style={{ fontWeight: "700", fontSize: "0.75rem", color: "#94a3b8" }}>
+                                H: {s.attSummary.H} | I: {s.attSummary.I} | S: {s.attSummary.S} | <span style={{ color: s.attSummary.A > 0 ? "#fca5a5" : "inherit" }}>A: {s.attSummary.A}</span>
+                              </span>
+                            </div>
+                          )}
+                          {s.issues.map((issue, idx) => {
+                            const isKosong = issue.status.includes("Kosong");
+                            return (
+                              <div key={idx} style={{
+                                display: "flex", justifyContent: "space-between", alignItems: "center",
+                                fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
+                                backgroundColor: isKosong ? "rgba(251,191,36,0.08)" : "rgba(239,68,68,0.12)",
+                                borderLeft: `3px solid ${isKosong ? "#fbbf24" : "#ef4444"}`
+                              }}>
+                                <span style={{ color: "#e2e8f0", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <span style={{ color: isKosong ? "#fbbf24" : "#ef4444" }}>•</span> {issue.aspek}
+                                </span>
+                                <span style={{ 
+                                  fontWeight: "700", fontSize: "0.75rem",
+                                  color: isKosong ? "#fcd34d" : "#fca5a5"
+                                }}>
+                                  {issue.status}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
