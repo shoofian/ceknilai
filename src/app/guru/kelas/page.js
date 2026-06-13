@@ -28,6 +28,7 @@ export default function KelolaKelas() {
   const [dapodikUploadModalOpen, setDapodikUploadModalOpen] = useState(false);
   const [dapodikUploadError, setDapodikUploadError] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const [importWarnings, setImportWarnings] = useState([]);
 
   // Duplicate Class States
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
@@ -234,6 +235,7 @@ export default function KelolaKelas() {
   const processDapodikFile = async (file) => {
     if (!file) return;
     setDapodikUploadError("");
+    setImportWarnings([]);
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -280,8 +282,14 @@ export default function KelolaKelas() {
           return;
         }
 
+        if (tglIdx === -1) {
+          setDapodikUploadError("Kolom 'Tanggal Lahir' tidak ditemukan di dalam berkas. Siswa tidak berhasil ditambahkan.");
+          return;
+        }
+
         const extractedStudents = [];
         const uniqueClasses = new Set();
+        const warnings = [];
 
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const cols = rows[i];
@@ -290,19 +298,39 @@ export default function KelolaKelas() {
           const nisnVal = cols[nisnIdx] ? String(cols[nisnIdx]).trim() : "";
           const namaVal = cols[namaIdx] ? String(cols[namaIdx]).trim() : "";
           const rombelVal = cols[rombelIdx] ? String(cols[rombelIdx]).trim() : "";
-          const tglVal = tglIdx !== -1 && cols[tglIdx] ? String(cols[tglIdx]).trim() : "-";
+          const tglVal = tglIdx !== -1 && cols[tglIdx] ? String(cols[tglIdx]).trim() : "";
 
-          if (!nisnVal || !namaVal || !rombelVal) continue;
+          // Pengecekan data tidak lengkap
+          const missingFields = [];
+          if (!nisnVal) missingFields.push("NISN");
+          if (!namaVal) missingFields.push("Nama");
+          if (!rombelVal) missingFields.push("Rombel");
+          if (!tglVal || tglVal === "-") missingFields.push("Tanggal Lahir");
+
+          if (missingFields.length > 0) {
+            // Catat baris bermasalah jika ada setidaknya salah satu data terisi (bukan baris kosong)
+            if (nisnVal || namaVal || rombelVal || tglVal) {
+              const identifier = namaVal || nisnVal || `Baris ${i + 1}`;
+              warnings.push(`Siswa "${identifier}" (Baris ${i + 1}) dilewati karena data tidak lengkap: ${missingFields.join(", ")} tidak ditemukan.`);
+            }
+            continue;
+          }
 
           extractedStudents.push({ nisn: nisnVal, nama: namaVal, rombel: rombelVal, tanggalLahir: tglVal, nilai: {}, catatan: "" });
           uniqueClasses.add(rombelVal);
         }
 
         if (extractedStudents.length === 0) {
-          setDapodikUploadError("Tidak ada data siswa yang valid.");
+          let errorMsg = "Tidak ada data siswa yang valid untuk diimpor.";
+          if (warnings.length > 0) {
+            errorMsg += " Semua baris dilewati karena data tidak lengkap.";
+          }
+          setDapodikUploadError(errorMsg);
+          setImportWarnings(warnings);
           return;
         }
 
+        setImportWarnings(warnings);
         setParsedStudents(extractedStudents);
         const classArray = Array.from(uniqueClasses).sort();
         setParsedClasses(classArray);
@@ -669,6 +697,30 @@ export default function KelolaKelas() {
               </div>
               <button onClick={() => setBulkModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
             </div>
+
+            {importWarnings.length > 0 && (
+              <div style={{
+                maxHeight: "130px",
+                overflowY: "auto",
+                backgroundColor: "var(--warning-glow)",
+                border: "1px solid rgba(245, 158, 11, 0.2)",
+                borderRadius: "var(--radius-sm)",
+                padding: "10px 14px",
+                fontSize: "0.8rem",
+                color: "var(--text-primary)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+                marginBottom: "16px"
+              }}>
+                <strong style={{ color: "var(--warning)" }}>⚠️ Pemberitahuan: {importWarnings.length} siswa tidak berhasil ditambahkan karena data tidak lengkap:</strong>
+                <ul style={{ paddingLeft: "16px", margin: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
+                  {importWarnings.map((warn, idx) => (
+                    <li key={idx}>{warn}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <form onSubmit={handleBulkSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ overflowX: "auto" }}>
