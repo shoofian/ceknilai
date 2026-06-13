@@ -30,6 +30,32 @@ export default function KelolaKelas() {
   const [dragActive, setDragActive] = useState(false);
   const [importWarnings, setImportWarnings] = useState([]);
 
+  // Custom Confirm/Alert Dialog Modal States
+  const [confirmConfig, setConfirmConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "OK",
+    cancelText: "Batal",
+    isDanger: false,
+    onConfirm: null
+  });
+
+  const triggerConfirm = (message, onConfirm, options = {}) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: options.title || "Konfirmasi",
+      message: message,
+      confirmText: options.confirmText || "OK",
+      cancelText: options.cancelText === undefined ? "Batal" : options.cancelText,
+      isDanger: !!options.isDanger,
+      onConfirm: () => {
+        if (onConfirm) onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
   // Duplicate Class States
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [sourceClass, setSourceClass] = useState(null);
@@ -121,43 +147,51 @@ export default function KelolaKelas() {
   };
 
   const handleArchive = async (id, name) => {
-    if (confirm(`Apakah Anda yakin ingin mengarsipkan kelas "${name}"? Kelas ini tidak akan muncul di daftar aktif.`)) {
-      try {
-        const response = await fetch(`/api/kelas/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ archived: true }),
-        });
-        
-        if (response.ok) {
-          fetchKelas();
-        } else {
-          const data = await response.json();
-          alert(data.error || "Gagal mengarsipkan kelas.");
+    triggerConfirm(
+      `Apakah Anda yakin ingin mengarsipkan kelas "${name}"?\nKelas ini tidak akan muncul di daftar aktif.`,
+      async () => {
+        try {
+          const response = await fetch(`/api/kelas/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ archived: true }),
+          });
+          
+          if (response.ok) {
+            fetchKelas();
+          } else {
+            const data = await response.json();
+            triggerConfirm(data.error || "Gagal mengarsipkan kelas.", null, { title: "Galat", confirmText: "OK", cancelText: "" });
+          }
+        } catch (err) {
+          console.error("Archive failed", err);
         }
-      } catch (err) {
-        console.error("Archive failed", err);
-      }
-    }
+      },
+      { title: "Arsipkan Kelas", confirmText: "Arsipkan", cancelText: "Batal" }
+    );
   };
 
   const handleDelete = async (id, name) => {
-    if (confirm(`⚠️ PERINGATAN KERAS!\nApakah Anda yakin ingin menghapus kelas "${name}"?\nTindakan ini bersifat PERMANEN dan akan menghapus semua data siswa serta nilai di dalamnya!`)) {
-      try {
-        const response = await fetch(`/api/kelas/${id}`, {
-          method: "DELETE",
-        });
-        
-        if (response.ok) {
-          fetchKelas();
-        } else {
-          const data = await response.json();
-          alert(data.error || "Gagal menghapus kelas.");
+    triggerConfirm(
+      `⚠️ PERINGATAN KERAS!\nApakah Anda yakin ingin menghapus kelas "${name}"?\nTindakan ini bersifat PERMANEN dan akan menghapus semua data siswa serta nilai di dalamnya!`,
+      async () => {
+        try {
+          const response = await fetch(`/api/kelas/${id}`, {
+            method: "DELETE",
+          });
+          
+          if (response.ok) {
+            fetchKelas();
+          } else {
+            const data = await response.json();
+            triggerConfirm(data.error || "Gagal menghapus kelas.", null, { title: "Galat", confirmText: "OK", cancelText: "" });
+          }
+        } catch (err) {
+          console.error("Delete failed", err);
         }
-      } catch (err) {
-        console.error("Delete failed", err);
-      }
-    }
+      },
+      { title: "⚠️ Hapus Kelas", confirmText: "Hapus Permanen", cancelText: "Batal", isDanger: true }
+    );
   };
 
   const handleDuplicateOpen = (k) => {
@@ -443,7 +477,7 @@ export default function KelolaKelas() {
         successCount++;
       }
 
-      alert(`${successCount} Kelas beserta siswanya berhasil diimpor!`);
+      triggerConfirm(`${successCount} Kelas beserta siswanya berhasil diimpor!`, null, { title: "Impor Berhasil", confirmText: "Selesai", cancelText: "" });
       setBulkModalOpen(false);
       fetchKelas();
     } catch (err) {
@@ -506,7 +540,7 @@ export default function KelolaKelas() {
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(k.id);
-                      alert("Kode Kelas disalin!");
+                      triggerConfirm("Kode Kelas berhasil disalin ke papan klip!", null, { title: "Salin Kode", confirmText: "OK", cancelText: "" });
                     }}
                     style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem", padding: "2px" }}
                     title="Salin Kode Kelas"
@@ -1031,6 +1065,54 @@ export default function KelolaKelas() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ===== GLOBAL CUSTOM CONFIRMATION MODAL ===== */}
+      {confirmConfig.isOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }} className="animate-fade-in">
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+              <span style={{ fontSize: "2rem", lineHeight: "1" }}>{confirmConfig.title.includes("⚠️") || confirmConfig.isDanger ? "⚠️" : "❓"}</span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
+                  {confirmConfig.title.replace("⚠️", "").trim() || "Konfirmasi"}
+                </h4>
+              </div>
+            </div>
+            
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line" }}>
+              {confirmConfig.message}
+            </p>
+            
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "12px" }}>
+              {confirmConfig.cancelText && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                  className="btn btn-secondary"
+                  style={{ padding: "8px 16px", fontSize: "0.82rem" }}
+                >
+                  {confirmConfig.cancelText}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={confirmConfig.onConfirm}
+                className={confirmConfig.isDanger ? "btn btn-danger" : "btn btn-primary"}
+                style={{
+                  padding: "8px 20px",
+                  fontSize: "0.82rem",
+                  fontWeight: "700",
+                  backgroundColor: confirmConfig.isDanger ? "var(--danger)" : "var(--primary)",
+                  color: "#fff",
+                  border: confirmConfig.isDanger ? "1px solid var(--danger)" : "1px solid var(--primary)"
+                }}
+              >
+                {confirmConfig.confirmText}
+              </button>
+            </div>
           </div>
         </div>
       )}
