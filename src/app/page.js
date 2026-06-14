@@ -13,6 +13,7 @@ export default function StudentPortal() {
   const [activeClassId, setActiveClassId] = useState(null);
   const [simulationScores, setSimulationScores] = useState({});
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [isPresensiOpen, setIsPresensiOpen] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -532,6 +533,15 @@ export default function StudentPortal() {
                             ✨ Buka Kalkulator Estimasi Target
                           </button>
                         )}
+                        {res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
+                          <button
+                            onClick={() => setIsPresensiOpen(true)}
+                            className="btn btn-secondary"
+                            style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", borderColor: "rgba(59, 130, 246, 0.4)", boxShadow: "0 4px 14px rgba(59, 130, 246, 0.2)", flex: "1 1 auto" }}
+                          >
+                            📅 Cek Rekap Presensi
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDownloadImage(res.kelasId)}
                           disabled={isGenerating}
@@ -576,7 +586,6 @@ export default function StudentPortal() {
                               <th>Komponen Nilai</th>
                               <th>Bobot</th>
                               <th>Nilai</th>
-                              <th>Kontribusi</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -604,9 +613,6 @@ export default function StudentPortal() {
                                       <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>(rata-rata)</span>
                                     )}
                                   </td>
-                                  <td style={{ fontWeight: "600", color: "var(--text-secondary)" }}>
-                                    {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "-" : col.kontribusi}
-                                  </td>
                                 </tr>
 
                                 {/* Baris sub-aspek (indent, hanya jika isGroup) */}
@@ -629,7 +635,6 @@ export default function StudentPortal() {
                                     }}>
                                       {sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli}
                                     </td>
-                                    <td style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>—</td>
                                   </tr>
                                 ))}
                               </>
@@ -686,6 +691,90 @@ export default function StudentPortal() {
                             </div>
                             
                             <button onClick={() => setSimulationScores({})} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Reset Simulasi</button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Attendance Recap Modal Pop-up */}
+                      {isPresensiOpen && res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
+                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "600px", padding: "30px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflow: "hidden" }}>
+                            <button onClick={() => setIsPresensiOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", zIndex: 10 }}>✕</button>
+                            
+                            <div style={{ textAlign: "center" }}>
+                              <span style={{ fontSize: "2rem" }}>📅</span>
+                              <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", marginTop: "10px", marginBottom: "4px" }}>Rekap Presensi Kehadiran</h3>
+                              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>Detail catatan kehadiran Anda selama semester ini.</p>
+                            </div>
+                            
+                            {/* Attendance Summary Cards */}
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px", textAlign: "center" }}>
+                              <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.7rem", color: "var(--success)", fontWeight: "800" }}>HADIR</div>
+                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--success)" }}>{res.rekapPresensi.summary.H}</div>
+                              </div>
+                              <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.7rem", color: "var(--warning)", fontWeight: "800" }}>IZIN</div>
+                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--warning)" }}>{res.rekapPresensi.summary.I}</div>
+                              </div>
+                              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.7rem", color: "#3b82f6", fontWeight: "800" }}>SAKIT</div>
+                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#3b82f6" }}>{res.rekapPresensi.summary.S}</div>
+                              </div>
+                              <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.7rem", color: "var(--danger)", fontWeight: "800" }}>ALFA</div>
+                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--danger)" }}>{res.rekapPresensi.summary.A}</div>
+                              </div>
+                              <div style={{ background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--primary)", fontWeight: "800" }}>PERSENTASE</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)" }}>{res.rekapPresensi.persentase}%</div>
+                              </div>
+                            </div>
+
+                            {/* Meeting list */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
+                              <table className="premium-table" style={{ fontSize: "0.85rem" }}>
+                                <thead>
+                                  <tr>
+                                    <th>Pertemuan</th>
+                                    <th>Tanggal</th>
+                                    <th>Materi</th>
+                                    <th style={{ textAlign: "center" }}>Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {res.rekapPresensi.detail.map((p, idx) => (
+                                    <tr key={p.pertemuanId || idx}>
+                                      <td style={{ fontWeight: "700" }}>{p.nama}</td>
+                                      <td>{p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "-"}</td>
+                                      <td style={{ color: "var(--text-secondary)" }}>{p.materi || "—"}</td>
+                                      <td style={{ textAlign: "center" }}>
+                                        <span style={{ 
+                                          fontWeight: "800", 
+                                          fontSize: "0.85rem",
+                                          padding: "2px 8px",
+                                          borderRadius: "4px",
+                                          backgroundColor: 
+                                            p.status === 'H' ? "rgba(16, 185, 129, 0.15)" :
+                                            p.status === 'I' ? "rgba(245, 158, 11, 0.15)" :
+                                            p.status === 'S' ? "rgba(59, 130, 246, 0.15)" :
+                                            p.status === 'A' ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
+                                          color:
+                                            p.status === 'H' ? "var(--success)" :
+                                            p.status === 'I' ? "var(--warning)" :
+                                            p.status === 'S' ? "#3b82f6" :
+                                            p.status === 'A' ? "var(--danger)" : "var(--text-muted)"
+                                        }}>
+                                          {p.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            
+                            <button onClick={() => setIsPresensiOpen(false)} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Tutup</button>
                           </div>
                         </div>
                       )}
@@ -943,6 +1032,91 @@ export default function StudentPortal() {
                             );
                           })()}
                         </div>
+
+                        {/* SECTION 5: Rekap Presensi */}
+                        {res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
+                          <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
+                            <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>5. Rekap Presensi Kehadiran</p>
+                            
+                            <div style={{ display: "flex", gap: "40px", alignItems: "center" }}>
+                              {/* Summary badges */}
+                              <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", flex: 1 }}>
+                                <div style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "12px 6px", borderRadius: "12px", textAlign: "center" }}>
+                                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#34d399", fontWeight: "800" }}>HADIR</p>
+                                  <h4 style={{ margin: "4px 0 0 0", fontSize: "1.8rem", fontWeight: "800", color: "#10b981" }}>{res.rekapPresensi.summary.H}</h4>
+                                </div>
+                                <div style={{ backgroundColor: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "12px 6px", borderRadius: "12px", textAlign: "center" }}>
+                                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#fbbf24", fontWeight: "800" }}>IZIN</p>
+                                  <h4 style={{ margin: "4px 0 0 0", fontSize: "1.8rem", fontWeight: "800", color: "#f59e0b" }}>{res.rekapPresensi.summary.I}</h4>
+                                </div>
+                                <div style={{ backgroundColor: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "12px 6px", borderRadius: "12px", textAlign: "center" }}>
+                                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#60a5fa", fontWeight: "800" }}>SAKIT</p>
+                                  <h4 style={{ margin: "4px 0 0 0", fontSize: "1.8rem", fontWeight: "800", color: "#3b82f6" }}>{res.rekapPresensi.summary.S}</h4>
+                                </div>
+                                <div style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "12px 6px", borderRadius: "12px", textAlign: "center" }}>
+                                  <p style={{ margin: 0, fontSize: "0.85rem", color: "#f87171", fontWeight: "800" }}>ALFA</p>
+                                  <h4 style={{ margin: "4px 0 0 0", fontSize: "1.8rem", fontWeight: "800", color: "#ef4444" }}>{res.rekapPresensi.summary.A}</h4>
+                                </div>
+                                <div style={{ backgroundColor: "rgba(59, 130, 246, 0.2)", border: "1px solid rgba(59, 130, 246, 0.3)", padding: "12px 6px", borderRadius: "12px", textAlign: "center", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                  <p style={{ margin: 0, fontSize: "0.75rem", color: "#38bdf8", fontWeight: "800" }}>PERSENTASE</p>
+                                  <h4 style={{ margin: "4px 0 0 0", fontSize: "1.6rem", fontWeight: "800", color: "#38bdf8" }}>{res.rekapPresensi.persentase}%</h4>
+                                </div>
+                              </div>
+
+                              <div style={{ width: "300px", color: "#cbd5e1", fontSize: "0.95rem", lineHeight: "1.4" }}>
+                                <p style={{ margin: 0 }}>
+                                  Total Pertemuan: <strong>{res.rekapPresensi.totalPertemuan}</strong> kali
+                                </p>
+                                <p style={{ margin: "4px 0 0 0" }}>
+                                  Kehadiran dinilai dengan bobot dari guru sebesar <strong>{res.rekapPresensi.bobot}%</strong> dari nilai akhir.
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Detailed list in export image */}
+                            <div style={{ marginTop: "25px" }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem", color: "#cbd5e1" }}>
+                                <thead>
+                                  <tr style={{ borderBottom: "2px solid #334155", textAlign: "left" }}>
+                                    <th style={{ padding: "10px 8px", fontWeight: "700" }}>Pertemuan</th>
+                                    <th style={{ padding: "10px 8px", fontWeight: "700" }}>Tanggal</th>
+                                    <th style={{ padding: "10px 8px", fontWeight: "700" }}>Materi</th>
+                                    <th style={{ padding: "10px 8px", fontWeight: "700", textAlign: "center" }}>Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {res.rekapPresensi.detail.map((p, idx) => (
+                                    <tr key={p.pertemuanId || idx} style={{ borderBottom: "1px solid #334155" }}>
+                                      <td style={{ padding: "10px 8px", fontWeight: "700" }}>{p.nama}</td>
+                                      <td style={{ padding: "10px 8px" }}>{p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "-"}</td>
+                                      <td style={{ padding: "10px 8px", color: "#94a3b8" }}>{p.materi || "—"}</td>
+                                      <td style={{ padding: "10px 8px", textAlign: "center" }}>
+                                        <span style={{ 
+                                          fontWeight: "800", 
+                                          fontSize: "0.85rem",
+                                          padding: "3px 10px",
+                                          borderRadius: "4px",
+                                          backgroundColor: 
+                                            p.status === 'H' ? "rgba(16, 185, 129, 0.15)" :
+                                            p.status === 'I' ? "rgba(245, 158, 11, 0.15)" :
+                                            p.status === 'S' ? "rgba(59, 130, 246, 0.15)" :
+                                            p.status === 'A' ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
+                                          color:
+                                            p.status === 'H' ? "#10b981" :
+                                            p.status === 'I' ? "#f59e0b" :
+                                            p.status === 'S' ? "#3b82f6" :
+                                            p.status === 'A' ? "#ef4444" : "#94a3b8"
+                                        }}>
+                                          {p.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Footer Info */}
                         <div style={{ marginTop: "auto", borderTop: "2px solid #334155", paddingTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

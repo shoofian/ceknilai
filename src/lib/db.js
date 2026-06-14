@@ -746,8 +746,45 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         console.error("Gagal menghitung rata-rata kelas:", err);
       }
 
+      // Hitung Rekap Presensi Siswa
+      const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
+      const pertemuanList = skema.pertemuan || [];
+      
+      let totalH = 0, totalI = 0, totalS = 0, totalA = 0;
+      const daftarHadir = [];
+
+      pertemuanList.forEach(p => {
+        const status = nilaiObj[`_presensi_${p.id}`] || null;
+        if (status === 'H') totalH++;
+        else if (status === 'I') totalI++;
+        else if (status === 'S') totalS++;
+        else if (status === 'A') totalA++;
+        
+        daftarHadir.push({
+          pertemuanId: p.id,
+          nama: p.nama,
+          tanggal: p.tanggal,
+          materi: p.materi || "",
+          status: status || "-"
+        });
+      });
+
+      const attCount = totalH + totalS + totalI + totalA;
+      const attTotal = (totalH * 100) + (totalS * 50) + (totalI * 50) + (totalA * 0);
+      const avgAttendance = attCount > 0 ? Math.round(attTotal / attCount) : 0;
+
+      const rekapPresensi = {
+        digunakan: !!presensiConfig.digunakan,
+        bobot: presensiConfig.bobot || 0,
+        totalPertemuan: pertemuanList.length,
+        summary: { H: totalH, I: totalI, S: totalS, A: totalA },
+        persentase: avgAttendance,
+        detail: daftarHadir
+      };
+
       hasil.push({
         kelasId: k.id,
+        rekapPresensi,
         namaKelas: k.nama,
         mataPelajaran: k.mata_pelajaran || 'Informatika',
         tahunAjaran: k.tahun_ajaran,
