@@ -2680,7 +2680,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </thead>
                   <tbody>
                   {kelas.siswa.length > 0 ? (
-                    sortedStudents.map((student) => {
+                    sortedStudents.map((student, idx) => {
                       
                       // Nilai akhir sudah dihitung di useMemo
                       const finalScore = student.finalScore;
@@ -2689,7 +2689,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                   return (
                     <Fragment key={student.nisn}>
-                      <tr>
+                      <tr style={{ backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                         <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
@@ -2697,7 +2697,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           className={`sticky-nama ${expandedNama[student.nisn] ? 'expanded-active' : ''}`}
                           onClick={() => toggleNamaExpand(student.nisn)}
                           title="Klik untuk melihat nama lengkap"
-                          style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: "var(--bg-secondary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
+                          style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
@@ -3606,7 +3606,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            background-color: var(--bg-primary) !important;
+            background-color: var(--bg-primary);
             box-shadow: 4px 0 8px rgba(0,0,0,0.08) !important;
             z-index: 10 !important;
             transition: all 0.2s ease;
