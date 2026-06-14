@@ -2365,13 +2365,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                       )}
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
                         <button onClick={() => handleOpenEditPertemuan(p)} style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Ubah</button>
-                        <button onClick={async () => {
-                          if(!confirm(`Hapus ${p.nama}? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus.`)) return;
-                          const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: kelas.skemaPenilaian.pertemuan.filter(pt => pt.id !== p.id) };
-                          setKelas({ ...kelas, skemaPenilaian: updatedSkema });
-                          try {
-                             await fetch(`/api/kelas/${kelas.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
-                          } catch(e) {}
+                        <button onClick={() => {
+                          triggerConfirm(
+                            `Apakah Anda yakin ingin menghapus "${p.nama}"? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus secara permanen.`,
+                            async () => {
+                              const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: kelas.skemaPenilaian.pertemuan.filter(pt => pt.id !== p.id) };
+                              setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                              try {
+                                 await fetch(`/api/kelas/${kelas.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
+                              } catch(e) {}
+                            },
+                            {
+                              title: "Hapus Pertemuan",
+                              confirmText: "Ya, Hapus",
+                              isDanger: true
+                            }
+                          );
                         }} style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Hapus</button>
                       </div>
                     </th>
@@ -3993,9 +4002,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                         key={item.val}
                         type="button"
                         onClick={() => {
-                          if (confirm(`Ubah status kehadiran SEMUA siswa di ${pertemuanNama} menjadi "${item.label}"?`)) {
-                            handleBulkPresensi(selectedPertemuanId, item.val);
-                          }
+                          triggerConfirm(
+                            `Apakah Anda yakin ingin mengubah status kehadiran SEMUA siswa di "${pertemuanNama}" menjadi "${item.label}"?`,
+                            () => {
+                              handleBulkPresensi(selectedPertemuanId, item.val);
+                            },
+                            {
+                              title: "Presensi Massal",
+                              confirmText: "Ya, Ubah",
+                              isDanger: false
+                            }
+                          );
                         }}
                         className="btn"
                         style={{
