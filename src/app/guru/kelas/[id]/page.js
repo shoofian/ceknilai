@@ -2190,6 +2190,99 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           </div>
 
+          {/* Panel Presensi Massal Cepat */}
+          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
+            <div style={{
+              margin: "0 24px",
+              padding: "16px 20px",
+              backgroundColor: "rgba(59, 130, 246, 0.04)",
+              border: "1px dashed rgba(59, 130, 246, 0.25)",
+              borderRadius: "var(--radius-md)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "16px"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "1.5rem" }}>⚡</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <strong style={{ fontSize: "0.9rem", color: "var(--text-primary)" }}>Presensi Massal Cepat (Bulk)</strong>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Set kehadiran seluruh siswa sekaligus pada pertemuan yang dipilih</span>
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <select 
+                  id="quick-bulk-pertemuan-select"
+                  style={{ 
+                    padding: "8px 16px", 
+                    borderRadius: "var(--radius-sm)", 
+                    border: "1px solid var(--border-color)", 
+                    backgroundColor: "var(--bg-secondary)", 
+                    color: "var(--text-primary)", 
+                    fontWeight: "700", 
+                    fontSize: "0.85rem", 
+                    outline: "none",
+                    cursor: "pointer"
+                  }}
+                >
+                  <option value="">-- Pilih Pertemuan --</option>
+                  {(kelas.skemaPenilaian?.pertemuan || []).map(p => (
+                    <option key={p.id} value={p.id}>{p.nama} ({p.tanggal})</option>
+                  ))}
+                </select>
+                
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", marginRight: "4px" }}>Set Semua:</span>
+                  {[
+                    { val: 'H', label: 'Hadir', color: 'var(--success)' },
+                    { val: 'I', label: 'Izin', color: 'var(--warning)' },
+                    { val: 'S', label: 'Sakit', color: '#3b82f6' },
+                    { val: 'A', label: 'Alpa', color: 'var(--danger)' },
+                    { val: '', label: 'Kosongkan', color: 'var(--text-muted)' }
+                  ].map(item => (
+                    <button
+                      key={item.val}
+                      onClick={() => {
+                        const selectEl = document.getElementById("quick-bulk-pertemuan-select");
+                        const selectedId = selectEl?.value;
+                        if (!selectedId) {
+                          alert("Harap pilih pertemuan terlebih dahulu pada menu dropdown.");
+                          return;
+                        }
+                        const pName = kelas.skemaPenilaian.pertemuan.find(pt => pt.id === selectedId)?.nama || "Pertemuan";
+                        triggerConfirm(
+                          `Apakah Anda yakin ingin mengubah status kehadiran SEMUA siswa di "${pName}" menjadi "${item.label}"?`,
+                          () => {
+                            handleBulkPresensi(selectedId, item.val);
+                          },
+                          {
+                            title: "Presensi Massal",
+                            confirmText: "Ya, Ubah",
+                            isDanger: false
+                          }
+                        );
+                      }}
+                      className="btn btn-secondary"
+                      style={{
+                        padding: "6px 12px",
+                        fontSize: "0.75rem",
+                        fontWeight: "800",
+                        backgroundColor: item.val === '' ? "rgba(255,255,255,0.05)" : `rgba(${item.val === 'H' ? '16, 185, 129' : item.val === 'I' ? '245, 158, 11' : item.val === 'S' ? '59, 130, 246' : '239, 68, 68'}, 0.1)`,
+                        color: item.color,
+                        borderColor: item.val === '' ? "var(--border-color)" : `rgba(${item.val === 'H' ? '16, 185, 129' : item.val === 'I' ? '245, 158, 11' : item.val === 'S' ? '59, 130, 246' : '239, 68, 68'}, 0.3)`,
+                        cursor: "pointer"
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Ringkasan Statistik Presensi */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
             <div className="presensi-stats-grid">
