@@ -1072,49 +1072,6 @@ export default function StudentPortal() {
                                 </p>
                               </div>
                             </div>
-
-                            {/* Detailed list in export image */}
-                            <div style={{ marginTop: "25px" }}>
-                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem", color: "#cbd5e1" }}>
-                                <thead>
-                                  <tr style={{ borderBottom: "2px solid #334155", textAlign: "left" }}>
-                                    <th style={{ padding: "10px 8px", fontWeight: "700" }}>Pertemuan</th>
-                                    <th style={{ padding: "10px 8px", fontWeight: "700" }}>Tanggal</th>
-                                    <th style={{ padding: "10px 8px", fontWeight: "700" }}>Materi</th>
-                                    <th style={{ padding: "10px 8px", fontWeight: "700", textAlign: "center" }}>Status</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {res.rekapPresensi.detail.map((p, idx) => (
-                                    <tr key={p.pertemuanId || idx} style={{ borderBottom: "1px solid #334155" }}>
-                                      <td style={{ padding: "10px 8px", fontWeight: "700" }}>{p.nama}</td>
-                                      <td style={{ padding: "10px 8px" }}>{p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "-"}</td>
-                                      <td style={{ padding: "10px 8px", color: "#94a3b8" }}>{p.materi || "—"}</td>
-                                      <td style={{ padding: "10px 8px", textAlign: "center" }}>
-                                        <span style={{ 
-                                          fontWeight: "800", 
-                                          fontSize: "0.85rem",
-                                          padding: "3px 10px",
-                                          borderRadius: "4px",
-                                          backgroundColor: 
-                                            p.status === 'H' ? "rgba(16, 185, 129, 0.15)" :
-                                            p.status === 'I' ? "rgba(245, 158, 11, 0.15)" :
-                                            p.status === 'S' ? "rgba(59, 130, 246, 0.15)" :
-                                            p.status === 'A' ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
-                                          color:
-                                            p.status === 'H' ? "#10b981" :
-                                            p.status === 'I' ? "#f59e0b" :
-                                            p.status === 'S' ? "#3b82f6" :
-                                            p.status === 'A' ? "#ef4444" : "#94a3b8"
-                                        }}>
-                                          {p.status}
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
                           </div>
                         )}
 
