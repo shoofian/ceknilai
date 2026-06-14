@@ -117,6 +117,14 @@ export default function StudentPortal() {
         setResults(data.hasil);
         setActiveClassId(null); // Menampilkan card-card kelas terlebih dahulu
         setSimulationScores({});
+        
+        // Scroll ke hasil pencarian secara otomatis setelah DOM di-update
+        setTimeout(() => {
+          const el = document.getElementById("search-results");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
       } else {
         setResults([]);
         setError("Data nilai tidak ditemukan. Periksa kembali NISN dan Tanggal Lahir Anda.");
@@ -258,7 +266,7 @@ export default function StudentPortal() {
 
         {/* Search Results */}
         {results && results.length > 0 && (
-          <div style={{ width: "100%", maxWidth: "900px" }} className="animate-fade-in">
+          <div id="search-results" style={{ width: "100%", maxWidth: "900px" }} className="animate-fade-in">
             
             {/* Header pencarian */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "10px" }}>
