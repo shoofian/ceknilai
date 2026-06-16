@@ -44,6 +44,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     confirmText: "OK",
     cancelText: "Batal",
     isDanger: false,
+    isAlert: false,
     onConfirm: null
   });
 
@@ -55,8 +56,25 @@ export default function DetailKelas({ params: paramsPromise }) {
       confirmText: options.confirmText || "OK",
       cancelText: options.cancelText || "Batal",
       isDanger: !!options.isDanger,
+      isAlert: false,
       onConfirm: () => {
         onConfirm();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const triggerAlert = (message, onConfirm = null, options = {}) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: options.title || "Informasi",
+      message: message,
+      confirmText: options.confirmText || "Tutup",
+      cancelText: "",
+      isDanger: !!options.isDanger,
+      isAlert: true,
+      onConfirm: () => {
+        if (onConfirm) onConfirm();
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
       }
     });
@@ -580,6 +598,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       if (response.ok) {
         const data = await response.json();
         if (data.siswa && Array.isArray(data.siswa)) {
+          data.siswa = data.siswa.map(s => ({ ...s, nilai: s.nilai || {} }));
           data.siswa.sort((a, b) => (a.nama || "").localeCompare(b.nama || ""));
         }
         setKelas(data);
@@ -1049,26 +1068,61 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const handleDuplicateFromClass = (sourceClass) => {
     triggerConfirm(
-      `Apakah Anda yakin ingin menyalin aspek dari kelas "${sourceClass.nama}"?\n\nAspek penilaian yang ada di tabel saat ini akan TERHAPUS dan tertiban (overwrite) dengan yang baru.`,
+      `Apakah Anda yakin ingin menyalin aspek dari kelas "${sourceClass.nama}"?\n\nAspek penilaian baru yang belum ada di kelas ini akan ditambahkan ke daftar aspek aktif Anda.`,
       () => {
-        const copiedColumns = sourceClass.kolomNilai.map(col => ({
-          ...col,
-          id: 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5)
-        }));
-        setKelas({ ...kelas, kolomNilai: copiedColumns });
-        setNewAspects([{ id: Date.now(), nama: "", bobot: "" }]); // Bersihkan newAspects
+        const existingNames = new Set(
+          kelas.kolomNilai.map(col => col.nama.trim().toLowerCase())
+        );
+        const skippedNames = [];
+        const aspectsToAdd = [];
+
+        sourceClass.kolomNilai.forEach(col => {
+          const trimmedName = col.nama.trim();
+          if (existingNames.has(trimmedName.toLowerCase())) {
+            skippedNames.push(trimmedName);
+          } else {
+            const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+            aspectsToAdd.push({
+              ...col,
+              id: newColId,
+              subKolom: col.subKolom ? col.subKolom.map(sub => ({
+                ...sub,
+                id: `${newColId}-sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+              })) : []
+            });
+          }
+        });
+
+        if (aspectsToAdd.length > 0) {
+          const updatedCols = [...kelas.kolomNilai, ...aspectsToAdd];
+          setKelas({ ...kelas, kolomNilai: updatedCols });
+          setNewAspects([]); // Bersihkan newAspects jika ada aspek yang disalin
+          setActiveAspectId(aspectsToAdd[0].id); // Pilih aspek pertama yang baru disalin
+        }
+
         setDuplicateModalOpen(false);
+
+        if (skippedNames.length > 0) {
+          // Tampilkan informasi aspek yang tidak disalin menggunakan modal kustom
+          setTimeout(() => {
+            triggerAlert(
+              `Beberapa aspek berikut tidak disalin karena sudah ada aspek dengan nama yang sama di kelas ini (nilai & konfigurasi aspek yang sudah ada tetap dipertahankan):\n\n- ${skippedNames.join("\n- ")}`,
+              null,
+              { title: "📋 INFORMASI PENYALINAN" }
+            );
+          }, 300); // Jeda singkat setelah modal duplikat ditutup
+        }
       },
       {
-        title: "⚠️ PERHATIAN!",
-        confirmText: "Ya, Salin Aspek",
-        isDanger: true
+        title: "📋 SALIN ASPEK DARI KELAS LAIN",
+        confirmText: "Ya, Salin",
+        cancelText: "Batal"
       }
     );
   };
 
   const handleDeleteKolom = (colId, colName) => {
-    const hasData = kelas.siswa.some(s => s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
+    const hasData = kelas.siswa.some(s => s.nilai && s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
     
     const executeDelete = () => {
       // Remove locally
@@ -1245,7 +1299,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     for (const colId of deletedKolomIds) {
       const initial = initialKolomNilai.find(c => c.id === colId);
       if (initial) {
-        const hasData = kelas.siswa.some(s => s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
+        const hasData = kelas.siswa.some(s => s.nilai && s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
         if (hasData) {
           deletedColumnsWithValues.push(initial.nama);
         }
@@ -1257,7 +1311,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       if (initial) {
         // 1. Single -> Group
         if (!initial.isGroup && col.isGroup) {
-          const hasData = kelas.siswa.some(s => s.nilai[col.id] !== undefined && s.nilai[col.id] !== null && s.nilai[col.id] !== "");
+          const hasData = kelas.siswa.some(s => s.nilai && s.nilai[col.id] !== undefined && s.nilai[col.id] !== null && s.nilai[col.id] !== "");
           if (hasData) {
             changedToGroup.push(col.nama);
           }
@@ -1265,7 +1319,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         // 2. Group -> Single
         if (initial.isGroup && !col.isGroup) {
           const subIds = (initial.subKolom || []).map(s => s.id);
-          const hasData = kelas.siswa.some(s => subIds.some(sid => s.nilai[sid] !== undefined && s.nilai[sid] !== null && s.nilai[sid] !== ""));
+          const hasData = kelas.siswa.some(s => s.nilai && subIds.some(sid => s.nilai[sid] !== undefined && s.nilai[sid] !== null && s.nilai[sid] !== ""));
           if (hasData) {
             changedToSingle.push(col.nama);
           }
@@ -1275,7 +1329,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           for (const initialSub of (initial.subKolom || [])) {
             const stillExists = (col.subKolom || []).some(s => s.id === initialSub.id);
             if (!stillExists) {
-              const hasData = kelas.siswa.some(s => s.nilai[initialSub.id] !== undefined && s.nilai[initialSub.id] !== null && s.nilai[initialSub.id] !== "");
+              const hasData = kelas.siswa.some(s => s.nilai && s.nilai[initialSub.id] !== undefined && s.nilai[initialSub.id] !== null && s.nilai[initialSub.id] !== "");
               if (hasData) {
                 deletedSubAspects.push(`Sub-aspek "${initialSub.nama}" di kelompok "${col.nama}"`);
               }
@@ -4944,7 +4998,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                         const newSub = activeAspect.subKolom.filter(s => s.id !== sub.id);
                                         handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
                                       } else {
-                                        const hasData = kelas.siswa.some(s => s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
+                                        const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
                                         if (hasData) {
                                           if (!confirm(`⚠️ PERINGATAN!\nSub-aspek "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-aspek ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
                                             return;
@@ -5265,14 +5319,16 @@ export default function DetailKelas({ params: paramsPromise }) {
             </p>
             
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "12px" }}>
-              <button
-                type="button"
-                onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                className="btn btn-secondary"
-                style={{ padding: "8px 16px", fontSize: "0.82rem" }}
-              >
-                {confirmConfig.cancelText}
-              </button>
+              {!confirmConfig.isAlert && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+                  className="btn btn-secondary"
+                  style={{ padding: "8px 16px", fontSize: "0.82rem" }}
+                >
+                  {confirmConfig.cancelText}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={confirmConfig.onConfirm}
