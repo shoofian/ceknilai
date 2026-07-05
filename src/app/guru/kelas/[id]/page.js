@@ -5035,34 +5035,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                         />
                       </div>
 
-                      {/* Visibility & DB Info Row */}
-                      <div className="aspect-visibility-row">
-                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                          <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>Visibilitas Nilai</span>
-                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                            {isNew ? "Aspek baru akan otomatis ditampilkan setelah disimpan." : "Tentukan apakah siswa dapat melihat nilai aspek ini di portal mereka."}
-                          </span>
-                        </div>
-                        {isNew ? (
-                          <span className="badge badge-success" style={{ fontSize: "0.7rem", backgroundColor: "rgba(16,185,129,0.08)" }}>Otomatis Tampil</span>
-                        ) : (
-                          <button
-                            onClick={() => toggleAspectVisibility(activeAspect.id)}
-                            className="btn btn-secondary"
-                            style={{
-                              padding: "6px 12px",
-                              fontSize: "0.78rem",
-                              fontWeight: "700",
-                              borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "var(--danger)" : "var(--success)",
-                              color: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "var(--danger)" : "var(--success)",
-                              backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
-                            }}
-                          >
-                            {kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "🔒 Tersembunyi (Siswa)" : "👁️ Tampil (Siswa)"}
-                          </button>
-                        )}
-                      </div>
-
                       {/* Tipe Aspek Selector (Single vs Group) */}
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <label className="form-label">Tipe Struktur Aspek</label>
@@ -5107,6 +5079,34 @@ export default function DetailKelas({ params: paramsPromise }) {
                             </div>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Visibility & DB Info Row */}
+                      <div className="aspect-visibility-row" style={{ marginTop: "12px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                          <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>Visibilitas Nilai</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                            {isNew ? "Aspek baru akan otomatis ditampilkan setelah disimpan." : "Tentukan apakah siswa dapat melihat nilai aspek ini di portal mereka."}
+                          </span>
+                        </div>
+                        {isNew ? (
+                          <span className="badge badge-success" style={{ fontSize: "0.7rem", backgroundColor: "rgba(16,185,129,0.08)" }}>Otomatis Tampil</span>
+                        ) : (
+                          <button
+                            onClick={() => toggleAspectVisibility(activeAspect.id)}
+                            className="btn btn-secondary"
+                            style={{
+                              padding: "6px 12px",
+                              fontSize: "0.78rem",
+                              fontWeight: "700",
+                              borderColor: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "var(--danger)" : "var(--success)",
+                              color: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "var(--danger)" : "var(--success)",
+                              backgroundColor: kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "rgba(239, 68, 68, 0.05)" : "rgba(16, 185, 129, 0.05)"
+                            }}
+                          >
+                            {kelas.skemaPenilaian?.hiddenAspek?.includes(activeAspect.id) ? "🔒 Tersembunyi (Siswa)" : "👁️ Tampil (Siswa)"}
+                          </button>
+                        )}
                       </div>
 
                       {/* Group Calculation & Sub-Aspects (Only if Group) */}
