@@ -122,7 +122,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [pertemuanMateri, setPertemuanMateri] = useState("");
   const [pertemuanKegiatan, setPertemuanKegiatan] = useState("");
   const [agendaCollapsed, setAgendaCollapsed] = useState(true);
-  const [defaultBulkStatus, setDefaultBulkStatus] = useState("H"); // Hadir by default when adding
+  const [defaultBulkStatus, setDefaultBulkStatus] = useState(""); // empty/blank by default
 
   // States untuk Panduan Bantuan
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
@@ -724,6 +724,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setPertemuanTanggal(new Date().toISOString().split('T')[0]);
     setPertemuanMateri("");
     setPertemuanKegiatan("");
+    setDefaultBulkStatus(""); // default to empty/blank
     setPertemuanModalOpen(true);
   };
 
@@ -4005,105 +4006,113 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* Tambah/Edit Pertemuan Modal */}
       {pertemuanModalOpen && (
-        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(4px)" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "450px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>
+        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(15, 23, 42, 0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(6px)" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "500px", padding: "28px", display: "flex", flexDirection: "column", gap: "20px", border: "1px solid rgba(255, 255, 255, 0.08)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "10px", margin: 0 }}>
                 {isEditingPertemuan ? "✏️ Edit Pertemuan" : "📅 Tambah Pertemuan Baru"}
               </h3>
-              <button onClick={() => setPertemuanModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+              <button onClick={() => setPertemuanModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.4rem", cursor: "pointer", color: "var(--text-muted)", transition: "color 0.2s" }} onMouseEnter={(e) => e.target.style.color = "var(--text-primary)"} onMouseLeave={(e) => e.target.style.color = "var(--text-muted)"}>✕</button>
             </div>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Nama Pertemuan</label>
-                <input
-                  type="text"
-                  value={pertemuanNama}
-                  onChange={(e) => setPertemuanNama(e.target.value)}
-                  className="input-field"
-                  placeholder="Contoh: Pertemuan 1"
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-color)",
-                    backgroundColor: "var(--bg-secondary)",
-                    color: "var(--text-primary)",
-                    fontSize: "0.95rem"
-                  }}
-                />
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>Nama Pertemuan</label>
+                  <input
+                    type="text"
+                    value={pertemuanNama}
+                    onChange={(e) => setPertemuanNama(e.target.value)}
+                    className="input-field"
+                    placeholder="Contoh: Pertemuan 1"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid var(--border-color)",
+                      backgroundColor: "var(--bg-secondary)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.9rem",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tanggal Pertemuan</label>
+                  <input
+                    type="date"
+                    value={pertemuanTanggal}
+                    onChange={(e) => setPertemuanTanggal(e.target.value)}
+                    className="input-field"
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid var(--border-color)",
+                      backgroundColor: "var(--bg-secondary)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.9rem",
+                      outline: "none"
+                    }}
+                  />
+                </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tanggal Pertemuan</label>
-                <input
-                  type="date"
-                  value={pertemuanTanggal}
-                  onChange={(e) => setPertemuanTanggal(e.target.value)}
-                  className="input-field"
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    borderRadius: "var(--radius-md)",
-                    border: "1px solid var(--border-color)",
-                    backgroundColor: "var(--bg-secondary)",
-                    color: "var(--text-primary)",
-                    fontSize: "0.95rem"
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Materi Pembelajaran (Opsional)</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>Materi Pembelajaran <span style={{ fontWeight: "500", color: "var(--text-muted)" }}>(Opsional)</span></label>
                 <input
                   type="text"
                   value={pertemuanMateri}
                   onChange={(e) => setPertemuanMateri(e.target.value)}
                   className="input-field"
+                  placeholder="Contoh: Pendahuluan Algoritma"
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "10px 12px",
                     borderRadius: "var(--radius-md)",
                     border: "1px solid var(--border-color)",
                     backgroundColor: "var(--bg-secondary)",
                     color: "var(--text-primary)",
-                    fontSize: "0.95rem"
+                    fontSize: "0.9rem",
+                    outline: "none"
                   }}
                 />
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Kegiatan Pembelajaran (Opsional)</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>Kegiatan Pembelajaran <span style={{ fontWeight: "500", color: "var(--text-muted)" }}>(Opsional)</span></label>
                 <textarea
                   value={pertemuanKegiatan}
                   onChange={(e) => setPertemuanKegiatan(e.target.value)}
                   className="input-field"
+                  placeholder="Contoh: Diskusi kelompok dan latihan coding dasar..."
                   rows={2}
                   style={{
                     width: "100%",
-                    padding: "10px 14px",
+                    padding: "10px 12px",
                     borderRadius: "var(--radius-md)",
                     border: "1px solid var(--border-color)",
                     backgroundColor: "var(--bg-secondary)",
                     color: "var(--text-primary)",
-                    fontSize: "0.95rem",
+                    fontSize: "0.9rem",
+                    outline: "none",
                     resize: "vertical"
                   }}
                 />
               </div>
 
               {isEditingPertemuan ? (
-                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Presensi Massal (Bulk)</label>
-                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Ubah status kehadiran seluruh siswa di pertemuan ini sekaligus.</p>
-                  <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap" }}>
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Presensi Massal Cepat (Bulk)</label>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Ubah status kehadiran seluruh siswa di pertemuan ini secara serentak.</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px", marginTop: "4px" }}>
                     {[
-                      { val: 'H', label: 'Hadir', color: 'var(--success)' },
-                      { val: 'I', label: 'Izin', color: 'var(--warning)' },
-                      { val: 'S', label: 'Sakit', color: '#3b82f6' },
-                      { val: 'A', label: 'Alpa', color: 'var(--danger)' },
-                      { val: '', label: 'Kosongkan', color: 'var(--text-muted)' }
+                      { val: 'H', label: 'Hadir', bg: 'rgba(16, 185, 129, 0.1)', color: '#34d399', border: 'rgba(16, 185, 129, 0.2)' },
+                      { val: 'I', label: 'Izin', bg: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.2)' },
+                      { val: 'S', label: 'Sakit', bg: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.2)' },
+                      { val: 'A', label: 'Alpa', bg: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
+                      { val: '', label: 'Kosong', bg: 'rgba(100, 116, 139, 0.1)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.2)' }
                     ].map(item => (
                       <button
                         key={item.val}
@@ -4123,58 +4132,64 @@ export default function DetailKelas({ params: paramsPromise }) {
                         }}
                         className="btn"
                         style={{
-                          flex: "1 1 auto",
-                          padding: "8px 10px",
+                          padding: "8px 4px",
                           fontSize: "0.75rem",
                           fontWeight: "800",
-                          backgroundColor: "var(--bg-tertiary)",
-                          border: "1px solid var(--border-color)",
+                          backgroundColor: item.bg,
+                          border: `1px solid ${item.border}`,
                           color: item.color,
                           cursor: "pointer",
                           borderRadius: "var(--radius-sm)",
-                          transition: "all 0.2s"
+                          textAlign: "center",
+                          transition: "filter 0.2s"
                         }}
+                        onMouseEnter={(e) => e.target.style.filter = "brightness(1.15)"}
+                        onMouseLeave={(e) => e.target.style.filter = "none"}
                       >
-                        {item.val || "∅"} {item.label}
+                        {item.label}
                       </button>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Set Kehadiran Awal Siswa (Bulk)</label>
-                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Pilih status kehadiran default untuk seluruh siswa saat pertemuan ini dibuat.</p>
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Set Kehadiran Awal Siswa (Bulk)</label>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Pilih status kehadiran default untuk seluruh siswa saat pertemuan ini pertama kali dibuat.</p>
                   <select
                     value={defaultBulkStatus}
                     onChange={(e) => setDefaultBulkStatus(e.target.value)}
                     className="input-field"
                     style={{
                       width: "100%",
-                      padding: "10px 14px",
+                      padding: "10px 12px",
                       borderRadius: "var(--radius-md)",
                       border: "1px solid var(--border-color)",
                       backgroundColor: "var(--bg-secondary)",
                       color: "var(--text-primary)",
-                      fontSize: "0.95rem",
-                      appearance: "auto"
+                      fontSize: "0.9rem",
+                      appearance: "auto",
+                      outline: "none",
+                      cursor: "pointer"
                     }}
                   >
+                    <option value="">∅ Kosongkan (Default / Isi Manual)</option>
                     <option value="H">🟢 Hadir (Semua)</option>
                     <option value="I">🟡 Izin (Semua)</option>
                     <option value="S">🔵 Sakit (Semua)</option>
                     <option value="A">🔴 Alpa (Semua)</option>
-                    <option value="">∅ Kosongkan (Isi Manual)</option>
                   </select>
                 </div>
               )}
             </div>
-
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "8px" }}>
-              <button onClick={() => setPertemuanModalOpen(false)} className="btn btn-secondary">Batal</button>
+            
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px" }}>
+              <button type="button" onClick={() => setPertemuanModalOpen(false)} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.85rem" }}>Batal</button>
               <button 
+                type="button"
                 onClick={handleSavePertemuan} 
                 className="btn btn-primary"
                 disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal}
+                style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
                 {isSavingPertemuan ? "Menyimpan..." : "Simpan"}
               </button>
