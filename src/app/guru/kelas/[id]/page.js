@@ -1921,7 +1921,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content", flexWrap: "wrap" }}>
-        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "ranking", label: "🏆 Peringkat" }, { id: "analitik", label: "📈 Analitik" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }].map(tab => (
+        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik & Peringkat" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -1944,88 +1944,13 @@ export default function DetailKelas({ params: paramsPromise }) {
         ))}
       </div>
 
-      {/* ============= RANKING TAB ============= */}
-      {activeTab === "ranking" && (
-        <div className="glass-card animate-fade-in" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "20px 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
-            <div>
-              <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>🏆 Peringkat Siswa</h4>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>Urutan berdasarkan nilai akhir tertinggi. Hanya siswa dengan semua aspek terisi yang diperingkatkan.</p>
-            </div>
-          </div>
-          {!analyticsData ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Tambah siswa dan aspek nilai terlebih dahulu untuk melihat peringkat.</div>
-          ) : (
-            <div className="table-container" style={{ margin: 0, borderRadius: 0, borderLeft: "none", borderRight: "none" }}>
-              <table className="premium-table" style={{ width: "100%" }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: "60px", textAlign: "center" }}>Rank</th>
-                    <th>Nama Siswa</th>
-                    <th style={{ textAlign: "center" }}>NISN</th>
-                    <th style={{ textAlign: "center" }}>Nilai Akhir</th>
-                    <th style={{ textAlign: "center" }}>Predikat</th>
-                    <th style={{ textAlign: "center" }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {analyticsData.ranked.map((s) => (
-                    <tr key={s.nisn} style={{ backgroundColor: s.rank === 1 ? "rgba(234,179,8,0.06)" : s.rank === 2 ? "rgba(148,163,184,0.05)" : s.rank === 3 ? "rgba(180,83,9,0.05)" : "" }}>
-                      <td style={{ textAlign: "center" }}>
-                        <span style={{ fontWeight: "900", fontSize: "1.1rem", color: s.rank === 1 ? "#eab308" : s.rank === 2 ? "#94a3b8" : s.rank === 3 ? "#b45309" : "var(--text-muted)" }}>
-                          {s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : `#${s.rank}`}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: "700" }}>{s.nama}</td>
-                      <td style={{ textAlign: "center", fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
-                      <td style={{ textAlign: "center" }}>
-                        {s.complete ? (
-                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                            <span style={{ fontWeight: "800", fontSize: "1.1rem", color: s.finalScore >= analyticsData.kkmVal ? "var(--success)" : "var(--danger)" }}>{s.finalScore}</span>
-                            {s.nilai?._katrol ? (
-                              <span style={{ 
-                                fontSize: "0.62rem", 
-                                backgroundColor: "rgba(16, 185, 129, 0.15)", 
-                                color: "#34d399", 
-                                border: "1px solid rgba(16, 185, 129, 0.25)", 
-                                padding: "0 4px", 
-                                borderRadius: "3px",
-                                fontWeight: "700" 
-                              }} title="Nilai Katrol (Rahasia)">
-                                🔒 {Number(s.nilai._katrol) > 0 ? `+${s.nilai._katrol}` : s.nilai._katrol}
-                              </span>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>Belum Lengkap</span>
-                        )}
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        <span className={`badge ${s.predikat === (kelas.skemaPenilaian?.statusA || "A") || s.predikat === (kelas.skemaPenilaian?.statusB || "B") ? "badge-success" : s.predikat === (kelas.skemaPenilaian?.statusC || "C") ? "badge-warning" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>
-                          {s.predikat}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        {s.complete ? (
-                          <span className={`badge ${s.lulus ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>{s.lulus ? "LULUS" : "TIDAK LULUS"}</span>
-                        ) : (
-                          <span className="badge badge-warning" style={{ fontSize: "0.7rem" }}>–</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ============= ANALITIK TAB ============= */}
+      {/* ============= ANALITIK & PERINGKAT TAB ============= */}
       {activeTab === "analitik" && (
-        <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {!analyticsData ? (
-            <div className="glass-card" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>Tambah siswa dan aspek nilai terlebih dahulu untuk melihat analitik.</div>
+            <div className="glass-card" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+              Tambah siswa dan aspek nilai terlebih dahulu untuk melihat analitik dan peringkat.
+            </div>
           ) : (
             <>
               {/* Header Tab Analitik */}
@@ -2128,6 +2053,77 @@ export default function DetailKelas({ params: paramsPromise }) {
                     })}
                     {analyticsData.aspectAvg.length === 0 && <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Belum ada aspek nilai.</p>}
                   </div>
+                </div>
+              </div>
+
+              {/* ============= PERINGKAT SISWA TABLE ============= */}
+              <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ padding: "20px 24px 16px 24px" }}>
+                  <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>🏆 Peringkat Siswa</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                    Urutan berdasarkan nilai akhir tertinggi. Hanya siswa dengan semua aspek terisi yang diperingkatkan.
+                  </p>
+                </div>
+                <div className="table-container" style={{ margin: 0, borderRadius: 0, borderLeft: "none", borderRight: "none" }}>
+                  <table className="premium-table" style={{ width: "100%" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: "60px", textAlign: "center" }}>Rank</th>
+                        <th>Nama Siswa</th>
+                        <th style={{ textAlign: "center" }}>NISN</th>
+                        <th style={{ textAlign: "center" }}>Nilai Akhir</th>
+                        <th style={{ textAlign: "center" }}>Predikat</th>
+                        <th style={{ textAlign: "center" }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analyticsData.ranked.map((s) => (
+                        <tr key={s.nisn} style={{ backgroundColor: s.rank === 1 ? "rgba(234,179,8,0.06)" : s.rank === 2 ? "rgba(148,163,184,0.05)" : s.rank === 3 ? "rgba(180,83,9,0.05)" : "" }}>
+                          <td style={{ textAlign: "center" }}>
+                            <span style={{ fontWeight: "900", fontSize: "1.1rem", color: s.rank === 1 ? "#eab308" : s.rank === 2 ? "#94a3b8" : s.rank === 3 ? "#b45309" : "var(--text-muted)" }}>
+                              {s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : `#${s.rank}`}
+                            </span>
+                          </td>
+                          <td style={{ fontWeight: "700" }}>{s.nama}</td>
+                          <td style={{ textAlign: "center", fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
+                          <td style={{ textAlign: "center" }}>
+                            {s.complete ? (
+                              <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span style={{ fontWeight: "800", fontSize: "1.1rem", color: s.finalScore >= analyticsData.kkmVal ? "var(--success)" : "var(--danger)" }}>{s.finalScore}</span>
+                                {s.nilai?._katrol ? (
+                                  <span style={{ 
+                                    fontSize: "0.62rem", 
+                                    backgroundColor: "rgba(16, 185, 129, 0.15)", 
+                                    color: "#34d399", 
+                                    border: "1px solid rgba(16, 185, 129, 0.25)", 
+                                    padding: "0 4px", 
+                                    borderRadius: "3px",
+                                    fontWeight: "700" 
+                                  }} title="Nilai Katrol (Rahasia)">
+                                    🔒 {Number(s.nilai._katrol) > 0 ? `+${s.nilai._katrol}` : s.nilai._katrol}
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>Belum Lengkap</span>
+                            )}
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <span className={`badge ${s.predikat === (kelas.skemaPenilaian?.statusA || "A") || s.predikat === (kelas.skemaPenilaian?.statusB || "B") ? "badge-success" : s.predikat === (kelas.skemaPenilaian?.statusC || "C") ? "badge-warning" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>
+                              {s.predikat}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            {s.complete ? (
+                              <span className={`badge ${s.lulus ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>{s.lulus ? "LULUS" : "TIDAK LULUS"}</span>
+                            ) : (
+                              <span className="badge badge-warning" style={{ fontSize: "0.7rem" }}>–</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </>
