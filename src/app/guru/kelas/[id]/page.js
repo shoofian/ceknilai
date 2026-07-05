@@ -155,11 +155,15 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [katrolValue, setKatrolValue] = useState("");
   const [isSavingKatrol, setIsSavingKatrol] = useState(false);
 
+  // State untuk Navigasi Panel Mobile di Modal Atur Aspek
+  const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
+
   useEffect(() => {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
       setInitialHiddenAspek(JSON.parse(JSON.stringify(kelas.skemaPenilaian?.hiddenAspek || [])));
       setDeletedKolomIds([]);
+      setMobileActiveView("list"); // Reset ke daftar aspek di mobile
       if (kelas.kolomNilai && kelas.kolomNilai.length > 0) {
         setActiveAspectId(kelas.kolomNilai[0].id);
         setNewAspects([]);
@@ -167,6 +171,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         const newId = `new-aspect-${Date.now()}`;
         setNewAspects([{ id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] }]);
         setActiveAspectId(newId);
+        setMobileActiveView("detail"); // Tampilkan form jika belum ada aspek sama sekali
       }
     }
   }, [kolomModalOpen]);
@@ -4741,7 +4746,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
             <div className="aspect-modal-container">
               {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
-              <div className="aspect-sidebar-panel">
+              <div className={`aspect-sidebar-panel ${mobileActiveView === "list" ? "show-mobile" : "hide-mobile"}`}>
                 <div className="aspect-sidebar-header">
                   <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Daftar Aspek ({kelas.kolomNilai.length + newAspects.filter(a => a.nama.trim() !== "").length})</span>
                   <input
@@ -4768,7 +4773,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div
                         key={col.id}
                         className={`aspect-item-card ${isActive ? "active" : ""}`}
-                        onClick={() => setActiveAspectId(col.id)}
+                        onClick={() => {
+                          setActiveAspectId(col.id);
+                          setMobileActiveView("detail");
+                        }}
                       >
                         <div className="aspect-item-card-header">
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
@@ -4857,7 +4865,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                         key={aspect.id}
                         className={`aspect-item-card ${isActive ? "active" : ""}`}
                         style={{ borderStyle: "dashed", borderColor: isActive ? "var(--primary)" : "var(--success)" }}
-                        onClick={() => setActiveAspectId(aspect.id)}
+                        onClick={() => {
+                          setActiveAspectId(aspect.id);
+                          setMobileActiveView("detail");
+                        }}
                       >
                         <div className="aspect-item-card-header">
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
@@ -4892,8 +4903,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                             )}
                             <button
                               onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveNewAspect(aspect.id);
+                                  e.stopPropagation();
+                                  handleRemoveNewAspect(aspect.id);
                               }}
                               style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
                               title="Hapus aspek baru"
@@ -4923,7 +4934,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                   
                   {/* Button Add New Aspect */}
                   <button
-                    onClick={handleAddBlankAspect}
+                    onClick={() => {
+                      handleAddBlankAspect();
+                      setMobileActiveView("detail");
+                    }}
                     className="btn btn-secondary"
                     style={{ borderStyle: "dashed", borderColor: "var(--primary)", color: "var(--primary)", padding: "10px", fontSize: "0.82rem", fontWeight: "700", width: "100%", marginTop: "10px" }}
                   >
@@ -4950,7 +4964,28 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
 
               {/* --- PANEL KANAN: CONFIG DETAIL --- */}
-              <div className="aspect-content-panel">
+              <div className={`aspect-content-panel ${mobileActiveView === "detail" ? "show-mobile" : "hide-mobile"}`}>
+                <button 
+                  onClick={() => setMobileActiveView("list")}
+                  className="mobile-back-btn"
+                  style={{
+                    display: "none",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "none",
+                    border: "none",
+                    color: "var(--primary)",
+                    fontWeight: "700",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    padding: "8px 0",
+                    textAlign: "left",
+                    marginBottom: "12px",
+                    width: "fit-content"
+                  }}
+                >
+                  ← Kembali ke Daftar Aspek
+                </button>
                 {(() => {
                   const activeAspect = kelas.kolomNilai.find(c => c.id === activeAspectId) || newAspects.find(a => a.id === activeAspectId);
                   

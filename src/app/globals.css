@@ -1356,7 +1356,7 @@ input[type="date"].form-input {
 
   .aspect-modal-container {
     flex-direction: column !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
     max-height: none !important;
     flex: 1 !important;
   }
@@ -1364,14 +1364,35 @@ input[type="date"].form-input {
   .aspect-sidebar-panel {
     width: 100% !important;
     border-right: none !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    flex-shrink: 0 !important;
+    border-bottom: none !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .aspect-sidebar-panel.hide-mobile,
+  .aspect-content-panel.hide-mobile {
+    display: none !important;
+  }
+
+  .aspect-sidebar-panel.show-mobile {
+    display: flex !important;
+  }
+
+  .aspect-content-panel.show-mobile {
+    display: flex !important;
+  }
+
+  .mobile-back-btn {
+    display: flex !important;
   }
   
   .aspect-sidebar-list {
-    max-height: 180px !important;
+    flex: 1 !important;
+    max-height: none !important;
     overflow-y: auto !important;
-    padding: 10px 12px !important;
+    padding: 12px !important;
     gap: 8px !important;
   }
   
@@ -1394,7 +1415,8 @@ input[type="date"].form-input {
   }
   
   .aspect-content-panel {
-    overflow-y: visible !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
     padding: 16px !important;
   }
 
