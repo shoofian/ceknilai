@@ -7,6 +7,17 @@ export default function CetakLaporan() {
   const [kelas, setKelas] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedClass, setSelectedClass] = useState(null);
+  const [guruProfile, setGuruProfile] = useState(null);
+
+  // === DYNAMIC REPORT KOP & SIGNATURE SETTINGS (stored in localStorage) ===
+  const [namaSekolah, setNamaSekolah] = useState("Sekolah Menengah Atas Digital CekNilai");
+  const [alamatSekolah, setAlamatSekolah] = useState("Jl. Edukasi Pintar No. 45, Jakarta Selatan");
+  const [telpSekolah, setTelpSekolah] = useState("(021) 7890123");
+  const [namaKepsek, setNamaKepsek] = useState("Drs. H. Mulyadi, M.Pd.");
+  const [nipKepsek, setNipKepsek] = useState("19680512 199403 1 002");
+  const [kotaCetak, setKotaCetak] = useState("Jakarta");
+  const [nipGuru, setNipGuru] = useState("-");
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const fetchAllKelas = async () => {
@@ -25,7 +36,40 @@ export default function CetakLaporan() {
         setLoading(false);
       }
     };
+
+    const fetchGuruProfile = async () => {
+      try {
+        const response = await fetch("/api/profil");
+        if (response.ok) {
+          const data = await response.json();
+          setGuruProfile(data);
+        }
+      } catch (err) {
+        console.error("Gagal memuat profil guru", err);
+      }
+    };
+
     fetchAllKelas();
+    fetchGuruProfile();
+
+    // Load custom settings from localStorage if available
+    if (typeof window !== "undefined") {
+      const savedNamaSekolah = localStorage.getItem("rep_namaSekolah");
+      const savedAlamatSekolah = localStorage.getItem("rep_alamatSekolah");
+      const savedTelpSekolah = localStorage.getItem("rep_telpSekolah");
+      const savedNamaKepsek = localStorage.getItem("rep_namaKepsek");
+      const savedNipKepsek = localStorage.getItem("rep_nipKepsek");
+      const savedKotaCetak = localStorage.getItem("rep_kotaCetak");
+      const savedNipGuru = localStorage.getItem("rep_nipGuru");
+
+      if (savedNamaSekolah) setNamaSekolah(savedNamaSekolah);
+      if (savedAlamatSekolah) setAlamatSekolah(savedAlamatSekolah);
+      if (savedTelpSekolah) setTelpSekolah(savedTelpSekolah);
+      if (savedNamaKepsek) setNamaKepsek(savedNamaKepsek);
+      if (savedNipKepsek) setNipKepsek(savedNipKepsek);
+      if (savedKotaCetak) setKotaCetak(savedKotaCetak);
+      if (savedNipGuru) setNipGuru(savedNipGuru);
+    }
   }, []);
 
   useEffect(() => {
@@ -48,60 +92,152 @@ export default function CetakLaporan() {
     fetchClassDetail();
   }, [selectedClassId]);
 
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    localStorage.setItem("rep_namaSekolah", namaSekolah);
+    localStorage.setItem("rep_alamatSekolah", alamatSekolah);
+    localStorage.setItem("rep_telpSekolah", telpSekolah);
+    localStorage.setItem("rep_namaKepsek", namaKepsek);
+    localStorage.setItem("rep_nipKepsek", nipKepsek);
+    localStorage.setItem("rep_kotaCetak", kotaCetak);
+    localStorage.setItem("rep_nipGuru", nipGuru);
+    setShowSettings(false);
+  };
+
+  // === HELPER: CALCULATE ASPECT SCORE IN GRUP / SINGLE COL ===
+  const getColScore = (student, col) => {
+    if (col.isGroup && col.subKolom) {
+      let subTotal = 0;
+      let subFilledCount = 0;
+      let subFilledWeight = 0;
+      
+      col.subKolom.forEach(sub => {
+        let sc = student.nilai[sub.id];
+        if (sc !== undefined && sc !== null && sc !== "") {
+          const scNum = Number(sc);
+          if (col.hitungMetode === "persentase") {
+            const subBobot = sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : 0;
+            subTotal += scNum * subBobot;
+            subFilledWeight += subBobot;
+          } else {
+            subTotal += scNum;
+          }
+          subFilledCount++;
+        }
+      });
+      
+      if (subFilledCount === 0) return { score: null, isFilled: false, isAllFilled: false };
+      
+      const score = col.hitungMetode === "persentase"
+        ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
+        : (subTotal / subFilledCount);
+        
+      return {
+        score,
+        isFilled: true,
+        isAllFilled: subFilledCount === col.subKolom.length
+      };
+    } else {
+      let sc = student.nilai[col.id];
+      if (sc !== undefined && sc !== null && sc !== "") {
+        return {
+          score: Number(sc),
+          isFilled: true,
+          isAllFilled: true
+        };
+      }
+      return { score: null, isFilled: false, isAllFilled: false };
+    }
+  };
+
   // === CALCULATE DETAILED REPORT STATISTICS ===
   let stats = {
     average: 0,
     highest: 0,
     lowest: 0,
-    passRate: 0, // KKM >= 75
+    passRate: 0,
     totalStudents: 0
   };
 
   const studentReports = [];
 
   if (selectedClass) {
+    const skema = selectedClass.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+    const classKkm = skema.kkm ?? 75;
+
     stats.totalStudents = selectedClass.siswa.length;
     let totalScoreSum = 0;
     let passCount = 0;
     let scoresList = [];
 
     selectedClass.siswa.forEach(siswa => {
-      // Hitung nilai akhir terbobot secara proporsional
+      // Hitung nilai akhir terbobot secara proporsional sesuai dengan logika di Buku Nilai
       let totalBobotTerisi = 0;
       let totalNilaiTerisi = 0;
+      let filledCount = 0;
       
       selectedClass.kolomNilai.forEach(col => {
-        const score = siswa.nilai[col.id];
-        if (score !== undefined && score !== null && score !== "") {
-          totalNilaiTerisi += Number(score) * (col.bobot / 100);
-          totalBobotTerisi += col.bobot;
+        const { score, isFilled, isAllFilled } = getColScore(siswa, col);
+        if (isFilled) {
+          totalNilaiTerisi += score * (col.bobot / 100);
+          if (isAllFilled) {
+            filledCount++;
+          }
         }
       });
 
-      const finalScore = totalBobotTerisi > 0 
-        ? (totalNilaiTerisi / (totalBobotTerisi / 100)) 
-        : 0;
+      let total = totalNilaiTerisi;
 
-      const finalScoreRounded = Number(finalScore.toFixed(2));
+      // Hitung Presensi jika digunakan
+      const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
+      const pertemuanList = skema.pertemuan || [];
+      
+      let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+      pertemuanList.forEach(p => {
+        const val = siswa.nilai[`_presensi_${p.id}`];
+        if (val && attSummary[val] !== undefined) {
+          attSummary[val]++;
+        }
+      });
+
+      if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
+        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
+        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
+        
+        const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+        total += attAvg * (presensiConfig.bobot / 100);
+      }
+
+      // Tambahkan Nilai Katrol jika ada
+      total += (Number(siswa.nilai?._katrol) || 0);
+
+      const finalScoreRounded = Number(total.toFixed(2));
       scoresList.push(finalScoreRounded);
       totalScoreSum += finalScoreRounded;
 
-      // Predikat
+      // Predikat dinamis sesuai skema penilaian kelas
       let predikat = "E";
-      if (finalScoreRounded >= 85) predikat = "A";
-      else if (finalScoreRounded >= 75) predikat = "B";
-      else if (finalScoreRounded >= 65) predikat = "C";
-      else if (finalScoreRounded >= 50) predikat = "D";
+      if (finalScoreRounded >= skema.A) predikat = skema.statusA || "A";
+      else if (finalScoreRounded >= skema.B) predikat = skema.statusB || "B";
+      else if (finalScoreRounded >= skema.C) predikat = skema.statusC || "C";
+      else if (finalScoreRounded >= skema.D) predikat = skema.statusD || "D";
 
-      // Status Kelulusan (KKM >= 75)
-      const statusKelulusan = finalScoreRounded >= 75 ? "LULUS" : "TIDAK LULUS";
-      if (finalScoreRounded >= 75) passCount++;
+      // Status Kelulusan (KKM dinamis)
+      const statusKelulusan = finalScoreRounded >= classKkm ? "LULUS" : "TIDAK LULUS";
+      if (finalScoreRounded >= classKkm) passCount++;
+
+      // Simpan nilai aspek yang dihitung (misal rata-rata untuk kolom aspek grup)
+      const calculatedGrades = {};
+      selectedClass.kolomNilai.forEach(col => {
+        const { score, isFilled } = getColScore(siswa, col);
+        calculatedGrades[col.id] = isFilled ? Number(score.toFixed(2)) : "-";
+      });
 
       studentReports.push({
         nisn: siswa.nisn,
         nama: siswa.nama,
         tanggalLahir: siswa.tanggalLahir,
-        nilai: siswa.nilai,
+        nilai: calculatedGrades,
         nilaiAkhir: finalScoreRounded,
         predikat,
         statusKelulusan
@@ -138,25 +274,145 @@ export default function CetakLaporan() {
           <p className="page-subtitle">Pilih kelas untuk melihat analisis hasil belajar dan cetak laporan resmi kelas.</p>
         </div>
         
-        {/* Class Selection Dropdown */}
+        {/* Class Selection Dropdown & Settings button */}
         {kelas.length > 0 && (
-          <div className="form-group" style={{ marginBottom: 0, flexDirection: "row", alignItems: "center", gap: "10px" }}>
-            <label className="form-label" style={{ whiteSpace: "nowrap" }}>Pilih Kelas:</label>
-            <select
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              className="form-input"
-              style={{ width: "220px", padding: "10px 16px" }}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <button 
+              onClick={() => setShowSettings(!showSettings)} 
+              className="btn btn-secondary" 
+              style={{ padding: "10px 16px", display: "inline-flex", alignItems: "center", gap: "8px", border: "1px solid var(--border-color)" }}
             >
-              {kelas.map((k) => (
-                <option key={k.id} value={k.id}>
-                  {k.nama} - {k.mataPelajaran || "Informatika"} (Sem. {k.semester || "Ganjil"} - {k.tahunAjaran}) {k.archived ? "[Arsip]" : ""}
-                </option>
-              ))}
-            </select>
+              ⚙️ {showSettings ? "Tutup Kop & Ttd" : "Atur Kop & Tanda Tangan"}
+            </button>
+
+            <div className="form-group" style={{ marginBottom: 0, flexDirection: "row", alignItems: "center", gap: "10px" }}>
+              <label className="form-label" style={{ whiteSpace: "nowrap" }}>Pilih Kelas:</label>
+              <select
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                className="form-input"
+                style={{ width: "220px", padding: "10px 16px" }}
+              >
+                {kelas.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.nama} - {k.mataPelajaran || "Informatika"} (Sem. {k.semester || "Ganjil"} - {k.tahunAjaran}) {k.archived ? "[Arsip]" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Customizable Settings Panel for Report Kop and Signatures */}
+      {showSettings && (
+        <div className="glass-card no-print animate-fade-in" style={{ borderLeft: "4px solid var(--primary)", padding: "20px" }}>
+          <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "16px" }}>⚙️ Pengaturan Kop Laporan & Tanda Tangan</h4>
+          <form onSubmit={handleSaveSettings} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+              
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Sekolah / Instansi</label>
+                <input 
+                  type="text" 
+                  value={namaSekolah} 
+                  onChange={(e) => setNamaSekolah(e.target.value)} 
+                  className="form-input" 
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Alamat Sekolah</label>
+                <input 
+                  type="text" 
+                  value={alamatSekolah} 
+                  onChange={(e) => setAlamatSekolah(e.target.value)} 
+                  className="form-input" 
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Telepon Sekolah</label>
+                <input 
+                  type="text" 
+                  value={telpSekolah} 
+                  onChange={(e) => setTelpSekolah(e.target.value)} 
+                  className="form-input" 
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Kota Penerbitan Laporan</label>
+                <input 
+                  type="text" 
+                  value={kotaCetak} 
+                  onChange={(e) => setKotaCetak(e.target.value)} 
+                  className="form-input" 
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Kepala Sekolah</label>
+                <input 
+                  type="text" 
+                  value={namaKepsek} 
+                  onChange={(e) => setNamaKepsek(e.target.value)} 
+                  className="form-input" 
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NIP Kepala Sekolah</label>
+                <input 
+                  type="text" 
+                  value={nipKepsek} 
+                  onChange={(e) => setNipKepsek(e.target.value)} 
+                  className="form-input" 
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NIP Guru Pengampu</label>
+                <input 
+                  type="text" 
+                  value={nipGuru} 
+                  onChange={(e) => setNipGuru(e.target.value)} 
+                  className="form-input" 
+                />
+              </div>
+
+            </div>
+            
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setNamaSekolah("Sekolah Menengah Atas Digital CekNilai");
+                  setAlamatSekolah("Jl. Edukasi Pintar No. 45, Jakarta Selatan");
+                  setTelpSekolah("(021) 7890123");
+                  setNamaKepsek("Drs. H. Mulyadi, M.Pd.");
+                  setNipKepsek("19680512 199403 1 002");
+                  setKotaCetak("Jakarta");
+                  setNipGuru("-");
+                }} 
+                className="btn btn-secondary" 
+                style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+              >
+                🔄 Reset Default
+              </button>
+              <button type="submit" className="btn btn-primary" style={{ padding: "8px 24px", fontSize: "0.85rem" }}>
+                💾 Simpan & Terapkan
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {kelas.length === 0 ? (
         <div className="glass-card no-print" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
@@ -181,10 +437,10 @@ export default function CetakLaporan() {
                 Laporan Hasil Belajar Siswa
               </h2>
               <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "var(--text-secondary)", marginTop: "4px" }}>
-                Sekolah Menengah Atas Digital CekNilai
+                {namaSekolah}
               </h3>
               <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                Alamat: Jl. Edukasi Pintar No. 45, Jakarta Selatan &bull; Telp: (021) 7890123
+                Alamat: {alamatSekolah} &bull; Telp: {telpSekolah}
               </p>
             </div>
 
@@ -245,10 +501,10 @@ export default function CetakLaporan() {
                       <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{report.nisn}</td>
                       <td style={{ fontWeight: "700" }}>{report.nama}</td>
                       
-                      {/* Dynamic grades */}
+                      {/* Dynamic calculated grades (handles Aspect Groups as well) */}
                       {selectedClass.kolomNilai.map(col => (
                         <td key={col.id} style={{ textAlign: "center" }}>
-                          {report.nilai[col.id] !== null && report.nilai[col.id] !== undefined ? report.nilai[col.id] : "-"}
+                          {report.nilai[col.id]}
                         </td>
                       ))}
 
@@ -278,24 +534,42 @@ export default function CetakLaporan() {
 
             {/* KKM Footnote */}
             <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-              * Kriteria Ketuntasan Minimal (KKM) mata pelajaran adalah 75. Nilai akhir dihitung secara otomatis berdasarkan pembagian persentase bobot aspek nilai kelas.
+              * Kriteria Ketuntasan Minimal (KKM) mata pelajaran adalah {selectedClass.skemaPenilaian?.kkm || 75}. Nilai akhir dihitung secara otomatis berdasarkan pembagian persentase bobot aspek nilai kelas.
             </p>
 
             {/* OFFICIAL SIGNATURE SECTION */}
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: "50px", padding: "0 20px" }} className="align-left-mobile">
-              <div></div>
+              
+              {/* Left Side Signature: Teacher (Guru Pengampu) */}
               <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "60px" }}>
                 <div>
-                  <p style={{ fontSize: "0.9rem" }}>Mengetahui,</p>
-                  <p style={{ fontSize: "0.95rem", fontWeight: "700", marginTop: "2px" }}>Kepala Sekolah SMA Digital</p>
+                  <p style={{ fontSize: "0.9rem" }}>&nbsp;</p>
+                  <p style={{ fontSize: "0.95rem", fontWeight: "700", marginTop: "2px" }}>Guru Pengampu,</p>
                 </div>
                 <div>
                   <p style={{ fontSize: "0.95rem", fontWeight: "700", borderBottom: "1px solid var(--text-primary)", display: "inline-block" }}>
-                    Drs. H. Mulyadi, M.Pd.
+                    {guruProfile?.nama || "Nama Guru"}
                   </p>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>NIP. 19680512 199403 1 002</p>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                    {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. -"}
+                  </p>
                 </div>
               </div>
+
+              {/* Right Side Signature: Principal (Kepala Sekolah) */}
+              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "60px" }}>
+                <div>
+                  <p style={{ fontSize: "0.9rem" }}>{kotaCetak}, {new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  <p style={{ fontSize: "0.95rem", fontWeight: "700", marginTop: "2px" }}>Mengetahui,<br />Kepala Sekolah</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: "0.95rem", fontWeight: "700", borderBottom: "1px solid var(--text-primary)", display: "inline-block" }}>
+                    {namaKepsek}
+                  </p>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>NIP. {nipKepsek}</p>
+                </div>
+              </div>
+
             </div>
 
           </div>
