@@ -1151,7 +1151,16 @@ export default function KelolaKelas() {
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }} className="animate-fade-in">
           <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-              <span style={{ fontSize: "2rem", lineHeight: "1" }}>{confirmConfig.title.includes("⚠️") || confirmConfig.isDanger ? "⚠️" : "❓"}</span>
+              <span style={{ fontSize: "2rem", lineHeight: "1" }}>
+                {(() => {
+                  const titleLower = (confirmConfig.title || "").toLowerCase();
+                  if (confirmConfig.isDanger || titleLower.includes("⚠️") || titleLower.includes("hapus") || titleLower.includes("delete")) return "⚠️";
+                  if (titleLower.includes("berhasil") || titleLower.includes("sukses") || titleLower.includes("success")) return "✅";
+                  if (titleLower.includes("galat") || titleLower.includes("gagal") || titleLower.includes("error")) return "❌";
+                  if (titleLower.includes("salin") || titleLower.includes("copy") || titleLower.includes("papan klip")) return "📋";
+                  return "❓";
+                })()}
+              </span>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                 <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
                   {confirmConfig.title.replace("⚠️", "").trim() || "Konfirmasi"}
