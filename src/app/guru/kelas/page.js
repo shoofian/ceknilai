@@ -325,6 +325,58 @@ export default function KelolaKelas() {
         const uniqueClasses = new Set();
         const warnings = [];
 
+        // === Helper: normalize all known Dapodik date formats to YYYY-MM-DD ===
+        const BULAN_ID_CLIENT = {
+          januari: "01", februari: "02", maret: "03", april: "04",
+          mei: "05", juni: "06", juli: "07", agustus: "08",
+          september: "09", oktober: "10", november: "11", desember: "12",
+        };
+
+        const normalizeTanggal = (raw) => {
+          if (!raw && raw !== 0) return "";
+          const s = String(raw).trim();
+          if (!s || s === "-") return "";
+
+          // Already YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+          // DD/MM/YYYY or DD-MM-YYYY
+          const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+          if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,"0")}-${dmy[1].padStart(2,"0")}`;
+
+          // YYYY/MM/DD
+          const ymd = s.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/);
+          if (ymd) return `${ymd[1]}-${ymd[2].padStart(2,"0")}-${ymd[3].padStart(2,"0")}`;
+
+          // Excel serial number (pure integer, e.g. 40200)
+          if (/^\d+$/.test(s)) {
+            const serial = parseInt(s, 10);
+            if (serial > 1 && serial < 80000) {
+              const epoch = new Date(Date.UTC(1899, 11, 30));
+              const d = new Date(epoch.getTime() + serial * 86400000);
+              if (!isNaN(d.getTime())) {
+                return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
+              }
+            }
+          }
+
+          // Indonesian long format: "15 Januari 2009"
+          const idLong = s.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/);
+          if (idLong) {
+            const m = BULAN_ID_CLIENT[idLong[2].toLowerCase()];
+            if (m) return `${idLong[3]}-${m}-${idLong[1].padStart(2,"0")}`;
+          }
+
+          // Fallback
+          const parsed = new Date(s);
+          if (!isNaN(parsed.getTime())) {
+            return `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,"0")}-${String(parsed.getDate()).padStart(2,"0")}`;
+          }
+
+          return s; // return as-is, server will re-attempt parsing
+        };
+        // === End helper ===
+
         for (let i = headerRowIndex + 1; i < rows.length; i++) {
           const cols = rows[i];
           if (!cols || !Array.isArray(cols) || cols.length === 0) continue;
@@ -332,14 +384,16 @@ export default function KelolaKelas() {
           const nisnVal = cols[nisnIdx] ? String(cols[nisnIdx]).trim() : "";
           const namaVal = cols[namaIdx] ? String(cols[namaIdx]).trim() : "";
           const rombelVal = cols[rombelIdx] ? String(cols[rombelIdx]).trim() : "";
-          const tglVal = tglIdx !== -1 && cols[tglIdx] ? String(cols[tglIdx]).trim() : "";
+          // Use raw value (may be number for Excel serial) then normalize
+          const tglRaw = tglIdx !== -1 && (cols[tglIdx] !== undefined && cols[tglIdx] !== null) ? cols[tglIdx] : "";
+          const tglVal = normalizeTanggal(tglRaw);
 
           // Pengecekan data tidak lengkap
           const missingFields = [];
           if (!nisnVal) missingFields.push("NISN");
           if (!namaVal) missingFields.push("Nama");
           if (!rombelVal) missingFields.push("Rombel");
-          if (!tglVal || tglVal === "-") missingFields.push("Tanggal Lahir");
+          if (!tglVal) missingFields.push("Tanggal Lahir");
 
           if (missingFields.length > 0) {
             // Catat baris bermasalah jika ada setidaknya salah satu data terisi (bukan baris kosong)

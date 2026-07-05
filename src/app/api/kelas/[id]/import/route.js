@@ -13,12 +13,12 @@ async function checkAuth() {
 function parseDateToYmd(dateStr) {
   if (!dateStr) return null;
   const clean = dateStr.toString().trim();
-  
+
   // 1. Matches YYYY-MM-DD (e.g. 2010-01-15)
   if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
     return clean;
   }
-  
+
   // 2. Matches DD/MM/YYYY or DD-MM-YYYY (e.g. 15/01/2010 or 15-01-2010)
   const dmyMatch = clean.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
   if (dmyMatch) {
@@ -27,7 +27,7 @@ function parseDateToYmd(dateStr) {
     const year = dmyMatch[3];
     return `${year}-${month}-${day}`;
   }
-  
+
   // 3. Matches YYYY/MM/DD (e.g. 2010/01/15)
   const ymdSlashMatch = clean.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/);
   if (ymdSlashMatch) {
@@ -37,7 +37,39 @@ function parseDateToYmd(dateStr) {
     return `${year}-${month}-${day}`;
   }
 
-  // 4. Try parsing with standard Date parser
+  // 4. Excel serial date number (e.g. 40200 = 2010-01-15)
+  // Excel counts days from 1899-12-30 (with the intentional 1900 leap-year bug)
+  if (/^\d+$/.test(clean)) {
+    const serial = parseInt(clean, 10);
+    if (serial > 1 && serial < 80000) { // sanity check: plausible school-age student birth years
+      const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+      const msPerDay = 86400000;
+      const date = new Date(excelEpoch.getTime() + serial * msPerDay);
+      if (!isNaN(date.getTime())) {
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+    }
+  }
+
+  // 5. Indonesian long format: "15 Januari 2009" or "15 januari 2009"
+  const BULAN_ID = {
+    januari: '01', februari: '02', maret: '03', april: '04',
+    mei: '05', juni: '06', juli: '07', agustus: '08',
+    september: '09', oktober: '10', november: '11', desember: '12',
+  };
+  const idLongMatch = clean.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/);
+  if (idLongMatch) {
+    const day = idLongMatch[1].padStart(2, '0');
+    const monthName = idLongMatch[2].toLowerCase();
+    const year = idLongMatch[3];
+    const month = BULAN_ID[monthName];
+    if (month) return `${year}-${month}-${day}`;
+  }
+
+  // 6. Fallback: let JavaScript Date try to parse it
   const parsed = new Date(clean);
   if (!isNaN(parsed.getTime())) {
     const year = parsed.getFullYear();
@@ -45,7 +77,7 @@ function parseDateToYmd(dateStr) {
     const day = String(parsed.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
-  
+
   return null;
 }
 
