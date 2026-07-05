@@ -1013,6 +1013,44 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
+  const handleMoveKolom = async (index, direction) => {
+    if (!kelas || !kelas.kolomNilai) return;
+    const newKolom = [...kelas.kolomNilai];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newKolom.length) return;
+    
+    // Swap target and index items
+    const temp = newKolom[index];
+    newKolom[index] = newKolom[targetIndex];
+    newKolom[targetIndex] = temp;
+    
+    // Update local state immediately
+    setKelas({ ...kelas, kolomNilai: newKolom });
+    
+    // Save new order to database (async)
+    try {
+      await fetch(`/api/kelas/${kelas.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kolomNilai: newKolom })
+      });
+    } catch (e) {
+      console.error("Gagal menukar posisi aspek", e);
+    }
+  };
+
+  const handleMoveNewAspect = (index, direction) => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newAspects.length) return;
+    
+    const newAspectsCopy = [...newAspects];
+    const temp = newAspectsCopy[index];
+    newAspectsCopy[index] = newAspectsCopy[targetIndex];
+    newAspectsCopy[targetIndex] = temp;
+    
+    setNewAspects(newAspectsCopy);
+  };
+
   const handleAddBlankAspect = () => {
     const newId = `new-aspect-${Date.now()}`;
     const newAspect = { id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] };
@@ -4620,7 +4658,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 
                 <div className="aspect-sidebar-list">
                   {/* Existing Aspects */}
-                  {kelas.kolomNilai.map((col) => {
+                  {kelas.kolomNilai.map((col, idx) => {
                     const isActive = col.id === activeAspectId;
                     return (
                       <div
@@ -4648,16 +4686,42 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <span className="aspect-item-card-title">{col.nama || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>(Tanpa Nama)</span>}</span>
                           </div>
                           
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteKolom(col.id, col.nama);
-                            }}
-                            style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
-                            title="Hapus aspek"
-                          >
-                            🗑️
-                          </button>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto", flexShrink: 0 }}>
+                            {idx > 0 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveKolom(idx, 'up');
+                                }}
+                                style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                                title="Pindahkan Ke Atas"
+                              >
+                                ▲
+                              </button>
+                            )}
+                            {idx < kelas.kolomNilai.length - 1 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveKolom(idx, 'down');
+                                }}
+                                style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                                title="Pindahkan Ke Bawah"
+                              >
+                                ▼
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteKolom(col.id, col.nama);
+                              }}
+                              style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                              title="Hapus aspek"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="aspect-item-card-meta">
@@ -4666,7 +4730,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           </span>
                           {col.isGroup ? (
                             <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
-                              Kelompok ({col.subKolom?.length || 0})
+                              Kelompok ({col.subKomom?.length || col.subKolom?.length || 0})
                             </span>
                           ) : (
                             <span className="badge badge-success" style={{ fontSize: "0.6rem", padding: "1px 6px", backgroundColor: "rgba(16,185,129,0.04)" }}>
@@ -4682,7 +4746,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   })}
                   
                   {/* New Aspects */}
-                  {newAspects.map((aspect) => {
+                  {newAspects.map((aspect, idx) => {
                     const isActive = aspect.id === activeAspectId;
                     return (
                       <div
@@ -4697,16 +4761,42 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <span className="aspect-item-card-title">{aspect.nama || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>+ Aspek Baru</span>}</span>
                           </div>
                           
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveNewAspect(aspect.id);
-                            }}
-                            style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
-                            title="Hapus aspek baru"
-                          >
-                            ✖
-                          </button>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto", flexShrink: 0 }}>
+                            {idx > 0 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveNewAspect(idx, 'up');
+                                }}
+                                style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                                title="Pindahkan Ke Atas"
+                              >
+                                ▲
+                              </button>
+                            )}
+                            {idx < newAspects.length - 1 && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveNewAspect(idx, 'down');
+                                }}
+                                style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                                title="Pindahkan Ke Bawah"
+                              >
+                                ▼
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveNewAspect(aspect.id);
+                              }}
+                              style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
+                              title="Hapus aspek baru"
+                            >
+                              ✖
+                            </button>
+                          </div>
                         </div>
                         
                         <div className="aspect-item-card-meta">
