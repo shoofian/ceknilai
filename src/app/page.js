@@ -854,6 +854,11 @@ export default function StudentPortal() {
                                         <td style={{ textAlign: "left" }}>
                                           {col.isGroup && <span style={{ fontSize: "0.7rem", border: "1.5px solid #000", padding: "1px 4px", marginRight: "6px", fontWeight: "bold" }}>GRUP</span>}
                                           {col.namaKolom}
+                                          {(res.skemaPenilaian?.tpConfig?.[col.kolomId] || res.skema?.tpConfig?.[col.kolomId]) && (
+                                            <div style={{ fontSize: "0.75rem", fontStyle: "italic", fontWeight: "normal", color: "#4b5563", marginTop: "2px" }}>
+                                              {res.skemaPenilaian?.tpConfig?.[col.kolomId] || res.skema?.tpConfig?.[col.kolomId]}
+                                            </div>
+                                          )}
                                         </td>
                                         <td style={{ textAlign: "center" }}>{res.kkm}</td>
                                         <td style={{ textAlign: "center", fontWeight: "bold" }}>

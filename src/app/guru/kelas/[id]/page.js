@@ -1509,6 +1509,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       // Buat aspek-aspek baru terlebih dahulu
       const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
       let updatedKolomNilai = [...kelas.kolomNilai]; // Salin state lama
+      let updatedTpConfig = { ...(kelas.skemaPenilaian?.tpConfig || {}) };
 
       for (const aspect of validNewAspects) {
         const res = await fetch(`/api/kelas/${classId}/kolom`, {
@@ -1521,7 +1522,11 @@ export default function DetailKelas({ params: paramsPromise }) {
            throw new Error(data.error || "Gagal membuat aspek baru");
         }
         const data = await res.json();
+        const permanentId = data.kolom.id;
         updatedKolomNilai.push(data.kolom); // Masukkan aspek yang baru dibuat ke daftar sinkronisasi
+        if (aspect.tp) {
+          updatedTpConfig[permanentId] = aspect.tp;
+        }
       }
 
       // Perbarui seluruh konfigurasi secara massal — konversi bobot ke Number sebelum dikirim
@@ -1531,7 +1536,10 @@ export default function DetailKelas({ params: paramsPromise }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           kolomNilai: kolomToSave,
-          skemaPenilaian: kelas.skemaPenilaian || {}
+          skemaPenilaian: {
+            ...(kelas.skemaPenilaian || {}),
+            tpConfig: updatedTpConfig
+          }
         }),
       });
 
@@ -4996,6 +5004,37 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </div>
                       </div>
 
+                      {/* TP/KD Description Field */}
+                      <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
+                        <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          📖 Deskripsi TP / KD / Indikator Penilaian <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal" }}>(Opsional)</span>
+                        </label>
+                        <textarea
+                          className="form-input"
+                          placeholder="Contoh: TP 1: Memahami konsep algoritma pemrograman dasar, tipe data, dan instruksi kondisional..."
+                          value={isNew ? (activeAspect.tp || "") : (kelas.skemaPenilaian?.tpConfig?.[activeAspect.id] || "")}
+                          onChange={(e) => {
+                            if (isNew) {
+                              handleNewAspectChange(activeAspect.id, 'tp', e.target.value);
+                            } else {
+                              const currentTp = kelas.skemaPenilaian?.tpConfig || {};
+                              setKelas({
+                                ...kelas,
+                                skemaPenilaian: {
+                                  ...(kelas.skemaPenilaian || {}),
+                                  tpConfig: {
+                                    ...currentTp,
+                                    [activeAspect.id]: e.target.value
+                                  }
+                                }
+                              });
+                            }
+                          }}
+                          rows={2}
+                          style={{ padding: "10px 14px", fontSize: "0.85rem", resize: "vertical" }}
+                        />
+                      </div>
+
                       {/* Visibility & DB Info Row */}
                       <div className="aspect-visibility-row">
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -5715,6 +5754,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td style={{ textAlign: "left" }}>
                           {col.isGroup && <span style={{ fontSize: "0.7rem", border: "1.5px solid #000", padding: "1px 4px", marginRight: "6px", fontWeight: "bold" }}>GRUP</span>}
                           {col.namaKolom}
+                          {skema.tpConfig?.[col.kolomId] && (
+                            <div style={{ fontSize: "0.75rem", fontStyle: "italic", fontWeight: "normal", color: "#4b5563", marginTop: "2px" }}>
+                              {skema.tpConfig[col.kolomId]}
+                            </div>
+                          )}
                         </td>
                         <td style={{ textAlign: "center" }}>{skema.kkm}</td>
                         <td style={{ textAlign: "center", fontWeight: "bold" }}>
