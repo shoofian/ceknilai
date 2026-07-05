@@ -65,7 +65,7 @@ export async function POST(request, { params }) {
         { auth: { persistSession: false } }
       );
 
-      for (const siswa of kelas.siswa) {
+      const updatePromises = kelas.siswa.map(siswa => {
         let updatedNilai = { ...(siswa.nilai || {}) };
         if (newColumn.isGroup && newColumn.subKolom) {
           newColumn.subKolom.forEach(sub => {
@@ -75,11 +75,12 @@ export async function POST(request, { params }) {
           updatedNilai[columnId] = null;
         }
 
-        await sb.from('siswa')
+        return sb.from('siswa')
           .update({ nilai: updatedNilai })
           .eq('kelas_id', id)
           .eq('nisn', siswa.nisn);
-      }
+      });
+      await Promise.all(updatePromises);
     }
 
     return NextResponse.json({ success: true, kolom: newColumn });
@@ -141,6 +142,7 @@ export async function PATCH(request, { params }) {
         { auth: { persistSession: false } }
       );
 
+      const updatePromises = [];
       for (const siswa of kelas.siswa) {
         let updatedNilai = { ...(siswa.nilai || {}) };
         let changed = false;
@@ -157,11 +159,16 @@ export async function PATCH(request, { params }) {
         });
 
         if (changed) {
-          await sb.from('siswa')
-            .update({ nilai: updatedNilai })
-            .eq('kelas_id', id)
-            .eq('nisn', siswa.nisn);
+          updatePromises.push(
+            sb.from('siswa')
+              .update({ nilai: updatedNilai })
+              .eq('kelas_id', id)
+              .eq('nisn', siswa.nisn)
+          );
         }
+      }
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
       }
     }
 
