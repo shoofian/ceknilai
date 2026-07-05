@@ -309,7 +309,7 @@ export default function KelolaKelas() {
             nisnIdx = nIdx;
             namaIdx = namIdx;
             rombelIdx = romIdx;
-            tglIdx = tempHeaders.findIndex((h) => h.includes("tanggal lahir") || h.includes("lahir"));
+            tglIdx = tempHeaders.findIndex((h) => h.includes("tanggal lahir") || (h.includes("lahir") && !h.includes("tempat")));
             break;
           }
         }
