@@ -218,6 +218,7 @@ a:hover {
 
 .form-input {
   width: 100%;
+  max-width: 100%;
   padding: 12px 16px;
   font-family: var(--font-body);
   font-size: 0.95rem;
@@ -1018,5 +1019,16 @@ a:hover {
   .aspect-form-row {
     grid-template-columns: 1fr;
     gap: 12px;
+  }
+  .glass-card {
+    padding: 16px;
+  }
+  .form-input {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  input[type="date"].form-input {
+    max-width: 100%;
+    min-width: 0;
   }
 }
