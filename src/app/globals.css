@@ -590,7 +590,7 @@ input[type="date"].form-input {
     width: 100% !important;
   }
 
-  /* printable-area: full-width, no card styling */
+  /* printable-area: full-width, BLOCK layout — flex breaks page-break algorithm */
   #printable-area {
     width: 100% !important;
     border: none !important;
@@ -599,9 +599,11 @@ input[type="date"].form-input {
     background: #ffffff !important;
     backdrop-filter: none !important;
     border-radius: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 12pt !important;
+    display: block !important;
+  }
+
+  #printable-area > * {
+    margin-bottom: 10pt !important;
   }
 
   /* All glass-cards inside printable-area get clean look */
@@ -675,17 +677,29 @@ input[type="date"].form-input {
     border-collapse: collapse !important;
     border: 2px solid #000000 !important;
     font-size: 9pt !important;
+    /* allow table itself to break, but keep individual rows whole */
     page-break-inside: auto !important;
+    break-inside: auto !important;
     table-layout: fixed !important;
   }
 
+  /* thead MUST be table-header-group so it repeats on each page */
   .premium-table thead {
     display: table-header-group !important;
   }
 
-  .premium-table tr {
+  /* thead rows must never be split */
+  .premium-table thead tr {
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* tbody rows: never split a single row across pages */
+  .premium-table tbody tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
     page-break-after: auto !important;
+    break-after: auto !important;
   }
 
   .premium-table th {
@@ -705,6 +719,8 @@ input[type="date"].form-input {
 
   .premium-table td {
     border: 1px solid #555555 !important;
+    /* Explicit border-top ensures first row on a new page always has a top line */
+    border-top: 1px solid #555555 !important;
     padding: 4pt !important;
     color: #000000 !important;
     font-size: 9pt !important;
@@ -713,6 +729,9 @@ input[type="date"].form-input {
     white-space: normal !important;
     background: #ffffff !important;
     font-family: 'Times New Roman', Times, serif !important;
+    /* Ensure box decoration is cloned at page breaks, not sliced */
+    -webkit-box-decoration-break: clone !important;
+    box-decoration-break: clone !important;
   }
 
   .premium-table tbody tr:nth-child(even) td {
