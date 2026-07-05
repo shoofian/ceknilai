@@ -225,6 +225,34 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedHistorySiswa, setSelectedHistorySiswa] = useState(null);
 
+  // States untuk Cetak KHS / Rapor Bayangan PDF
+  const [selectedPrintStudent, setSelectedPrintStudent] = useState(null);
+
+  const handlePrintStudentKHS = (student) => {
+    setSelectedPrintStudent(student);
+    
+    setTimeout(() => {
+      // 1. Tambahkan style element untuk set size: A4 portrait
+      const printStyle = document.createElement("style");
+      printStyle.id = "dynamic-print-portrait-style";
+      printStyle.innerHTML = "@media print { @page { size: A4 portrait !important; margin: 15mm 15mm 15mm 15mm !important; } }";
+      document.head.appendChild(printStyle);
+
+      // 2. Tambahkan class print-portrait-mode pada body
+      document.body.classList.add("print-portrait-mode");
+
+      // 3. Panggil print dialog
+      window.print();
+
+      // 4. Bersihkan setelah dialog print ditutup
+      setTimeout(() => {
+        document.body.classList.remove("print-portrait-mode");
+        const styleEl = document.getElementById("dynamic-print-portrait-style");
+        if (styleEl) styleEl.remove();
+      }, 500);
+    }, 150);
+  };
+
   // State untuk Integrasi E-Rapor
   const [raporModalOpen, setRaporModalOpen] = useState(false);
 
@@ -3096,6 +3124,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                               )}
                             </div>
                             <button 
+                              onClick={() => handlePrintStudentKHS(student)} 
+                              className="btn btn-secondary" 
+                              style={{ padding: "6px 8px", fontSize: "0.75rem" }} 
+                              title="Cetak KHS / Rapor Bayangan PDF"
+                            >
+                              🖨️
+                            </button>
+                            <button 
                               onClick={() => handleOpenEditSiswa(student)} 
                               className="btn btn-secondary" 
                               style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }} 
@@ -5508,6 +5544,306 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         </div>
       )}
+
+      {/* PORTRAIT KHS / RAPOR BAYANGAN PRINT-ONLY VIEW */}
+      {selectedPrintStudent && (() => {
+        const student = selectedPrintStudent;
+        const finalScore = student.finalScore || 0;
+        
+        const skema = kelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+        let predikat = "E";
+        if (finalScore >= skema.A) predikat = skema.statusA || "A";
+        else if (finalScore >= skema.B) predikat = skema.statusB || "B";
+        else if (finalScore >= skema.C) predikat = skema.statusC || "C";
+        else if (finalScore >= skema.D) predikat = skema.statusD || "D";
+
+        const statusKelulusan = finalScore >= (skema.kkm || 75) ? "LULUS" : "TIDAK LULUS";
+
+        const config = skema.laporanConfig || {
+          namaSekolah: "Sekolah Menengah Atas Digital CekNilai",
+          alamatSekolah: "Jl. Edukasi Pintar No. 45, Jakarta Selatan",
+          telpSekolah: "(021) 7890123",
+          namaKepsek: "Drs. H. Mulyadi, M.Pd.",
+          nipKepsek: "19680512 199403 1 002",
+          kotaCetak: "Jakarta",
+          nipGuru: "-"
+        };
+
+        // Hitung rekap presensi
+        let totalH = 0, totalS = 0, totalI = 0, totalA = 0;
+        (skema.pertemuan || []).forEach(p => {
+          const val = student.nilai?.[`_presensi_${p.id}`];
+          if (val === 'H') totalH++;
+          else if (val === 'S') totalS++;
+          else if (val === 'I') totalI++;
+          else if (val === 'A') totalA++;
+        });
+        const hasPresensi = (skema.pertemuan || []).length > 0;
+
+        // Hitung nilai aspek detail
+        const detailNilai = (kelas.kolomNilai || []).map(col => {
+          const groupConfig = skema.kolomAspekGroup?.[col.id];
+          const isGroup = groupConfig ? !!groupConfig.isGroup : false;
+          const hitungMetode = groupConfig ? (groupConfig.hitungMetode || "rata-rata") : "rata-rata";
+          const subKolom = groupConfig ? (groupConfig.subKolom || []) : [];
+
+          let scoreVal = null;
+          let isFilled = false;
+          const subDetail = [];
+
+          if (isGroup && subKolom.length > 0) {
+            let subTotal = 0;
+            let subFilledWeight = 0;
+            let subFilledCount = 0;
+
+            subKolom.forEach(sub => {
+              const sc = student.nilai?.[sub.id];
+              if (sc !== undefined && sc !== null && sc !== "") {
+                const scNum = Number(sc);
+                if (hitungMetode === "persentase") {
+                  const subBobot = sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : 0;
+                  subTotal += scNum * subBobot;
+                  subFilledWeight += subBobot;
+                } else {
+                  subTotal += scNum;
+                }
+                subFilledCount++;
+                subDetail.push({
+                  subId: sub.id,
+                  nama: sub.nama,
+                  bobot: sub.bobot,
+                  nilaiAsli: scNum
+                });
+              } else {
+                subDetail.push({
+                  subId: sub.id,
+                  nama: sub.nama,
+                  bobot: sub.bobot,
+                  nilaiAsli: null
+                });
+              }
+            });
+
+            if (subFilledCount > 0) {
+              isFilled = true;
+              if (hitungMetode === "persentase") {
+                scoreVal = subFilledWeight > 0 ? Number((subTotal / subFilledWeight).toFixed(2)) : 0;
+              } else {
+                scoreVal = Number((subTotal / subFilledCount).toFixed(2));
+              }
+            }
+          } else {
+            const rawVal = student.nilai?.[col.id];
+            isFilled = rawVal !== undefined && rawVal !== null && rawVal !== "";
+            scoreVal = isFilled ? Number(rawVal) : null;
+          }
+
+          return {
+            kolomId: col.id,
+            namaKolom: col.nama,
+            bobot: col.bobot,
+            nilaiAsli: scoreVal,
+            isGroup,
+            subDetail
+          };
+        });
+
+        return (
+          <div id="printable-khs-area">
+            {/* KOP SEKOLAH */}
+            <div className="khs-kop">
+              <h2>LAPORAN HASIL BELAJAR SISWA</h2>
+              <h3>{config.namaSekolah}</h3>
+              <p>Alamat: {config.alamatSekolah} &bull; Telp: {config.telpSekolah}</p>
+            </div>
+
+            <div className="khs-title">KARTU HASIL STUDI (RAPOR BAYANGAN)</div>
+
+            {/* BIODATA SISWA */}
+            <table className="khs-identity-table">
+              <tbody>
+                <tr>
+                  <td style={{ width: "15%", fontWeight: "bold" }}>Nama Siswa</td>
+                  <td style={{ width: "2%" }}>:</td>
+                  <td style={{ width: "33%" }}><strong>{student.nama}</strong></td>
+                  <td style={{ width: "15%", fontWeight: "bold" }}>Mata Pelajaran</td>
+                  <td style={{ width: "2%" }}>:</td>
+                  <td style={{ width: "33%" }}>{kelas.mataPelajaran || "Informatika"}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: "bold" }}>NISN</td>
+                  <td>:</td>
+                  <td>{student.nisn}</td>
+                  <td style={{ fontWeight: "bold" }}>Kelas</td>
+                  <td>:</td>
+                  <td>{kelas.nama}</td>
+                </tr>
+                <tr>
+                  <td style={{ fontWeight: "bold" }}>Tahun Ajaran</td>
+                  <td>:</td>
+                  <td>{kelas.tahunAjaran}</td>
+                  <td style={{ fontWeight: "bold" }}>Semester</td>
+                  <td>:</td>
+                  <td>{kelas.semester || "Ganjil"}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* TABEL NILAI */}
+            <table className="khs-grades-table">
+              <thead>
+                <tr>
+                  <th style={{ width: "5%", textAlign: "center" }}>No</th>
+                  <th style={{ width: "50%", textAlign: "left" }}>Komponen Penilaian</th>
+                  <th style={{ width: "15%", textAlign: "center" }}>KKM</th>
+                  <th style={{ width: "15%", textAlign: "center" }}>Nilai Angka</th>
+                  <th style={{ width: "15%", textAlign: "center" }}>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detailNilai.map((col, idx) => {
+                  const isTuntas = col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= skema.kkm);
+                  const ketText = col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" 
+                    ? "Belum Diisi" 
+                    : isTuntas ? "Tuntas" : "Belum Tuntas";
+                    
+                  return (
+                    <Fragment key={col.kolomId}>
+                      {/* Baris Aspek Utama */}
+                      <tr style={col.isGroup ? { fontWeight: "bold" } : {}}>
+                        <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                        <td style={{ textAlign: "left" }}>
+                          {col.isGroup && <span style={{ fontSize: "0.7rem", border: "1.5px solid #000", padding: "1px 4px", marginRight: "6px", fontWeight: "bold" }}>GRUP</span>}
+                          {col.namaKolom}
+                        </td>
+                        <td style={{ textAlign: "center" }}>{skema.kkm}</td>
+                        <td style={{ textAlign: "center", fontWeight: "bold" }}>
+                          {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "—" : col.nilaiAsli}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", color: isTuntas ? "#15803d" : "#b91c1c" }}>
+                          {ketText}
+                        </td>
+                      </tr>
+
+                      {/* Baris Sub-aspek jika merupakan Grup */}
+                      {col.isGroup && col.subDetail?.map((sub) => {
+                        const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= skema.kkm;
+                        const subKet = sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas";
+                        return (
+                          <tr key={sub.subId} className="khs-sub-row">
+                            <td></td>
+                            <td style={{ fontStyle: "italic" }}>
+                              ↳ {sub.nama}
+                            </td>
+                            <td style={{ textAlign: "center" }}>{skema.kkm}</td>
+                            <td style={{ textAlign: "center" }}>
+                              {sub.nilaiAsli === null ? "—" : sub.nilaiAsli}
+                            </td>
+                            <td style={{ textAlign: "center", fontSize: "0.85em", color: subTuntas ? "#15803d" : "#b91c1c" }}>
+                              {subKet}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+
+            {/* RINGKASAN HASIL AKHIR */}
+            <div className="khs-summary-box">
+              <div className="khs-summary-column">
+                <div className="khs-summary-item">
+                  <span>KKM Kelulusan</span>
+                  <strong>{skema.kkm}</strong>
+                </div>
+                <div className="khs-summary-item">
+                  <span>Nilai Akhir Rapor</span>
+                  <strong>{kelas.isNilaiAkhirGenerated ? finalScore.toFixed(2) : "🔒 Sedang Diproses"}</strong>
+                </div>
+              </div>
+              <div className="khs-summary-column">
+                <div className="khs-summary-item">
+                  <span>Predikat Capaian</span>
+                  <strong>{kelas.isNilaiAkhirGenerated ? predikat : "🔒"}</strong>
+                </div>
+                <div className="khs-summary-item">
+                  <span>Status Kelulusan</span>
+                  <strong style={{ color: finalScore >= skema.kkm ? "#15803d" : "#b91c1c" }}>
+                    {kelas.isNilaiAkhirGenerated ? statusKelulusan : "🔒 Menunggu"}
+                  </strong>
+                </div>
+              </div>
+            </div>
+
+            {/* PRESENSI KEHADIRAN (Hanya jika diaktifkan) */}
+            {hasPresensi && (
+              <div style={{ pageBreakInside: "avoid", breakInside: "avoid" }}>
+                <h4 style={{ margin: "10pt 0 4pt 0", fontSize: "10pt", fontWeight: "bold" }}>Rekapitulasi Kehadiran</h4>
+                <table className="khs-presensi-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "70%" }}>Keadaan Kehadiran</th>
+                      <th style={{ width: "30%", textAlign: "center" }}>Jumlah Hari</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1. Sakit (S)</td>
+                      <td>{totalS} hari</td>
+                    </tr>
+                    <tr>
+                      <td>2. Izin (I)</td>
+                      <td>{totalI} hari</td>
+                    </tr>
+                    <tr>
+                      <td>3. Tanpa Keterangan (A)</td>
+                      <td>{totalA} hari</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* CATATAN GURU */}
+            {student.catatan && (
+              <div style={{ marginTop: "10pt", pageBreakInside: "avoid", breakInside: "avoid" }}>
+                <h4 style={{ margin: "0 0 4pt 0", fontSize: "10pt", fontWeight: "bold" }}>Catatan Perkembangan dari Guru</h4>
+                <div className="khs-catatan-box">
+                  "{student.catatan}"
+                </div>
+              </div>
+            )}
+
+            {/* TANDA TANGAN (SIGNATURES) */}
+            <div className="khs-signature-section">
+              <div className="khs-signature-col" style={{ width: "30%" }}>
+                <span>Orang Tua / Wali Siswa,</span>
+                <span style={{ borderBottom: "1px solid #000000", width: "120px", margin: "40px auto 0 auto" }}></span>
+              </div>
+              
+              <div className="khs-signature-col" style={{ width: "40%" }}>
+                <span>Mengetahui,</span>
+                <span>Kepala Sekolah,</span>
+                <span style={{ fontWeight: "bold", borderBottom: "1px solid #000000", width: "160px", margin: "30px auto 0 auto" }}>
+                  {config.namaKepsek}
+                </span>
+                <span style={{ fontSize: "0.8em" }}>NIP. {config.nipKepsek}</span>
+              </div>
+
+              <div className="khs-signature-col" style={{ width: "30%" }}>
+                <span>{config.kotaCetak || "Jakarta"}, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</span>
+                <span>Guru Pengampu,</span>
+                <span style={{ fontWeight: "bold", borderBottom: "1px solid #000000", width: "120px", margin: "30px auto 0 auto" }}>
+                  {guruProfile?.nama || "Nama Guru"}
+                </span>
+                <span style={{ fontSize: "0.8em" }}>{config.nipGuru && config.nipGuru !== "-" ? `NIP. ${config.nipGuru}` : "NIP. —"}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </>
   );

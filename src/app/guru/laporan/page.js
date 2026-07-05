@@ -84,6 +84,35 @@ export default function CetakLaporan() {
         if (response.ok) {
           const data = await response.json();
           setSelectedClass(data);
+
+          // Load settings from Supabase skemaPenilaian.laporanConfig if available
+          const config = data.skemaPenilaian?.laporanConfig;
+          if (config) {
+            if (config.namaSekolah !== undefined) setNamaSekolah(config.namaSekolah);
+            if (config.alamatSekolah !== undefined) setAlamatSekolah(config.alamatSekolah);
+            if (config.telpSekolah !== undefined) setTelpSekolah(config.telpSekolah);
+            if (config.namaKepsek !== undefined) setNamaKepsek(config.namaKepsek);
+            if (config.nipKepsek !== undefined) setNipKepsek(config.nipKepsek);
+            if (config.kotaCetak !== undefined) setKotaCetak(config.kotaCetak);
+            if (config.nipGuru !== undefined) setNipGuru(config.nipGuru);
+          } else {
+            // Fallback to localStorage or defaults
+            const savedNamaSekolah = localStorage.getItem("rep_namaSekolah") || "Sekolah Menengah Atas Digital CekNilai";
+            const savedAlamatSekolah = localStorage.getItem("rep_alamatSekolah") || "Jl. Edukasi Pintar No. 45, Jakarta Selatan";
+            const savedTelpSekolah = localStorage.getItem("rep_telpSekolah") || "(021) 7890123";
+            const savedNamaKepsek = localStorage.getItem("rep_namaKepsek") || "Drs. H. Mulyadi, M.Pd.";
+            const savedNipKepsek = localStorage.getItem("rep_nipKepsek") || "19680512 199403 1 002";
+            const savedKotaCetak = localStorage.getItem("rep_kotaCetak") || "Jakarta";
+            const savedNipGuru = localStorage.getItem("rep_nipGuru") || "-";
+
+            setNamaSekolah(savedNamaSekolah);
+            setAlamatSekolah(savedAlamatSekolah);
+            setTelpSekolah(savedTelpSekolah);
+            setNamaKepsek(savedNamaKepsek);
+            setNipKepsek(savedNipKepsek);
+            setKotaCetak(savedKotaCetak);
+            setNipGuru(savedNipGuru);
+          }
         }
       } catch (err) {
         console.error("Gagal memuat detail kelas untuk laporan", err);
@@ -92,8 +121,10 @@ export default function CetakLaporan() {
     fetchClassDetail();
   }, [selectedClassId]);
 
-  const handleSaveSettings = (e) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
+    
+    // Save to localStorage
     localStorage.setItem("rep_namaSekolah", namaSekolah);
     localStorage.setItem("rep_alamatSekolah", alamatSekolah);
     localStorage.setItem("rep_telpSekolah", telpSekolah);
@@ -101,6 +132,47 @@ export default function CetakLaporan() {
     localStorage.setItem("rep_nipKepsek", nipKepsek);
     localStorage.setItem("rep_kotaCetak", kotaCetak);
     localStorage.setItem("rep_nipGuru", nipGuru);
+
+    // Save to Supabase (if class is selected)
+    if (selectedClassId && selectedClass) {
+      try {
+        const updatedSkema = {
+          ...(selectedClass.skemaPenilaian || {}),
+          laporanConfig: {
+            namaSekolah,
+            alamatSekolah,
+            telpSekolah,
+            namaKepsek,
+            nipKepsek,
+            kotaCetak,
+            nipGuru
+          }
+        };
+
+        const response = await fetch(`/api/kelas/${selectedClassId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            skemaPenilaian: updatedSkema
+          })
+        });
+
+        if (response.ok) {
+          // Update local state
+          setSelectedClass(prev => ({
+            ...prev,
+            skemaPenilaian: updatedSkema
+          }));
+        } else {
+          console.error("Gagal sinkronisasi config laporan ke database");
+        }
+      } catch (err) {
+        console.error("Gagal menyimpan config laporan ke database", err);
+      }
+    }
+
     setShowSettings(false);
   };
 

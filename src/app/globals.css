@@ -805,6 +805,222 @@ input[type="date"].form-input {
   }
 }
 
+/* Screen-only CSS to hide the KHS print area */
+#printable-khs-area {
+  display: none !important;
+}
+
+/* Portrait KHS Print Styles */
+@media print {
+  body.print-portrait-mode {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body.print-portrait-mode .sidebar,
+  body.print-portrait-mode .sidebar-container,
+  body.print-portrait-mode .header,
+  body.print-portrait-mode .btn,
+  body.print-portrait-mode .mobile-header,
+  body.print-portrait-mode .no-print,
+  body.print-portrait-mode #printable-area,
+  body.print-portrait-mode nav,
+  body.print-portrait-mode .page-title-section,
+  body.print-portrait-mode .glass-card:not(.khs-glass-card),
+  body.print-portrait-mode .teacher-dashboard-main > *:not(#printable-khs-area),
+  body.print-portrait-mode main > *:not(#printable-khs-area),
+  body.print-portrait-mode div[style*="position: fixed"] {
+    display: none !important;
+  }
+
+  body.print-portrait-mode #printable-khs-area {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    font-size: 10.5pt !important;
+  }
+
+  #printable-khs-area .khs-kop {
+    border-bottom: 3px double #000000 !important;
+    padding-bottom: 8pt !important;
+    margin-bottom: 12pt !important;
+    text-align: center !important;
+  }
+
+  #printable-khs-area .khs-kop h2 {
+    font-size: 15pt !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-kop h3 {
+    font-size: 11.5pt !important;
+    font-weight: bold !important;
+    margin: 3pt 0 0 0 !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-kop p {
+    font-size: 8.5pt !important;
+    margin: 3pt 0 0 0 !important;
+    color: #333333 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-title {
+    text-align: center !important;
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-top: 10pt !important;
+    margin-bottom: 14pt !important;
+    letter-spacing: 0.5px !important;
+    text-decoration: underline !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-identity-table {
+    width: 100% !important;
+    margin-bottom: 14pt !important;
+    font-size: 10pt !important;
+    border-collapse: collapse !important;
+  }
+
+  #printable-khs-area .khs-identity-table td {
+    border: none !important;
+    padding: 2pt 4pt !important;
+    vertical-align: top !important;
+    background: transparent !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-grades-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1.5px solid #000000 !important;
+    font-size: 9.5pt !important;
+    margin-bottom: 12pt !important;
+  }
+
+  #printable-khs-area .khs-grades-table th {
+    background: #e2e8f0 !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    padding: 6pt 4pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-grades-table td {
+    border: 1px solid #000000 !important;
+    padding: 5pt 6pt !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-sub-row td {
+    background: #f8fafc !important;
+    padding-left: 18pt !important;
+  }
+
+  #printable-khs-area .khs-summary-box {
+    border: 1px solid #000000 !important;
+    padding: 8pt !important;
+    margin-bottom: 12pt !important;
+    background-color: #fafafa !important;
+    font-size: 9.5pt !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    gap: 15pt !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-summary-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4pt;
+    flex: 1;
+  }
+
+  #printable-khs-area .khs-summary-item {
+    display: flex !important;
+    justify-content: space-between !important;
+    border-bottom: 1px dashed #cccccc !important;
+    padding-bottom: 2pt !important;
+  }
+
+  #printable-khs-area .khs-summary-item:last-child {
+    border-bottom: none !important;
+  }
+
+  #printable-khs-area .khs-catatan-box {
+    border: 1px solid #000000 !important;
+    padding: 8pt 10pt !important;
+    margin-bottom: 14pt !important;
+    font-size: 9.5pt !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-presensi-table {
+    width: 45% !important;
+    border-collapse: collapse !important;
+    border: 1.5px solid #000000 !important;
+    font-size: 9pt !important;
+    margin-bottom: 14pt !important;
+  }
+
+  #printable-khs-area .khs-presensi-table th {
+    background: #e2e8f0 !important;
+    border: 1px solid #000000 !important;
+    padding: 4pt 6pt !important;
+    font-weight: bold !important;
+    text-align: left !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-presensi-table td {
+    border: 1px solid #000000 !important;
+    padding: 4pt !important;
+    text-align: center !important;
+    background: #ffffff !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-signature-section {
+    margin-top: 20pt !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    font-size: 9.5pt !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    font-family: 'Times New Roman', Times, serif !important;
+  }
+
+  #printable-khs-area .khs-signature-col {
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-height: 75pt !important;
+  }
+}
+
 /* ===== REDESIGNED ASPECT CONFIGURATION MODAL (TWO PANEL) ===== */
 .aspect-modal-container {
   display: flex;
