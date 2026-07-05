@@ -91,6 +91,12 @@ export async function POST(request, { params }) {
     const { id } = await params;
     const { siswaList } = await request.json();
 
+    console.log(`[Import API] Received siswaList with ${siswaList?.length} items.`);
+    if (siswaList && siswaList.length > 0) {
+      console.log(`[Import API] First student sample keys:`, Object.keys(siswaList[0]));
+      console.log(`[Import API] First student sample data:`, JSON.stringify(siswaList[0]));
+    }
+
     if (!Array.isArray(siswaList)) {
       return NextResponse.json({ error: 'Data impor tidak valid' }, { status: 400 });
     }
@@ -109,7 +115,10 @@ export async function POST(request, { params }) {
     for (const item of siswaList) {
       const { nisn, nama, tanggalLahir, nilai } = item;
       
-      if (!nisn || !nama || !tanggalLahir) continue; // Skip baris tidak lengkap
+      if (!nisn || !nama || !tanggalLahir) {
+        console.warn(`[Import API] Skipped student due to missing fields: nisn=${!!nisn}, nama=${!!nama}, tanggalLahir=${!!tanggalLahir}`);
+        continue; // Skip baris tidak lengkap
+      }
 
       const cleanNisn = nisn.toString().trim();
       const cleanNama = nama.toString().trim();
@@ -117,7 +126,7 @@ export async function POST(request, { params }) {
       // Parse tanggal lahir dengan fungsi robust helper
       const cleanTanggal = parseDateToYmd(tanggalLahir);
       if (!cleanTanggal) {
-        console.warn(`Skipped student ${cleanNama} (${cleanNisn}) due to invalid date: ${tanggalLahir}`);
+        console.warn(`[Import API] Skipped student "${cleanNama}" (${cleanNisn}) due to invalid date format: "${tanggalLahir}"`);
         continue; // Skip jika format tanggal tidak dapat diidentifikasi
       }
 
