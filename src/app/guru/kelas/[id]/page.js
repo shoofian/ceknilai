@@ -122,6 +122,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [pertemuanMateri, setPertemuanMateri] = useState("");
   const [pertemuanKegiatan, setPertemuanKegiatan] = useState("");
   const [agendaCollapsed, setAgendaCollapsed] = useState(true);
+  const [defaultBulkStatus, setDefaultBulkStatus] = useState("H"); // Hadir by default when adding
 
   // States untuk Panduan Bantuan
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
@@ -756,38 +757,92 @@ export default function DetailKelas({ params: paramsPromise }) {
           ? { ...p, nama: pertemuanNama.trim(), tanggal: pertemuanTanggal, materi: pertemuanMateri.trim(), kegiatan: pertemuanKegiatan.trim() } 
           : p
       );
+      
+      const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: updatedPertemuan };
+
+      try {
+        const response = await fetch(`/api/kelas/${kelas.id}`, { 
+          method: 'PATCH', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ skemaPenilaian: updatedSkema }) 
+        });
+
+        if (response.ok) {
+          setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+          setPertemuanModalOpen(false);
+        } else {
+          alert("Gagal menyimpan pertemuan.");
+        }
+      } catch (e) {
+        console.error("Error saving pertemuan", e);
+        alert("Terjadi kesalahan.");
+      } finally {
+        setIsSavingPertemuan(false);
+      }
     } else {
       // Add new
+      const newPertemuanId = Date.now().toString();
       const newPertemuan = { 
-        id: Date.now().toString(), 
+        id: newPertemuanId, 
         nama: pertemuanNama.trim(), 
         tanggal: pertemuanTanggal,
         materi: pertemuanMateri.trim(),
         kegiatan: pertemuanKegiatan.trim()
       };
       updatedPertemuan = [...(kelas.skemaPenilaian?.pertemuan || []), newPertemuan];
-    }
 
-    const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: updatedPertemuan };
+      const updatedSkema = { ...kelas.skemaPenilaian, pertemuan: updatedPertemuan };
+      const defaultStatus = defaultBulkStatus === "" ? null : defaultBulkStatus;
 
-    try {
-      const response = await fetch(`/api/kelas/${kelas.id}`, { 
-        method: 'PATCH', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ skemaPenilaian: updatedSkema }) 
-      });
+      // Update state locally immediately
+      const updatedSiswa = kelas.siswa.map(s => ({
+        ...s,
+        nilai: {
+          ...s.nilai,
+          [`_presensi_${newPertemuanId}`]: defaultStatus
+        }
+      }));
 
-      if (response.ok) {
-        setKelas({ ...kelas, skemaPenilaian: updatedSkema });
-        setPertemuanModalOpen(false);
-      } else {
-        alert("Gagal menyimpan pertemuan.");
+      try {
+        // Save to backend: class update + parallel student updates if defaultStatus is not null
+        const classPromise = fetch(`/api/kelas/${kelas.id}`, { 
+          method: 'PATCH', 
+          headers: { 'Content-Type': 'application/json' }, 
+          body: JSON.stringify({ skemaPenilaian: updatedSkema }) 
+        });
+
+        const studentPromises = [];
+        if (defaultStatus !== null && kelas.siswa && kelas.siswa.length > 0) {
+          studentPromises.push(
+            ...kelas.siswa.map(s => 
+              fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  nilai: {
+                    [`_presensi_${newPertemuanId}`]: defaultStatus
+                  }
+                })
+              })
+            )
+          );
+        }
+
+        const responses = await Promise.all([classPromise, ...studentPromises]);
+        const classRes = responses[0];
+        
+        if (classRes.ok) {
+          setKelas({ ...kelas, siswa: updatedSiswa, skemaPenilaian: updatedSkema });
+          setPertemuanModalOpen(false);
+        } else {
+          alert("Gagal menambahkan pertemuan.");
+        }
+      } catch (e) {
+        console.error("Error adding pertemuan", e);
+        alert("Terjadi kesalahan.");
+      } finally {
+        setIsSavingPertemuan(false);
       }
-    } catch (e) {
-      console.error("Error saving pertemuan", e);
-      alert("Terjadi kesalahan.");
-    } finally {
-      setIsSavingPertemuan(false);
     }
   };
 
@@ -2244,98 +2299,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           </div>
 
-          {/* Panel Presensi Massal Cepat */}
-          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
-            <div style={{
-              margin: "0 24px",
-              padding: "16px 20px",
-              backgroundColor: "rgba(59, 130, 246, 0.04)",
-              border: "1px dashed rgba(59, 130, 246, 0.25)",
-              borderRadius: "var(--radius-md)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "16px"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "1.5rem" }}>⚡</span>
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  <strong style={{ fontSize: "0.9rem", color: "var(--text-primary)" }}>Presensi Massal Cepat (Bulk)</strong>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Set kehadiran seluruh siswa sekaligus pada pertemuan yang dipilih</span>
-                </div>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                <select 
-                  id="quick-bulk-pertemuan-select"
-                  style={{ 
-                    padding: "8px 16px", 
-                    borderRadius: "var(--radius-sm)", 
-                    border: "1px solid var(--border-color)", 
-                    backgroundColor: "var(--bg-secondary)", 
-                    color: "var(--text-primary)", 
-                    fontWeight: "700", 
-                    fontSize: "0.85rem", 
-                    outline: "none",
-                    cursor: "pointer"
-                  }}
-                >
-                  <option value="">-- Pilih Pertemuan --</option>
-                  {(kelas.skemaPenilaian?.pertemuan || []).map(p => (
-                    <option key={p.id} value={p.id}>{p.nama} ({p.tanggal})</option>
-                  ))}
-                </select>
-                
-                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", marginRight: "4px" }}>Set Semua:</span>
-                  {[
-                    { val: 'H', label: 'Hadir', color: 'var(--success)' },
-                    { val: 'I', label: 'Izin', color: 'var(--warning)' },
-                    { val: 'S', label: 'Sakit', color: '#3b82f6' },
-                    { val: 'A', label: 'Alpa', color: 'var(--danger)' },
-                    { val: '', label: 'Kosongkan', color: 'var(--text-muted)' }
-                  ].map(item => (
-                    <button
-                      key={item.val}
-                      onClick={() => {
-                        const selectEl = document.getElementById("quick-bulk-pertemuan-select");
-                        const selectedId = selectEl?.value;
-                        if (!selectedId) {
-                          alert("Harap pilih pertemuan terlebih dahulu pada menu dropdown.");
-                          return;
-                        }
-                        const pName = kelas.skemaPenilaian.pertemuan.find(pt => pt.id === selectedId)?.nama || "Pertemuan";
-                        triggerConfirm(
-                          `Apakah Anda yakin ingin mengubah status kehadiran SEMUA siswa di "${pName}" menjadi "${item.label}"?`,
-                          () => {
-                            handleBulkPresensi(selectedId, item.val);
-                          },
-                          {
-                            title: "Presensi Massal",
-                            confirmText: "Ya, Ubah",
-                            isDanger: false
-                          }
-                        );
-                      }}
-                      className="btn btn-secondary"
-                      style={{
-                        padding: "6px 12px",
-                        fontSize: "0.75rem",
-                        fontWeight: "800",
-                        backgroundColor: item.val === '' ? "rgba(255,255,255,0.05)" : `rgba(${item.val === 'H' ? '16, 185, 129' : item.val === 'I' ? '245, 158, 11' : item.val === 'S' ? '59, 130, 246' : '239, 68, 68'}, 0.1)`,
-                        color: item.color,
-                        borderColor: item.val === '' ? "var(--border-color)" : `rgba(${item.val === 'H' ? '16, 185, 129' : item.val === 'I' ? '245, 158, 11' : item.val === 'S' ? '59, 130, 246' : '239, 68, 68'}, 0.3)`,
-                        cursor: "pointer"
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Panel Presensi Massal Cepat removed from page, integrated directly inside pertemuan modals */}
 
           {/* Ringkasan Statistik Presensi */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
@@ -4133,7 +4097,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 />
               </div>
 
-              {isEditingPertemuan && (
+              {isEditingPertemuan ? (
                 <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
                   <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Presensi Massal (Bulk)</label>
                   <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Ubah status kehadiran seluruh siswa di pertemuan ini sekaligus.</p>
@@ -4179,6 +4143,32 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </button>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Set Kehadiran Awal Siswa (Bulk)</label>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Pilih status kehadiran default untuk seluruh siswa saat pertemuan ini dibuat.</p>
+                  <select
+                    value={defaultBulkStatus}
+                    onChange={(e) => setDefaultBulkStatus(e.target.value)}
+                    className="input-field"
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      borderRadius: "var(--radius-md)",
+                      border: "1px solid var(--border-color)",
+                      backgroundColor: "var(--bg-secondary)",
+                      color: "var(--text-primary)",
+                      fontSize: "0.95rem",
+                      appearance: "auto"
+                    }}
+                  >
+                    <option value="H">🟢 Hadir (Semua)</option>
+                    <option value="I">🟡 Izin (Semua)</option>
+                    <option value="S">🔵 Sakit (Semua)</option>
+                    <option value="A">🔴 Alpa (Semua)</option>
+                    <option value="">∅ Kosongkan (Isi Manual)</option>
+                  </select>
                 </div>
               )}
             </div>
