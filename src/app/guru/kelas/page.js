@@ -275,10 +275,13 @@ export default function KelolaKelas() {
     reader.onload = (evt) => {
       try {
         const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
+        // cellDates:false ensures dates come as serial numbers, then raw:false
+        // converts all cells to their formatted display string — so dates come
+        // back as "2008-09-03" instead of serial 39689, avoiding type guessing.
+        const wb = XLSX.read(bstr, { type: "binary", cellDates: false });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
-        const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: "" });
 
         if (rows.length < 2) {
           setDapodikUploadError("Berkas Excel/CSV kosong atau format tidak sesuai.");
@@ -381,12 +384,15 @@ export default function KelolaKelas() {
           const cols = rows[i];
           if (!cols || !Array.isArray(cols) || cols.length === 0) continue;
 
-          const nisnVal = cols[nisnIdx] ? String(cols[nisnIdx]).trim() : "";
+          // NISN: remove thousands-separators that Excel formatting may add (e.g. "3,099,240,538")
+          const nisnVal = cols[nisnIdx] ? String(cols[nisnIdx]).replace(/[,.\s]/g, "").trim() : "";
           const namaVal = cols[namaIdx] ? String(cols[namaIdx]).trim() : "";
           const rombelVal = cols[rombelIdx] ? String(cols[rombelIdx]).trim() : "";
-          // Use raw value (may be number for Excel serial) then normalize
-          const tglRaw = tglIdx !== -1 && (cols[tglIdx] !== undefined && cols[tglIdx] !== null) ? cols[tglIdx] : "";
+          // With raw:false, date cells already come as formatted strings (e.g. "2008-09-03")
+          // normalizeTanggal handles any remaining format variants as fallback
+          const tglRaw = tglIdx !== -1 ? cols[tglIdx] : "";
           const tglVal = normalizeTanggal(tglRaw);
+
 
           // Pengecekan data tidak lengkap
           const missingFields = [];
@@ -525,8 +531,22 @@ export default function KelolaKelas() {
           });
 
           if (!resStudents.ok) {
-            console.error(`Gagal mengimpor siswa untuk kelas ${form.nama}`);
+            const errData = await resStudents.json().catch(() => ({}));
+            throw new Error(
+              `Gagal mengimpor siswa kelas "${form.nama}": ${
+                errData.error || `HTTP ${resStudents.status}`
+              }`
+            );
           }
+
+          const importResult = await resStudents.json().catch(() => ({}));
+          console.info(`Kelas "${form.nama}": ${importResult.addedCount ?? 0} siswa ditambahkan.`);
+        } else {
+          // Warn user: class form exists but no students matched that rombel
+          throw new Error(
+            `Tidak ada siswa ditemukan untuk rombel "${form.sourceRombel}" di berkas yang diunggah. ` +
+            `Periksa apakah nama rombel di berkas sudah sesuai dengan pilihan di dropdown.`
+          );
         }
         successCount++;
       }
@@ -844,9 +864,12 @@ export default function KelolaKelas() {
                         <td style={{ padding: "8px" }}>
                           <select className="form-input" value={form.sourceRombel} onChange={(e) => handleBulkFormChange(form.id, "sourceRombel", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
                             <option value="">-- Abaikan --</option>
-                            {parsedClasses.map((cls) => (
-                              <option key={cls} value={cls}>{cls}</option>
-                            ))}
+                            {parsedClasses.map((cls) => {
+                              const count = parsedStudents.filter(s => s.rombel === cls).length;
+                              return (
+                                <option key={cls} value={cls}>{cls} ({count} siswa)</option>
+                              );
+                            })}
                           </select>
                         </td>
                         <td style={{ padding: "8px", textAlign: "center" }}>
