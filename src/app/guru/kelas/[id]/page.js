@@ -275,6 +275,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
   const [activeTab, setActiveTab] = useState('nilai');
   const [showKehadiran, setShowKehadiran] = useState(false);
+  const [laporanTheme, setLaporanTheme] = useState("dark");
 
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
@@ -2185,6 +2186,33 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <input type="checkbox" id="showKehadiranToggle" checked={showKehadiran} onChange={(e) => setShowKehadiran(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "var(--primary)" }} />
                 <label htmlFor="showKehadiranToggle" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "600" }}>Tampilkan Kehadiran</label>
               </div>
+
+              {/* Theme Toggle Selector */}
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", marginRight: "8px", backgroundColor: "var(--bg-tertiary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                {['light', 'dark'].map((theme) => (
+                  <button
+                    key={theme}
+                    type="button"
+                    onClick={() => setLaporanTheme(theme)}
+                    className="btn"
+                    style={{
+                      padding: "4px 10px",
+                      fontSize: "0.75rem",
+                      fontWeight: "700",
+                      borderRadius: "4px",
+                      border: "none",
+                      cursor: "pointer",
+                      backgroundColor: laporanTheme === theme ? (theme === 'dark' ? 'var(--bg-primary)' : '#ffffff') : 'transparent',
+                      color: laporanTheme === theme ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      boxShadow: laporanTheme === theme ? 'var(--shadow-sm)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {theme === 'dark' ? '🌙 Dark' : '☀️ Light'}
+                  </button>
+                ))}
+              </div>
+
               <button onClick={() => {
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nGuru Pengampu: ${guruProfile?.nama || "-"}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
@@ -2207,7 +2235,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 element.style.padding = "40px";
                 element.style.width = "800px";
                 
-                const canvas = await html2canvas(element, { scale: 2, backgroundColor: "#0f172a" });
+                const canvas = await html2canvas(element, { scale: 2, backgroundColor: laporanTheme === "dark" ? "#0f172a" : "#ffffff" });
                 
                 // Restore styles
                 element.setAttribute("style", originalStyle);
@@ -2220,94 +2248,126 @@ export default function DetailKelas({ params: paramsPromise }) {
                 📸 Unduh Gambar
               </button>
             </div>
-          </div>
-
-          <div id="laporan-wali-kelas-export" style={{ backgroundColor: "#0f172a", padding: "24px", borderRadius: "var(--radius-md)", color: "#f8fafc", width: "100%", maxWidth: "800px", margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: "24px", borderBottom: "1px dashed rgba(255,255,255,0.2)", paddingBottom: "16px" }}>
-              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", margin: "0 0 8px 0", color: "#38bdf8" }}>Laporan Kendala Akademik</h2>
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "#94a3b8", marginBottom: "6px" }}>{kelas.mataPelajaran} • Kelas {kelas.nama}</p>
-              <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>Guru Pengampu: <strong style={{ color: "#cbd5e1" }}>{guruProfile?.nama || "-"}</strong> • KKM: <strong style={{ color: "#cbd5e1" }}>{analyticsData?.kkmVal}</strong></p>
-            </div>
-
-            {analyticsData?.problematicStudents.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                <span style={{ fontSize: "3rem" }}>🎉</span>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: "700", marginTop: "16px", color: "#10b981" }}>Luar Biasa! Semua Siswa Tuntas</h3>
-                <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginTop: "8px" }}>Tidak ada siswa dengan nilai kosong atau di bawah KKM.</p>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {analyticsData?.problematicStudents.map((s, i) => (
-                  <div key={s.nisn} style={{ backgroundColor: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
-                    <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: "0 0 12px 0", color: "#f8fafc" }}>{i + 1}. {s.nama}</h4>
-                    
-                    {/* Status & Detail Kendala Box */}
-                    <div style={{
-                      backgroundColor: s.finalScore >= analyticsData?.kkmVal ? "rgba(16, 185, 129, 0.03)" : "rgba(239, 68, 68, 0.03)",
-                      border: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? "rgba(52, 211, 153, 0.15)" : "rgba(248, 113, 113, 0.15)"}`,
-                      borderRadius: "8px",
-                      overflow: "hidden"
-                    }}>
-                      {/* Final Score Status Header */}
-                      <div style={{ 
-                        display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", fontSize: "0.85rem", fontWeight: "600",
-                        backgroundColor: s.finalScore >= analyticsData?.kkmVal ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)",
-                        color: s.finalScore >= analyticsData?.kkmVal ? "#34d399" : "#fca5a5",
-                        borderBottom: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? "rgba(52, 211, 153, 0.1)" : "rgba(248, 113, 113, 0.1)"}`
-                      }}>
-                        <span>{s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️"}</span>
-                        <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
-                      </div>
-
-                      {/* Rincian Kendala Aspek (Nested inside status box) */}
-                      <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span>↳</span> Rincian Detail Kendala Aspek:
-                        </div>
-                        
-                        <div style={{ paddingLeft: "12px", borderLeft: "2px solid rgba(255, 255, 255, 0.08)", display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {showKehadiran && (
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", backgroundColor: "rgba(0,0,0,0.25)", padding: "7px 12px", borderRadius: "4px", borderLeft: "3px solid #475569" }}>
-                              <span style={{ color: "#94a3b8", fontWeight: "600" }}>📋 Kehadiran</span>
-                              <span style={{ fontWeight: "700", fontSize: "0.75rem", color: "#94a3b8" }}>
-                                H: {s.attSummary.H} | I: {s.attSummary.I} | S: {s.attSummary.S} | <span style={{ color: s.attSummary.A > 0 ? "#fca5a5" : "inherit" }}>A: {s.attSummary.A}</span>
-                              </span>
-                            </div>
-                          )}
-                          {s.issues.map((issue, idx) => {
-                            const isKosong = issue.status.includes("Kosong");
-                            return (
-                              <div key={idx} style={{
-                                display: "flex", justifyContent: "space-between", alignItems: "center",
-                                fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
-                                backgroundColor: isKosong ? "rgba(251,191,36,0.08)" : "rgba(239,68,68,0.12)",
-                                borderLeft: `3px solid ${isKosong ? "#fbbf24" : "#ef4444"}`
-                              }}>
-                                <span style={{ color: "#e2e8f0", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <span style={{ color: isKosong ? "#fbbf24" : "#ef4444" }}>•</span> {issue.aspek}
-                                </span>
-                                <span style={{ 
-                                  fontWeight: "700", fontSize: "0.75rem",
-                                  color: isKosong ? "#fcd34d" : "#fca5a5"
-                                }}>
-                                  {issue.status}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          </div>e="b          {(() => {
+            const isDark = laporanTheme === "dark";
+            const colors = {
+              bg: isDark ? "#0f172a" : "#ffffff",
+              textPrimary: isDark ? "#f8fafc" : "#0f172a",
+              textSecondary: isDark ? "#94a3b8" : "#475569",
+              textMuted: isDark ? "#64748b" : "#64748b",
+              headerTitle: isDark ? "#38bdf8" : "#0284c7",
+              subTitleGuru: isDark ? "#cbd5e1" : "#1e293b",
+              borderDash: isDark ? "rgba(255,255,255,0.2)" : "rgba(15,23,42,0.15)",
+              cardBg: isDark ? "rgba(255,255,255,0.02)" : "#f8fafc",
+              cardBorder: isDark ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.06)",
+              tuntasBg: isDark ? "rgba(16, 185, 129, 0.03)" : "rgba(16, 185, 129, 0.04)",
+              tuntasBorder: isDark ? "rgba(52, 211, 153, 0.15)" : "rgba(16, 185, 129, 0.2)",
+              tuntasHeaderBg: isDark ? "rgba(16, 185, 129, 0.08)" : "rgba(16, 185, 129, 0.1)",
+              tuntasText: isDark ? "#34d399" : "#059669",
+              belumTuntasBg: isDark ? "rgba(239, 68, 68, 0.03)" : "rgba(239, 68, 68, 0.04)",
+              belumTuntasBorder: isDark ? "rgba(248, 113, 113, 0.15)" : "rgba(239, 68, 68, 0.2)",
+              belumTuntasHeaderBg: isDark ? "rgba(239, 68, 68, 0.08)" : "rgba(239, 68, 68, 0.1)",
+              belumTuntasText: isDark ? "#fca5a5" : "#dc2626",
+              listBorder: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 23, 42, 0.08)",
+              attBg: isDark ? "rgba(0,0,0,0.25)" : "rgba(15,23,42,0.04)",
+              attText: isDark ? "#94a3b8" : "#475569",
+              kosongBg: isDark ? "rgba(251,191,36,0.08)" : "rgba(245,158,11,0.08)",
+              kosongBorder: isDark ? "#fbbf24" : "#d97706",
+              kosongText: isDark ? "#fcd34d" : "#b45309",
+              kurangBg: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)",
+              kurangBorder: isDark ? "#ef4444" : "#dc2626",
+              kurangText: isDark ? "#fca5a5" : "#b91c1c",
+            };
             
-            <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed rgba(255,255,255,0.2)", textAlign: "center", fontSize: "0.75rem", color: "#64748b" }}>
-              <p style={{ margin: "0 0 8px 0", color: "#94a3b8", fontSize: "0.85rem" }}>Siswa dapat mengecek detail nilai masing-masing secara privat melalui: <strong style={{ color: "#38bdf8" }}>ceknilaimu.vercel.app</strong></p>
-              Dihasilkan otomatis oleh CekNilai App • {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </div>
-          </div>
+            return (
+              <div id="laporan-wali-kelas-export" style={{ backgroundColor: colors.bg, padding: "24px", borderRadius: "var(--radius-md)", color: colors.textPrimary, width: "100%", maxWidth: "800px", margin: "0 auto", border: isDark ? "none" : "1px solid var(--border-color)", boxShadow: isDark ? "none" : "var(--shadow-md)" }}>
+                <div style={{ textAlign: "center", marginBottom: "24px", borderBottom: `1px dashed ${colors.borderDash}`, paddingBottom: "16px" }}>
+                  <h2 style={{ fontSize: "1.5rem", fontWeight: "800", margin: "0 0 8px 0", color: colors.headerTitle }}>Laporan Kendala Akademik</h2>
+                  <p style={{ margin: 0, fontSize: "0.9rem", color: colors.textSecondary, marginBottom: "6px" }}>{kelas.mataPelajaran} • Kelas {kelas.nama}</p>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: colors.textMuted }}>Guru Pengampu: <strong style={{ color: colors.subTitleGuru }}>{guruProfile?.nama || "-"}</strong> • KKM: <strong style={{ color: colors.subTitleGuru }}>{analyticsData?.kkmVal}</strong></p>
+                </div>
+
+                {analyticsData?.problematicStudents.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                    <span style={{ fontSize: "3rem" }}>🎉</span>
+                    <h3 style={{ fontSize: "1.2rem", fontWeight: "700", marginTop: "16px", color: "#10b981" }}>Luar Biasa! Semua Siswa Tuntas</h3>
+                    <p style={{ color: colors.textSecondary, fontSize: "0.9rem", marginTop: "8px" }}>Tidak ada siswa dengan nilai kosong atau di bawah KKM.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {analyticsData?.problematicStudents.map((s, i) => (
+                      <div key={s.nisn} style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.cardBorder}`, padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
+                        <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: "0 0 12px 0", color: colors.textPrimary }}>{i + 1}. {s.nama}</h4>
+                        
+                        {/* Status & Detail Kendala Box */}
+                        <div style={{
+                          backgroundColor: s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBg : colors.belumTuntasBg,
+                          border: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder}`,
+                          borderRadius: "8px",
+                          overflow: "hidden"
+                        }}>
+                          {/* Final Score Status Header */}
+                          <div style={{ 
+                            display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", fontSize: "0.85rem", fontWeight: "600",
+                            backgroundColor: s.finalScore >= analyticsData?.kkmVal ? colors.tuntasHeaderBg : colors.belumTuntasHeaderBg,
+                            color: s.finalScore >= analyticsData?.kkmVal ? colors.tuntasText : colors.belumTuntasText,
+                            borderBottom: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder}`
+                          }}>
+                            <span>{s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️"}</span>
+                            <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
+                          </div>
+
+                          {/* Rincian Kendala Aspek (Nested inside status box) */}
+                          <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                            <div style={{ fontSize: "0.75rem", color: colors.textSecondary, fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span>↳</span> Rincian Detail Kendala Aspek:
+                            </div>
+                            
+                            <div style={{ paddingLeft: "12px", borderLeft: `2px solid ${colors.listBorder}`, display: "flex", flexDirection: "column", gap: "6px" }}>
+                              {showKehadiran && (
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem", backgroundColor: colors.attBg, padding: "7px 12px", borderRadius: "4px", borderLeft: "3px solid #475569" }}>
+                                  <span style={{ color: colors.attText, fontWeight: "600" }}>📋 Kehadiran</span>
+                                  <span style={{ fontWeight: "700", fontSize: "0.75rem", color: colors.attText }}>
+                                    H: {s.attSummary.H} | I: {s.attSummary.I} | S: {s.attSummary.S} | <span style={{ color: s.attSummary.A > 0 ? (isDark ? "#fca5a5" : "#dc2626") : "inherit" }}>A: {s.attSummary.A}</span>
+                                  </span>
+                                </div>
+                              )}
+                              {s.issues.map((issue, idx) => {
+                                const isKosong = issue.status.includes("Kosong");
+                                return (
+                                  <div key={idx} style={{
+                                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                                    fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
+                                    backgroundColor: isKosong ? colors.kosongBg : colors.kurangBg,
+                                    borderLeft: `3px solid ${isKosong ? colors.kosongBorder : colors.kurangBorder}`
+                                  }}>
+                                    <span style={{ color: colors.textPrimary, fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <span style={{ color: isKosong ? colors.kosongBorder : colors.kurangBorder }}>•</span> {issue.aspek}
+                                    </span>
+                                    <span style={{ 
+                                      fontWeight: "700", fontSize: "0.75rem",
+                                      color: isKosong ? colors.kosongText : colors.kurangText
+                                    }}>
+                                      {issue.status}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: `1px dashed ${colors.borderDash}`, textAlign: "center", fontSize: "0.75rem", color: colors.textMuted }}>
+                  <p style={{ margin: "0 0 8px 0", color: colors.textSecondary, fontSize: "0.85rem" }}>Siswa dapat mengecek detail nilai masing-masing secara privat melalui: <strong style={{ color: colors.headerTitle }}>ceknilaimu.vercel.app</strong></p>
+                  Dihasilkan otomatis oleh CekNilai App • {new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
