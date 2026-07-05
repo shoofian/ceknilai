@@ -251,6 +251,21 @@ a:hover {
 }
 
 /* Ensure date inputs are fully responsive and fit their containers in iOS/Safari and other platforms */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* iOS Safari centers text and styles date input values like a button by default unless overridden */
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.25em;
+  margin: 0;
+}
+
 input[type="date"].form-input {
   display: block;
   width: 100%;
