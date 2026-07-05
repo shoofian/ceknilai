@@ -328,7 +328,10 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
     // Sync columns if kolomNilai is provided
     if (updatedFields.kolomNilai !== undefined) {
       const { error: delError } = await supabase.from('kolom_nilai').delete().eq('kelas_id', id);
-      if (delError) console.error('Error deleting columns:', delError);
+      if (delError) {
+        console.error('Error deleting columns:', delError);
+        throw delError;
+      }
 
       if (updatedFields.kolomNilai.length > 0) {
         const colsToInsert = updatedFields.kolomNilai.map(col => ({
@@ -338,7 +341,10 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
           bobot: col.bobot
         }));
         const { error: colError } = await supabase.from('kolom_nilai').insert(colsToInsert);
-        if (colError) console.error('Error inserting columns:', colError);
+        if (colError) {
+          console.error('Error inserting columns:', colError);
+          throw colError;
+        }
       }
     }
 
@@ -356,7 +362,10 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
         const { error: sError } = await supabase
           .from('siswa')
           .upsert(studentsToUpsert, { onConflict: 'kelas_id,nisn' });
-        if (sError) console.error('Error upserting students:', sError);
+        if (sError) {
+          console.error('Error upserting students:', sError);
+          throw sError;
+        }
       }
     }
 
