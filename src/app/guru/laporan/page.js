@@ -432,72 +432,96 @@ export default function CetakLaporan() {
           <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "24px", border: "1px solid var(--border-color)", padding: "40px" }} id="printable-area">
             
             {/* OFFICIAL REPORT KOP / HEADER */}
-            <div style={{ textAlign: "center", borderBottom: "4px double var(--text-primary)", paddingBottom: "20px", marginBottom: "20px" }}>
-              <h2 style={{ fontSize: "1.8rem", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.02em" }}>
+            <div className="report-kop" style={{ textAlign: "center", borderBottom: "4px double #333", paddingBottom: "20px", marginBottom: "10px" }}>
+              <h2 style={{ fontSize: "1.8rem", textTransform: "uppercase", fontWeight: "800", letterSpacing: "0.02em", color: "inherit" }}>
                 Laporan Hasil Belajar Siswa
               </h2>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "var(--text-secondary)", marginTop: "4px" }}>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: "700", marginTop: "4px", color: "inherit" }}>
                 {namaSekolah}
               </h3>
-              <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
+              <p style={{ fontSize: "0.85rem", marginTop: "4px", color: "inherit" }}>
                 Alamat: {alamatSekolah} &bull; Telp: {telpSekolah}
               </p>
             </div>
 
-            {/* REPORT METADATA GRID */}
+            {/* REPORT METADATA - two-column info block */}
             <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "16px", fontSize: "0.95rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                 <p>Kelas: <strong>{selectedClass.nama}</strong></p>
                 <p>Mata Pelajaran: <strong>{selectedClass.mataPelajaran || "Informatika"}</strong></p>
                 <p>Tahun Ajaran: <strong>{selectedClass.tahunAjaran} ({selectedClass.semester || "Ganjil"})</strong></p>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", textAlign: "right" }} className="align-left-mobile">
+              <div style={{ display: "flex", flexDirection: "column", gap: "5px", textAlign: "right" }} className="align-left-mobile">
                 <p>Total Siswa: <strong>{stats.totalStudents} orang</strong></p>
-                <p>Tanggal Cetak: <strong>{new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</strong></p>
-                <p>Status: <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "2px 8px" }}>{selectedClass.archived ? "Arsip" : "Aktif"}</span></p>
+                <p>Tanggal Cetak: <strong>{new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</strong></p>
+                <p>Status: <span className={`badge ${selectedClass.archived ? "badge-warning" : "badge-primary"}`} style={{ fontSize: "0.7rem", padding: "2px 8px" }}>{selectedClass.archived ? "Arsip" : "Aktif"}</span></p>
               </div>
             </div>
 
-            {/* CLASS STATISTICS ANALYTICS SUMMARY */}
-            <div className="grid-cols-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginTop: "10px" }}>
-              <div style={{ padding: "16px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "700" }}>RATA-RATA KELAS</span>
-                <h4 style={{ fontSize: "1.75rem", color: "var(--primary)", marginTop: "4px" }}>{stats.average}</h4>
-              </div>
-              <div style={{ padding: "16px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "700" }}>NILAI TERTINGGI</span>
-                <h4 style={{ fontSize: "1.75rem", color: "var(--success)", marginTop: "4px" }}>{stats.highest}</h4>
-              </div>
-              <div style={{ padding: "16px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "700" }}>NILAI TERENDAH</span>
-                <h4 style={{ fontSize: "1.75rem", color: "var(--danger)", marginTop: "4px" }}>{stats.lowest}</h4>
-              </div>
-              <div style={{ padding: "16px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "700" }}>PERSENTASE KELULUSAN</span>
-                <h4 style={{ fontSize: "1.75rem", color: stats.passRate >= 75 ? "var(--success)" : "var(--warning)", marginTop: "4px" }}>{stats.passRate}%</h4>
-              </div>
-            </div>
+            {/* STATISTIK KELAS — formal HTML table (print-safe, no CSS vars) */}
+            <table className="print-stats-table" style={{ width: "100%", borderCollapse: "collapse", marginTop: "4px" }}>
+              <thead>
+                <tr>
+                  {[
+                    "Rata-rata Kelas",
+                    "Nilai Tertinggi",
+                    "Nilai Terendah",
+                    "% Kelulusan",
+                    "KKM"
+                  ].map(label => (
+                    <th
+                      key={label}
+                      style={{
+                        border: "1px solid #aaaaaa",
+                        padding: "8px 12px",
+                        textAlign: "center",
+                        backgroundColor: "#f3f4f6",
+                        fontSize: "0.76rem",
+                        fontWeight: "700",
+                        letterSpacing: "0.03em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ border: "1px solid #aaaaaa", padding: "10px 12px", textAlign: "center", fontSize: "1.5rem", fontWeight: "800", color: "#2563eb" }}>{stats.average}</td>
+                  <td style={{ border: "1px solid #aaaaaa", padding: "10px 12px", textAlign: "center", fontSize: "1.5rem", fontWeight: "800", color: "#16a34a" }}>{stats.highest}</td>
+                  <td style={{ border: "1px solid #aaaaaa", padding: "10px 12px", textAlign: "center", fontSize: "1.5rem", fontWeight: "800", color: "#dc2626" }}>{stats.lowest}</td>
+                  <td style={{ border: "1px solid #aaaaaa", padding: "10px 12px", textAlign: "center", fontSize: "1.5rem", fontWeight: "800", color: stats.passRate >= 75 ? "#16a34a" : "#d97706" }}>{stats.passRate}%</td>
+                  <td style={{ border: "1px solid #aaaaaa", padding: "10px 12px", textAlign: "center", fontSize: "1.5rem", fontWeight: "800" }}>{selectedClass.skemaPenilaian?.kkm || 75}</td>
+                </tr>
+              </tbody>
+            </table>
 
             {/* TABEL LAPORAN NILAI UTAMA */}
-            <div className="table-container" style={{ margin: "20px 0 10px 0" }}>
+            <div className="table-container" style={{ margin: "8px 0 0 0" }}>
               <table className="premium-table">
                 <thead>
                   <tr>
-                    <th>No</th>
-                    <th>NISN</th>
-                    <th>Nama Siswa</th>
+                    <th style={{ width: "36px", textAlign: "center" }}>No</th>
+                    <th style={{ width: "108px" }}>NISN</th>
+                    <th style={{ minWidth: "160px" }}>Nama Siswa</th>
                     {selectedClass.kolomNilai.map(col => (
-                      <th key={col.id} style={{ textAlign: "center" }}>{col.nama} ({col.bobot}%)</th>
+                      <th key={col.id} style={{ textAlign: "center", minWidth: "80px" }}>
+                        {col.nama}
+                        <br />
+                        <span style={{ fontSize: "0.78em", fontWeight: "400", opacity: 0.8 }}>({col.bobot}%)</span>
+                      </th>
                     ))}
-                    <th style={{ textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>N. Akhir</th>
-                    <th style={{ textAlign: "center", width: "100px" }}>Predikat</th>
-                    <th style={{ textAlign: "center", width: "130px" }}>Kelulusan</th>
+                    <th style={{ textAlign: "center", width: "72px", backgroundColor: "#dce6f1" }}>N. Akhir</th>
+                    <th style={{ textAlign: "center", width: "80px" }}>Predikat</th>
+                    <th style={{ textAlign: "center", width: "110px" }}>Kelulusan</th>
                   </tr>
                 </thead>
                 <tbody>
                   {studentReports.map((report, idx) => (
                     <tr key={report.nisn}>
-                      <td>{idx + 1}</td>
+                      <td style={{ textAlign: "center" }}>{idx + 1}</td>
                       <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{report.nisn}</td>
                       <td style={{ fontWeight: "700" }}>{report.nama}</td>
                       
@@ -509,20 +533,29 @@ export default function CetakLaporan() {
                       ))}
 
                       {/* Final weighted score */}
-                      <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59,130,246,0.02)" }}>
+                      <td style={{ textAlign: "center", fontWeight: "800", color: "#2563eb", backgroundColor: "rgba(59,130,246,0.05)" }}>
                         {report.nilaiAkhir}
                       </td>
 
                       {/* Predicate */}
                       <td style={{ textAlign: "center", fontWeight: "800" }}>
-                        <span style={{ color: report.predikat === "A" || report.predikat === "B" ? "var(--success)" : report.predikat === "C" ? "var(--warning)" : "var(--danger)" }}>
+                        <span style={{
+                          color: (report.predikat === "A" || report.predikat === "B")
+                            ? "#16a34a"
+                            : report.predikat === "C"
+                            ? "#d97706"
+                            : "#dc2626"
+                        }}>
                           {report.predikat}
                         </span>
                       </td>
 
                       {/* Graduation status */}
                       <td style={{ textAlign: "center" }}>
-                        <span className={`badge ${report.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.7rem", width: "100%", justifyContent: "center" }}>
+                        <span
+                          className={`badge ${report.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`}
+                          style={{ fontSize: "0.7rem", width: "100%", justifyContent: "center", display: "inline-flex" }}
+                        >
                           {report.statusKelulusan}
                         </span>
                       </td>
@@ -533,40 +566,41 @@ export default function CetakLaporan() {
             </div>
 
             {/* KKM Footnote */}
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-              * Kriteria Ketuntasan Minimal (KKM) mata pelajaran adalah {selectedClass.skemaPenilaian?.kkm || 75}. Nilai akhir dihitung secara otomatis berdasarkan pembagian persentase bobot aspek nilai kelas.
+            <p className="report-footnote" style={{ fontSize: "0.8rem", color: "#6b7280", fontStyle: "italic", borderTop: "1px solid #e5e7eb", paddingTop: "8px", marginTop: "4px" }}>
+              * Kriteria Ketuntasan Minimal (KKM) mata pelajaran ini adalah <strong>{selectedClass.skemaPenilaian?.kkm || 75}</strong>. Nilai akhir dihitung secara otomatis berdasarkan persentase bobot setiap aspek penilaian yang telah ditetapkan.
             </p>
 
             {/* OFFICIAL SIGNATURE SECTION */}
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: "50px", padding: "0 20px" }} className="align-left-mobile">
+            <div className="report-signature" style={{ display: "flex", justifyContent: "space-between", marginTop: "50px", padding: "0 20px" }}>
               
-              {/* Left Side Signature: Teacher (Guru Pengampu) */}
-              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "60px" }}>
+              {/* Left: Guru Pengampu */}
+              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "56px" }}>
+                <p style={{ fontSize: "0.95rem", fontWeight: "700" }}>Guru Pengampu,</p>
                 <div>
-                  <p style={{ fontSize: "0.9rem" }}>&nbsp;</p>
-                  <p style={{ fontSize: "0.95rem", fontWeight: "700", marginTop: "2px" }}>Guru Pengampu,</p>
-                </div>
-                <div>
-                  <p style={{ fontSize: "0.95rem", fontWeight: "700", borderBottom: "1px solid var(--text-primary)", display: "inline-block" }}>
+                  <p style={{ fontSize: "0.95rem", fontWeight: "700", borderBottom: "1px solid #333", display: "inline-block", paddingBottom: "2px" }}>
                     {guruProfile?.nama || "Nama Guru"}
                   </p>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                    {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. -"}
+                  <p style={{ fontSize: "0.8rem", marginTop: "3px", color: "#6b7280" }}>
+                    {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. —"}
                   </p>
                 </div>
               </div>
 
-              {/* Right Side Signature: Principal (Kepala Sekolah) */}
-              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "60px" }}>
+              {/* Right: Kepala Sekolah */}
+              <div style={{ textAlign: "center", display: "flex", flexDirection: "column", gap: "56px" }}>
                 <div>
-                  <p style={{ fontSize: "0.9rem" }}>{kotaCetak}, {new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                  <p style={{ fontSize: "0.95rem", fontWeight: "700", marginTop: "2px" }}>Mengetahui,<br />Kepala Sekolah</p>
+                  <p style={{ fontSize: "0.9rem" }}>
+                    {kotaCetak}, {new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                  <p style={{ fontSize: "0.95rem", fontWeight: "700", marginTop: "2px" }}>
+                    Mengetahui,<br />Kepala Sekolah
+                  </p>
                 </div>
                 <div>
-                  <p style={{ fontSize: "0.95rem", fontWeight: "700", borderBottom: "1px solid var(--text-primary)", display: "inline-block" }}>
+                  <p style={{ fontSize: "0.95rem", fontWeight: "700", borderBottom: "1px solid #333", display: "inline-block", paddingBottom: "2px" }}>
                     {namaKepsek}
                   </p>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px" }}>NIP. {nipKepsek}</p>
+                  <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "3px" }}>NIP. {nipKepsek}</p>
                 </div>
               </div>
 
