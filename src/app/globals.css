@@ -250,6 +250,15 @@ a:hover {
   -moz-appearance: textfield;
 }
 
+/* Ensure date inputs are fully responsive and fit their containers in iOS/Safari and other platforms */
+input[type="date"].form-input {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
