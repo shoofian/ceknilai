@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS kelas (
   semester text DEFAULT 'Ganjil',
   tingkatan integer DEFAULT NULL,
   archived boolean DEFAULT false,
-  guru_username text REFERENCES guru(username) ON DELETE CASCADE DEFAULT 'guru',
+  guru_username text REFERENCES guru(username) ON DELETE CASCADE ON UPDATE CASCADE DEFAULT 'guru',
   is_nilai_akhir_generated boolean DEFAULT false,
   skema_penilaian jsonb DEFAULT '{"A": 85, "B": 75, "C": 65, "D": 50, "kkm": 75, "statusA": "A", "statusB": "B", "statusC": "C", "statusD": "D"}'::jsonb
 );
