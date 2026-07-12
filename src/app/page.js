@@ -192,23 +192,16 @@ export default function StudentPortal() {
       {/* Navbar Portal */}
       <nav className="header no-print">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div
+          <img
+            src="/logo.png"
+            alt="CekNilai Logo"
             style={{
               width: "40px",
               height: "40px",
+              objectFit: "cover",
               borderRadius: "10px",
-              background: "linear-gradient(135deg, var(--primary), var(--success))",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "800",
-              color: "#ffffff",
-              fontSize: "1.2rem",
-              fontFamily: "var(--font-heading)"
             }}
-          >
-            N
-          </div>
+          />
           <div>
             <h1 style={{ fontSize: "1.2rem", fontWeight: "800", letterSpacing: "-0.02em" }}>CekNilai</h1>
             <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>Sistem Penilaian Online</p>

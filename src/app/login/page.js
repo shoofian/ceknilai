@@ -80,25 +80,18 @@ export default function LoginGuru() {
           
           {/* Logo & Header */}
           <div style={{ textAlign: "center" }}>
-            <div
+            <img
+              src="/logo.png"
+              alt="CekNilai Logo"
               style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "800",
-                color: "#ffffff",
-                fontSize: "1.6rem",
+                width: "64px",
+                height: "64px",
+                objectFit: "cover",
+                borderRadius: "16px",
                 margin: "0 auto 16px auto",
                 boxShadow: "0 8px 16px var(--primary-glow)",
-                fontFamily: "var(--font-heading)"
               }}
-            >
-              N
-            </div>
+            />
             <h2 style={{ fontSize: "1.75rem", fontWeight: "800", letterSpacing: "-0.03em" }}>Masuk Sebagai Guru</h2>
             <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "6px" }}>
               Kelola kelas, siswa, kolom nilai, dan unduh laporan.
