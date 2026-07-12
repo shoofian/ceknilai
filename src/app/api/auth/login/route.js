@@ -17,6 +17,10 @@ export async function POST(request) {
         path: '/',
       });
       
+      // Log teacher activity
+      const { logAktivitasGuru } = await import('@/lib/db');
+      await logAktivitasGuru(guru.username, 'LOGIN', 'Melakukan login ke sistem');
+
       const { password: _, ...guruData } = guru;
       return NextResponse.json({ success: true, user: guruData });
     }

@@ -79,6 +79,14 @@ export async function POST(request) {
       });
     }
 
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    if (newPassword) {
+      await logAktivitasGuru(session.value, 'UBAH_PASSWORD', 'Memperbarui kata sandi akun');
+    } else {
+      await logAktivitasGuru(session.value, 'EDIT_PROFIL', 'Memperbarui informasi profil akun');
+    }
+
     const { password: _, ...guruData } = updated;
     return NextResponse.json({ success: true, user: guruData });
   } catch (error) {
