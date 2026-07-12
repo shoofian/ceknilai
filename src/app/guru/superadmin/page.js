@@ -29,7 +29,7 @@ export default function SuperadminPanel() {
   const [formPassword, setFormPassword] = useState("");
 
   const router = useRouter();
-  const SUPERADMIN_USERNAMES = ["superadmin", "shoofian", "gurubaik"];
+  const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
 
   useEffect(() => {
     const checkAuth = async () => {

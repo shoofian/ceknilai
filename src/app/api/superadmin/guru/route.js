@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian', 'gurubaik'];
+const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
 
 async function checkSuperadminAuth() {
   const cookieStore = await cookies();

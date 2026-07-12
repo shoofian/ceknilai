@@ -76,7 +76,7 @@ export default function GuruLayout({ children }) {
     { name: "👤 Profil Saya", path: "/guru/profil" },
   ];
 
-  if (guru && ["superadmin", "shoofian", "gurubaik"].includes(guru.username.toLowerCase())) {
+  if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
     navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
   }
 
