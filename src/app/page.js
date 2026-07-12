@@ -22,11 +22,13 @@ export default function StudentPortal() {
   const [selectedTahunAjaran, setSelectedTahunAjaran] = useState("Semua");
   const [selectedSemester, setSelectedSemester] = useState("Semua");
   const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("Semua");
+  const [selectedTingkatan, setSelectedTingkatan] = useState("Semua");
 
   // Dynamic filter options derived from search results
   const tahunAjaranOptions = results ? ["Semua", ...Array.from(new Set(results.map(r => r.tahunAjaran).filter(Boolean))).sort()] : [];
   const semesterOptions = results ? ["Semua", ...Array.from(new Set(results.map(r => r.semester || "Ganjil").filter(Boolean))).sort()] : [];
   const mataPelajaranOptions = results ? ["Semua", ...Array.from(new Set(results.map(r => r.mataPelajaran || "Informatika").filter(Boolean))).sort()] : [];
+  const tingkatanOptions = results ? ["Semua", ...Array.from(new Set(results.map(r => r.tingkatan).filter(Boolean))).sort((a, b) => a - b).map(String)] : [];
 
   const filteredResults = results ? results.filter(r => {
     const matchesSearch = r.namaKelas.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -34,7 +36,8 @@ export default function StudentPortal() {
     const matchesTahun = selectedTahunAjaran === "Semua" || r.tahunAjaran === selectedTahunAjaran;
     const matchesSemester = selectedSemester === "Semua" || (r.semester || "Ganjil") === selectedSemester;
     const matchesMapel = selectedMataPelajaran === "Semua" || (r.mataPelajaran || "Informatika") === selectedMataPelajaran;
-    return matchesSearch && matchesTahun && matchesSemester && matchesMapel;
+    const matchesTingkatan = selectedTingkatan === "Semua" || String(r.tingkatan) === selectedTingkatan;
+    return matchesSearch && matchesTahun && matchesSemester && matchesMapel && matchesTingkatan;
   }) : [];
 
   // States untuk Fitur Gabung Kelas
@@ -147,6 +150,7 @@ export default function StudentPortal() {
     setSelectedTahunAjaran("Semua");
     setSelectedSemester("Semua");
     setSelectedMataPelajaran("Semua");
+    setSelectedTingkatan("Semua");
 
     try {
       const response = await fetch(
@@ -376,6 +380,18 @@ export default function StudentPortal() {
                           {mataPelajaranOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                       </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan</label>
+                        <select
+                          className="form-input"
+                          value={selectedTingkatan}
+                          onChange={(e) => setSelectedTingkatan(e.target.value)}
+                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "120px" }}
+                        >
+                          {tingkatanOptions.map(opt => <option key={opt} value={opt}>{opt === "Semua" ? "Semua" : `Kelas ${opt}`}</option>)}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -411,6 +427,11 @@ export default function StudentPortal() {
                           <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
                             <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff" }}>{res.namaKelas}</h4>
                             <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
+                              {res.tingkatan && (
+                                <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.25)", color: "#ffffff", fontWeight: "700" }}>
+                                  🎓 Kelas {res.tingkatan}
+                                </span>
+                              )}
                               <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
                                 📚 TA: {res.tahunAjaran}
                               </span>

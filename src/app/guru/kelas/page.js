@@ -11,16 +11,46 @@ export default function KelolaKelas() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState("");
   const [nama, setNama] = useState("");
-  const [mataPelajaran, setMataPelajaran] = useState("Informatika");
-  const [tahunAjaran, setTahunAjaran] = useState("2025/2026");
-  const [semester, setSemester] = useState("Ganjil");
+  const [tingkatan, setTingkatan] = useState("");
+  const [mataPelajaran, setMataPelajaran] = useState("");
+  const [mataPelajaranCustom, setMataPelajaranCustom] = useState("");
+  const [tahunAjaran, setTahunAjaran] = useState("");
+  const [semester, setSemester] = useState("");
   const [error, setError] = useState("");
+
+  // Filter States
+  const [filterTingkatan, setFilterTingkatan] = useState("Semua");
+
+  // Dropdown Constants
+  const TINGKATAN_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+  const MATA_PELAJARAN_OPTIONS = [
+    "Informatika", "Matematika", "Bahasa Indonesia", "Bahasa Inggris", "Bahasa Jerman",
+    "Bahasa Jepang", "Bahasa Arab", "Bahasa Mandarin", "Bahasa Prancis", "Bahasa Korea",
+    "IPA", "Fisika", "Kimia", "Biologi",
+    "IPS", "Ekonomi", "Geografi", "Sosiologi", "Sejarah", "Antropologi",
+    "PKN", "Pendidikan Agama Islam", "Pendidikan Agama Kristen", "Pendidikan Agama Katolik",
+    "Pendidikan Agama Hindu", "Pendidikan Agama Buddha", "Pendidikan Agama Konghucu",
+    "Seni Budaya", "Seni Musik", "Seni Rupa", "Seni Tari", "Seni Teater",
+    "PJOK", "Prakarya", "Prakarya dan Kewirausahaan",
+    "Teknologi Informasi dan Komunikasi", "Bimbingan Konseling",
+    "Muatan Lokal", "Lainnya"
+  ];
+  const currentYear = new Date().getFullYear();
+  const TAHUN_AJARAN_OPTIONS = Array.from({ length: 5 }, (_, i) => {
+    const y = currentYear - 1 + i;
+    return `${y}/${y + 1}`;
+  });
+
+  const getEffectiveMataPelajaran = () => {
+    if (mataPelajaran === "Lainnya") return mataPelajaranCustom.trim();
+    return mataPelajaran;
+  };
 
   // Bulk Import States
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [parsedClasses, setParsedClasses] = useState([]);
   const [parsedStudents, setParsedStudents] = useState([]);
-  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" }]);
+  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" }]);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
@@ -60,7 +90,9 @@ export default function KelolaKelas() {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
   const [sourceClass, setSourceClass] = useState(null);
   const [dupNama, setDupNama] = useState("");
+  const [dupTingkatan, setDupTingkatan] = useState("");
   const [dupMataPelajaran, setDupMataPelajaran] = useState("");
+  const [dupMataPelajaranCustom, setDupMataPelajaranCustom] = useState("");
   const [dupTahunAjaran, setDupTahunAjaran] = useState("");
   const [dupSemester, setDupSemester] = useState("Ganjil");
   const [copyStudents, setCopyStudents] = useState(true);
@@ -89,9 +121,11 @@ export default function KelolaKelas() {
   const handleOpenAdd = () => {
     setIsEditing(false);
     setNama("");
-    setMataPelajaran("Informatika");
-    setTahunAjaran("2025/2026");
-    setSemester("Ganjil");
+    setTingkatan("");
+    setMataPelajaran("");
+    setMataPelajaranCustom("");
+    setTahunAjaran("");
+    setSemester("");
     setError("");
     setModalOpen(true);
   };
@@ -100,8 +134,17 @@ export default function KelolaKelas() {
     setIsEditing(true);
     setCurrentId(k.id);
     setNama(k.nama);
-    setMataPelajaran(k.mataPelajaran || "Informatika");
-    setTahunAjaran(k.tahunAjaran);
+    setTingkatan(k.tingkatan ? String(k.tingkatan) : "");
+    const mapelVal = k.mataPelajaran || "";
+    if (MATA_PELAJARAN_OPTIONS.includes(mapelVal)) {
+      setMataPelajaran(mapelVal);
+      setMataPelajaranCustom("");
+    } else {
+      setMataPelajaran("Lainnya");
+      setMataPelajaranCustom(mapelVal);
+    }
+    const taVal = k.tahunAjaran || "";
+    setTahunAjaran(TAHUN_AJARAN_OPTIONS.includes(taVal) ? taVal : taVal);
     setSemester(k.semester || "Ganjil");
     setError("");
     setModalOpen(true);
@@ -113,24 +156,44 @@ export default function KelolaKelas() {
       setError("Nama kelas harus diisi.");
       return;
     }
-    if (!mataPelajaran.trim()) {
+    if (!tingkatan) {
+      setError("Tingkatan kelas harus dipilih.");
+      return;
+    }
+    const effectiveMapel = getEffectiveMataPelajaran();
+    if (!effectiveMapel) {
       setError("Mata pelajaran harus diisi.");
+      return;
+    }
+    if (!tahunAjaran) {
+      setError("Tahun ajaran harus dipilih.");
+      return;
+    }
+    if (!semester) {
+      setError("Semester harus dipilih.");
       return;
     }
 
     try {
       let response;
+      const payload = {
+        nama: nama.trim(),
+        tingkatan: Number(tingkatan),
+        mataPelajaran: effectiveMapel,
+        tahunAjaran: tahunAjaran.trim(),
+        semester: semester.trim()
+      };
       if (isEditing) {
         response = await fetch(`/api/kelas/${currentId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim(), semester: semester.trim() }),
+          body: JSON.stringify(payload),
         });
       } else {
         response = await fetch("/api/kelas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: nama.trim(), mataPelajaran: mataPelajaran.trim(), tahunAjaran: tahunAjaran.trim(), semester: semester.trim() }),
+          body: JSON.stringify(payload),
         });
       }
 
@@ -197,7 +260,15 @@ export default function KelolaKelas() {
   const handleDuplicateOpen = (k) => {
     setSourceClass(k);
     setDupNama(`${k.nama} (Salinan)`);
-    setDupMataPelajaran(k.mataPelajaran || "Informatika");
+    setDupTingkatan(k.tingkatan ? String(k.tingkatan) : "");
+    const mapelVal = k.mataPelajaran || "";
+    if (MATA_PELAJARAN_OPTIONS.includes(mapelVal)) {
+      setDupMataPelajaran(mapelVal);
+      setDupMataPelajaranCustom("");
+    } else {
+      setDupMataPelajaran("Lainnya");
+      setDupMataPelajaranCustom(mapelVal);
+    }
     setDupTahunAjaran(k.tahunAjaran);
     setDupSemester(k.semester || "Ganjil");
     setCopyStudents(true);
@@ -212,7 +283,12 @@ export default function KelolaKelas() {
       setDupError("Nama kelas baru harus diisi.");
       return;
     }
-    if (!dupMataPelajaran.trim()) {
+    if (!dupTingkatan) {
+      setDupError("Tingkatan kelas harus dipilih.");
+      return;
+    }
+    const effectiveDupMapel = dupMataPelajaran === "Lainnya" ? dupMataPelajaranCustom.trim() : dupMataPelajaran;
+    if (!effectiveDupMapel) {
       setDupError("Mata pelajaran harus diisi.");
       return;
     }
@@ -243,7 +319,8 @@ export default function KelolaKelas() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nama: dupNama.trim(),
-          mataPelajaran: dupMataPelajaran.trim(),
+          tingkatan: Number(dupTingkatan),
+          mataPelajaran: effectiveDupMapel,
           tahunAjaran: dupTahunAjaran.trim(),
           semester: dupSemester.trim(),
           kolomNilai: sourceClass.kolomNilai || [],
@@ -432,6 +509,7 @@ export default function KelolaKelas() {
         const initialForms = [{
           id: Date.now(),
           nama: "",
+          tingkatan: "",
           mataPelajaran: "Informatika",
           tahunAjaran: "2025/2026",
           semester: "Ganjil",
@@ -480,7 +558,7 @@ export default function KelolaKelas() {
 
       const isLastFilled = updated[updated.length - 1].nama.trim() !== "" || updated[updated.length - 1].sourceRombel !== "";
       if (isLastFilled) {
-        updated.push({ id: Date.now(), nama: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" });
+        updated.push({ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" });
       }
 
       return updated;
@@ -500,6 +578,11 @@ export default function KelolaKelas() {
       setBulkError("Anda harus mengisi setidaknya satu kelas untuk diimpor.");
       return;
     }
+    const hasEmptyTingkatan = validForms.some((f) => !f.tingkatan);
+    if (hasEmptyTingkatan) {
+      setBulkError("Tingkatan kelas harus diisi untuk semua kelas yang akan diimpor.");
+      return;
+    }
 
     setIsBulkImporting(true);
 
@@ -510,7 +593,7 @@ export default function KelolaKelas() {
         const resKelas = await fetch("/api/kelas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: form.nama.trim(), mataPelajaran: form.mataPelajaran.trim(), tahunAjaran: form.tahunAjaran.trim(), semester: form.semester.trim() }),
+          body: JSON.stringify({ nama: form.nama.trim(), tingkatan: form.tingkatan ? Number(form.tingkatan) : null, mataPelajaran: form.mataPelajaran.trim(), tahunAjaran: form.tahunAjaran.trim(), semester: form.semester.trim() }),
         });
 
         if (!resKelas.ok) {
@@ -587,11 +670,35 @@ export default function KelolaKelas() {
           <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
         </div>
       ) : kelas.length > 0 ? (
-        <div className="grid-cols-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
-          {kelas.map((k) => (
+        <>
+          {/* Filter Bar */}
+          <div className="glass-card" style={{ display: "flex", gap: "16px", flexWrap: "wrap", padding: "16px", alignItems: "center" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan Kelas</label>
+              <select
+                className="form-input"
+                value={filterTingkatan}
+                onChange={(e) => setFilterTingkatan(e.target.value)}
+                style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "130px", appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+              >
+                <option value="Semua" style={{ backgroundColor: "var(--bg-secondary)" }}>Semua Tingkatan</option>
+                {TINGKATAN_OPTIONS.map(t => (
+                  <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid-cols-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+          {kelas.filter(k => filterTingkatan === "Semua" || String(k.tingkatan) === filterTingkatan).map((k) => (
             <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}>
               <div>
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                  {k.tingkatan && (
+                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                      🎓 Kelas {k.tingkatan}
+                    </span>
+                  )}
                   <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
                     📚 {k.tahunAjaran}
                   </span>
@@ -648,7 +755,7 @@ export default function KelolaKelas() {
                   <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Edit Kelas">
                     ✏️ Edit
                   </button>
-                  <button onClick={() => handleOpenDuplicate(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Duplikat Kelas">
+                  <button onClick={() => handleDuplicateOpen(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Duplikat Kelas">
                     📋 Duplikat
                   </button>
                   <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center" }} title="Arsipkan Kelas">
@@ -661,7 +768,9 @@ export default function KelolaKelas() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </>
+
       ) : (
         <div style={{ padding: "60px 20px", textAlign: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)" }}>
           <h3 style={{ fontSize: "1.25rem", color: "var(--text-secondary)", marginBottom: "8px" }}>Belum Ada Kelas Aktif</h3>
@@ -699,48 +808,22 @@ export default function KelolaKelas() {
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama Kelas</label>
+                <label className="form-label">Nama Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
                 <input
                   type="text"
                   placeholder="Contoh: Kelas XI-IPA 2"
                   className="form-input"
                   value={nama}
                   onChange={(e) => setNama(e.target.value)}
-                  required
                 />
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Mata Pelajaran</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Informatika"
-                  className="form-input"
-                  value={mataPelajaran}
-                  onChange={(e) => setMataPelajaran(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tahun Ajaran</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: 2025/2026"
-                  className="form-input"
-                  value={tahunAjaran}
-                  onChange={(e) => setTahunAjaran(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Semester</label>
+                <label className="form-label">Tingkatan Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
                 <select
                   className="form-input"
-                  value={semester}
-                  onChange={(e) => setSemester(e.target.value)}
-                  required
+                  value={tingkatan}
+                  onChange={(e) => setTingkatan(e.target.value)}
                   style={{ 
                     appearance: "auto", 
                     backgroundColor: "rgba(30, 41, 59, 0.7)", 
@@ -748,6 +831,77 @@ export default function KelolaKelas() {
                     border: "1px solid var(--border-color)" 
                   }}
                 >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
+                  {TINGKATAN_OPTIONS.map(t => (
+                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Mata Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
+                  className="form-input"
+                  value={mataPelajaran}
+                  onChange={(e) => { setMataPelajaran(e.target.value); if (e.target.value !== "Lainnya") setMataPelajaranCustom(""); }}
+                  style={{ 
+                    appearance: "auto", 
+                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    color: "var(--text-primary)", 
+                    border: "1px solid var(--border-color)" 
+                  }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Mata Pelajaran --</option>
+                  {MATA_PELAJARAN_OPTIONS.map(mp => (
+                    <option key={mp} value={mp} style={{ backgroundColor: "var(--bg-secondary)" }}>{mp}</option>
+                  ))}
+                </select>
+                {mataPelajaran === "Lainnya" && (
+                  <input
+                    type="text"
+                    placeholder="Ketik nama mata pelajaran..."
+                    className="form-input"
+                    value={mataPelajaranCustom}
+                    onChange={(e) => setMataPelajaranCustom(e.target.value)}
+                    style={{ marginTop: "8px" }}
+                  />
+                )}
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tahun Ajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
+                  className="form-input"
+                  value={tahunAjaran}
+                  onChange={(e) => setTahunAjaran(e.target.value)}
+                  style={{ 
+                    appearance: "auto", 
+                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    color: "var(--text-primary)", 
+                    border: "1px solid var(--border-color)" 
+                  }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tahun Ajaran --</option>
+                  {TAHUN_AJARAN_OPTIONS.map(ta => (
+                    <option key={ta} value={ta} style={{ backgroundColor: "var(--bg-secondary)" }}>{ta}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Semester <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
+                  className="form-input"
+                  value={semester}
+                  onChange={(e) => setSemester(e.target.value)}
+                  style={{ 
+                    appearance: "auto", 
+                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    color: "var(--text-primary)", 
+                    border: "1px solid var(--border-color)" 
+                  }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Semester --</option>
                   <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
                   <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
                 </select>
@@ -832,10 +986,11 @@ export default function KelolaKelas() {
                 <table className="premium-table" style={{ minWidth: "700px", margin: 0 }}>
                   <thead>
                     <tr>
-                      <th style={{ width: "25%" }}>Nama Kelas Target</th>
-                      <th style={{ width: "20%" }}>Mata Pelajaran</th>
-                      <th style={{ width: "15%" }}>T.A.</th>
-                      <th style={{ width: "15%" }}>Semester</th>
+                      <th style={{ width: "22%" }}>Nama Kelas Target</th>
+                      <th style={{ width: "10%" }}>Tingkatan</th>
+                      <th style={{ width: "18%" }}>Mata Pelajaran</th>
+                      <th style={{ width: "13%" }}>T.A.</th>
+                      <th style={{ width: "12%" }}>Semester</th>
                       <th style={{ width: "20%" }}>Sumber Dapodik</th>
                       <th style={{ width: "5%" }}></th>
                     </tr>
@@ -845,6 +1000,14 @@ export default function KelolaKelas() {
                       <tr key={form.id}>
                         <td style={{ padding: "8px" }}>
                           <input type="text" className="form-input" placeholder="Nama kelas..." value={form.nama} onChange={(e) => handleBulkFormChange(form.id, "nama", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <select className="form-input" value={form.tingkatan} onChange={(e) => handleBulkFormChange(form.id, "tingkatan", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
+                            <option value="">--</option>
+                            {TINGKATAN_OPTIONS.map(t => (
+                              <option key={t} value={String(t)}>{t}</option>
+                            ))}
+                          </select>
                         </td>
                         <td style={{ padding: "8px" }}>
                           <input type="text" className="form-input" placeholder="Mapel..." value={form.mataPelajaran} onChange={(e) => handleBulkFormChange(form.id, "mataPelajaran", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
@@ -929,54 +1092,78 @@ export default function KelolaKelas() {
 
             <form onSubmit={handleDuplicateSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama Kelas Baru</label>
+                <label className="form-label">Nama Kelas Baru <span style={{ color: "var(--danger)" }}>*</span></label>
                 <input
                   type="text"
                   placeholder="Contoh: Kelas XI-IPA 2 (Salinan)"
                   className="form-input"
                   value={dupNama}
                   onChange={(e) => setDupNama(e.target.value)}
-                  required
                 />
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Mata Pelajaran</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Informatika"
+                <label className="form-label">Tingkatan Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
+                  className="form-input"
+                  value={dupTingkatan}
+                  onChange={(e) => setDupTingkatan(e.target.value)}
+                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
+                  {TINGKATAN_OPTIONS.map(t => (
+                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Mata Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
                   className="form-input"
                   value={dupMataPelajaran}
-                  onChange={(e) => setDupMataPelajaran(e.target.value)}
-                  required
-                />
+                  onChange={(e) => { setDupMataPelajaran(e.target.value); if (e.target.value !== "Lainnya") setDupMataPelajaranCustom(""); }}
+                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Mata Pelajaran --</option>
+                  {MATA_PELAJARAN_OPTIONS.map(mp => (
+                    <option key={mp} value={mp} style={{ backgroundColor: "var(--bg-secondary)" }}>{mp}</option>
+                  ))}
+                </select>
+                {dupMataPelajaran === "Lainnya" && (
+                  <input
+                    type="text"
+                    placeholder="Ketik nama mata pelajaran..."
+                    className="form-input"
+                    value={dupMataPelajaranCustom}
+                    onChange={(e) => setDupMataPelajaranCustom(e.target.value)}
+                    style={{ marginTop: "8px" }}
+                  />
+                )}
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tahun Ajaran</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: 2025/2026"
+                <label className="form-label">Tahun Ajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
                   className="form-input"
                   value={dupTahunAjaran}
                   onChange={(e) => setDupTahunAjaran(e.target.value)}
-                  required
-                />
+                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tahun Ajaran --</option>
+                  {TAHUN_AJARAN_OPTIONS.map(ta => (
+                    <option key={ta} value={ta} style={{ backgroundColor: "var(--bg-secondary)" }}>{ta}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Semester</label>
+                <label className="form-label">Semester <span style={{ color: "var(--danger)" }}>*</span></label>
                 <select
                   className="form-input"
                   value={dupSemester}
                   onChange={(e) => setDupSemester(e.target.value)}
-                  required
-                  style={{ 
-                    appearance: "auto", 
-                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
-                    color: "var(--text-primary)", 
-                    border: "1px solid var(--border-color)" 
-                  }}
+                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
                 >
                   <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
                   <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>

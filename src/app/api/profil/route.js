@@ -63,7 +63,22 @@ export async function POST(request) {
       updatedProfile.password = newPassword;
     }
 
-    const updated = await updateGuru(updatedProfile);
+    const updated = await updateGuru(session.value, updatedProfile);
+    if (!updated) {
+      return NextResponse.json({ error: 'Gagal memperbarui profil atau username sudah digunakan' }, { status: 400 });
+    }
+
+    // Sync session cookie if username changed
+    if (updated.username.toLowerCase() !== session.value.toLowerCase()) {
+      cookieStore.set('guru_session', updated.username, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24, // 1 hari
+        path: '/',
+      });
+    }
+
     const { password: _, ...guruData } = updated;
     return NextResponse.json({ success: true, user: guruData });
   } catch (error) {

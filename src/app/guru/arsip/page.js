@@ -12,6 +12,8 @@ export default function ArsipKelas() {
   const [selectedTahunAjaran, setSelectedTahunAjaran] = useState("Semua");
   const [selectedSemester, setSelectedSemester] = useState("Semua");
   const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("Semua");
+  const [selectedTingkatan, setSelectedTingkatan] = useState("Semua");
+  const TINGKATAN_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
  
   const fetchArchivedKelas = async () => {
     try {
@@ -75,6 +77,7 @@ export default function ArsipKelas() {
   const tahunAjaranOptions = ["Semua", ...Array.from(new Set(kelas.map(k => k.tahunAjaran).filter(Boolean))).sort()];
   const semesterOptions = ["Semua", ...Array.from(new Set(kelas.map(k => k.semester || "Ganjil").filter(Boolean))).sort()];
   const mataPelajaranOptions = ["Semua", ...Array.from(new Set(kelas.map(k => k.mataPelajaran || "Informatika").filter(Boolean))).sort()];
+  const tingkatanOptions = ["Semua", ...Array.from(new Set(kelas.map(k => k.tingkatan).filter(Boolean))).sort((a, b) => a - b).map(String)];
 
   const filteredKelas = kelas.filter(k => {
     const matchesSearch = k.nama.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -82,7 +85,8 @@ export default function ArsipKelas() {
     const matchesTahun = selectedTahunAjaran === "Semua" || k.tahunAjaran === selectedTahunAjaran;
     const matchesSemester = selectedSemester === "Semua" || (k.semester || "Ganjil") === selectedSemester;
     const matchesMapel = selectedMataPelajaran === "Semua" || (k.mataPelajaran || "Informatika") === selectedMataPelajaran;
-    return matchesSearch && matchesTahun && matchesSemester && matchesMapel;
+    const matchesTingkatan = selectedTingkatan === "Semua" || String(k.tingkatan) === selectedTingkatan;
+    return matchesSearch && matchesTahun && matchesSemester && matchesMapel && matchesTingkatan;
   });
  
   return (
@@ -149,6 +153,18 @@ export default function ArsipKelas() {
                   {mataPelajaranOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan</label>
+                <select
+                  className="form-input"
+                  value={selectedTingkatan}
+                  onChange={(e) => setSelectedTingkatan(e.target.value)}
+                  style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "120px" }}
+                >
+                  {tingkatanOptions.map(opt => <option key={opt} value={opt}>{opt === "Semua" ? "Semua" : `Kelas ${opt}`}</option>)}
+                </select>
+              </div>
             </div>
           </div>
  
@@ -157,9 +173,16 @@ export default function ArsipKelas() {
               {filteredKelas.map((k) => (
                 <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--text-muted)", opacity: 0.85 }}>
                   <div>
-                    <span className="badge badge-warning" style={{ marginBottom: "8px", backgroundColor: "rgba(100, 116, 139, 0.1)", color: "var(--text-secondary)", borderColor: "var(--border-color)" }}>
-                      📁 diarsipkan &bull; {k.tahunAjaran} ({k.semester || "Ganjil"}) &bull; {k.mataPelajaran || "Informatika"}
-                    </span>
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "8px" }}>
+                      <span className="badge badge-warning" style={{ backgroundColor: "rgba(100, 116, 139, 0.1)", color: "var(--text-secondary)", borderColor: "var(--border-color)" }}>
+                        📁 diarsipkan &bull; {k.tahunAjaran} ({k.semester || "Ganjil"}) &bull; {k.mataPelajaran || "Informatika"}
+                      </span>
+                      {k.tingkatan && (
+                        <span className="badge" style={{ backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                          🎓 Kelas {k.tingkatan}
+                        </span>
+                      )}
+                    </div>
                     <h3 style={{ fontSize: "1.4rem", fontWeight: "700" }}>{k.nama}</h3>
                     <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px" }}>
                       👨‍🎓 <strong>{k.siswa?.length || 0}</strong> siswa terdaftar &bull; 🏷️ <strong>{k.kolomNilai?.length || 0}</strong> aspek penilaian

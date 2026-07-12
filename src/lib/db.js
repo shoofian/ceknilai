@@ -24,6 +24,7 @@ function mapKelasFromDb(k) {
     mataPelajaran: k.mata_pelajaran || 'Informatika',
     tahunAjaran: k.tahun_ajaran,
     semester: k.semester || 'Ganjil',
+    tingkatan: k.tingkatan || null,
     archived: !!k.archived,
     isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
     skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
@@ -72,25 +73,32 @@ export async function getGuru(username = null) {
   }
 }
 
-export async function updateGuru(updatedProfile) {
+export async function updateGuru(currentUsername, updatedProfile) {
   if (!supabase) return null;
   try {
-    const current = await getGuru();
-    const currentUsername = current?.username || 'guru';
+    let oldUsername = currentUsername;
+    let updates = updatedProfile;
 
-    const updates = {
-      username: updatedProfile.username,
-      nama: updatedProfile.nama,
-      email: updatedProfile.email
+    // Handle single-argument calls or backwards compatibility
+    if (typeof currentUsername === 'object' && updatedProfile === undefined) {
+      updates = currentUsername;
+      const current = await getGuru();
+      oldUsername = current?.username || 'guru';
+    }
+
+    const updatesPayload = {
+      username: updates.username,
+      nama: updates.nama,
+      email: updates.email
     };
-    if (updatedProfile.password) {
-      updates.password = updatedProfile.password;
+    if (updates.password) {
+      updatesPayload.password = updates.password;
     }
 
     const { data, error } = await supabase
       .from('guru')
-      .update(updates)
-      .eq('username', currentUsername)
+      .update(updatesPayload)
+      .eq('username', oldUsername)
       .select()
       .single();
 
@@ -193,6 +201,7 @@ export async function createKelas(newKelas, guruUsername = null) {
       mata_pelajaran: cleanMapel,
       tahun_ajaran: cleanTahun,
       semester: cleanSemester,
+      tingkatan: newKelas.tingkatan || null,
       archived: false,
       is_nilai_akhir_generated: false,
       guru_username: guruUsername || 'guru',
@@ -278,6 +287,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
     if (updatedFields.mataPelajaran !== undefined) updates.mata_pelajaran = updatedFields.mataPelajaran;
     if (updatedFields.tahunAjaran !== undefined) updates.tahun_ajaran = updatedFields.tahunAjaran;
     if (updatedFields.semester !== undefined) updates.semester = updatedFields.semester;
+    if (updatedFields.tingkatan !== undefined) updates.tingkatan = updatedFields.tingkatan;
     if (updatedFields.archived !== undefined) {
       updates.archived = updatedFields.archived;
     }
@@ -798,6 +808,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         mataPelajaran: k.mata_pelajaran || 'Informatika',
         tahunAjaran: k.tahun_ajaran,
         semester: k.semester || 'Ganjil',
+        tingkatan: k.tingkatan || null,
         archived: !!k.archived,
         isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
         guruNama,

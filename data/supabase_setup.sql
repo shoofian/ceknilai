@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS kelas (
   mata_pelajaran text DEFAULT 'Informatika',
   tahun_ajaran text NOT NULL,
   semester text DEFAULT 'Ganjil',
+  tingkatan integer DEFAULT NULL,
   archived boolean DEFAULT false,
   guru_username text REFERENCES guru(username) ON DELETE CASCADE DEFAULT 'guru',
   is_nilai_akhir_generated boolean DEFAULT false,
