@@ -843,3 +843,126 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
     return [];
   }
 }
+
+// === SUPERADMIN PANEL FUNCTIONS ===
+export async function getSuperadminLogs() {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('siswa')
+      .select('nisn, nama, kelas_id, nilai, kelas(nama, mata_pelajaran)')
+      .not('nilai', 'is', null);
+      
+    if (error) {
+      console.error('Error fetching logs:', error);
+      return [];
+    }
+    
+    const logs = [];
+    data.forEach(s => {
+      if (s.nilai && Array.isArray(s.nilai._login_history) && s.nilai._login_history.length > 0) {
+        s.nilai._login_history.forEach(timestamp => {
+          logs.push({
+            nisn: s.nisn,
+            namaSiswa: s.nama,
+            kelasNama: s.kelas?.nama || 'Tanpa Kelas',
+            mataPelajaran: s.kelas?.mata_pelajaran || 'Informatika',
+            timestamp: timestamp
+          });
+        });
+      }
+    });
+    
+    logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return logs;
+  } catch (err) {
+    console.error('Unexpected error in getSuperadminLogs:', err);
+    return [];
+  }
+}
+
+export async function getAllGurus() {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('guru')
+      .select('username, nama, email, password');
+    if (error) {
+      console.error('Error fetching all gurus:', error);
+      return [];
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in getAllGurus:', err);
+    return [];
+  }
+}
+
+export async function createGuruByAdmin(guruData) {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('guru')
+      .insert({
+        username: guruData.username.trim().toLowerCase(),
+        nama: guruData.nama.trim(),
+        email: guruData.email.trim(),
+        password: guruData.password
+      })
+      .select()
+      .single();
+    if (error) {
+      console.error('Error creating guru by admin:', error);
+      throw new Error(error.message || 'Gagal membuat akun guru');
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in createGuruByAdmin:', err);
+    throw err;
+  }
+}
+
+export async function updateGuruByAdmin(username, updatedData) {
+  if (!supabase) return null;
+  try {
+    const payload = {
+      nama: updatedData.nama.trim(),
+      email: updatedData.email.trim()
+    };
+    if (updatedData.password) {
+      payload.password = updatedData.password;
+    }
+    const { data, error } = await supabase
+      .from('guru')
+      .update(payload)
+      .eq('username', username)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating guru by admin:', error);
+      throw new Error(error.message || 'Gagal memperbarui akun guru');
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in updateGuruByAdmin:', err);
+    throw err;
+  }
+}
+
+export async function deleteGuruByAdmin(username) {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('guru')
+      .delete()
+      .eq('username', username);
+    if (error) {
+      console.error('Error deleting guru by admin:', error);
+      throw new Error(error.message || 'Gagal menghapus akun guru');
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in deleteGuruByAdmin:', err);
+    throw err;
+  }
+}

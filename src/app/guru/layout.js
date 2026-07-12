@@ -74,8 +74,13 @@ export default function GuruLayout({ children }) {
     { name: "📁 Arsip Kelas", path: "/guru/arsip" },
     { name: "🖨️ Cetak Laporan", path: "/guru/laporan" },
     { name: "👤 Profil Saya", path: "/guru/profil" },
-    { name: "🌐 Portal Siswa", path: "/" }
   ];
+
+  if (guru && ["superadmin", "shoofian", "gurubaik"].includes(guru.username.toLowerCase())) {
+    navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
+  }
+
+  navItems.push({ name: "🌐 Portal Siswa", path: "/" });
 
   if (loading) {
     return (
