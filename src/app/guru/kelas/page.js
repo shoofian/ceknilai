@@ -50,7 +50,7 @@ export default function KelolaKelas() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [parsedClasses, setParsedClasses] = useState([]);
   const [parsedStudents, setParsedStudents] = useState([]);
-  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" }]);
+  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" }]);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
@@ -510,8 +510,9 @@ export default function KelolaKelas() {
           id: Date.now(),
           nama: "",
           tingkatan: "",
-          mataPelajaran: "Informatika",
-          tahunAjaran: "2025/2026",
+          mataPelajaran: "",
+          mataPelajaranCustom: "",
+          tahunAjaran: "",
           semester: "Ganjil",
           sourceRombel: ""
         }];
@@ -558,7 +559,7 @@ export default function KelolaKelas() {
 
       const isLastFilled = updated[updated.length - 1].nama.trim() !== "" || updated[updated.length - 1].sourceRombel !== "";
       if (isLastFilled) {
-        updated.push({ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "Informatika", tahunAjaran: "2025/2026", semester: "Ganjil", sourceRombel: "" });
+        updated.push({ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" });
       }
 
       return updated;
@@ -578,10 +579,21 @@ export default function KelolaKelas() {
       setBulkError("Anda harus mengisi setidaknya satu kelas untuk diimpor.");
       return;
     }
-    const hasEmptyTingkatan = validForms.some((f) => !f.tingkatan);
-    if (hasEmptyTingkatan) {
-      setBulkError("Tingkatan kelas harus diisi untuk semua kelas yang akan diimpor.");
-      return;
+
+    for (const form of validForms) {
+      if (!form.tingkatan) {
+        setBulkError(`Tingkatan kelas harus diisi untuk kelas "${form.nama}".`);
+        return;
+      }
+      const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
+      if (!effectiveMapel) {
+        setBulkError(`Mata pelajaran harus diisi untuk kelas "${form.nama}".`);
+        return;
+      }
+      if (!form.tahunAjaran) {
+        setBulkError(`Tahun ajaran harus diisi untuk kelas "${form.nama}".`);
+        return;
+      }
     }
 
     setIsBulkImporting(true);
@@ -589,11 +601,18 @@ export default function KelolaKelas() {
     try {
       let successCount = 0;
       for (const form of validForms) {
+        const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
         // 1. Create Class
         const resKelas = await fetch("/api/kelas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: form.nama.trim(), tingkatan: form.tingkatan ? Number(form.tingkatan) : null, mataPelajaran: form.mataPelajaran.trim(), tahunAjaran: form.tahunAjaran.trim(), semester: form.semester.trim() }),
+          body: JSON.stringify({
+            nama: form.nama.trim(),
+            tingkatan: Number(form.tingkatan),
+            mataPelajaran: effectiveMapel,
+            tahunAjaran: form.tahunAjaran.trim(),
+            semester: form.semester.trim()
+          }),
         });
 
         if (!resKelas.ok) {
@@ -1003,20 +1022,56 @@ export default function KelolaKelas() {
                         </td>
                         <td style={{ padding: "8px" }}>
                           <select className="form-input" value={form.tingkatan} onChange={(e) => handleBulkFormChange(form.id, "tingkatan", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
-                            <option value="">--</option>
+                            <option value="" disabled>-- Pilih --</option>
                             {TINGKATAN_OPTIONS.map(t => (
-                              <option key={t} value={String(t)}>{t}</option>
+                              <option key={t} value={String(t)}>Kelas {t}</option>
                             ))}
                           </select>
                         </td>
                         <td style={{ padding: "8px" }}>
-                          <input type="text" className="form-input" placeholder="Mapel..." value={form.mataPelajaran} onChange={(e) => handleBulkFormChange(form.id, "mataPelajaran", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                          <select
+                            className="form-input"
+                            value={form.mataPelajaran}
+                            onChange={(e) => {
+                              handleBulkFormChange(form.id, "mataPelajaran", e.target.value);
+                              if (e.target.value !== "Lainnya") {
+                                handleBulkFormChange(form.id, "mataPelajaranCustom", "");
+                              }
+                            }}
+                            style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}
+                          >
+                            <option value="" disabled>-- Pilih Mapel --</option>
+                            {MATA_PELAJARAN_OPTIONS.map(mp => (
+                              <option key={mp} value={mp}>{mp}</option>
+                            ))}
+                          </select>
+                          {form.mataPelajaran === "Lainnya" && (
+                            <input
+                              type="text"
+                              placeholder="Mapel kustom..."
+                              className="form-input"
+                              value={form.mataPelajaranCustom || ""}
+                              onChange={(e) => handleBulkFormChange(form.id, "mataPelajaranCustom", e.target.value)}
+                              style={{ marginTop: "4px", padding: "6px 8px", fontSize: "0.8rem" }}
+                            />
+                          )}
                         </td>
                         <td style={{ padding: "8px" }}>
-                          <input type="text" className="form-input" placeholder="T.A." value={form.tahunAjaran} onChange={(e) => handleBulkFormChange(form.id, "tahunAjaran", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                          <select
+                            className="form-input"
+                            value={form.tahunAjaran}
+                            onChange={(e) => handleBulkFormChange(form.id, "tahunAjaran", e.target.value)}
+                            style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}
+                          >
+                            <option value="" disabled>-- Pilih T.A. --</option>
+                            {TAHUN_AJARAN_OPTIONS.map(ta => (
+                              <option key={ta} value={ta}>{ta}</option>
+                            ))}
+                          </select>
                         </td>
                         <td style={{ padding: "8px" }}>
                           <select className="form-input" value={form.semester} onChange={(e) => handleBulkFormChange(form.id, "semester", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
+                            <option value="" disabled>-- Semester --</option>
                             <option value="Ganjil">Ganjil</option>
                             <option value="Genap">Genap</option>
                           </select>
