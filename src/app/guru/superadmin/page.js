@@ -217,7 +217,8 @@ export default function SuperadminPanel() {
   }
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <>
+      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
       {/* Title */}
       <div className="page-title-section">
@@ -460,19 +461,17 @@ export default function SuperadminPanel() {
           )}
         </>
       )}
+      </div>
 
       {/* CRUD Guru Modal */}
       {modalOpen && (
         <div
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            backdropFilter: "blur(4px)",
-            zIndex: 300,
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -562,6 +561,6 @@ export default function SuperadminPanel() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+    </>
   );
 }
