@@ -62,6 +62,14 @@ export async function POST(request) {
         skemaPenilaian
       }, username);
 
+      // Log teacher activity
+      const { logAktivitasGuru } = await import('@/lib/db');
+      await logAktivitasGuru(
+        username,
+        'BUAT_KELAS',
+        `Membuat kelas "${nama}" (${mataPelajaran}, TA: ${tahunAjaran || '2025/2026'}, Sem: ${semester || 'Ganjil'})`
+      );
+
       return NextResponse.json({ success: true, kelas: newKelas });
     } catch (dbError) {
       return NextResponse.json({ error: dbError.message }, { status: 400 });

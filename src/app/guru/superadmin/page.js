@@ -12,10 +12,12 @@ export default function SuperadminPanel() {
   // Data States
   const [logs, setLogs] = useState([]);
   const [gurus, setGurus] = useState([]);
+  const [teacherLogs, setTeacherLogs] = useState([]);
 
   // Search/Filter States
   const [searchLogQuery, setSearchLogQuery] = useState("");
   const [searchGuruQuery, setSearchGuruQuery] = useState("");
+  const [searchTeacherLogQuery, setSearchTeacherLogQuery] = useState("");
 
   // CRUD Guru Modal States
   const [modalOpen, setModalOpen] = useState(false);
@@ -70,6 +72,13 @@ export default function SuperadminPanel() {
       if (resGurus.ok) {
         const dataGurus = await resGurus.json();
         setGurus(dataGurus);
+      }
+
+      // Fetch Teacher Logs
+      const resTeacherLogs = await fetch("/api/superadmin/logs?type=guru");
+      if (resTeacherLogs.ok) {
+        const dataTeacherLogs = await resTeacherLogs.json();
+        setTeacherLogs(dataTeacherLogs);
       }
     } catch (err) {
       console.error("Gagal mengambil data superadmin", err);
@@ -185,6 +194,13 @@ export default function SuperadminPanel() {
     log.mataPelajaran.toLowerCase().includes(searchLogQuery.toLowerCase())
   );
 
+  const filteredTeacherLogs = teacherLogs.filter(log =>
+    log.namaGuru.toLowerCase().includes(searchTeacherLogQuery.toLowerCase()) ||
+    log.username.toLowerCase().includes(searchTeacherLogQuery.toLowerCase()) ||
+    log.aksi.toLowerCase().includes(searchTeacherLogQuery.toLowerCase()) ||
+    log.detail.toLowerCase().includes(searchTeacherLogQuery.toLowerCase())
+  );
+
   const filteredGurus = gurus.filter(g =>
     g.nama.toLowerCase().includes(searchGuruQuery.toLowerCase()) ||
     g.username.toLowerCase().includes(searchGuruQuery.toLowerCase()) ||
@@ -219,11 +235,18 @@ export default function SuperadminPanel() {
           📋 Log Aktivitas Siswa
         </button>
         <button
+          onClick={() => setActiveTab("logs_guru")}
+          className={`btn ${activeTab === "logs_guru" ? "btn-primary" : "btn-secondary"}`}
+          style={{ padding: "8px 16px", borderRadius: "8px" }}
+        >
+          👨‍🏫 Log Aktivitas Guru
+        </button>
+        <button
           onClick={() => setActiveTab("guru")}
           className={`btn ${activeTab === "guru" ? "btn-primary" : "btn-secondary"}`}
           style={{ padding: "8px 16px", borderRadius: "8px" }}
         >
-          👨‍🏫 Manajemen Akun Guru
+          🔑 Manajemen Akun Guru
         </button>
       </div>
 
@@ -287,6 +310,88 @@ export default function SuperadminPanel() {
               ) : (
                 <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
                   Belum ada log riwayat akses siswa yang tercatat.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: LOG AKTIVITAS GURU */}
+          {activeTab === "logs_guru" && (
+            <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                <h4 style={{ margin: 0, fontWeight: "800" }}>Log Riwayat Aktivitas Guru</h4>
+                <input
+                  type="text"
+                  placeholder="🔍 Cari guru, aksi, detail..."
+                  className="form-input"
+                  value={searchTeacherLogQuery}
+                  onChange={(e) => setSearchTeacherLogQuery(e.target.value)}
+                  style={{ maxWidth: "300px", padding: "8px 12px", fontSize: "0.85rem" }}
+                />
+              </div>
+
+              {filteredTeacherLogs.length > 0 ? (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="premium-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "20%" }}>Waktu</th>
+                        <th style={{ width: "20%" }}>Nama Guru</th>
+                        <th style={{ width: "15%" }}>Aksi</th>
+                        <th style={{ width: "45%" }}>Detail Aktivitas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTeacherLogs.map((log) => {
+                        const date = new Date(log.timestamp);
+                        const formattedDate = date.toLocaleString("id-ID", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit"
+                        });
+                        
+                        let badgeColor = "rgba(100, 116, 139, 0.1)";
+                        let textColor = "var(--text-secondary)";
+                        if (log.aksi.includes("BUAT")) {
+                          badgeColor = "rgba(16, 185, 129, 0.1)";
+                          textColor = "var(--success)";
+                        } else if (log.aksi.includes("HAPUS")) {
+                          badgeColor = "rgba(239, 68, 68, 0.1)";
+                          textColor = "var(--danger)";
+                        } else if (log.aksi.includes("EDIT")) {
+                          badgeColor = "rgba(59, 130, 246, 0.1)";
+                          textColor = "var(--primary)";
+                        } else if (log.aksi.includes("ARSIP") || log.aksi.includes("AKTIF")) {
+                          badgeColor = "rgba(245, 158, 11, 0.1)";
+                          textColor = "var(--warning)";
+                        }
+
+                        return (
+                          <tr key={log.id}>
+                            <td>{formattedDate}</td>
+                            <td>
+                              <strong style={{ color: "var(--text-primary)" }}>{log.namaGuru}</strong>
+                              <br />
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>@{log.username}</span>
+                            </td>
+                            <td>
+                              <span className="badge" style={{ backgroundColor: badgeColor, color: textColor, border: "none", fontWeight: "700" }}>
+                                {log.aksi}
+                              </span>
+                            </td>
+                            <td>{log.detail}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                  Belum ada log aktivitas guru yang tercatat.
                 </div>
               )}
             </div>

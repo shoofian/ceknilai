@@ -35,6 +35,11 @@ export async function POST(request, { params }) {
     }
 
     try {
+      const kelas = await getKelasById(id, username);
+      if (!kelas) {
+        return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+      }
+
       const addedSiswa = await addSiswaToKelas(id, {
         nisn: nisn.trim(),
         nama: nama.trim(),
@@ -43,8 +48,16 @@ export async function POST(request, { params }) {
       }, username);
       
       if (!addedSiswa) {
-        return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+        return NextResponse.json({ error: 'Gagal menambahkan siswa' }, { status: 400 });
       }
+
+      // Log teacher activity
+      const { logAktivitasGuru } = await import('@/lib/db');
+      await logAktivitasGuru(
+        username,
+        'TAMBAH_SISWA',
+        `Menambahkan siswa "${nama.trim()}" (NISN: ${nisn.trim()}) ke kelas "${kelas.nama}"`
+      );
 
       return NextResponse.json({ success: true, siswa: addedSiswa });
     } catch (dbError) {

@@ -966,3 +966,50 @@ export async function deleteGuruByAdmin(username) {
     throw err;
   }
 }
+
+// === TEACHER ACTIVITY LOG FUNCTIONS ===
+export async function logAktivitasGuru(guruUsername, aksi, detail) {
+  if (!supabase || !guruUsername) return null;
+  try {
+    const { data } = await supabase
+      .from('log_aktivitas_guru')
+      .insert({
+        guru_username: guruUsername,
+        aksi,
+        detail
+      })
+      .select()
+      .single();
+    return data;
+  } catch (err) {
+    console.error('Failed to log teacher activity:', err);
+    return null;
+  }
+}
+
+export async function getSuperadminTeacherLogs() {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('log_aktivitas_guru')
+      .select('id, guru_username, aksi, detail, created_at, guru(nama)')
+      .order('created_at', { ascending: false });
+      
+    if (error) {
+      console.error('Error fetching teacher logs:', error);
+      return [];
+    }
+    
+    return data.map(log => ({
+      id: log.id,
+      username: log.guru_username,
+      namaGuru: log.guru?.nama || log.guru_username || 'Guru',
+      aksi: log.aksi,
+      detail: log.detail,
+      timestamp: log.created_at
+    }));
+  } catch (err) {
+    console.error('Unexpected error in getSuperadminTeacherLogs:', err);
+    return [];
+  }
+}

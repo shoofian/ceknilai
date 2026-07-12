@@ -83,6 +83,14 @@ export async function POST(request, { params }) {
       await Promise.all(updatePromises);
     }
 
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    await logAktivitasGuru(
+      username,
+      'TAMBAH_KOLOM',
+      `Menambahkan kolom nilai "${nama.trim()}" (Bobot: ${bobot}%) di kelas "${kelas.nama}"`
+    );
+
     return NextResponse.json({ success: true, kolom: newColumn });
   } catch (error) {
     console.error('Error in POST kolom API:', error);
@@ -172,6 +180,14 @@ export async function PATCH(request, { params }) {
       }
     }
 
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    await logAktivitasGuru(
+      username,
+      'EDIT_KOLOM',
+      `Memperbarui bobot/aspek penilaian di kelas "${kelas.nama}"`
+    );
+
     return NextResponse.json({ success: true, kolomNilai: cleanedKolom });
   } catch (error) {
     console.error('Error in PATCH kolom API:', error);
@@ -225,6 +241,14 @@ export async function DELETE(request, { params }) {
       kolomNilai: kelas.kolomNilai,
       siswa: kelas.siswa
     }, username);
+
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    await logAktivitasGuru(
+      username,
+      'HAPUS_KOLOM',
+      `Menghapus kolom nilai "${deletedCol.nama}" di kelas "${kelas.nama}"`
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

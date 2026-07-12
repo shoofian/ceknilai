@@ -46,6 +46,18 @@ export async function PATCH(request, { params }) {
     };
 
     const updated = await updateSiswaInKelas(id, nisn, siswaUpdate, username);
+    if (!updated) {
+      return NextResponse.json({ error: 'Gagal memperbarui siswa' }, { status: 400 });
+    }
+
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    await logAktivitasGuru(
+      username,
+      'EDIT_SISWA',
+      `Memperbarui data siswa "${siswaLama.nama}" (NISN: ${nisn}) di kelas "${kelas.nama}"`
+    );
+
     return NextResponse.json({ success: true, siswa: updated });
   } catch (error) {
     console.error('Error in PATCH siswa individual API:', error);
@@ -61,11 +73,29 @@ export async function DELETE(request, { params }) {
     }
 
     const { id, nisn } = await params;
+    const kelas = await getKelasById(id, username);
+    if (!kelas) {
+      return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+    }
+
+    const siswaLama = kelas.siswa.find(s => s.nisn === nisn);
+    if (!siswaLama) {
+      return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 });
+    }
+
     const success = await deleteSiswaFromKelas(id, nisn, username);
     
     if (!success) {
-      return NextResponse.json({ error: 'Siswa atau kelas tidak ditemukan' }, { status: 404 });
+      return NextResponse.json({ error: 'Gagal menghapus siswa' }, { status: 400 });
     }
+
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    await logAktivitasGuru(
+      username,
+      'HAPUS_SISWA',
+      `Menghapus siswa "${siswaLama.nama}" (NISN: ${nisn}) dari kelas "${kelas.nama}"`
+    );
     
     return NextResponse.json({ success: true });
   } catch (error) {

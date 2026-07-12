@@ -46,6 +46,17 @@ export async function PATCH(request, { params }) {
       if (!updated) {
         return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
       }
+
+      // Log teacher activity
+      const { logAktivitasGuru } = await import('@/lib/db');
+      if (fieldsToUpdate.archived === true) {
+        await logAktivitasGuru(username, 'ARSIP_KELAS', `Mengarsipkan kelas "${updated.nama}"`);
+      } else if (fieldsToUpdate.archived === false) {
+        await logAktivitasGuru(username, 'AKTIFKAN_KELAS', `Mengaktifkan kelas "${updated.nama}"`);
+      } else {
+        await logAktivitasGuru(username, 'EDIT_KELAS', `Memperbarui kelas "${updated.nama}"`);
+      }
+
       return NextResponse.json({ success: true, kelas: updated });
     } catch (dbError) {
       return NextResponse.json({ error: dbError.message || 'Gagal memperbarui kelas' }, { status: 400 });
@@ -64,11 +75,20 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
+    const kelas = await getKelasById(id, username);
+    if (!kelas) {
+      return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+    }
+
     const success = await deleteKelas(id, username);
     
     if (!success) {
-      return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+      return NextResponse.json({ error: 'Gagal menghapus kelas' }, { status: 400 });
     }
+
+    // Log teacher activity
+    const { logAktivitasGuru } = await import('@/lib/db');
+    await logAktivitasGuru(username, 'HAPUS_KELAS', `Menghapus kelas "${kelas.nama}"`);
     
     return NextResponse.json({ success: true });
   } catch (error) {
