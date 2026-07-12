@@ -143,16 +143,9 @@ export default function GuruLayout({ children }) {
       <aside className={`sidebar ${sidebarOpen ? "active" : ""} no-print`}>
         {/* Logo and Brand */}
         <div style={{ height: "var(--header-height)", display: "flex", alignItems: "center", gap: "10px", padding: "0 24px", borderBottom: "1px solid var(--border-color)" }}>
-          <img
-            src="/logo.png"
-            alt="CekNilai Logo"
-            style={{
-              width: "32px",
-              height: "32px",
-              objectFit: "cover",
-              borderRadius: "8px",
-            }}
-          />
+          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "linear-gradient(135deg, var(--primary), var(--primary-hover))", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", color: "#ffffff", fontSize: "1.05rem" }}>
+            N
+          </div>
           <div>
             <h2 style={{ fontSize: "1.05rem", fontWeight: "800" }}>CekNilai</h2>
             <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: "500" }}>PANEL KONTROL GURU</p>
