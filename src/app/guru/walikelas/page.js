@@ -402,7 +402,28 @@ export default function WaliKelasDashboard() {
             const calcFinal = (s) => {
               let total = 0;
               columns.forEach(col => { total += getColScore(s, col) * (col.bobot / 100); });
-              return total + (Number(s.nilai?._katrol) || 0);
+              
+              // Hitung Kehadiran (Presensi) jika digunakan
+              const skema = selectedSubjectDetail.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+              const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
+              const pertemuanList = skema.pertemuan || [];
+              let totalPresensiScore = 0;
+              
+              if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
+                let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+                pertemuanList.forEach(p => {
+                  const val = s.nilai?.[`_presensi_${p.id}`];
+                  if (val && attSummary[val] !== undefined) {
+                    attSummary[val]++;
+                  }
+                });
+                let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
+                let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
+                const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+                totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
+              }
+              
+              return total + totalPresensiScore + (Number(s.nilai?._katrol) || 0);
             };
 
             const finals = allStudents.map(s => calcFinal(s));
