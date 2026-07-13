@@ -731,29 +731,40 @@ export default function WaliKelasDashboard() {
             padding: "20px"
           }}
         >
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "960px", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)", padding: "0" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "1000px", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", border: "1px solid var(--border-focus)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)", padding: "0" }}>
             
             {/* Modal Header */}
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "sticky", top: 0, backgroundColor: "var(--bg-primary)", zIndex: 10 }}>
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-primary)", flexShrink: 0 }}>
               <div>
-                <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>📚 Detail Nilai Mata Pelajaran</span>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "900", margin: "4px 0" }}>{selectedSubjectDetail?.mataPelajaran || "Memuat..."}</h3>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", margin: 0 }}>
-                  Guru: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong> • KKM: <strong>{selectedSubjectDetail?.skemaPenilaian?.kkm || "-"}</strong>
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", padding: "2px 8px", borderRadius: "10px", backgroundColor: "rgba(59, 130, 246, 0.1)" }}>📚 Leger Detail</span>
+                  <span style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em" }}>• Nilai Akademik</span>
+                </div>
+                <h3 style={{ fontSize: "1.5rem", fontWeight: "900", margin: "4px 0", color: "var(--text-primary)" }}>{selectedSubjectDetail?.mataPelajaran || "Memuat Detail..."}</h3>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
+                  <span style={{ fontSize: "0.75rem", padding: "4px 8px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "4px" }}>
+                    👤 Guru: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong>
+                  </span>
+                  <span style={{ fontSize: "0.75rem", padding: "4px 8px", borderRadius: "var(--radius-sm)", backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", color: "var(--success)", display: "flex", alignItems: "center", gap: "4px" }}>
+                    🎯 KKM: <strong>{selectedSubjectDetail?.skemaPenilaian?.kkm || "75"}</strong>
+                  </span>
+                  <span style={{ fontSize: "0.75rem", padding: "4px 8px", borderRadius: "var(--radius-sm)", backgroundColor: "rgba(124, 58, 237, 0.1)", border: "1px solid rgba(124, 58, 237, 0.2)", color: "var(--primary)", display: "flex", alignItems: "center", gap: "4px" }}>
+                    📅 Semester {selectedSubjectDetail?.semester || semester}
+                  </span>
+                </div>
               </div>
               <button 
                 onClick={() => { setSubjectDetailModalOpen(false); setSelectedSubjectDetail(null); }}
                 className="btn btn-secondary"
-                style={{ padding: "6px 14px", fontSize: "0.85rem", flexShrink: 0 }}
+                style={{ padding: "8px 16px", fontSize: "0.85rem", flexShrink: 0, display: "flex", alignItems: "center", gap: "6px", borderRadius: "var(--radius-sm)" }}
               >
                 ✕ Tutup
               </button>
             </div>
 
             {loadingSubjectDetail ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
-                <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flexGrow: 1, padding: "80px 0" }}>
+                <span className="spinner" style={{ width: "35px", height: "35px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
               </div>
             ) : selectedSubjectDetail ? (() => {
               // Pre-calculate stats for the summary bar
@@ -795,101 +806,122 @@ export default function WaliKelasDashboard() {
               const lowest = finals.length > 0 ? Math.min(...finals) : 0;
 
               return (
-                <>
-                  {/* Summary Stats Bar */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "1px", backgroundColor: "var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
+                <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflowY: "auto" }}>
+                  
+                  {/* Summary Stats Cards */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px", padding: "20px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
                     {[
-                      { label: "Jumlah Siswa", value: allStudents.length, color: "var(--text-primary)" },
-                      { label: "Rata-Rata", value: avg.toFixed(1), color: "var(--primary)" },
-                      { label: "Tertinggi", value: highest.toFixed(1), color: "var(--success)" },
-                      { label: "Terendah", value: lowest.toFixed(1), color: lowest < kkm ? "var(--danger)" : "var(--text-primary)" },
-                      { label: "Tuntas", value: `${passing}`, color: "var(--success)" },
-                      { label: "Belum Tuntas", value: `${failing}`, color: failing > 0 ? "var(--danger)" : "var(--text-muted)" },
+                      { label: "Jumlah Siswa", value: allStudents.length, color: "var(--text-primary)", icon: "👥", bg: "rgba(255,255,255,0.03)" },
+                      { label: "Rata-Rata", value: avg.toFixed(1), color: "var(--primary)", icon: "📈", bg: "rgba(59, 130, 246, 0.05)" },
+                      { label: "Tertinggi", value: highest.toFixed(1), color: "var(--success)", icon: "🏆", bg: "rgba(16, 185, 129, 0.05)" },
+                      { label: "Terendah", value: lowest.toFixed(1), color: lowest < kkm ? "var(--danger)" : "var(--text-primary)", icon: "📉", bg: lowest < kkm ? "rgba(239, 68, 68, 0.05)" : "rgba(255,255,255,0.03)" },
+                      { label: "Tuntas", value: `${passing} siswa`, color: "var(--success)", icon: "✅", bg: "rgba(16, 185, 129, 0.05)" },
+                      { label: "Belum Tuntas", value: `${failing} siswa`, color: failing > 0 ? "var(--danger)" : "var(--text-muted)", icon: "⚠️", bg: failing > 0 ? "rgba(239, 68, 68, 0.05)" : "rgba(255,255,255,0.03)" },
                     ].map((stat, i) => (
-                      <div key={i} style={{ backgroundColor: "var(--bg-primary)", padding: "12px 16px", textAlign: "center" }}>
-                        <div style={{ fontSize: "0.65rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
-                        <div style={{ fontSize: "1.15rem", fontWeight: "900", color: stat.color, marginTop: "2px" }}>{stat.value}</div>
+                      <div key={i} style={{ backgroundColor: stat.bg, padding: "16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "4px", position: "relative" }}>
+                        <span style={{ position: "absolute", top: "12px", right: "12px", fontSize: "1.2rem" }}>{stat.icon}</span>
+                        <div style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
+                        <div style={{ fontSize: "1.3rem", fontWeight: "900", color: stat.color, marginTop: "4px" }}>{stat.value}</div>
                       </div>
                     ))}
                   </div>
 
                   {/* Grade Table */}
-                  <div style={{ overflowX: "auto", padding: "0" }}>
-                    <table className="premium-table" style={{ margin: 0 }}>
-                      <thead>
-                        <tr>
-                          <th style={{ width: "50px", textAlign: "center" }}>No</th>
-                          <th style={{ width: "120px" }}>NISN</th>
-                          <th style={{ minWidth: "160px" }}>Nama Siswa</th>
-                          {columns.map(col => (
-                            <th key={col.id} style={{ textAlign: "center", minWidth: "90px" }}>
-                              {col.nama}
-                              <span style={{ display: "block", fontSize: "0.6rem", color: "var(--text-secondary)", textTransform: "none", marginTop: "2px" }}>
-                                {col.bobot}%
-                              </span>
-                            </th>
-                          ))}
-                          <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Nilai Akhir</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {allStudents.map((s, index) => {
-                          const finalScore = finals[index];
-                          const isUnderKkm = finalScore < kkm;
+                  <div style={{ padding: "20px 24px" }}>
+                    <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", backgroundColor: "var(--bg-primary)" }}>
+                      <table className="premium-table" style={{ margin: 0, width: "100%" }}>
+                        <thead>
+                          <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                            <th style={{ width: "60px", textAlign: "center", padding: "12px 10px" }}>No</th>
+                            <th style={{ width: "130px", padding: "12px 16px" }}>NISN</th>
+                            <th style={{ minWidth: "180px", padding: "12px 16px" }}>Nama Siswa</th>
+                            {columns.map(col => (
+                              <th key={col.id} style={{ textAlign: "center", minWidth: "100px", padding: "12px 10px" }}>
+                                {col.nama}
+                                <span style={{ display: "block", fontSize: "0.6rem", color: "var(--text-secondary)", textTransform: "none", marginTop: "4px", fontWeight: "normal" }}>
+                                  Bobot {col.bobot}%
+                                </span>
+                              </th>
+                            ))}
+                            <th style={{ width: "120px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.08)", padding: "12px 16px" }}>Nilai Akhir</th>
+                            <th style={{ width: "110px", textAlign: "center", padding: "12px 16px" }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {allStudents.map((s, index) => {
+                            const finalScore = finals[index];
+                            const isUnderKkm = finalScore < kkm;
 
-                          const getColScore = (student, col) => {
-                            if (col.subKolom && col.subKolom.length > 0) {
-                              let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
-                              col.subKolom.forEach(sub => {
-                                const sc = student.nilai?.[sub.id];
-                                if (sc !== undefined && sc !== null && sc !== "") {
-                                  if (col.hitungMetode === "persentase") { subTotal += Number(sc) * (sub.bobot / 100); subFilledWeight += sub.bobot; } else { subTotal += Number(sc); }
-                                  subFilledCount++;
-                                }
-                              });
-                              if (subFilledCount === 0) return 0;
-                              return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
-                            } else {
-                              const sc = student.nilai?.[col.id];
-                              return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
-                            }
-                          };
+                            const getColScore = (student, col) => {
+                              if (col.subKolom && col.subKolom.length > 0) {
+                                let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
+                                col.subKolom.forEach(sub => {
+                                  const sc = student.nilai?.[sub.id];
+                                  if (sc !== undefined && sc !== null && sc !== "") {
+                                    if (col.hitungMetode === "persentase") { subTotal += Number(sc) * (sub.bobot / 100); subFilledWeight += sub.bobot; } else { subTotal += Number(sc); }
+                                    subFilledCount++;
+                                  }
+                                });
+                                if (subFilledCount === 0) return 0;
+                                return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
+                              } else {
+                                const sc = student.nilai?.[col.id];
+                                return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
+                              }
+                            };
 
-                          return (
-                            <tr key={s.nisn} style={{ backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.02)" : "transparent" }}>
-                              <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
-                              <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }}>{s.nisn}</td>
-                              <td style={{ fontWeight: "700" }}>{s.nama}</td>
-                              {columns.map(col => {
-                                const score = getColScore(s, col);
-                                return (
-                                  <td key={col.id} style={{ textAlign: "center", fontSize: "0.88rem" }}>
-                                    {score > 0 ? score.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
-                                  </td>
-                                );
-                              })}
-                              <td style={{ 
-                                textAlign: "center", 
-                                fontWeight: "900",
-                                fontSize: "0.95rem",
-                                backgroundColor: "rgba(59, 130, 246, 0.02)",
-                                color: isUnderKkm ? "var(--danger)" : "var(--text-primary)"
-                              }}>
-                                {finalScore.toFixed(1)} {isUnderKkm && "⚠️"}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                            return (
+                              <tr key={s.nisn} style={{ backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.01)" : "transparent", borderBottom: "1px solid var(--border-color)" }}>
+                                <td style={{ textAlign: "center", fontWeight: "700", padding: "12px 10px" }}>{index + 1}</td>
+                                <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-secondary)", padding: "12px 16px" }}>{s.nisn}</td>
+                                <td style={{ fontWeight: "700", color: "var(--text-primary)", padding: "12px 16px" }}>{s.nama}</td>
+                                {columns.map(col => {
+                                  const score = getColScore(s, col);
+                                  const colUnderKkm = score < kkm;
+                                  return (
+                                    <td key={col.id} style={{ textAlign: "center", fontSize: "0.88rem", padding: "12px 10px", color: colUnderKkm ? "var(--danger)" : "var(--text-primary)", fontWeight: colUnderKkm ? "600" : "normal" }}>
+                                      {score > 0 ? score.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                                    </td>
+                                  );
+                                })}
+                                <td style={{ 
+                                  textAlign: "center", 
+                                  fontWeight: "900",
+                                  fontSize: "0.95rem",
+                                  backgroundColor: "rgba(59, 130, 246, 0.03)",
+                                  color: isUnderKkm ? "var(--danger)" : "var(--primary)",
+                                  padding: "12px 16px"
+                                }}>
+                                  {finalScore.toFixed(1)}
+                                </td>
+                                <td style={{ textAlign: "center", padding: "12px 16px" }}>
+                                  <span style={{ 
+                                    display: "inline-block",
+                                    fontSize: "0.7rem", 
+                                    fontWeight: "800", 
+                                    padding: "4px 10px", 
+                                    borderRadius: "12px",
+                                    backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
+                                    color: isUnderKkm ? "var(--danger)" : "var(--success)",
+                                    border: isUnderKkm ? "1px solid rgba(239, 68, 68, 0.2)" : "1px solid rgba(16, 185, 129, 0.2)"
+                                  }}>
+                                    {isUnderKkm ? "Belum Tuntas" : "Tuntas"}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </>
+                </div>
               );
             })() : (
-              <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
-                <span style={{ fontSize: "2.5rem" }}>📭</span>
-                <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Gagal Memuat Detail Nilai</h4>
-                <p style={{ fontSize: "0.85rem", margin: 0 }}>Data kelas ini tidak dapat diakses. Pastikan guru pengampu dan Anda terdaftar di sekolah yang sama.</p>
+              <div style={{ padding: "80px 24px", textAlign: "center", color: "var(--text-muted)", flexGrow: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+                <span style={{ fontSize: "3rem", marginBottom: "16px" }}>📭</span>
+                <h4 style={{ margin: "0 0 8px 0", fontWeight: "800", color: "var(--text-secondary)" }}>Gagal Memuat Detail Nilai</h4>
+                <p style={{ fontSize: "0.85rem", margin: 0, color: "var(--text-muted)", maxWidth: "400px" }}>Data kelas ini tidak dapat diakses. Pastikan guru pengampu dan Anda terdaftar di sekolah yang sama.</p>
               </div>
             )}
           </div>
