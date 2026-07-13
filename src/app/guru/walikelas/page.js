@@ -373,9 +373,9 @@ export default function WaliKelasDashboard() {
               <table className="premium-table">
                 <thead>
                   <tr>
-                    <th style={{ width: "80px", textAlign: "center" }}>Rank</th>
-                    <th style={{ width: "130px" }}>NISN</th>
-                    <th>Nama Siswa</th>
+                    <th style={{ width: "80px", minWidth: "80px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, background: "var(--bg-tertiary)" }}>Rank</th>
+                    <th style={{ width: "120px", minWidth: "120px", position: "sticky", left: "80px", zIndex: 12, background: "var(--bg-tertiary)" }}>NISN</th>
+                    <th style={{ width: "220px", minWidth: "220px", maxWidth: "220px", position: "sticky", left: "200px", zIndex: 12, background: "var(--bg-tertiary)", borderRight: "2px solid var(--border-color)" }}>Nama Siswa</th>
                     {mataPelajaranList.map(mp => (
                       <th key={mp.id} style={{ textAlign: "center", minWidth: "120px" }}>
                         <div>{mp.mataPelajaran}</div>
@@ -390,7 +390,7 @@ export default function WaliKelasDashboard() {
                 <tbody>
                   {siswa.map(s => (
                     <tr key={s.nisn}>
-                      <td style={{ textAlign: "center", fontWeight: "800" }}>
+                      <td style={{ textAlign: "center", fontWeight: "800", position: "sticky", left: 0, zIndex: 10, background: "var(--bg-secondary)" }}>
                         <span style={{ 
                           display: "inline-flex", 
                           width: "24px", 
@@ -404,8 +404,8 @@ export default function WaliKelasDashboard() {
                           {s.ranking}
                         </span>
                       </td>
-                      <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
-                      <td style={{ fontWeight: "700" }}>{s.nama}</td>
+                      <td style={{ fontFamily: "monospace", fontSize: "0.85rem", position: "sticky", left: "80px", zIndex: 10, background: "var(--bg-secondary)" }}>{s.nisn}</td>
+                      <td style={{ fontWeight: "700", position: "sticky", left: "200px", zIndex: 10, background: "var(--bg-secondary)", borderRight: "2px solid var(--border-color)" }}>{s.nama}</td>
                       {mataPelajaranList.map(mp => {
                         const score = s.nilaiMapel[mp.mataPelajaran];
                         const isUnderKkm = score !== undefined && score !== null && score < mp.kkm;
@@ -556,11 +556,13 @@ export default function WaliKelasDashboard() {
         </div>
       )}
 
-      {/* global animations */}
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .premium-table tr:hover td {
+          background-color: var(--bg-tertiary) !important;
         }
       `}</style>
 
