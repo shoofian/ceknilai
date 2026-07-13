@@ -16,6 +16,7 @@ export default function WaliKelasDashboard() {
   // Filter States
   const [tahunAjaran, setTahunAjaran] = useState("2025/2026");
   const [semester, setSemester] = useState("Ganjil");
+  const [mounted, setMounted] = useState(false);
   
   // Data States
   const [siswa, setSiswa] = useState([]);
