@@ -4,10 +4,9 @@ import { useState, useEffect } from "react";
 
 export default function ProfilGuru() {
   const detectLevelInRombel = (tingkatan, rombel) => {
-    if (!tingkatan || !rombel) return false;
+    if (!rombel) return false;
     const r = rombel.toUpperCase().trim();
-    const tingkatanPattern = new RegExp(`^(${tingkatan}|${tingkatan === "10" ? "X" : tingkatan === "11" ? "XI" : "XII"})\\b`, 'i');
-    return tingkatanPattern.test(r) || r.startsWith("KELAS");
+    return /^(10|11|12|X|XI|XII)\b/i.test(r) || r.startsWith("KELAS");
   };
 
   const [loading, setLoading] = useState(true);

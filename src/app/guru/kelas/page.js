@@ -59,18 +59,9 @@ export default function KelolaKelas() {
   const [bulkError, setBulkError] = useState("");
 
   const detectLevelInRombel = (tingkatan, rombel) => {
-    if (!tingkatan || !rombel) return false;
+    if (!rombel) return false;
     const r = rombel.toUpperCase().trim();
-    const roman = { 10: "X", 11: "XI", 12: "XII" }[tingkatan] || String(tingkatan);
-    const patterns = [
-      `KELAS\\s+${tingkatan}`,
-      `KELAS\\s+${roman}`,
-      `^${tingkatan}\\b`,
-      `^${roman}\\b`,
-      `\\b${tingkatan}\\b`,
-      `\\b${roman}\\b`
-    ];
-    return patterns.some(pat => new RegExp(pat, "i").test(r));
+    return /^(10|11|12|X|XI|XII)\b/i.test(r) || r.startsWith("KELAS");
   };
 
   // Dapodik Upload Modal States
