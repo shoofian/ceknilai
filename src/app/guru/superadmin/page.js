@@ -579,7 +579,7 @@ export default function SuperadminPanel() {
                         style={{ 
                           resize: "vertical", 
                           fontSize: "0.85rem", 
-                          backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                          backgroundColor: "var(--bg-secondary)", 
                           color: "var(--text-primary)", 
                           border: "1px solid var(--border-color)",
                           padding: "8px 12px",

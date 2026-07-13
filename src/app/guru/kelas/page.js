@@ -724,7 +724,7 @@ export default function KelolaKelas() {
                 className="form-input"
                 value={filterTingkatan}
                 onChange={(e) => setFilterTingkatan(e.target.value)}
-                style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "130px", appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "130px", appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
               >
                 <option value="Semua" style={{ backgroundColor: "var(--bg-secondary)" }}>Semua Tingkatan</option>
                 {TINGKATAN_OPTIONS.map(t => (
@@ -900,7 +900,7 @@ export default function KelolaKelas() {
                   onChange={(e) => setTingkatan(e.target.value)}
                   style={{ 
                     appearance: "auto", 
-                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    backgroundColor: "var(--bg-secondary)", 
                     color: "var(--text-primary)", 
                     border: "1px solid var(--border-color)" 
                   }}
@@ -920,7 +920,7 @@ export default function KelolaKelas() {
                   onChange={(e) => { setMataPelajaran(e.target.value); if (e.target.value !== "Lainnya") setMataPelajaranCustom(""); }}
                   style={{ 
                     appearance: "auto", 
-                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    backgroundColor: "var(--bg-secondary)", 
                     color: "var(--text-primary)", 
                     border: "1px solid var(--border-color)" 
                   }}
@@ -950,7 +950,7 @@ export default function KelolaKelas() {
                   onChange={(e) => setTahunAjaran(e.target.value)}
                   style={{ 
                     appearance: "auto", 
-                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    backgroundColor: "var(--bg-secondary)", 
                     color: "var(--text-primary)", 
                     border: "1px solid var(--border-color)" 
                   }}
@@ -970,7 +970,7 @@ export default function KelolaKelas() {
                   onChange={(e) => setSemester(e.target.value)}
                   style={{ 
                     appearance: "auto", 
-                    backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                    backgroundColor: "var(--bg-secondary)", 
                     color: "var(--text-primary)", 
                     border: "1px solid var(--border-color)" 
                   }}
@@ -1218,7 +1218,7 @@ export default function KelolaKelas() {
                   className="form-input"
                   value={dupTingkatan}
                   onChange={(e) => setDupTingkatan(e.target.value)}
-                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
                 >
                   <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
                   {TINGKATAN_OPTIONS.map(t => (
@@ -1233,7 +1233,7 @@ export default function KelolaKelas() {
                   className="form-input"
                   value={dupMataPelajaran}
                   onChange={(e) => { setDupMataPelajaran(e.target.value); if (e.target.value !== "Lainnya") setDupMataPelajaranCustom(""); }}
-                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
                 >
                   <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Mata Pelajaran --</option>
                   {MATA_PELAJARAN_OPTIONS.map(mp => (
@@ -1258,7 +1258,7 @@ export default function KelolaKelas() {
                   className="form-input"
                   value={dupTahunAjaran}
                   onChange={(e) => setDupTahunAjaran(e.target.value)}
-                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
                 >
                   <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tahun Ajaran --</option>
                   {TAHUN_AJARAN_OPTIONS.map(ta => (
@@ -1273,7 +1273,7 @@ export default function KelolaKelas() {
                   className="form-input"
                   value={dupSemester}
                   onChange={(e) => setDupSemester(e.target.value)}
-                  style={{ appearance: "auto", backgroundColor: "rgba(30, 41, 59, 0.7)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
                 >
                   <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
                   <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
