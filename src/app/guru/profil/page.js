@@ -105,13 +105,13 @@ export default function ProfilGuru() {
     };
 
     // Validasi penggantian password jika diisi
-    if (newPassword || oldPassword || confirmPassword) {
-      if (!oldPassword) {
+    if (newPassword.trim() || confirmPassword.trim()) {
+      if (!oldPassword.trim()) {
         setErrorMsg("Harap masukkan password lama untuk mengubah password.");
         setSubmitting(false);
         return;
       }
-      if (newPassword.length < 6) {
+      if (newPassword.trim().length < 6) {
         setErrorMsg("Password baru minimal harus 6 karakter.");
         setSubmitting(false);
         return;
