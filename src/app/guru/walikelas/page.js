@@ -32,6 +32,30 @@ export default function WaliKelasDashboard() {
   const TAHUN_AJARAN_OPTIONS = ["2023/2024", "2024/2025", "2025/2026", "2026/2027"];
   const SEMESTER_OPTIONS = ["Ganjil", "Genap"];
 
+  const getSubjectStats = (subjectName, kkm) => {
+    const scores = (siswa || [])
+      .map(s => (s.nilaiMapel || {})[subjectName])
+      .filter(score => score !== undefined && score !== null);
+      
+    if (scores.length === 0) {
+      return { average: 0, passingCount: 0, failingCount: 0, passingPercent: 0, total: 0 };
+    }
+    
+    const sum = scores.reduce((a, b) => a + b, 0);
+    const average = sum / scores.length;
+    const passingCount = scores.filter(score => score >= kkm).length;
+    const failingCount = scores.length - passingCount;
+    const passingPercent = (passingCount / scores.length) * 100;
+    
+    return {
+      average,
+      passingCount,
+      failingCount,
+      passingPercent,
+      total: scores.length
+    };
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -116,7 +140,7 @@ export default function WaliKelasDashboard() {
     siswa.forEach(s => {
       const failingSubjects = [];
       mataPelajaranList.forEach(mp => {
-        const score = s.nilaiMapel[mp.mataPelajaran];
+        const score = (s.nilaiMapel || {})[mp.mataPelajaran];
         if (score !== undefined && score !== null) {
           if (score < mp.kkm) {
             failingSubjects.push({ mapel: mp.mataPelajaran, nilai: score, kkm: mp.kkm });
@@ -159,7 +183,7 @@ export default function WaliKelasDashboard() {
     siswa.forEach(s => {
       const row = [s.ranking, `="${s.nisn}"`, s.nama];
       mataPelajaranList.forEach(mp => {
-        const score = s.nilaiMapel[mp.mataPelajaran];
+        const score = (s.nilaiMapel || {})[mp.mataPelajaran];
         row.push(score !== undefined && score !== null ? score : "-");
       });
       row.push(s.rataRata);
@@ -501,7 +525,7 @@ export default function WaliKelasDashboard() {
                       <td style={{ fontFamily: "monospace", fontSize: "0.85rem", position: "sticky", left: "80px", zIndex: 10, background: "var(--bg-secondary)" }}>{s.nisn}</td>
                       <td style={{ fontWeight: "700", position: "sticky", left: "200px", zIndex: 10, background: "var(--bg-secondary)", borderRight: "2px solid var(--border-color)" }}>{s.nama}</td>
                       {mataPelajaranList.map(mp => {
-                        const score = s.nilaiMapel[mp.mataPelajaran];
+                        const score = (s.nilaiMapel || {})[mp.mataPelajaran];
                         const isUnderKkm = score !== undefined && score !== null && score < mp.kkm;
                         return (
                           <td 
@@ -543,7 +567,7 @@ export default function WaliKelasDashboard() {
           {siswa.length > 0 ? (
             siswa.map(s => {
               const subjectRemarks = Object.entries(s.catatanMapel || {})
-                .filter(([_, remark]) => remark && remark.trim() !== "");
+                .filter(([_, remark]) => remark && String(remark).trim() !== "");
                 
               return (
                 <div key={s.nisn} className="glass-card animate-fade-in" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>

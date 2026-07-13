@@ -1179,7 +1179,10 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
       id: k.id,
       mataPelajaran: k.mataPelajaran,
       kkm: k.skemaPenilaian?.kkm || 75,
-      isNilaiAkhirGenerated: !!k.isNilaiAkhirGenerated
+      isNilaiAkhirGenerated: !!k.isNilaiAkhirGenerated,
+      guru_username: k.guru_username || '',
+      guru: k.guru || null,
+      semester: k.semester || semester
     }));
     
     // 3. Aggregate unique students across all subject classes
