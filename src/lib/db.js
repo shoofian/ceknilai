@@ -135,6 +135,12 @@ export async function updateGuru(currentUsername, updatedProfile) {
     if (updates.sekolah_id !== undefined) {
       updatesPayload.sekolah_id = updates.sekolah_id;
     }
+    if (updates.walikelas_tingkatan !== undefined) {
+      updatesPayload.walikelas_tingkatan = updates.walikelas_tingkatan;
+    }
+    if (updates.walikelas_rombel_nama !== undefined) {
+      updatesPayload.walikelas_rombel_nama = updates.walikelas_rombel_nama;
+    }
 
     const { data, error } = await supabase
       .from('guru')
