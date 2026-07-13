@@ -337,6 +337,7 @@ export default function WaliKelasDashboard() {
       <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
         {[
           { id: "leger", label: "📊 Buku Leger Nilai" },
+          { id: "catatan", label: "📝 Catatan Guru" },
           { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` }
         ].map(tab => (
           <button
@@ -440,6 +441,52 @@ export default function WaliKelasDashboard() {
               <span style={{ fontSize: "2.5rem" }}>📭</span>
               <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Nilai</h4>
               <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas aktif atau nilai terinput untuk rombel ini pada periode terpilih.</p>
+            </div>
+          )}
+        </div>
+      ) : activeTab === "catatan" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {siswa.length > 0 ? (
+            siswa.map(s => {
+              const subjectRemarks = Object.entries(s.catatanMapel || {})
+                .filter(([_, remark]) => remark && remark.trim() !== "");
+                
+              return (
+                <div key={s.nisn} className="glass-card animate-fade-in" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+                    <div>
+                      <strong style={{ fontSize: "1.1rem", color: "var(--text-primary)" }}>{s.nama}</strong>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginLeft: "12px", fontFamily: "monospace" }}>NISN: {s.nisn}</span>
+                    </div>
+                    <span className="badge badge-info">Peringkat {s.ranking}</span>
+                  </div>
+                  
+                  {subjectRemarks.length > 0 ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {subjectRemarks.map(([mapel, remark]) => (
+                        <div key={mapel} style={{ display: "flex", gap: "12px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: "10px 14px", borderLeft: "4px solid var(--primary)", alignItems: "flex-start" }}>
+                          <div style={{ minWidth: "140px", fontWeight: "700", color: "var(--text-secondary)" }}>
+                            📚 {mapel}
+                          </div>
+                          <div style={{ fontSize: "0.88rem", color: "var(--text-primary)", fontStyle: "italic", whiteSpace: "pre-wrap", flex: 1 }}>
+                            "{remark}"
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                      Belum ada catatan atau umpan balik perkembangan dari guru mata pelajaran.
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          ) : (
+            <div className="glass-card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+              <span style={{ fontSize: "2.5rem" }}>📭</span>
+              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Siswa</h4>
+              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada data siswa untuk rombel ini pada periode terpilih.</p>
             </div>
           )}
         </div>
