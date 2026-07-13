@@ -480,24 +480,6 @@ export default function WaliKelasDashboard() {
                           const finalScore = finals[index];
                           const isUnderKkm = finalScore < kkm;
 
-                          const getColScore = (student, col) => {
-                            if (col.subKolom && col.subKolom.length > 0) {
-                              let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
-                              col.subKolom.forEach(sub => {
-                                const sc = student.nilai?.[sub.id];
-                                if (sc !== undefined && sc !== null && sc !== "") {
-                                  if (col.hitungMetode === "persentase") { subTotal += Number(sc) * (sub.bobot / 100); subFilledWeight += sub.bobot; } else { subTotal += Number(sc); }
-                                  subFilledCount++;
-                                }
-                              });
-                              if (subFilledCount === 0) return 0;
-                              return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
-                            } else {
-                              const sc = student.nilai?.[col.id];
-                              return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
-                            }
-                          };
-
                           return (
                             <tr key={s.nisn} style={{ backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.01)" : "transparent", borderBottom: "1px solid var(--border-color)" }}>
                               <td style={{ textAlign: "center", fontWeight: "700", padding: "12px 10px" }}>{index + 1}</td>
