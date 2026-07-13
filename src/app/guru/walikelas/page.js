@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -34,6 +34,35 @@ export default function WaliKelasDashboard() {
   const [loadingPerpaduan, setLoadingPerpaduan] = useState(false);
   const [perpaduanSiswa, setPerpaduanSiswa] = useState([]);
   const [perpaduanMapelList, setPerpaduanMapelList] = useState([]);
+
+  // Leger Sort States
+  const [legerSortConfig, setLegerSortConfig] = useState({ key: "nama", direction: "asc" });
+
+  const handleLegerSort = (key) => {
+    let direction = "asc";
+    if (legerSortConfig.key === key && legerSortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setLegerSortConfig({ key, direction });
+  };
+
+  const sortedSiswa = useMemo(() => {
+    const list = [...siswa];
+    if (legerSortConfig.key) {
+      list.sort((a, b) => {
+        let valA = a[legerSortConfig.key];
+        let valB = b[legerSortConfig.key];
+
+        if (typeof valA === "string") valA = valA.toLowerCase();
+        if (typeof valB === "string") valB = valB.toLowerCase();
+
+        if (valA < valB) return legerSortConfig.direction === "asc" ? -1 : 1;
+        if (valA > valB) return legerSortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    return list;
+  }, [siswa, legerSortConfig]);
 
   // Options
   const TAHUN_AJARAN_OPTIONS = ["2023/2024", "2024/2025", "2025/2026", "2026/2027"];
@@ -827,9 +856,21 @@ export default function WaliKelasDashboard() {
               <table className="premium-table">
                 <thead>
                   <tr>
-                    <th style={{ width: "80px", minWidth: "80px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, background: "var(--bg-tertiary)" }}>Rank</th>
+                    <th 
+                      onClick={() => handleLegerSort("ranking")}
+                      style={{ width: "80px", minWidth: "80px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, background: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none" }}
+                      title="Klik untuk mengurutkan berdasarkan ranking"
+                    >
+                      Rank {legerSortConfig.key === "ranking" ? (legerSortConfig.direction === "asc" ? " ⇅ ▲" : " ⇅ ▼") : " ⇅"}
+                    </th>
                     <th style={{ width: "120px", minWidth: "120px", position: "sticky", left: "80px", zIndex: 12, background: "var(--bg-tertiary)" }}>NISN</th>
-                    <th style={{ width: "220px", minWidth: "220px", maxWidth: "220px", position: "sticky", left: "200px", zIndex: 12, background: "var(--bg-tertiary)", borderRight: "2px solid var(--border-color)" }}>Nama Siswa</th>
+                    <th 
+                      onClick={() => handleLegerSort("nama")}
+                      style={{ width: "220px", minWidth: "220px", maxWidth: "220px", position: "sticky", left: "200px", zIndex: 12, background: "var(--bg-tertiary)", borderRight: "2px solid var(--border-color)", cursor: "pointer", userSelect: "none" }}
+                      title="Klik untuk mengurutkan abjad nama siswa"
+                    >
+                      Nama Siswa {legerSortConfig.key === "nama" ? (legerSortConfig.direction === "asc" ? " ⇅ ▲" : " ⇅ ▼") : " ⇅"}
+                    </th>
                     {mataPelajaranList.map(mp => (
                       <th key={mp.id} style={{ textAlign: "center", minWidth: "120px" }}>
                         <div>{mp.mataPelajaran}</div>
@@ -842,7 +883,7 @@ export default function WaliKelasDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {siswa.map(s => (
+                  {sortedSiswa.map(s => (
                     <tr key={s.nisn}>
                       <td style={{ textAlign: "center", fontWeight: "800", position: "sticky", left: 0, zIndex: 10, background: "var(--bg-secondary)" }}>
                         <span style={{ 
