@@ -107,7 +107,8 @@ INSERT INTO sekolah (id, nama, npsn) VALUES
 ('SCH-30400366', 'SMP Negeri 1 Segah', '30400366'),
 ('SCH-30400363', 'SMP Negeri 2 Teluk Bayur', '30400363'),
 ('SCH-30400367', 'SMP Negeri 1 Pulau Derawan', '30400367'),
-('SCH-30400353', 'SMP Negeri 1 Maratua', '30400353')
+('SCH-30400353', 'SMP Negeri 1 Maratua', '30400353'),
+('SCH-70043825', 'SMAS Islam Ibnu Katsir Berau', '70043825')
 ON CONFLICT (npsn) DO UPDATE SET 
   nama = EXCLUDED.nama
 ;
