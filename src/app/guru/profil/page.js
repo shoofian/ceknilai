@@ -29,6 +29,10 @@ export default function ProfilGuru() {
   const [sekolahSearchResults, setSekolahSearchResults] = useState([]);
   const [showSekolahDropdown, setShowSekolahDropdown] = useState(false);
 
+  // Wali Kelas selection states
+  const [walikelasTingkatan, setWalikelasTingkatan] = useState("");
+  const [walikelasRombelNama, setWalikelasRombelNama] = useState("");
+
   useEffect(() => {
     const fetchProfil = async () => {
       try {
@@ -40,6 +44,8 @@ export default function ProfilGuru() {
           setEmail(data.email);
           setSekolahId(data.sekolah_id || "");
           setSekolahSearchQuery(data.sekolah?.nama || "");
+          setWalikelasTingkatan(data.walikelas_tingkatan || "");
+          setWalikelasRombelNama(data.walikelas_rombel_nama || "");
           setIsLocked(!!data.is_locked);
         }
       } catch (err) {
@@ -63,11 +69,14 @@ export default function ProfilGuru() {
     setErrorMsg("");
     setSuccessMsg("");
 
+    const cleanRombel = walikelasRombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1");
     const payload = {
       nama: nama.trim(),
       username: username.trim().toLowerCase(),
       email: email.trim(),
-      sekolah_id: sekolahId || null
+      sekolah_id: sekolahId || null,
+      walikelas_tingkatan: walikelasTingkatan ? Number(walikelasTingkatan) : null,
+      walikelas_rombel_nama: walikelasTingkatan && cleanRombel ? cleanRombel : null
     };
 
     // Validasi penggantian password jika diisi
@@ -277,6 +286,41 @@ export default function ProfilGuru() {
                 >
                   ➕ Daftar Baru
                 </button>
+              </div>
+            </div>
+
+            {/* Wali Rombel */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "12px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tingkatan Wali Kelas</label>
+                <select
+                  className="form-input"
+                  value={walikelasTingkatan}
+                  onChange={(e) => {
+                    setWalikelasTingkatan(e.target.value);
+                    if (!e.target.value) setWalikelasRombelNama("");
+                  }}
+                  disabled={isLocked}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                >
+                  <option value="">Bukan Wali</option>
+                  <option value="10">Kelas 10 (X)</option>
+                  <option value="11">Kelas 11 (XI)</option>
+                  <option value="12">Kelas 12 (XII)</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama/No. Rombel Wali</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: MIPA 1 atau 1"
+                  className="form-input"
+                  value={walikelasRombelNama}
+                  onChange={(e) => setWalikelasRombelNama(e.target.value)}
+                  disabled={isLocked || !walikelasTingkatan}
+                  required={!!walikelasTingkatan}
+                />
               </div>
             </div>
  
