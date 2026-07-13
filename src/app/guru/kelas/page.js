@@ -24,8 +24,9 @@ export default function KelolaKelas() {
   // Dropdown Constants
   const TINGKATAN_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
   const MATA_PELAJARAN_OPTIONS = [
-    "Informatika", "Matematika", "Bahasa Indonesia", "Bahasa Inggris", "Bahasa Jerman",
-    "Bahasa Jepang", "Bahasa Arab", "Bahasa Mandarin", "Bahasa Prancis", "Bahasa Korea",
+    "Informatika", "Koding & AI", "Matematika", "Matematika tk Lanjut",
+    "Bahasa Indonesia", "Bhs Indonesia tk Lanjut", "Bahasa Inggris", "Bhs Inggris tk Lanjut",
+    "Bahasa Jerman", "Bahasa Jepang", "Bahasa Arab", "Bahasa Mandarin", "Bahasa Prancis", "Bahasa Korea",
     "IPA", "Fisika", "Kimia", "Biologi",
     "IPS", "Ekonomi", "Geografi", "Sosiologi", "Sejarah", "Antropologi",
     "PKN", "Pendidikan Agama Islam", "Pendidikan Agama Kristen", "Pendidikan Agama Katolik",
