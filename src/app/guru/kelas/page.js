@@ -768,7 +768,7 @@ export default function KelolaKelas() {
           {/* Filter Bar */}
           <div className="glass-card" style={{ display: "flex", gap: "16px", flexWrap: "wrap", padding: "16px", alignItems: "center" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan Kelas</label>
+              <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan</label>
               <select
                 className="form-input"
                 value={filterTingkatan}
@@ -777,7 +777,7 @@ export default function KelolaKelas() {
               >
                 <option value="Semua" style={{ backgroundColor: "var(--bg-secondary)" }}>Semua Tingkatan</option>
                 {TINGKATAN_OPTIONS.map(t => (
-                  <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                  <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
                 ))}
               </select>
             </div>
@@ -930,29 +930,28 @@ export default function KelolaKelas() {
             </h3>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              {/* 1. Tingkatan Kelas */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tingkatan Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
-                <select
-                  className="form-input"
-                  value={tingkatan}
-                  onChange={(e) => setTingkatan(e.target.value)}
-                  style={{ 
-                    appearance: "auto", 
-                    backgroundColor: "var(--bg-secondary)", 
-                    color: "var(--text-primary)", 
-                    border: "1px solid var(--border-color)" 
-                  }}
-                >
-                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
-                  {TINGKATAN_OPTIONS.map(t => (
-                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
-                  ))}
-                </select>
-              </div>
+              {/* 1 & 2. Tingkatan & No./Nama Rombel Bersandingan */}
+              <div style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "12px" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Tingkatan <span style={{ color: "var(--danger)" }}>*</span></label>
+                  <select
+                    className="form-input"
+                    value={tingkatan}
+                    onChange={(e) => setTingkatan(e.target.value)}
+                    style={{ 
+                      appearance: "auto", 
+                      backgroundColor: "var(--bg-secondary)", 
+                      color: "var(--text-primary)", 
+                      border: "1px solid var(--border-color)" 
+                    }}
+                  >
+                    <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih --</option>
+                    {TINGKATAN_OPTIONS.map(t => (
+                      <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* 2. No./Nama Rombel & Nama Kustom */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
                   <input
@@ -969,17 +968,18 @@ export default function KelolaKelas() {
                     </span>
                   )}
                 </div>
+              </div>
 
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Nama Kustom (Opsional)</label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: Informatika"
-                    className="form-input"
-                    value={namaKustom}
-                    onChange={(e) => setNamaKustom(e.target.value)}
-                  />
-                </div>
+              {/* Nama Kustom (Opsional) */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Kustom (Opsional)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Informatika"
+                  className="form-input"
+                  value={namaKustom}
+                  onChange={(e) => setNamaKustom(e.target.value)}
+                />
               </div>
 
               {/* 3. Pratinjau Nama Kelas */}
@@ -1176,7 +1176,7 @@ export default function KelolaKelas() {
                           <select className="form-input" value={form.tingkatan} onChange={(e) => handleBulkFormChange(form.id, "tingkatan", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
                             <option value="" disabled>-- Pilih --</option>
                             {TINGKATAN_OPTIONS.map(t => (
-                              <option key={t} value={String(t)}>Kelas {t}</option>
+                              <option key={t} value={String(t)}>{t}</option>
                             ))}
                           </select>
                         </td>
@@ -1321,7 +1321,7 @@ export default function KelolaKelas() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tingkatan Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
+                <label className="form-label">Tingkatan <span style={{ color: "var(--danger)" }}>*</span></label>
                 <select
                   className="form-input"
                   value={dupTingkatan}
@@ -1330,7 +1330,7 @@ export default function KelolaKelas() {
                 >
                   <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
                   {TINGKATAN_OPTIONS.map(t => (
-                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
                   ))}
                 </select>
               </div>
