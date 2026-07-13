@@ -731,10 +731,10 @@ export default function WaliKelasDashboard() {
             padding: "20px"
           }}
         >
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "1000px", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", border: "1px solid var(--border-focus)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)", padding: "0" }}>
+          <div className="glass-card animate-fade-in modal-glass-container" style={{ width: "100%", maxWidth: "1000px", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", border: "1px solid var(--border-focus)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)", padding: "0" }}>
             
             {/* Modal Header */}
-            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-primary)", flexShrink: 0 }}>
+            <div className="modal-header-container" style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-primary)", flexShrink: 0 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
                   <span style={{ fontSize: "0.65rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.1em", padding: "2px 8px", borderRadius: "10px", backgroundColor: "rgba(59, 130, 246, 0.1)" }}>📚 Leger Detail</span>
@@ -809,7 +809,7 @@ export default function WaliKelasDashboard() {
                 <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflowY: "auto" }}>
                   
                   {/* Summary Stats Cards */}
-                  <div className="stats-grid" style={{ padding: "20px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+                  <div className="stats-grid stats-grid-container" style={{ padding: "20px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
                     {[
                       { label: "Jumlah Siswa", value: allStudents.length, color: "var(--text-primary)", icon: "👥", bg: "rgba(255,255,255,0.03)" },
                       { label: "Rata-Rata", value: avg.toFixed(1), color: "var(--primary)", icon: "📈", bg: "rgba(59, 130, 246, 0.05)" },
@@ -827,8 +827,8 @@ export default function WaliKelasDashboard() {
                   </div>
 
                   {/* Grade Table */}
-                  <div style={{ padding: "20px 24px" }}>
-                    <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", backgroundColor: "var(--bg-primary)" }}>
+                  <div className="table-padding-container" style={{ padding: "20px 24px" }}>
+                    <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflowX: "auto", backgroundColor: "var(--bg-primary)" }}>
                       <table className="premium-table" style={{ margin: 0, width: "100%" }}>
                         <thead>
                           <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
@@ -957,6 +957,22 @@ export default function WaliKelasDashboard() {
         @media (max-width: 576px) {
           .stats-grid {
             grid-template-columns: repeat(2, 1fr);
+          }
+          .modal-glass-container {
+            max-height: 92vh !important;
+            border-radius: var(--radius-sm) !important;
+          }
+          .modal-header-container {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 16px !important;
+          }
+          .stats-grid-container {
+            padding: 12px 16px !important;
+            gap: 8px !important;
+          }
+          .table-padding-container {
+            padding: 12px 16px !important;
           }
         }
       `}</style>
