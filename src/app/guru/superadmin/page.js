@@ -34,7 +34,11 @@ export default function SuperadminPanel() {
   const [formSekolahId, setFormSekolahId] = useState("");
   const [formWalikelasTingkatan, setFormWalikelasTingkatan] = useState("");
   const [formWalikelasRombelNama, setFormWalikelasRombelNama] = useState("");
-  const [sekolahList, setSekolahList] = useState([]);
+  
+  // Smart Search States
+  const [sekolahSearchQuery, setSekolahSearchQuery] = useState("");
+  const [sekolahSearchResults, setSekolahSearchResults] = useState([]);
+  const [showSekolahDropdown, setShowSekolahDropdown] = useState(false);
 
   const router = useRouter();
   const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
@@ -80,12 +84,7 @@ export default function SuperadminPanel() {
         setGurus(dataGurus);
       }
 
-      // Fetch Sekolah list
-      const resSekolah = await fetch("/api/sekolah/search");
-      if (resSekolah.ok) {
-        const dataSekolah = await resSekolah.json();
-        setSekolahList(dataSekolah);
-      }
+      // Fetch Sekolah list - removed, loaded dynamically on type search
 
       // Fetch Teacher Logs
       const resTeacherLogs = await fetch("/api/superadmin/logs?type=guru");
@@ -111,6 +110,7 @@ export default function SuperadminPanel() {
     setFormSekolahId("");
     setFormWalikelasTingkatan("");
     setFormWalikelasRombelNama("");
+    setSekolahSearchQuery("");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -126,6 +126,7 @@ export default function SuperadminPanel() {
     setFormSekolahId(guru.sekolah_id || "");
     setFormWalikelasTingkatan(guru.walikelas_tingkatan || "");
     setFormWalikelasRombelNama(guru.walikelas_rombel_nama || "");
+    setSekolahSearchQuery(guru.sekolah?.nama || "");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -563,19 +564,75 @@ export default function SuperadminPanel() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group" style={{ marginBottom: 0, position: "relative" }}>
                 <label className="form-label">Asal Sekolah</label>
-                <select
-                  className="form-input"
-                  value={formSekolahId}
-                  onChange={(e) => setFormSekolahId(e.target.value)}
-                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-                >
-                  <option value="">-- Pilih Sekolah --</option>
-                  {sekolahList.map(s => (
-                    <option key={s.id} value={s.id}>{s.nama} ({s.npsn})</option>
-                  ))}
-                </select>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Cari sekolah (ketik nama atau NPSN)..."
+                    className="form-input"
+                    value={sekolahSearchQuery}
+                    onChange={(e) => {
+                      setSekolahSearchQuery(e.target.value);
+                      if (!e.target.value.trim()) {
+                        setFormSekolahId("");
+                        setSekolahSearchResults([]);
+                        setShowSekolahDropdown(false);
+                        return;
+                      }
+                      fetch(`/api/sekolah/search?query=${encodeURIComponent(e.target.value)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          setSekolahSearchResults(data);
+                          setShowSekolahDropdown(true);
+                        });
+                    }}
+                    onFocus={() => { if (sekolahSearchQuery.trim()) setShowSekolahDropdown(true); }}
+                    onBlur={() => setTimeout(() => setShowSekolahDropdown(false), 200)}
+                    style={{ width: "100%" }}
+                  />
+                  {showSekolahDropdown && sekolahSearchResults.length > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        right: 0,
+                        backgroundColor: "var(--bg-secondary)",
+                        border: "1px solid var(--border-focus)",
+                        borderRadius: "var(--radius-sm)",
+                        zIndex: 1000,
+                        maxHeight: "180px",
+                        overflowY: "auto",
+                        boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
+                        marginTop: "4px",
+                        textAlign: "left"
+                      }}
+                    >
+                      {sekolahSearchResults.map(s => (
+                        <div
+                          key={s.id}
+                          onMouseDown={() => {
+                            setFormSekolahId(s.id);
+                            setSekolahSearchQuery(s.nama);
+                            setShowSekolahDropdown(false);
+                          }}
+                          style={{
+                            padding: "10px 12px",
+                            cursor: "pointer",
+                            fontSize: "0.85rem",
+                            borderBottom: "1px solid var(--border-color)",
+                            transition: "background-color 0.15s ease"
+                          }}
+                          className="sekolah-search-item"
+                        >
+                          <div style={{ fontWeight: "700" }}>{s.nama}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>NPSN: {s.npsn}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "12px" }}>
@@ -683,6 +740,9 @@ export default function SuperadminPanel() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .sekolah-search-item:hover {
+          background-color: var(--bg-tertiary) !important;
         }
       `}</style>
     </>

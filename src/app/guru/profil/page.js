@@ -19,11 +19,15 @@ export default function ProfilGuru() {
   const [submitting, setSubmitting] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [sekolahId, setSekolahId] = useState("");
-  const [sekolahList, setSekolahList] = useState([]);
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [newSekolahNama, setNewSekolahNama] = useState("");
   const [newSekolahNpsn, setNewSekolahNpsn] = useState("");
   const [registerError, setRegisterError] = useState("");
+
+  // Smart search states
+  const [sekolahSearchQuery, setSekolahSearchQuery] = useState("");
+  const [sekolahSearchResults, setSekolahSearchResults] = useState([]);
+  const [showSekolahDropdown, setShowSekolahDropdown] = useState(false);
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -35,14 +39,8 @@ export default function ProfilGuru() {
           setUsername(data.username);
           setEmail(data.email);
           setSekolahId(data.sekolah_id || "");
+          setSekolahSearchQuery(data.sekolah?.nama || "");
           setIsLocked(!!data.is_locked);
-        }
-        
-        // Fetch sekolah list
-        const resSekolah = await fetch("/api/sekolah/search");
-        if (resSekolah.ok) {
-          const list = await resSekolah.json();
-          setSekolahList(list);
         }
       } catch (err) {
         console.error("Gagal memuat profil", err);
@@ -199,21 +197,76 @@ export default function ProfilGuru() {
             </div>
 
             {/* Asal Sekolah */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group" style={{ marginBottom: 0, position: "relative" }}>
               <label className="form-label">Asal Sekolah</label>
               <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <select
-                  className="form-input"
-                  value={sekolahId}
-                  onChange={(e) => setSekolahId(e.target.value)}
-                  disabled={isLocked}
-                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)", flex: 1 }}
-                >
-                  <option value="">-- Pilih Sekolah Anda --</option>
-                  {sekolahList.map(s => (
-                    <option key={s.id} value={s.id}>{s.nama} ({s.npsn})</option>
-                  ))}
-                </select>
+                <div style={{ flex: 1, position: "relative" }}>
+                  <input
+                    type="text"
+                    placeholder="🔍 Cari asal sekolah (ketik nama atau NPSN)..."
+                    className="form-input"
+                    value={sekolahSearchQuery}
+                    onChange={(e) => {
+                      setSekolahSearchQuery(e.target.value);
+                      if (!e.target.value.trim()) {
+                        setSekolahId("");
+                        setSekolahSearchResults([]);
+                        setShowSekolahDropdown(false);
+                        return;
+                      }
+                      fetch(`/api/sekolah/search?query=${encodeURIComponent(e.target.value)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          setSekolahSearchResults(data);
+                          setShowSekolahDropdown(true);
+                        });
+                    }}
+                    onFocus={() => { if (sekolahSearchQuery.trim()) setShowSekolahDropdown(true); }}
+                    onBlur={() => setTimeout(() => setShowSekolahDropdown(false), 200)}
+                    disabled={isLocked}
+                    style={{ width: "100%" }}
+                  />
+                  {showSekolahDropdown && sekolahSearchResults.length > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        right: 0,
+                        backgroundColor: "var(--bg-secondary)",
+                        border: "1px solid var(--border-focus)",
+                        borderRadius: "var(--radius-sm)",
+                        zIndex: 1000,
+                        maxHeight: "180px",
+                        overflowY: "auto",
+                        boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
+                        marginTop: "4px"
+                      }}
+                    >
+                      {sekolahSearchResults.map(s => (
+                        <div
+                          key={s.id}
+                          onMouseDown={() => {
+                            setSekolahId(s.id);
+                            setSekolahSearchQuery(s.nama);
+                            setShowSekolahDropdown(false);
+                          }}
+                          style={{
+                            padding: "10px 12px",
+                            cursor: "pointer",
+                            fontSize: "0.85rem",
+                            borderBottom: "1px solid var(--border-color)",
+                            transition: "background-color 0.15s ease"
+                          }}
+                          className="sekolah-search-item"
+                        >
+                          <div style={{ fontWeight: "700" }}>{s.nama}</div>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>NPSN: {s.npsn}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => { setRegisterModalOpen(true); setRegisterError(""); }}
@@ -396,8 +449,7 @@ export default function ProfilGuru() {
                   Batal
                 </button>
                 <button
-                  type="button"
-                  onClick={async () => {
+                  onMouseDown={async () => {
                     if (!newSekolahNama.trim() || !newSekolahNpsn.trim()) {
                       setRegisterError("Semua kolom wajib diisi.");
                       return;
@@ -414,9 +466,8 @@ export default function ProfilGuru() {
                       });
                       const data = await res.json();
                       if (res.ok) {
-                        // Add to list and set as active
-                        setSekolahList(prev => [...prev, data.sekolah].sort((a, b) => a.nama.localeCompare(b.nama)));
                         setSekolahId(data.sekolah.id);
+                        setSekolahSearchQuery(data.sekolah.nama);
                         setRegisterModalOpen(false);
                         setNewSekolahNama("");
                         setNewSekolahNpsn("");
@@ -437,6 +488,11 @@ export default function ProfilGuru() {
           </div>
         </div>
       )}
+      <style jsx global>{`
+        .sekolah-search-item:hover {
+          background-color: var(--bg-tertiary) !important;
+        }
+      `}</style>
     </div>
   );
 }
