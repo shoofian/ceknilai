@@ -32,7 +32,8 @@ export default function SuperadminPanel() {
   const [formIsLocked, setFormIsLocked] = useState(false);
   const [formLockMessage, setFormLockMessage] = useState("");
   const [formSekolahId, setFormSekolahId] = useState("");
-  const [formWalikelasRombel, setFormWalikelasRombel] = useState("");
+  const [formWalikelasTingkatan, setFormWalikelasTingkatan] = useState("");
+  const [formWalikelasRombelNama, setFormWalikelasRombelNama] = useState("");
   const [sekolahList, setSekolahList] = useState([]);
 
   const router = useRouter();
@@ -108,7 +109,8 @@ export default function SuperadminPanel() {
     setFormIsLocked(false);
     setFormLockMessage("");
     setFormSekolahId("");
-    setFormWalikelasRombel("");
+    setFormWalikelasTingkatan("");
+    setFormWalikelasRombelNama("");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -122,7 +124,8 @@ export default function SuperadminPanel() {
     setFormIsLocked(guru.is_locked || false);
     setFormLockMessage(guru.lock_message || "");
     setFormSekolahId(guru.sekolah_id || "");
-    setFormWalikelasRombel(guru.walikelas_rombel || "");
+    setFormWalikelasTingkatan(guru.walikelas_tingkatan || "");
+    setFormWalikelasRombelNama(guru.walikelas_rombel_nama || "");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -144,7 +147,8 @@ export default function SuperadminPanel() {
       is_locked: formIsLocked,
       lock_message: formLockMessage,
       sekolah_id: formSekolahId || null,
-      walikelas_rombel: formWalikelasRombel.trim() || null,
+      walikelas_tingkatan: formWalikelasTingkatan ? Number(formWalikelasTingkatan) : null,
+      walikelas_rombel_nama: formWalikelasRombelNama.trim() || null,
     };
     
     if (formPassword) {
@@ -469,7 +473,7 @@ export default function SuperadminPanel() {
                             </div>
                           </td>
                           <td>{g.sekolah?.nama || "-"}</td>
-                          <td>{g.walikelas_rombel ? <code>{g.walikelas_rombel}</code> : "-"}</td>
+                          <td>{g.walikelas_tingkatan && g.walikelas_rombel_nama ? <code>{g.walikelas_tingkatan} {g.walikelas_rombel_nama}</code> : "-"}</td>
                           <td><code>{g.username}</code></td>
                           <td>{g.email}</td>
                           <td style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
@@ -574,15 +578,34 @@ export default function SuperadminPanel() {
                 </select>
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Wali Kelas Rombel (Opsional)</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Kelas X-A (Kosongkan jika bukan)"
-                  className="form-input"
-                  value={formWalikelasRombel}
-                  onChange={(e) => setFormWalikelasRombel(e.target.value)}
-                />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "12px" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Tingkatan Wali Kelas</label>
+                  <select
+                    className="form-input"
+                    value={formWalikelasTingkatan}
+                    onChange={(e) => setFormWalikelasTingkatan(e.target.value)}
+                    style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                  >
+                    <option value="">Bukan Wali</option>
+                    <option value="10">Kelas 10 (X)</option>
+                    <option value="11">Kelas 11 (XI)</option>
+                    <option value="12">Kelas 12 (XII)</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nama/No. Rombel</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: MIPA 1 atau 1"
+                    className="form-input"
+                    value={formWalikelasRombelNama}
+                    onChange={(e) => setFormWalikelasRombelNama(e.target.value)}
+                    disabled={!formWalikelasTingkatan}
+                    required={!!formWalikelasTingkatan}
+                  />
+                </div>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>

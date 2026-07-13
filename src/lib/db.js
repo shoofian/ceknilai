@@ -15,12 +15,23 @@ if (supabaseUrl && supabaseKey) {
   console.warn("WARNING: Supabase URL or Key is missing. Database calls will fail. Please configure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.");
 }
 
+export function normalizeRombelNama(str) {
+  if (!str) return "";
+  let clean = str.toString().trim().toUpperCase();
+  clean = clean.replace(/[-_]/g, " ");
+  clean = clean.replace(/\s+/g, " ");
+  clean = clean.replace(/\b0+(\d+)\b/g, "$1");
+  return clean.trim();
+}
+
 // Mapper to map snake_case DB schema to camelCase expected by the app
 function mapKelasFromDb(k) {
   if (!k) return null;
   return {
     id: k.id,
     nama: k.nama,
+    rombelNama: k.rombel_nama || null,
+    namaKustom: k.nama_kustom || null,
     mataPelajaran: k.mata_pelajaran || 'Informatika',
     tahunAjaran: k.tahun_ajaran,
     semester: k.semester || 'Ganjil',
@@ -55,7 +66,7 @@ function mapKelasFromDb(k) {
 
 // === GURU PROFILE ===
 export async function getGuru(username = null) {
-  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_rombel: null };
+  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null };
   try {
     let query = supabase.from('guru').select('*, sekolah:sekolah_id(nama, npsn)');
     if (username) {
@@ -63,7 +74,7 @@ export async function getGuru(username = null) {
     }
     const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
-      // Fallback if sekolah_id or walikelas_rombel does not exist
+      // Fallback if sekolah_id or walikelas columns do not exist
       let fallbackQuery = supabase.from('guru').select('username, password, nama, email, is_locked, lock_message');
       if (username) {
         fallbackQuery = fallbackQuery.ilike('username', username.trim());
@@ -79,7 +90,8 @@ export async function getGuru(username = null) {
         is_locked: result.is_locked ?? false,
         lock_message: result.lock_message ?? null,
         sekolah_id: null,
-        walikelas_rombel: null,
+        walikelas_tingkatan: null,
+        walikelas_rombel_nama: null,
         sekolah: null
       };
     }
@@ -89,12 +101,13 @@ export async function getGuru(username = null) {
       is_locked: result.is_locked ?? false,
       lock_message: result.lock_message ?? null,
       sekolah_id: result.sekolah_id ?? null,
-      walikelas_rombel: result.walikelas_rombel ?? null,
+      walikelas_tingkatan: result.walikelas_tingkatan ?? null,
+      walikelas_rombel_nama: result.walikelas_rombel_nama ?? null,
       sekolah: result.sekolah ?? null
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
-    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_rombel: null };
+    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null };
   }
 }
 
@@ -223,9 +236,12 @@ export async function createKelas(newKelas, guruUsername = null) {
     }
 
     const id = newKelas.id || 'kelas-' + Math.random().toString(36).substring(2, 11);
+    const rombelNamaNormalized = newKelas.rombelNama ? normalizeRombelNama(newKelas.rombelNama) : null;
     const kelasRow = {
       id,
       nama: cleanNama,
+      rombel_nama: rombelNamaNormalized,
+      nama_kustom: newKelas.namaKustom ? newKelas.namaKustom.trim() : null,
       mata_pelajaran: cleanMapel,
       tahun_ajaran: cleanTahun,
       semester: cleanSemester,
@@ -316,6 +332,12 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
     if (updatedFields.tahunAjaran !== undefined) updates.tahun_ajaran = updatedFields.tahunAjaran;
     if (updatedFields.semester !== undefined) updates.semester = updatedFields.semester;
     if (updatedFields.tingkatan !== undefined) updates.tingkatan = updatedFields.tingkatan;
+    if (updatedFields.rombelNama !== undefined) {
+      updates.rombel_nama = updatedFields.rombelNama ? normalizeRombelNama(updatedFields.rombelNama) : null;
+    }
+    if (updatedFields.namaKustom !== undefined) {
+      updates.nama_kustom = updatedFields.namaKustom ? updatedFields.namaKustom.trim() : null;
+    }
     if (updatedFields.archived !== undefined) {
       updates.archived = updatedFields.archived;
     }
@@ -914,7 +936,7 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_rombel, sekolah:sekolah_id(nama, npsn)');
+      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, sekolah:sekolah_id(nama, npsn)');
     if (error) {
       // Fallback
       const { data: fallbackData, error: fallbackError } = await supabase
@@ -929,14 +951,15 @@ export async function getAllGurus() {
           console.error('Error fetching all gurus (fallback 2):', fallbackError2);
           return [];
         }
-        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_rombel: null }));
+        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null }));
       }
       return fallbackData.map(g => ({
         ...g,
         is_locked: g.is_locked ?? false,
         lock_message: g.lock_message ?? null,
         sekolah_id: null,
-        walikelas_rombel: null
+        walikelas_tingkatan: null,
+        walikelas_rombel_nama: null
       }));
     }
     return data.map(g => ({
@@ -944,7 +967,8 @@ export async function getAllGurus() {
       is_locked: g.is_locked ?? false,
       lock_message: g.lock_message ?? null,
       sekolah_id: g.sekolah_id ?? null,
-      walikelas_rombel: g.walikelas_rombel ?? null,
+      walikelas_tingkatan: g.walikelas_tingkatan ?? null,
+      walikelas_rombel_nama: g.walikelas_rombel_nama ?? null,
       sekolah: g.sekolah ?? null
     }));
   } catch (err) {
@@ -996,8 +1020,11 @@ export async function updateGuruByAdmin(username, updatedData) {
     if (updatedData.sekolah_id !== undefined) {
       payload.sekolah_id = updatedData.sekolah_id || null;
     }
-    if (updatedData.walikelas_rombel !== undefined) {
-      payload.walikelas_rombel = updatedData.walikelas_rombel || null;
+    if (updatedData.walikelas_tingkatan !== undefined) {
+      payload.walikelas_tingkatan = updatedData.walikelas_tingkatan !== null ? Number(updatedData.walikelas_tingkatan) : null;
+    }
+    if (updatedData.walikelas_rombel_nama !== undefined) {
+      payload.walikelas_rombel_nama = updatedData.walikelas_rombel_nama ? normalizeRombelNama(updatedData.walikelas_rombel_nama) : null;
     }
     const { data, error } = await supabase
       .from('guru')
@@ -1114,14 +1141,15 @@ export async function getSuperadminTeacherLogs() {
   }
 }
 
-export async function getLegerData(sekolahId, rombelNama, tahunAjaran, semester) {
+export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombelNama, tahunAjaran, semester) {
   if (!supabase) return { siswa: [], mataPelajaranList: [] };
   try {
     // 1. Fetch all classes matching rombel name, academic year, and semester
     const { data: classes, error: errClasses } = await supabase
       .from('kelas')
       .select('*, guru:guru_username(sekolah_id), kolom_nilai(*), siswa(*)')
-      .eq('nama', rombelNama)
+      .eq('tingkatan', walikelasTingkatan)
+      .eq('rombel_nama', walikelasRombelNama)
       .eq('tahun_ajaran', tahunAjaran)
       .eq('semester', semester)
       .eq('archived', false);

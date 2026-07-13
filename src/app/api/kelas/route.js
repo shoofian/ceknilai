@@ -47,7 +47,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
     }
 
-    const { nama, mataPelajaran, tahunAjaran, semester, tingkatan, kolomNilai, siswa, skemaPenilaian } = await request.json();
+    const { nama, mataPelajaran, tahunAjaran, semester, tingkatan, rombelNama, namaKustom, kolomNilai, siswa, skemaPenilaian } = await request.json();
     if (!nama) {
       return NextResponse.json({ error: 'Nama kelas harus diisi' }, { status: 400 });
     }
@@ -62,6 +62,8 @@ export async function POST(request) {
         tahunAjaran: tahunAjaran || '2025/2026',
         semester: semester || 'Ganjil',
         tingkatan,
+        rombelNama,
+        namaKustom,
         kolomNilai: kolomNilai || [],
         siswa: siswa || [],
         skemaPenilaian

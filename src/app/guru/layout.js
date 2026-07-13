@@ -76,8 +76,9 @@ export default function GuruLayout({ children }) {
     { name: "👤 Profil Saya", path: "/guru/profil" },
   ];
 
-  if (guru && guru.walikelas_rombel) {
-    navItems.splice(2, 0, { name: `👨‍🏫 Wali Kelas (${guru.walikelas_rombel})`, path: "/guru/walikelas" });
+  if (guru && guru.walikelas_tingkatan && guru.walikelas_rombel_nama) {
+    const rombelLabel = `${guru.walikelas_tingkatan} ${guru.walikelas_rombel_nama}`;
+    navItems.splice(2, 0, { name: `👨‍🏫 Wali Kelas (${rombelLabel})`, path: "/guru/walikelas" });
   }
 
   if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {

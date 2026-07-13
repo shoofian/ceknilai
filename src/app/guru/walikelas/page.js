@@ -34,7 +34,7 @@ export default function WaliKelasDashboard() {
           const data = await res.json();
           if (data.loggedIn && data.user) {
             setGuru(data.user);
-            if (data.user.walikelas_rombel) {
+            if (data.user.walikelas_tingkatan && data.user.walikelas_rombel_nama) {
               setAuthorized(true);
             } else {
               setErrorMsg("Akun Anda belum dikonfigurasi sebagai Wali Kelas. Silakan hubungi Superadmin.");
@@ -117,7 +117,7 @@ export default function WaliKelasDashboard() {
     csvContent += `LEGER NILAI CONSOLIDATED\n`;
     csvContent += `Sekolah:;${guru?.sekolah?.nama || "-"}\n`;
     csvContent += `Wali Kelas:;${guru?.nama || "-"}\n`;
-    csvContent += `Rombel:;${guru?.walikelas_rombel || "-"}\n`;
+    csvContent += `Rombel:;Kelas ${guru?.walikelas_tingkatan || ""} ${guru?.walikelas_rombel_nama || "-"}\n`;
     csvContent += `Periode:;${tahunAjaran} - ${semester}\n\n`;
     
     // Headers
@@ -144,7 +144,8 @@ export default function WaliKelasDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Leger_${guru?.walikelas_rombel.replace(/\s+/g, "_")}_${tahunAjaran.replace(/\//g, "-")}_${semester}.csv`);
+    const rombelStr = `${guru?.walikelas_tingkatan || ""}_${guru?.walikelas_rombel_nama || ""}`;
+    link.setAttribute("download", `Leger_${rombelStr.replace(/\s+/g, "_")}_${tahunAjaran.replace(/\//g, "-")}_${semester}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -191,7 +192,7 @@ export default function WaliKelasDashboard() {
       }}>
         <div>
           <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🏫 Dashboard Wali Kelas</span>
-          <h2 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0 6px" }}>{guru?.walikelas_rombel}</h2>
+          <h2 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0 6px" }}>Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}</h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", margin: 0 }}>
             Instansi: <strong>{guru?.sekolah?.nama || "Sekolah Contoh"}</strong> • NPSN: <strong>{guru?.sekolah?.npsn || "-"}</strong>
           </p>

@@ -11,6 +11,8 @@ export default function KelolaKelas() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState("");
   const [nama, setNama] = useState("");
+  const [rombelNama, setRombelNama] = useState("");
+  const [namaKustom, setNamaKustom] = useState("");
   const [tingkatan, setTingkatan] = useState("");
   const [mataPelajaran, setMataPelajaran] = useState("");
   const [mataPelajaranCustom, setMataPelajaranCustom] = useState("");
@@ -137,6 +139,8 @@ export default function KelolaKelas() {
   const handleOpenAdd = () => {
     setIsEditing(false);
     setNama("");
+    setRombelNama("");
+    setNamaKustom("");
     setTingkatan("");
     setMataPelajaran("");
     setMataPelajaranCustom("");
@@ -150,6 +154,8 @@ export default function KelolaKelas() {
     setIsEditing(true);
     setCurrentId(k.id);
     setNama(k.nama);
+    setRombelNama(k.rombelNama || "");
+    setNamaKustom(k.namaKustom || "");
     setTingkatan(k.tingkatan ? String(k.tingkatan) : "");
     const mapelVal = k.mataPelajaran || "";
     if (MATA_PELAJARAN_OPTIONS.includes(mapelVal)) {
@@ -168,8 +174,8 @@ export default function KelolaKelas() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!nama.trim()) {
-      setError("Nama kelas harus diisi.");
+    if (!rombelNama.trim()) {
+      setError("Nomor/Nama Rombel harus diisi.");
       return;
     }
     if (!tingkatan) {
@@ -190,11 +196,24 @@ export default function KelolaKelas() {
       return;
     }
 
+    // Auto-Trimming and construction
+    const getRoman = (num) => {
+      const roman = { 10: "X", 11: "XI", 12: "XII" };
+      return roman[num] || num;
+    };
+    const romanTingkatan = getRoman(Number(tingkatan));
+    const cleanRombel = rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1");
+    const combinedNama = namaKustom.trim() 
+      ? `${romanTingkatan} ${cleanRombel} - ${namaKustom.trim()}`
+      : `${romanTingkatan} ${cleanRombel}`;
+
     try {
       let response;
       const payload = {
-        nama: nama.trim(),
+        nama: combinedNama,
         tingkatan: Number(tingkatan),
+        rombelNama: cleanRombel,
+        namaKustom: namaKustom.trim() || null,
         mataPelajaran: effectiveMapel,
         tahunAjaran: tahunAjaran.trim(),
         semester: semester.trim()
@@ -881,15 +900,29 @@ export default function KelolaKelas() {
             </h3>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Kelas XI-IPA 2"
-                  className="form-input"
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
-                />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: MIPA 1 atau 1"
+                    className="form-input"
+                    value={rombelNama}
+                    onChange={(e) => setRombelNama(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nama Kustom (Opsional)</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Informatika"
+                    className="form-input"
+                    value={namaKustom}
+                    onChange={(e) => setNamaKustom(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>

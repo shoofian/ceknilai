@@ -18,7 +18,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Sesi tidak valid' }, { status: 401 });
     }
     
-    if (!guru.walikelas_rombel) {
+    if (!guru.walikelas_tingkatan || !guru.walikelas_rombel_nama) {
       return NextResponse.json({ error: 'Akses ditolak. Akun Anda bukan Wali Kelas.' }, { status: 403 });
     }
     
@@ -32,7 +32,8 @@ export async function GET(request) {
     
     const leger = await getLegerData(
       guru.sekolah_id,
-      guru.walikelas_rombel,
+      guru.walikelas_tingkatan,
+      guru.walikelas_rombel_nama,
       tahunAjaran,
       semester
     );
