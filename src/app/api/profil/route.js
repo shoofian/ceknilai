@@ -40,7 +40,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
     }
 
-    const { nama, username, email, oldPassword, newPassword } = await request.json();
+    const { nama, username, email, oldPassword, newPassword, sekolah_id } = await request.json();
 
     if (!nama || !username || !email) {
       return NextResponse.json({ error: 'Nama, username, dan email harus diisi' }, { status: 400 });
@@ -51,7 +51,8 @@ export async function POST(request) {
     const updatedProfile = {
       nama: nama.trim(),
       username: username.trim().toLowerCase(),
-      email: email.trim()
+      email: email.trim(),
+      sekolah_id: sekolah_id || null
     };
 
     // Jika ingin mengganti password

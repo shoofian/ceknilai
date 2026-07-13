@@ -76,6 +76,10 @@ export default function GuruLayout({ children }) {
     { name: "👤 Profil Saya", path: "/guru/profil" },
   ];
 
+  if (guru && guru.walikelas_rombel) {
+    navItems.splice(2, 0, { name: `👨‍🏫 Wali Kelas (${guru.walikelas_rombel})`, path: "/guru/walikelas" });
+  }
+
   if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
     navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
   }

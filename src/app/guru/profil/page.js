@@ -18,6 +18,12 @@ export default function ProfilGuru() {
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [sekolahId, setSekolahId] = useState("");
+  const [sekolahList, setSekolahList] = useState([]);
+  const [registerModalOpen, setRegisterModalOpen] = useState(false);
+  const [newSekolahNama, setNewSekolahNama] = useState("");
+  const [newSekolahNpsn, setNewSekolahNpsn] = useState("");
+  const [registerError, setRegisterError] = useState("");
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -28,7 +34,15 @@ export default function ProfilGuru() {
           setNama(data.nama);
           setUsername(data.username);
           setEmail(data.email);
+          setSekolahId(data.sekolah_id || "");
           setIsLocked(!!data.is_locked);
+        }
+        
+        // Fetch sekolah list
+        const resSekolah = await fetch("/api/sekolah/search");
+        if (resSekolah.ok) {
+          const list = await resSekolah.json();
+          setSekolahList(list);
         }
       } catch (err) {
         console.error("Gagal memuat profil", err);
@@ -54,7 +68,8 @@ export default function ProfilGuru() {
     const payload = {
       nama: nama.trim(),
       username: username.trim().toLowerCase(),
-      email: email.trim()
+      email: email.trim(),
+      sekolah_id: sekolahId || null
     };
 
     // Validasi penggantian password jika diisi
@@ -183,6 +198,35 @@ export default function ProfilGuru() {
               </div>
             </div>
 
+            {/* Asal Sekolah */}
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Asal Sekolah</label>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <select
+                  className="form-input"
+                  value={sekolahId}
+                  onChange={(e) => setSekolahId(e.target.value)}
+                  disabled={isLocked}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)", flex: 1 }}
+                >
+                  <option value="">-- Pilih Sekolah Anda --</option>
+                  {sekolahList.map(s => (
+                    <option key={s.id} value={s.id}>{s.nama} ({s.npsn})</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => { setRegisterModalOpen(true); setRegisterError(""); }}
+                  className="btn btn-secondary"
+                  disabled={isLocked}
+                  style={{ whiteSpace: "nowrap", padding: "12px 16px", fontSize: "0.85rem" }}
+                  title="Daftarkan Sekolah Baru"
+                >
+                  ➕ Daftar Baru
+                </button>
+              </div>
+            </div>
+ 
             {/* Divider */}
             <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "10px 0" }}></div>
 
@@ -289,6 +333,110 @@ export default function ProfilGuru() {
         </div>
 
       </div>
+
+      {/* Modal Daftarkan Sekolah Baru */}
+      {registerModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card" style={{ width: "100%", maxWidth: "400px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: "800", marginBottom: "16px" }}>
+              🏫 Daftarkan Sekolah Baru
+            </h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: "1.5" }}>
+              Silakan masukkan nama resmi sekolah (tanpa singkatan SMAN/SMKN/SMPN/SDN) dan 8 digit nomor NPSN resmi.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Sekolah Resmi</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: SMA Negeri 4 Berau"
+                  className="form-input"
+                  value={newSekolahNama}
+                  onChange={(e) => setNewSekolahNama(e.target.value)}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NPSN Sekolah (8 Digit)</label>
+                <input
+                  type="text"
+                  maxLength={8}
+                  placeholder="Contoh: 30404228"
+                  className="form-input"
+                  value={newSekolahNpsn}
+                  onChange={(e) => setNewSekolahNpsn(e.target.value)}
+                />
+              </div>
+
+              {registerError && (
+                <div style={{ color: "var(--danger)", fontSize: "0.85rem" }}>
+                  ⚠️ {registerError}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setRegisterModalOpen(false)}
+                  className="btn btn-secondary"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!newSekolahNama.trim() || !newSekolahNpsn.trim()) {
+                      setRegisterError("Semua kolom wajib diisi.");
+                      return;
+                    }
+                    if (!/^\d{8}$/.test(newSekolahNpsn.trim())) {
+                      setRegisterError("NPSN harus berupa 8 digit angka.");
+                      return;
+                    }
+                    try {
+                      const res = await fetch("/api/sekolah/register", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ nama: newSekolahNama, npsn: newSekolahNpsn })
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        // Add to list and set as active
+                        setSekolahList(prev => [...prev, data.sekolah].sort((a, b) => a.nama.localeCompare(b.nama)));
+                        setSekolahId(data.sekolah.id);
+                        setRegisterModalOpen(false);
+                        setNewSekolahNama("");
+                        setNewSekolahNpsn("");
+                      } else {
+                        setRegisterError(data.error || "Gagal mendaftarkan sekolah.");
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      setRegisterError("Kesalahan koneksi ke server.");
+                    }
+                  }}
+                  className="btn btn-primary"
+                >
+                  Daftarkan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

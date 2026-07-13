@@ -31,6 +31,9 @@ export default function SuperadminPanel() {
   const [formPassword, setFormPassword] = useState("");
   const [formIsLocked, setFormIsLocked] = useState(false);
   const [formLockMessage, setFormLockMessage] = useState("");
+  const [formSekolahId, setFormSekolahId] = useState("");
+  const [formWalikelasRombel, setFormWalikelasRombel] = useState("");
+  const [sekolahList, setSekolahList] = useState([]);
 
   const router = useRouter();
   const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
@@ -76,6 +79,13 @@ export default function SuperadminPanel() {
         setGurus(dataGurus);
       }
 
+      // Fetch Sekolah list
+      const resSekolah = await fetch("/api/sekolah/search");
+      if (resSekolah.ok) {
+        const dataSekolah = await resSekolah.json();
+        setSekolahList(dataSekolah);
+      }
+
       // Fetch Teacher Logs
       const resTeacherLogs = await fetch("/api/superadmin/logs?type=guru");
       if (resTeacherLogs.ok) {
@@ -97,6 +107,8 @@ export default function SuperadminPanel() {
     setFormPassword("");
     setFormIsLocked(false);
     setFormLockMessage("");
+    setFormSekolahId("");
+    setFormWalikelasRombel("");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -109,6 +121,8 @@ export default function SuperadminPanel() {
     setFormPassword(""); // Leave empty if not changing
     setFormIsLocked(guru.is_locked || false);
     setFormLockMessage(guru.lock_message || "");
+    setFormSekolahId(guru.sekolah_id || "");
+    setFormWalikelasRombel(guru.walikelas_rombel || "");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -129,6 +143,8 @@ export default function SuperadminPanel() {
       email: formEmail.trim(),
       is_locked: formIsLocked,
       lock_message: formLockMessage,
+      sekolah_id: formSekolahId || null,
+      walikelas_rombel: formWalikelasRombel.trim() || null,
     };
     
     if (formPassword) {
@@ -432,6 +448,8 @@ export default function SuperadminPanel() {
                     <thead>
                       <tr>
                         <th>Nama Lengkap</th>
+                        <th>Sekolah</th>
+                        <th>Wali Kelas</th>
                         <th>Username</th>
                         <th>Email</th>
                         <th style={{ textAlign: "center", width: "160px" }}>Aksi</th>
@@ -450,6 +468,8 @@ export default function SuperadminPanel() {
                               )}
                             </div>
                           </td>
+                          <td>{g.sekolah?.nama || "-"}</td>
+                          <td>{g.walikelas_rombel ? <code>{g.walikelas_rombel}</code> : "-"}</td>
                           <td><code>{g.username}</code></td>
                           <td>{g.email}</td>
                           <td style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
@@ -536,6 +556,32 @@ export default function SuperadminPanel() {
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                   required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Asal Sekolah</label>
+                <select
+                  className="form-input"
+                  value={formSekolahId}
+                  onChange={(e) => setFormSekolahId(e.target.value)}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                >
+                  <option value="">-- Pilih Sekolah --</option>
+                  {sekolahList.map(s => (
+                    <option key={s.id} value={s.id}>{s.nama} ({s.npsn})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Wali Kelas Rombel (Opsional)</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Kelas X-A (Kosongkan jika bukan)"
+                  className="form-input"
+                  value={formWalikelasRombel}
+                  onChange={(e) => setFormWalikelasRombel(e.target.value)}
                 />
               </div>
 

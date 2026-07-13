@@ -55,26 +55,46 @@ function mapKelasFromDb(k) {
 
 // === GURU PROFILE ===
 export async function getGuru(username = null) {
-  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
+  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_rombel: null };
   try {
-    let query = supabase.from('guru').select('*');
+    let query = supabase.from('guru').select('*, sekolah:sekolah_id(nama, npsn)');
     if (username) {
       query = query.ilike('username', username.trim());
     }
     const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
-      console.error('Error fetching guru:', error);
-      return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
+      // Fallback if sekolah_id or walikelas_rombel does not exist
+      let fallbackQuery = supabase.from('guru').select('username, password, nama, email, is_locked, lock_message');
+      if (username) {
+        fallbackQuery = fallbackQuery.ilike('username', username.trim());
+      }
+      const { data: fbData, error: fbError } = await fallbackQuery.limit(1).maybeSingle();
+      if (fbError) {
+        console.error('Error fetching guru (fallback):', fbError);
+        return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
+      }
+      const result = fbData || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+      return {
+        ...result,
+        is_locked: result.is_locked ?? false,
+        lock_message: result.lock_message ?? null,
+        sekolah_id: null,
+        walikelas_rombel: null,
+        sekolah: null
+      };
     }
     const result = data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
     return {
       ...result,
       is_locked: result.is_locked ?? false,
-      lock_message: result.lock_message ?? null
+      lock_message: result.lock_message ?? null,
+      sekolah_id: result.sekolah_id ?? null,
+      walikelas_rombel: result.walikelas_rombel ?? null,
+      sekolah: result.sekolah ?? null
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
-    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
+    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_rombel: null };
   }
 }
 
@@ -98,6 +118,9 @@ export async function updateGuru(currentUsername, updatedProfile) {
     };
     if (updates.password) {
       updatesPayload.password = updates.password;
+    }
+    if (updates.sekolah_id !== undefined) {
+      updatesPayload.sekolah_id = updates.sekolah_id;
     }
 
     const { data, error } = await supabase
@@ -891,26 +914,38 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password, is_locked, lock_message');
+      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_rombel, sekolah:sekolah_id(nama, npsn)');
     if (error) {
-      // Fallback if columns don't exist yet
-      if (error.code === 'PGRST204' || error.message?.includes('is_locked') || error.message?.includes('lock_message')) {
-        const { data: fallbackData, error: fallbackError } = await supabase
+      // Fallback
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('guru')
+        .select('username, nama, email, password, is_locked, lock_message');
+      if (fallbackError) {
+        // Fallback level 2
+        const { data: fallbackData2, error: fallbackError2 } = await supabase
           .from('guru')
           .select('username, nama, email, password');
-        if (fallbackError) {
-          console.error('Error fetching all gurus (fallback):', fallbackError);
+        if (fallbackError2) {
+          console.error('Error fetching all gurus (fallback 2):', fallbackError2);
           return [];
         }
-        return fallbackData.map(g => ({ ...g, is_locked: false, lock_message: null }));
+        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_rombel: null }));
       }
-      console.error('Error fetching all gurus:', error);
-      return [];
+      return fallbackData.map(g => ({
+        ...g,
+        is_locked: g.is_locked ?? false,
+        lock_message: g.lock_message ?? null,
+        sekolah_id: null,
+        walikelas_rombel: null
+      }));
     }
     return data.map(g => ({
       ...g,
       is_locked: g.is_locked ?? false,
-      lock_message: g.lock_message ?? null
+      lock_message: g.lock_message ?? null,
+      sekolah_id: g.sekolah_id ?? null,
+      walikelas_rombel: g.walikelas_rombel ?? null,
+      sekolah: g.sekolah ?? null
     }));
   } catch (err) {
     console.error('Unexpected error in getAllGurus:', err);
@@ -957,6 +992,12 @@ export async function updateGuruByAdmin(username, updatedData) {
     }
     if (updatedData.lock_message !== undefined) {
       payload.lock_message = updatedData.lock_message;
+    }
+    if (updatedData.sekolah_id !== undefined) {
+      payload.sekolah_id = updatedData.sekolah_id || null;
+    }
+    if (updatedData.walikelas_rombel !== undefined) {
+      payload.walikelas_rombel = updatedData.walikelas_rombel || null;
     }
     const { data, error } = await supabase
       .from('guru')
@@ -1072,3 +1113,148 @@ export async function getSuperadminTeacherLogs() {
     return [];
   }
 }
+
+export async function getLegerData(sekolahId, rombelNama, tahunAjaran, semester) {
+  if (!supabase) return { siswa: [], mataPelajaranList: [] };
+  try {
+    // 1. Fetch all classes matching rombel name, academic year, and semester
+    const { data: classes, error: errClasses } = await supabase
+      .from('kelas')
+      .select('*, guru:guru_username(sekolah_id), kolom_nilai(*), siswa(*)')
+      .eq('nama', rombelNama)
+      .eq('tahun_ajaran', tahunAjaran)
+      .eq('semester', semester)
+      .eq('archived', false);
+      
+    if (errClasses) {
+      console.error('Error fetching classes for leger:', errClasses);
+      return { siswa: [], mataPelajaranList: [] };
+    }
+    
+    // Filter by same school id of teachers
+    const schoolClasses = (classes || []).filter(k => k.guru && k.guru.sekolah_id === sekolahId);
+    if (schoolClasses.length === 0) {
+      return { siswa: [], mataPelajaranList: [] };
+    }
+    
+    // Map using original mapKelasFromDb helper
+    const mappedClasses = schoolClasses.map(mapKelasFromDb);
+    
+    // 2. Aggregate unique subject list
+    const mataPelajaranList = mappedClasses.map(k => ({
+      id: k.id,
+      mataPelajaran: k.mataPelajaran,
+      kkm: k.skemaPenilaian?.kkm || 75,
+      isNilaiAkhirGenerated: !!k.isNilaiAkhirGenerated
+    }));
+    
+    // 3. Aggregate unique students across all subject classes
+    const studentsMap = {};
+    
+    mappedClasses.forEach(k => {
+      k.siswa.forEach(s => {
+        if (!studentsMap[s.nisn]) {
+          studentsMap[s.nisn] = {
+            nisn: s.nisn,
+            nama: s.nama,
+            tanggalLahir: s.tanggalLahir,
+            nilaiMapel: {},
+            isSelesaiMapel: {},
+            catatanMapel: {}
+          };
+        }
+        
+        let totalNilaiTerisi = 0;
+        let jumlahAspekTerisi = 0;
+        
+        const getColScore = (student, col) => {
+          if (col.isGroup && col.subKolom) {
+            let subTotal = 0;
+            let subFilledCount = 0;
+            let subFilledWeight = 0;
+            
+            col.subKolom.forEach(sub => {
+              const sc = student.nilai[sub.id];
+              if (sc !== undefined && sc !== null && sc !== "") {
+                const scNum = Number(sc);
+                if (col.hitungMetode === "persentase") {
+                  const subBobot = sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : 0;
+                  subTotal += scNum * subBobot;
+                  subFilledWeight += subBobot;
+                } else {
+                  subTotal += scNum;
+                }
+                subFilledCount++;
+              }
+            });
+            
+            if (subFilledCount === 0) return { score: null, isFilled: false, isAllFilled: false };
+            
+            const score = col.hitungMetode === "persentase"
+              ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
+              : (subTotal / subFilledCount);
+              
+            return {
+              score,
+              isFilled: true,
+              isAllFilled: subFilledCount === col.subKolom.length
+            };
+          } else {
+            const sc = student.nilai[col.id];
+            const isFilled = sc !== undefined && sc !== null && sc !== "";
+            return {
+              score: isFilled ? Number(sc) : null,
+              isFilled,
+              isAllFilled: isFilled
+            };
+          }
+        };
+
+        k.kolomNilai.forEach(col => {
+          const { score, isFilled, isAllFilled } = getColScore(s, col);
+          if (isFilled) {
+            totalNilaiTerisi += score * (col.bobot / 100);
+            if (isAllFilled) {
+              jumlahAspekTerisi++;
+            }
+          }
+        });
+        
+        const finalScore = totalNilaiTerisi + (Number(s.nilai?._katrol) || 0);
+        
+        studentsMap[s.nisn].nilaiMapel[k.mataPelajaran] = Number(finalScore.toFixed(2));
+        studentsMap[s.nisn].isSelesaiMapel[k.mataPelajaran] = (jumlahAspekTerisi === k.kolomNilai.length);
+        studentsMap[s.nisn].catatanMapel[k.mataPelajaran] = s.catatan || "";
+      });
+    });
+    
+    // Sort students alphabetically
+    const siswa = Object.values(studentsMap).sort((a, b) => a.nama.localeCompare(b.nama));
+    
+    // Calculate overall average
+    siswa.forEach(s => {
+      const scores = Object.values(s.nilaiMapel);
+      if (scores.length > 0) {
+        const sum = scores.reduce((sumVal, val) => sumVal + val, 0);
+        s.rataRata = Number((sum / scores.length).toFixed(2));
+      } else {
+        s.rataRata = 0;
+      }
+    });
+    
+    // Calculate rankings based on overall averages
+    const ranked = [...siswa].sort((a, b) => b.rataRata - a.rataRata);
+    siswa.forEach(s => {
+      s.ranking = ranked.findIndex(r => r.nisn === s.nisn) + 1;
+    });
+    
+    return {
+      siswa,
+      mataPelajaranList
+    };
+  } catch (err) {
+    console.error('Unexpected error in getLegerData:', err);
+    return { siswa: [], mataPelajaranList: [] };
+  }
+}
+
