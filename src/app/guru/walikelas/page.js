@@ -38,21 +38,29 @@ export default function WaliKelasDashboard() {
       .filter(score => score !== undefined && score !== null);
       
     if (scores.length === 0) {
-      return { average: 0, passingCount: 0, failingCount: 0, passingPercent: 0, total: 0 };
+      return { average: 0, passingCount: 0, failingCount: 0, passingPercent: 0, total: 0, highest: 0, lowest: 0, median: 0 };
     }
     
+    const sorted = [...scores].sort((a, b) => a - b);
     const sum = scores.reduce((a, b) => a + b, 0);
     const average = sum / scores.length;
     const passingCount = scores.filter(score => score >= kkm).length;
     const failingCount = scores.length - passingCount;
     const passingPercent = (passingCount / scores.length) * 100;
+    const highest = sorted[sorted.length - 1];
+    const lowest = sorted[0];
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     
     return {
       average,
       passingCount,
       failingCount,
       passingPercent,
-      total: scores.length
+      total: scores.length,
+      highest,
+      lowest,
+      median
     };
   };
 
@@ -426,33 +434,60 @@ export default function WaliKelasDashboard() {
 
                       {/* Real-time stats section */}
                       <div style={{ 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        gap: "6px", 
                         backgroundColor: "var(--bg-secondary)", 
                         borderRadius: "var(--radius-sm)", 
                         padding: "10px 12px",
                         border: "1px solid var(--border-color)",
-                        fontSize: "0.78rem",
+                        fontSize: "0.75rem",
                         margin: "12px 0 4px"
                       }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: "var(--text-secondary)" }}>Rata-Rata Kelas:</span>
-                          <strong style={{ fontSize: "0.88rem", color: "var(--primary)" }}>
+                        {/* Top row: Rata-rata highlight */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "8px", marginBottom: "8px", borderBottom: "1px solid var(--border-color)" }}>
+                          <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Rata-Rata Kelas</span>
+                          <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>
                             {stats.average > 0 ? stats.average.toFixed(1) : "-"}
                           </strong>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: "var(--text-secondary)" }}>Ketuntasan (≥ {mp.kkm}):</span>
-                          <span style={{ fontWeight: "700", color: stats.passingPercent >= 75 ? "var(--success)" : "var(--warning)" }}>
-                            {stats.passingCount}/{stats.total} ({stats.passingPercent.toFixed(0)}%)
-                          </span>
+                        {/* Stats grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "var(--text-muted)" }}>Tertinggi:</span>
+                            <strong style={{ color: "var(--success)" }}>{stats.highest > 0 ? stats.highest.toFixed(1) : "-"}</strong>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "var(--text-muted)" }}>Terendah:</span>
+                            <strong style={{ color: stats.lowest < mp.kkm ? "var(--danger)" : "var(--text-primary)" }}>{stats.lowest > 0 ? stats.lowest.toFixed(1) : "-"}</strong>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "var(--text-muted)" }}>Median:</span>
+                            <strong>{stats.median > 0 ? stats.median.toFixed(1) : "-"}</strong>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                            <span style={{ color: "var(--text-muted)" }}>Terdata:</span>
+                            <strong>{stats.total}/{siswa.length}</strong>
+                          </div>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ color: "var(--text-secondary)" }}>Belum Tuntas (&lt; {mp.kkm}):</span>
-                          <span style={{ fontWeight: "700", color: stats.failingCount > 0 ? "var(--danger)" : "var(--text-muted)" }}>
-                            {stats.failingCount} Siswa
-                          </span>
+                        {/* Ketuntasan bar */}
+                        <div style={{ marginTop: "8px", paddingTop: "8px", borderTop: "1px solid var(--border-color)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                            <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Ketuntasan (≥ {mp.kkm})</span>
+                            <span style={{ fontWeight: "700", color: stats.passingPercent >= 75 ? "var(--success)" : stats.passingPercent >= 50 ? "var(--warning)" : "var(--danger)" }}>
+                              {stats.total > 0 ? stats.passingPercent.toFixed(0) : 0}%
+                            </span>
+                          </div>
+                          <div style={{ width: "100%", height: "6px", backgroundColor: "var(--bg-tertiary)", borderRadius: "3px", overflow: "hidden" }}>
+                            <div style={{ 
+                              width: `${stats.total > 0 ? stats.passingPercent : 0}%`, 
+                              height: "100%", 
+                              borderRadius: "3px",
+                              background: stats.passingPercent >= 75 ? "var(--success)" : stats.passingPercent >= 50 ? "var(--warning)" : "var(--danger)",
+                              transition: "width 0.3s ease"
+                            }}></div>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+                            <span style={{ color: "var(--success)", fontWeight: "600" }}>✓ {stats.passingCount} tuntas</span>
+                            <span style={{ color: stats.failingCount > 0 ? "var(--danger)" : "var(--text-muted)", fontWeight: "600" }}>✗ {stats.failingCount} belum</span>
+                          </div>
                         </div>
                       </div>
 
