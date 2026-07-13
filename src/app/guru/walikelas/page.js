@@ -230,15 +230,17 @@ export default function WaliKelasDashboard() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "24px", padding: "10px 0" }}>
+    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
       
-      {/* Header Profile Section */}
-      <div className="glass-card" style={{ 
+      {/* Title Header */}
+      <div className="page-title-section no-print" style={{ 
         display: "flex", 
         justifyContent: "space-between", 
         alignItems: "center", 
         flexWrap: "wrap", 
         gap: "16px",
+        padding: "24px",
+        borderRadius: "var(--radius-md)",
         background: "linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(59, 130, 246, 0.03) 100%)",
         borderLeft: "4px solid var(--primary)"
       }}>
@@ -394,55 +396,92 @@ export default function WaliKelasDashboard() {
         <div>
           {mataPelajaranList.length > 0 ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", padding: "10px 0" }}>
-              {mataPelajaranList.map(mp => (
-                <div 
-                  key={mp.id} 
-                  onClick={() => handleViewSubjectDetail(mp.id)}
-                  className="glass-card subject-card"
-                  style={{ 
-                    padding: "20px", 
-                    cursor: "pointer", 
-                    border: "1px solid var(--border-color)", 
-                    transition: "all 0.2s ease",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "12px",
-                    position: "relative",
-                    overflow: "hidden"
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <span style={{ fontSize: "2rem" }}>📚</span>
-                    <span className={`badge ${mp.isNilaiAkhirGenerated ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.7rem" }}>
-                      {mp.isNilaiAkhirGenerated ? "✅ Nilai Akhir" : "⏳ Sedang Diinput"}
-                    </span>
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: "1.15rem", fontWeight: "800", margin: "4px 0" }}>{mp.mataPelajaran}</h4>
-                    <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: "2px 0 8px" }}>
-                      Guru: <strong>{mp.guru?.nama || mp.guru_username}</strong>
-                    </p>
-                    <div style={{ display: "flex", gap: "12px", fontSize: "0.78rem", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
-                      <span>KKM: <strong>{mp.kkm}</strong></span>
-                      <span>Semester: <strong>{mp.semester}</strong></span>
+              {mataPelajaranList.map(mp => {
+                const stats = getSubjectStats(mp.mataPelajaran, mp.kkm);
+                return (
+                  <div 
+                    key={mp.id} 
+                    onClick={() => handleViewSubjectDetail(mp.id)}
+                    className="glass-card subject-card"
+                    style={{ 
+                      padding: "20px", 
+                      cursor: "pointer", 
+                      border: "1px solid var(--border-color)", 
+                      transition: "all 0.2s ease",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                      position: "relative",
+                      overflow: "hidden",
+                      paddingBottom: "45px"
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <span style={{ fontSize: "2rem" }}>📚</span>
+                      <span className={`badge ${mp.isNilaiAkhirGenerated ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.7rem" }}>
+                        {mp.isNilaiAkhirGenerated ? "✅ Nilai Akhir" : "⏳ Sedang Diinput"}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: "1.15rem", fontWeight: "800", margin: "4px 0" }}>{mp.mataPelajaran}</h4>
+                      <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: "2px 0 8px" }}>
+                        Guru: <strong>{mp.guru?.nama || mp.guru_username}</strong>
+                      </p>
+
+                      {/* Real-time stats section */}
+                      <div style={{ 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        gap: "6px", 
+                        backgroundColor: "var(--bg-secondary)", 
+                        borderRadius: "var(--radius-sm)", 
+                        padding: "10px 12px",
+                        border: "1px solid var(--border-color)",
+                        fontSize: "0.78rem",
+                        margin: "12px 0 4px"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "var(--text-secondary)" }}>Rata-Rata Kelas:</span>
+                          <strong style={{ fontSize: "0.88rem", color: "var(--primary)" }}>
+                            {stats.average > 0 ? stats.average.toFixed(1) : "-"}
+                          </strong>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "var(--text-secondary)" }}>Ketuntasan (≥ {mp.kkm}):</span>
+                          <span style={{ fontWeight: "700", color: stats.passingPercent >= 75 ? "var(--success)" : "var(--warning)" }}>
+                            {stats.passingCount}/{stats.total} ({stats.passingPercent.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "var(--text-secondary)" }}>Belum Tuntas (&lt; {mp.kkm}):</span>
+                          <span style={{ fontWeight: "700", color: stats.failingCount > 0 ? "var(--danger)" : "var(--text-muted)" }}>
+                            {stats.failingCount} Siswa
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", gap: "12px", fontSize: "0.78rem", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
+                        <span>KKM: <strong>{mp.kkm}</strong></span>
+                        <span>Semester: <strong>{mp.semester}</strong></span>
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                      position: "absolute", 
+                      bottom: "12px", 
+                      right: "12px", 
+                      fontSize: "0.8rem", 
+                      fontWeight: "700", 
+                      color: "var(--primary)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }} className="view-detail-label">
+                      Lihat Nilai ➔
                     </div>
                   </div>
-                  
-                  <div style={{ 
-                    position: "absolute", 
-                    bottom: "12px", 
-                    right: "12px", 
-                    fontSize: "0.8rem", 
-                    fontWeight: "700", 
-                    color: "var(--primary)",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px"
-                  }} className="view-detail-label">
-                    Lihat Nilai ➔
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="glass-card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
