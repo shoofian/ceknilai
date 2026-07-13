@@ -30,6 +30,7 @@ function mapKelasFromDb(k) {
   return {
     id: k.id,
     nama: k.nama,
+    guru_username: k.guru_username || null,
     rombelNama: k.rombel_nama || null,
     namaKustom: k.nama_kustom || null,
     mataPelajaran: k.mata_pelajaran || 'Informatika',

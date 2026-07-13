@@ -54,9 +54,24 @@ export default function KelolaKelas() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [parsedClasses, setParsedClasses] = useState([]);
   const [parsedStudents, setParsedStudents] = useState([]);
-  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" }]);
+  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), tingkatan: "", rombelNama: "", namaKustom: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" }]);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
+
+  const detectLevelInRombel = (tingkatan, rombel) => {
+    if (!tingkatan || !rombel) return false;
+    const r = rombel.toUpperCase().trim();
+    const roman = { 10: "X", 11: "XI", 12: "XII" }[tingkatan] || String(tingkatan);
+    const patterns = [
+      `KELAS\\s+${tingkatan}`,
+      `KELAS\\s+${roman}`,
+      `^${tingkatan}\\b`,
+      `^${roman}\\b`,
+      `\\b${tingkatan}\\b`,
+      `\\b${roman}\\b`
+    ];
+    return patterns.some(pat => new RegExp(pat, "i").test(r));
+  };
 
   // Dapodik Upload Modal States
   const [dapodikUploadModalOpen, setDapodikUploadModalOpen] = useState(false);
@@ -543,8 +558,9 @@ export default function KelolaKelas() {
 
         const initialForms = [{
           id: Date.now(),
-          nama: "",
           tingkatan: "",
+          rombelNama: "",
+          namaKustom: "",
           mataPelajaran: "",
           mataPelajaranCustom: "",
           tahunAjaran: "",
@@ -592,9 +608,9 @@ export default function KelolaKelas() {
         return form;
       });
 
-      const isLastFilled = updated[updated.length - 1].nama.trim() !== "" || updated[updated.length - 1].sourceRombel !== "";
+      const isLastFilled = updated[updated.length - 1].rombelNama.trim() !== "" || updated[updated.length - 1].sourceRombel !== "";
       if (isLastFilled) {
-        updated.push({ id: Date.now(), nama: "", tingkatan: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" });
+        updated.push({ id: Date.now(), tingkatan: "", rombelNama: "", namaKustom: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" });
       }
 
       return updated;
@@ -609,7 +625,7 @@ export default function KelolaKelas() {
     e.preventDefault();
     setBulkError("");
 
-    const validForms = bulkForms.filter((f) => f.nama.trim() !== "" && f.sourceRombel !== "");
+    const validForms = bulkForms.filter((f) => f.rombelNama.trim() !== "" && f.sourceRombel !== "");
     if (validForms.length === 0) {
       setBulkError("Anda harus mengisi setidaknya satu kelas untuk diimpor.");
       return;
@@ -617,16 +633,16 @@ export default function KelolaKelas() {
 
     for (const form of validForms) {
       if (!form.tingkatan) {
-        setBulkError(`Tingkatan kelas harus diisi untuk kelas "${form.nama}".`);
+        setBulkError(`Tingkatan kelas harus diisi untuk rombel "${form.rombelNama}".`);
         return;
       }
       const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
       if (!effectiveMapel) {
-        setBulkError(`Mata pelajaran harus diisi untuk kelas "${form.nama}".`);
+        setBulkError(`Mata pelajaran harus diisi untuk rombel "${form.rombelNama}".`);
         return;
       }
       if (!form.tahunAjaran) {
-        setBulkError(`Tahun ajaran harus diisi untuk kelas "${form.nama}".`);
+        setBulkError(`Tahun ajaran harus diisi untuk rombel "${form.rombelNama}".`);
         return;
       }
     }
@@ -637,13 +653,27 @@ export default function KelolaKelas() {
       let successCount = 0;
       for (const form of validForms) {
         const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
+        
+        // Auto-Trimming and construction
+        const getRoman = (num) => {
+          const roman = { 10: "X", 11: "XI", 12: "XII" };
+          return roman[num] || num;
+        };
+        const romanTingkatan = getRoman(Number(form.tingkatan));
+        const cleanRombel = form.rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1");
+        const combinedNama = form.namaKustom.trim() 
+          ? `${romanTingkatan} ${cleanRombel} - ${form.namaKustom.trim()}`
+          : `${romanTingkatan} ${cleanRombel}`;
+
         // 1. Create Class
         const resKelas = await fetch("/api/kelas", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            nama: form.nama.trim(),
+            nama: combinedNama,
             tingkatan: Number(form.tingkatan),
+            rombelNama: cleanRombel,
+            namaKustom: form.namaKustom.trim() || null,
             mataPelajaran: effectiveMapel,
             tahunAjaran: form.tahunAjaran.trim(),
             semester: form.semester.trim()
@@ -652,7 +682,7 @@ export default function KelolaKelas() {
 
         if (!resKelas.ok) {
           const errData = await resKelas.json();
-          throw new Error(`Gagal membuat kelas ${form.nama}: ${errData.error}`);
+          throw new Error(`Gagal membuat kelas ${combinedNama}: ${errData.error}`);
         }
 
         const dataKelas = await resKelas.json();
@@ -670,14 +700,14 @@ export default function KelolaKelas() {
           if (!resStudents.ok) {
             const errData = await resStudents.json().catch(() => ({}));
             throw new Error(
-              `Gagal mengimpor siswa kelas "${form.nama}": ${
+              `Gagal mengimpor siswa kelas "${combinedNama}": ${
                 errData.error || `HTTP ${resStudents.status}`
               }`
             );
           }
 
           const importResult = await resStudents.json().catch(() => ({}));
-          console.info(`Kelas "${form.nama}": ${importResult.addedCount ?? 0} siswa ditambahkan.`);
+          console.info(`Kelas "${combinedNama}": ${importResult.addedCount ?? 0} siswa ditambahkan.`);
         } else {
           // Warn user: class form exists but no students matched that rombel
           throw new Error(
@@ -933,6 +963,11 @@ export default function KelolaKelas() {
                     onChange={(e) => setRombelNama(e.target.value)}
                     required
                   />
+                  {detectLevelInRombel(tingkatan, rombelNama) && (
+                    <span style={{ color: "var(--warning)", fontSize: "0.75rem", marginTop: "4px", display: "block", lineHeight: "1.3" }}>
+                      ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{tingkatan} MIPA 1").
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1121,24 +1156,22 @@ export default function KelolaKelas() {
 
             <form onSubmit={handleBulkSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ overflowX: "auto" }}>
-                <table className="premium-table" style={{ minWidth: "700px", margin: 0 }}>
+                <table className="premium-table" style={{ minWidth: "900px", margin: 0 }}>
                   <thead>
                     <tr>
-                      <th style={{ width: "22%" }}>Nama Kelas Target</th>
-                      <th style={{ width: "10%" }}>Tingkatan</th>
-                      <th style={{ width: "18%" }}>Mata Pelajaran</th>
-                      <th style={{ width: "13%" }}>T.A.</th>
-                      <th style={{ width: "12%" }}>Semester</th>
-                      <th style={{ width: "20%" }}>Sumber Dapodik</th>
-                      <th style={{ width: "5%" }}></th>
+                      <th style={{ width: "12%" }}>Tingkatan</th>
+                      <th style={{ width: "15%" }}>No./Nama Rombel</th>
+                      <th style={{ width: "15%" }}>Nama Kustom (Opsional)</th>
+                      <th style={{ width: "16%" }}>Mata Pelajaran</th>
+                      <th style={{ width: "12%" }}>T.A.</th>
+                      <th style={{ width: "10%" }}>Semester</th>
+                      <th style={{ width: "16%" }}>Sumber Dapodik</th>
+                      <th style={{ width: "4%" }}></th>
                     </tr>
                   </thead>
                   <tbody>
                     {bulkForms.map((form, index) => (
                       <tr key={form.id}>
-                        <td style={{ padding: "8px" }}>
-                          <input type="text" className="form-input" placeholder="Nama kelas..." value={form.nama} onChange={(e) => handleBulkFormChange(form.id, "nama", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
-                        </td>
                         <td style={{ padding: "8px" }}>
                           <select className="form-input" value={form.tingkatan} onChange={(e) => handleBulkFormChange(form.id, "tingkatan", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem", appearance: "auto" }}>
                             <option value="" disabled>-- Pilih --</option>
@@ -1146,6 +1179,17 @@ export default function KelolaKelas() {
                               <option key={t} value={String(t)}>Kelas {t}</option>
                             ))}
                           </select>
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <input type="text" className="form-input" placeholder="Contoh: MIPA 1 atau 1" value={form.rombelNama} onChange={(e) => handleBulkFormChange(form.id, "rombelNama", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
+                          {detectLevelInRombel(form.tingkatan, form.rombelNama) && (
+                            <span style={{ color: "var(--warning)", fontSize: "0.7rem", marginTop: "4px", display: "block", lineHeight: "1.2" }}>
+                              ⚠️ Tanpa tingkatan
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: "8px" }}>
+                          <input type="text" className="form-input" placeholder="Contoh: Informatika" value={form.namaKustom} onChange={(e) => handleBulkFormChange(form.id, "namaKustom", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
                         </td>
                         <td style={{ padding: "8px" }}>
                           <select

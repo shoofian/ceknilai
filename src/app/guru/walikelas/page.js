@@ -739,7 +739,7 @@ export default function WaliKelasDashboard() {
                 <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>📚 Detail Nilai Mata Pelajaran</span>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "900", margin: "4px 0" }}>{selectedSubjectDetail?.mataPelajaran || "Memuat..."}</h3>
                 <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", margin: 0 }}>
-                  Guru: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong> • KKM: <strong>{selectedSubjectDetail?.kkm || "-"}</strong>
+                  Guru: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong> • KKM: <strong>{selectedSubjectDetail?.skemaPenilaian?.kkm || "-"}</strong>
                 </p>
               </div>
               <button 
@@ -758,7 +758,7 @@ export default function WaliKelasDashboard() {
             ) : selectedSubjectDetail ? (() => {
               // Pre-calculate stats for the summary bar
               const allStudents = selectedSubjectDetail.siswa || [];
-              const kkm = selectedSubjectDetail.kkm || 75;
+              const kkm = selectedSubjectDetail.skemaPenilaian?.kkm || 75;
               const columns = selectedSubjectDetail.kolomNilai || [];
 
               const calcFinal = (s) => {
