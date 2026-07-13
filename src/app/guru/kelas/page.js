@@ -970,18 +970,6 @@ export default function KelolaKelas() {
                 </div>
               </div>
 
-              {/* Nama Kustom (Opsional) */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama Kustom (Opsional)</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Informatika"
-                  className="form-input"
-                  value={namaKustom}
-                  onChange={(e) => setNamaKustom(e.target.value)}
-                />
-              </div>
-
               {/* 3. Pratinjau Nama Kelas */}
               <div style={{ 
                 backgroundColor: "var(--bg-secondary)", 
@@ -1156,16 +1144,15 @@ export default function KelolaKelas() {
 
             <form onSubmit={handleBulkSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div style={{ overflowX: "auto" }}>
-                <table className="premium-table" style={{ minWidth: "900px", margin: 0 }}>
+                <table className="premium-table" style={{ minWidth: "800px", margin: 0 }}>
                   <thead>
                     <tr>
                       <th style={{ width: "12%" }}>Tingkatan</th>
-                      <th style={{ width: "15%" }}>No./Nama Rombel</th>
-                      <th style={{ width: "15%" }}>Nama Kustom (Opsional)</th>
-                      <th style={{ width: "16%" }}>Mata Pelajaran</th>
-                      <th style={{ width: "12%" }}>T.A.</th>
-                      <th style={{ width: "10%" }}>Semester</th>
-                      <th style={{ width: "16%" }}>Sumber Dapodik</th>
+                      <th style={{ width: "18%" }}>No./Nama Rombel</th>
+                      <th style={{ width: "22%" }}>Mata Pelajaran</th>
+                      <th style={{ width: "14%" }}>T.A.</th>
+                      <th style={{ width: "12%" }}>Semester</th>
+                      <th style={{ width: "18%" }}>Sumber Dapodik</th>
                       <th style={{ width: "4%" }}></th>
                     </tr>
                   </thead>
@@ -1187,9 +1174,6 @@ export default function KelolaKelas() {
                               ⚠️ Tanpa tingkatan
                             </span>
                           )}
-                        </td>
-                        <td style={{ padding: "8px" }}>
-                          <input type="text" className="form-input" placeholder="Contoh: Informatika" value={form.namaKustom} onChange={(e) => handleBulkFormChange(form.id, "namaKustom", e.target.value)} style={{ padding: "8px", fontSize: "0.85rem" }} />
                         </td>
                         <td style={{ padding: "8px" }}>
                           <select
