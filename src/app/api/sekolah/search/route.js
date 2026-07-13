@@ -17,6 +17,7 @@ function normalizeQuery(q) {
   clean = clean.replace(/\bsmkn\b/gi, "SMK Negeri");
   clean = clean.replace(/\bsmpn\b/gi, "SMP Negeri");
   clean = clean.replace(/\bsdn\b/gi, "SD Negeri");
+  clean = clean.replace(/\bppu\b/gi, "Penajam Paser Utara");
   return clean;
 }
 
@@ -28,8 +29,18 @@ export async function GET(request) {
     let query = supabase.from('sekolah').select('*').order('nama', { ascending: true });
     
     if (q) {
-      const normalized = normalizeQuery(q);
-      query = query.or(`nama.ilike.%${normalized}%,npsn.ilike.%${q}%`);
+      const trimmed = q.trim();
+      if (/^\d+$/.test(trimmed)) {
+        // If query is numeric, search by NPSN
+        query = query.ilike('npsn', `%${trimmed}%`);
+      } else {
+        // Otherwise, split query into terms and require all terms to match school name
+        const normalized = normalizeQuery(trimmed);
+        const words = normalized.split(/\s+/).filter(w => w.length > 0);
+        words.forEach(word => {
+          query = query.ilike('nama', `%${word}%`);
+        });
+      }
     } else {
       query = query.limit(100);
     }
@@ -37,7 +48,6 @@ export async function GET(request) {
     const { data, error } = await query;
     if (error) {
       console.error('Error searching sekolah:', error);
-      // Return empty list if table not migrated yet to prevent frontend crashes
       return NextResponse.json([]);
     }
     
