@@ -62,3 +62,54 @@ CREATE TABLE IF NOT EXISTS log_aktivitas_guru (
 -- ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_locked boolean DEFAULT false;
 -- ALTER TABLE guru ADD COLUMN IF NOT EXISTS lock_message text DEFAULT NULL;
 
+-- MIGRATION: WALI KELAS & MULTI-SEKOLAH (SOLUSI A)
+CREATE TABLE IF NOT EXISTS sekolah (
+  id text PRIMARY KEY,
+  nama text NOT NULL,
+  npsn text UNIQUE NOT NULL
+);
+
+ALTER TABLE guru ADD COLUMN IF NOT EXISTS sekolah_id text REFERENCES sekolah(id) ON DELETE SET NULL;
+ALTER TABLE guru ADD COLUMN IF NOT EXISTS walikelas_rombel text DEFAULT NULL;
+
+INSERT INTO sekolah (id, nama, npsn) VALUES
+('SCH-30400382', 'SMA Negeri 1 Berau', '30400382'),
+('SCH-30400376', 'SMA Negeri 3 Berau', '30400376'),
+('SCH-30404228', 'SMA Negeri 4 Berau', '30404228'),
+('SCH-30405592', 'SMA Negeri 7 Berau', '30405592'),
+('SCH-69728697', 'SMA Negeri 11 Berau', '69728697'),
+('SCH-69815477', 'SMA Negeri 12 Berau', '69815477'),
+('SCH-69822735', 'SMA Negeri 13 Berau', '69822735'),
+('SCH-30405573', 'SMA Negeri 15 Berau', '30405573'),
+('SCH-30400380', 'SMK Negeri 1 Berau', '30400380'),
+('SCH-30404245', 'SMK Negeri 2 Berau', '30404245'),
+('SCH-30404356', 'SMK Negeri 3 Berau', '30404356'),
+('SCH-30409875', 'SMK Negeri 4 Berau', '30409875'),
+('SCH-30407732', 'SMK Negeri 5 Berau', '30407732'),
+('SCH-69728696', 'SMK Negeri 6 Berau', '69728696'),
+('SCH-69728695', 'SMK Negeri 7 Berau', '69728695'),
+('SCH-69786488', 'SMK Negeri 8 Berau', '69786488'),
+('SCH-30400355', 'SMP Negeri 1 Tanjung Redeb', '30400355'),
+('SCH-30400351', 'SMP Negeri 2 Tanjung Redeb', '30400351'),
+('SCH-30400350', 'SMP Negeri 3 Tanjung Redeb', '30400350'),
+('SCH-30400356', 'SMP Negeri 4 Tanjung Redeb', '30400356'),
+('SCH-30400357', 'SMP Negeri 5 Tanjung Redeb', '30400357'),
+('SCH-30405612', 'SMP Negeri 6 Tanjung Redeb', '30405612'),
+('SCH-30404226', 'SMP Negeri 1 Sambaliung', '30404226'),
+('SCH-30400352', 'SMP Negeri 2 Sambaliung', '30400352'),
+('SCH-30404291', 'SMP Negeri 3 Sambaliung', '30404291'),
+('SCH-30404225', 'SMP Negeri 7 Sambaliung', '30404225'),
+('SCH-30400378', 'SMP Negeri 1 Gunung Tabur', '30400378'),
+('SCH-30400354', 'SMP Negeri 2 Gunung Tabur', '30400354'),
+('SCH-30400365', 'SMP Negeri 1 Talisayan', '30400365'),
+('SCH-30404521', 'SMP Negeri 2 Talisayan', '30404521'),
+('SCH-30400358', 'SMP Negeri 1 Kelay', '30400358'),
+('SCH-30400366', 'SMP Negeri 1 Segah', '30400366'),
+('SCH-30400363', 'SMP Negeri 2 Teluk Bayur', '30400363'),
+('SCH-30400367', 'SMP Negeri 1 Pulau Derawan', '30400367'),
+('SCH-30400353', 'SMP Negeri 1 Maratua', '30400353')
+ON CONFLICT (npsn) DO UPDATE SET 
+  nama = EXCLUDED.nama
+;
+
+
