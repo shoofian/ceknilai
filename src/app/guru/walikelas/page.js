@@ -115,17 +115,20 @@ export default function WaliKelasDashboard() {
 
   const handleViewSubjectDetail = async (classId) => {
     setLoadingSubjectDetail(true);
+    setSelectedSubjectDetail(null);
     setSubjectDetailModalOpen(true);
     try {
-      const res = await fetch(`/api/kelas/${classId}`);
+      const res = await fetch(`/api/kelas/${classId}?walikelas=true`);
       if (res.ok) {
         const data = await res.json();
         setSelectedSubjectDetail(data);
       } else {
         console.error("Gagal memuat detail mapel");
+        setSelectedSubjectDetail(null);
       }
     } catch (err) {
       console.error(err);
+      setSelectedSubjectDetail(null);
     } finally {
       setLoadingSubjectDetail(false);
     }
@@ -677,6 +680,7 @@ export default function WaliKelasDashboard() {
       {/* Subject Detail Modal */}
       {subjectDetailModalOpen && (
         <div
+          onClick={(e) => { if (e.target === e.currentTarget) { setSubjectDetailModalOpen(false); setSelectedSubjectDetail(null); }}}
           style={{
             position: "fixed",
             top: 0,
@@ -692,19 +696,21 @@ export default function WaliKelasDashboard() {
             padding: "20px"
           }}
         >
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "900px", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)", padding: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "960px", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)", padding: "0" }}>
+            
+            {/* Modal Header */}
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "sticky", top: 0, backgroundColor: "var(--bg-primary)", zIndex: 10 }}>
               <div>
-                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>📚 Detail Nilai Mata Pelajaran</span>
-                <h3 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0" }}>{selectedSubjectDetail?.mataPelajaran || "Loading..."}</h3>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>
-                  Guru Pengampu: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong> • KKM: <strong>{selectedSubjectDetail?.kkm || "-"}</strong>
+                <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>📚 Detail Nilai Mata Pelajaran</span>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "900", margin: "4px 0" }}>{selectedSubjectDetail?.mataPelajaran || "Memuat..."}</h3>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.82rem", margin: 0 }}>
+                  Guru: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong> • KKM: <strong>{selectedSubjectDetail?.kkm || "-"}</strong>
                 </p>
               </div>
               <button 
                 onClick={() => { setSubjectDetailModalOpen(false); setSelectedSubjectDetail(null); }}
                 className="btn btn-secondary"
-                style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+                style={{ padding: "6px 14px", fontSize: "0.85rem", flexShrink: 0 }}
               >
                 ✕ Tutup
               </button>
@@ -714,96 +720,141 @@ export default function WaliKelasDashboard() {
               <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
                 <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
               </div>
-            ) : selectedSubjectDetail ? (
-              <div style={{ overflowX: "auto" }}>
-                <table className="premium-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: "60px", textAlign: "center" }}>No</th>
-                      <th style={{ width: "120px" }}>NISN</th>
-                      <th>Nama Siswa</th>
-                      {selectedSubjectDetail.kolomNilai?.map(col => (
-                        <th key={col.id} style={{ textAlign: "center", minWidth: "100px" }}>
-                          {col.nama}
-                          <span style={{ display: "block", fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "none", marginTop: "2px" }}>
-                            Bobot: {col.bobot}%
-                          </span>
-                        </th>
-                      ))}
-                      <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Nilai Akhir</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedSubjectDetail.siswa?.map((s, index) => {
-                      let totalNilaiTerisi = 0;
-                      
-                      const getColScore = (student, col) => {
-                        if (col.subKolom && col.subKolom.length > 0) {
-                          let subTotal = 0;
-                          let subFilledWeight = 0;
-                          let subFilledCount = 0;
-                          
-                          col.subKolom.forEach(sub => {
-                            const sc = student.nilai?.[sub.id];
-                            if (sc !== undefined && sc !== null && sc !== "") {
-                              if (col.hitungMetode === "persentase") {
-                                subTotal += Number(sc) * (sub.bobot / 100);
-                                subFilledWeight += sub.bobot;
-                              } else {
-                                subTotal += Number(sc);
-                              }
-                              subFilledCount++;
-                            }
-                          });
-                          
-                          if (subFilledCount === 0) return 0;
-                          return col.hitungMetode === "persentase"
-                            ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
-                            : (subTotal / subFilledCount);
-                        } else {
-                          const sc = student.nilai?.[col.id];
-                          return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
-                        }
-                      };
+            ) : selectedSubjectDetail ? (() => {
+              // Pre-calculate stats for the summary bar
+              const allStudents = selectedSubjectDetail.siswa || [];
+              const kkm = selectedSubjectDetail.kkm || 75;
+              const columns = selectedSubjectDetail.kolomNilai || [];
 
-                      selectedSubjectDetail.kolomNilai?.forEach(col => {
-                        const score = getColScore(s, col);
-                        totalNilaiTerisi += score * (col.bobot / 100);
-                      });
-                      
-                      const finalScore = totalNilaiTerisi + (Number(s.nilai?._katrol) || 0);
-                      const isUnderKkm = finalScore < selectedSubjectDetail.kkm;
+              const calcFinal = (s) => {
+                let total = 0;
+                const getColScore = (student, col) => {
+                  if (col.subKolom && col.subKolom.length > 0) {
+                    let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
+                    col.subKolom.forEach(sub => {
+                      const sc = student.nilai?.[sub.id];
+                      if (sc !== undefined && sc !== null && sc !== "") {
+                        if (col.hitungMetode === "persentase") {
+                          subTotal += Number(sc) * (sub.bobot / 100);
+                          subFilledWeight += sub.bobot;
+                        } else { subTotal += Number(sc); }
+                        subFilledCount++;
+                      }
+                    });
+                    if (subFilledCount === 0) return 0;
+                    return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
+                  } else {
+                    const sc = student.nilai?.[col.id];
+                    return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
+                  }
+                };
+                columns.forEach(col => { total += getColScore(s, col) * (col.bobot / 100); });
+                return total + (Number(s.nilai?._katrol) || 0);
+              };
 
-                      return (
-                        <tr key={s.nisn}>
-                          <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
-                          <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
-                          <td style={{ fontWeight: "700" }}>{s.nama}</td>
-                          {selectedSubjectDetail.kolomNilai?.map(col => {
-                            const score = getColScore(s, col);
-                            return (
-                              <td key={col.id} style={{ textAlign: "center" }}>
-                                {score > 0 ? score.toFixed(1) : "-"}
-                              </td>
-                            );
-                          })}
-                          <td style={{ 
-                            textAlign: "center", 
-                            fontWeight: "900", 
-                            backgroundColor: "rgba(59, 130, 246, 0.02)",
-                            color: isUnderKkm ? "var(--danger)" : "var(--text-primary)"
-                          }}>
-                            {finalScore.toFixed(1)} {isUnderKkm && "⚠️"}
-                          </td>
+              const finals = allStudents.map(s => calcFinal(s));
+              const avg = finals.length > 0 ? finals.reduce((a, b) => a + b, 0) / finals.length : 0;
+              const passing = finals.filter(f => f >= kkm).length;
+              const failing = finals.length - passing;
+              const highest = finals.length > 0 ? Math.max(...finals) : 0;
+              const lowest = finals.length > 0 ? Math.min(...finals) : 0;
+
+              return (
+                <>
+                  {/* Summary Stats Bar */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "1px", backgroundColor: "var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
+                    {[
+                      { label: "Jumlah Siswa", value: allStudents.length, color: "var(--text-primary)" },
+                      { label: "Rata-Rata", value: avg.toFixed(1), color: "var(--primary)" },
+                      { label: "Tertinggi", value: highest.toFixed(1), color: "var(--success)" },
+                      { label: "Terendah", value: lowest.toFixed(1), color: lowest < kkm ? "var(--danger)" : "var(--text-primary)" },
+                      { label: "Tuntas", value: `${passing}`, color: "var(--success)" },
+                      { label: "Belum Tuntas", value: `${failing}`, color: failing > 0 ? "var(--danger)" : "var(--text-muted)" },
+                    ].map((stat, i) => (
+                      <div key={i} style={{ backgroundColor: "var(--bg-primary)", padding: "12px 16px", textAlign: "center" }}>
+                        <div style={{ fontSize: "0.65rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{stat.label}</div>
+                        <div style={{ fontSize: "1.15rem", fontWeight: "900", color: stat.color, marginTop: "2px" }}>{stat.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Grade Table */}
+                  <div style={{ overflowX: "auto", padding: "0" }}>
+                    <table className="premium-table" style={{ margin: 0 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: "50px", textAlign: "center" }}>No</th>
+                          <th style={{ width: "120px" }}>NISN</th>
+                          <th style={{ minWidth: "160px" }}>Nama Siswa</th>
+                          {columns.map(col => (
+                            <th key={col.id} style={{ textAlign: "center", minWidth: "90px" }}>
+                              {col.nama}
+                              <span style={{ display: "block", fontSize: "0.6rem", color: "var(--text-secondary)", textTransform: "none", marginTop: "2px" }}>
+                                {col.bobot}%
+                              </span>
+                            </th>
+                          ))}
+                          <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Nilai Akhir</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-                Gagal memuat detail nilai.
+                      </thead>
+                      <tbody>
+                        {allStudents.map((s, index) => {
+                          const finalScore = finals[index];
+                          const isUnderKkm = finalScore < kkm;
+
+                          const getColScore = (student, col) => {
+                            if (col.subKolom && col.subKolom.length > 0) {
+                              let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
+                              col.subKolom.forEach(sub => {
+                                const sc = student.nilai?.[sub.id];
+                                if (sc !== undefined && sc !== null && sc !== "") {
+                                  if (col.hitungMetode === "persentase") { subTotal += Number(sc) * (sub.bobot / 100); subFilledWeight += sub.bobot; } else { subTotal += Number(sc); }
+                                  subFilledCount++;
+                                }
+                              });
+                              if (subFilledCount === 0) return 0;
+                              return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
+                            } else {
+                              const sc = student.nilai?.[col.id];
+                              return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
+                            }
+                          };
+
+                          return (
+                            <tr key={s.nisn} style={{ backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.02)" : "transparent" }}>
+                              <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
+                              <td style={{ fontFamily: "monospace", fontSize: "0.82rem" }}>{s.nisn}</td>
+                              <td style={{ fontWeight: "700" }}>{s.nama}</td>
+                              {columns.map(col => {
+                                const score = getColScore(s, col);
+                                return (
+                                  <td key={col.id} style={{ textAlign: "center", fontSize: "0.88rem" }}>
+                                    {score > 0 ? score.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                                  </td>
+                                );
+                              })}
+                              <td style={{ 
+                                textAlign: "center", 
+                                fontWeight: "900",
+                                fontSize: "0.95rem",
+                                backgroundColor: "rgba(59, 130, 246, 0.02)",
+                                color: isUnderKkm ? "var(--danger)" : "var(--text-primary)"
+                              }}>
+                                {finalScore.toFixed(1)} {isUnderKkm && "⚠️"}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              );
+            })() : (
+              <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+                <span style={{ fontSize: "2.5rem" }}>📭</span>
+                <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Gagal Memuat Detail Nilai</h4>
+                <p style={{ fontSize: "0.85rem", margin: 0 }}>Data kelas ini tidak dapat diakses. Pastikan guru pengampu dan Anda terdaftar di sekolah yang sama.</p>
               </div>
             )}
           </div>

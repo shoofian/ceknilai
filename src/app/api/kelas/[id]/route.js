@@ -18,6 +18,31 @@ export async function GET(request, { params }) {
     }
 
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const isWalikelas = searchParams.get('walikelas') === 'true';
+
+    if (isWalikelas) {
+      // Wali kelas mode: read class without ownership filter, but validate same school
+      const { getGuru, getKelasById } = await import('@/lib/db');
+      const guru = await getGuru(username);
+      if (!guru || !guru.sekolah_id) {
+        return NextResponse.json({ error: 'Sekolah belum diatur' }, { status: 400 });
+      }
+
+      const kelas = await getKelasById(id); // no username filter
+      if (!kelas) {
+        return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
+      }
+
+      // Validate same school: fetch the class owner's school
+      const kelasOwner = await getGuru(kelas.guru_username);
+      if (!kelasOwner || kelasOwner.sekolah_id !== guru.sekolah_id) {
+        return NextResponse.json({ error: 'Akses ditolak. Kelas ini bukan dari sekolah Anda.' }, { status: 403 });
+      }
+
+      return NextResponse.json(kelas);
+    }
+
     const kelas = await getKelasById(id, username);
     
     if (!kelas) {
