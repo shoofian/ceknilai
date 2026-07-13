@@ -162,7 +162,7 @@ export default function ArsipKelas() {
                   onChange={(e) => setSelectedTingkatan(e.target.value)}
                   style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "120px" }}
                 >
-                  {tingkatanOptions.map(opt => <option key={opt} value={opt}>{opt === "Semua" ? "Semua" : `Kelas ${opt}`}</option>)}
+                  {tingkatanOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
             </div>
