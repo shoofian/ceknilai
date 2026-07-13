@@ -17,6 +17,7 @@ export default function KelolaKelas() {
   const [tahunAjaran, setTahunAjaran] = useState("");
   const [semester, setSemester] = useState("");
   const [error, setError] = useState("");
+  const [isLocked, setIsLocked] = useState(false);
 
   // Filter States
   const [filterTingkatan, setFilterTingkatan] = useState("Semua");
@@ -116,6 +117,20 @@ export default function KelolaKelas() {
   };
 
   useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const res = await fetch("/api/auth/session");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.loggedIn && data.user) {
+            setIsLocked(!!data.user.is_locked);
+          }
+        }
+      } catch (err) {
+        console.error("Gagal mengambil session", err);
+      }
+    };
+    fetchSession();
     fetchKelas();
   }, []);
 
@@ -676,10 +691,20 @@ export default function KelolaKelas() {
           <p className="page-subtitle">Buat dan kelola kelas aktif untuk tahun ajaran berjalan.</p>
         </div>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <button onClick={() => { setDapodikUploadModalOpen(true); setDapodikUploadError(""); }} className="btn btn-secondary" style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+          <button 
+            onClick={() => { setDapodikUploadModalOpen(true); setDapodikUploadError(""); }} 
+            className="btn btn-secondary" 
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+            disabled={isLocked}
+          >
             📥 Impor Kelas Dapodik
           </button>
-          <button onClick={handleOpenAdd} className="btn btn-primary">
+          <button 
+            onClick={handleOpenAdd} 
+            className="btn btn-primary"
+            style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+            disabled={isLocked}
+          >
             ➕ Tambah Kelas Baru
           </button>
         </div>
@@ -772,16 +797,40 @@ export default function KelolaKelas() {
                 </Link>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "8px" }}>
-                  <button onClick={() => handleOpenEdit(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Edit Kelas">
+                  <button 
+                    onClick={() => handleOpenEdit(k)} 
+                    className="btn btn-secondary" 
+                    style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
+                    title="Edit Kelas"
+                    disabled={isLocked}
+                  >
                     ✏️ Edit
                   </button>
-                  <button onClick={() => handleDuplicateOpen(k)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center" }} title="Duplikat Kelas">
+                  <button 
+                    onClick={() => handleDuplicateOpen(k)} 
+                    className="btn btn-secondary" 
+                    style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
+                    title="Duplikat Kelas"
+                    disabled={isLocked}
+                  >
                     📋 Duplikat
                   </button>
-                  <button onClick={() => handleArchive(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px", fontSize: "0.85rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center" }} title="Arsipkan Kelas">
+                  <button 
+                    onClick={() => handleArchive(k.id, k.nama)} 
+                    className="btn btn-secondary" 
+                    style={{ padding: "8px", fontSize: "0.85rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
+                    title="Arsipkan Kelas"
+                    disabled={isLocked}
+                  >
                     📁 Arsipkan
                   </button>
-                  <button onClick={() => handleDelete(k.id, k.nama)} className="btn btn-secondary" style={{ padding: "8px 10px", fontSize: "0.85rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", justifyContent: "center" }} title="Hapus Kelas">
+                  <button 
+                    onClick={() => handleDelete(k.id, k.nama)} 
+                    className="btn btn-secondary" 
+                    style={{ padding: "8px 10px", fontSize: "0.85rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
+                    title="Hapus Kelas"
+                    disabled={isLocked}
+                  >
                     🗑️
                   </button>
                 </div>
@@ -795,7 +844,12 @@ export default function KelolaKelas() {
         <div style={{ padding: "60px 20px", textAlign: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)" }}>
           <h3 style={{ fontSize: "1.25rem", color: "var(--text-secondary)", marginBottom: "8px" }}>Belum Ada Kelas Aktif</h3>
           <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "20px" }}>Silakan klik tombol di atas untuk membuat kelas baru.</p>
-          <button onClick={handleOpenAdd} className="btn btn-primary" style={{ display: "inline-flex" }}>
+          <button 
+            onClick={handleOpenAdd} 
+            className="btn btn-primary" 
+            style={{ display: "inline-flex", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+            disabled={isLocked}
+          >
             ➕ Tambah Kelas Pertama
           </button>
         </div>

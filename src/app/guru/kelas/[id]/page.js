@@ -130,6 +130,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
+  const isLocked = !!(guruProfile && guruProfile.is_locked);
 
   // States untuk Bagikan Overview
   const [isGeneratingOverview, setIsGeneratingOverview] = useState(false);
@@ -1982,6 +1983,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }
               }}
               className="btn"
+              disabled={isLocked}
               style={{
                 padding: "8px 18px",
                 fontSize: "0.85rem",
@@ -1990,8 +1992,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                 border: "none",
                 borderRadius: "var(--radius-sm)",
                 fontWeight: "700",
-                cursor: "pointer",
-                boxShadow: "0 4px 10px rgba(245, 158, 11, 0.2)"
+                cursor: isLocked ? "not-allowed" : "pointer",
+                opacity: isLocked ? 0.6 : 1,
+                boxShadow: isLocked ? "none" : "0 4px 10px rgba(245, 158, 11, 0.2)"
               }}
             >
               ⚙️ Mulai Atur Aspek Sekarang
@@ -2794,14 +2797,16 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 onClick={() => setKolomModalOpen(true)} 
                 className="btn btn-outline" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                disabled={isLocked}
               >
                 ⚖️ Atur Aspek & Bobot
               </button>
               <button 
                 onClick={() => setRangeModalOpen(true)} 
                 className="btn btn-outline" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                disabled={isLocked}
               >
                 📊 Atur Status & KKM
               </button>
@@ -2818,7 +2823,8 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 onClick={handleOpenAddSiswa} 
                 className="btn btn-secondary" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                disabled={isLocked}
               >
                 👤 Tambah Siswa
               </button>
@@ -2832,12 +2838,12 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
               
               <label
-                className={`btn btn-secondary ${kelas.kolomNilai.length === 0 ? "disabled" : ""}`}
+                className={`btn btn-secondary ${(kelas.kolomNilai.length === 0 || isLocked) ? "disabled" : ""}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px",
-                  cursor: kelas.kolomNilai.length === 0 ? "not-allowed" : "pointer",
-                  opacity: kelas.kolomNilai.length === 0 ? 0.5 : 1,
+                  cursor: (kelas.kolomNilai.length === 0 || isLocked) ? "not-allowed" : "pointer",
+                  opacity: (kelas.kolomNilai.length === 0 || isLocked) ? 0.5 : 1,
                   margin: 0
                 }}
               >
@@ -2847,7 +2853,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   accept=".xlsx, .xls"
                   style={{ display: "none" }}
                   onChange={handleExcelUpload}
-                  disabled={kelas.kolomNilai.length === 0}
+                  disabled={kelas.kolomNilai.length === 0 || isLocked}
                 />
               </label>
 
@@ -2900,7 +2906,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
                           <button 
                             onClick={handleTogglePublish}
-                            disabled={kelas.archived}
+                            disabled={kelas.archived || isLocked}
                             className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
                             style={{ 
                               padding: "4px 8px", 
@@ -2909,8 +2915,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                               color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff",
                               width: "100%",
                               whiteSpace: "nowrap",
-                              opacity: kelas.archived ? 0.5 : 1,
-                              cursor: kelas.archived ? "not-allowed" : "pointer"
+                              opacity: (kelas.archived || isLocked) ? 0.5 : 1,
+                              cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer"
                             }}
                           >
                             {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Tampilkan"}
@@ -3027,7 +3033,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                         }
                                       }
                                     }}
-                                    disabled={kelas.archived}
+                                    disabled={kelas.archived || isLocked}
                                     className="form-input"
                                     style={{
                                       padding: "6px 8px",
@@ -3042,7 +3048,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                             : "1px solid var(--border-color)",
                                       backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
                                       transition: "all 0.15s ease",
-                                      cursor: kelas.archived ? "not-allowed" : "text"
+                                      cursor: (kelas.archived || isLocked) ? "not-allowed" : "text"
                                     }}
                                     placeholder="-"
                                     min={0}
@@ -3068,7 +3074,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {/* Weighted Final Score */}
                         <td 
                           onClick={() => {
-                            if (kelas.isNilaiAkhirGenerated && !kelas.archived) {
+                            if (kelas.isNilaiAkhirGenerated && !kelas.archived && !isLocked) {
                               setKatrolSiswa(student);
                               setKatrolValue(student.nilai?._katrol !== undefined && student.nilai?._katrol !== null ? student.nilai._katrol.toString() : "");
                               setKatrolModalOpen(true);
@@ -3080,10 +3086,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                             color: kelas.isNilaiAkhirGenerated ? "var(--primary)" : "var(--text-muted)", 
                             backgroundColor: "rgba(59,130,246,0.02)", 
                             padding: "10px 12px",
-                            cursor: (kelas.isNilaiAkhirGenerated && !kelas.archived) ? "pointer" : "default",
+                            cursor: (kelas.isNilaiAkhirGenerated && !kelas.archived && !isLocked) ? "pointer" : "default",
                             position: "relative"
                           }}
-                          title={(kelas.isNilaiAkhirGenerated && !kelas.archived) ? "Klik untuk penyesuaian nilai akhir (Katrol Rahasia)" : ""}
+                          title={(kelas.isNilaiAkhirGenerated && !kelas.archived && !isLocked) ? "Klik untuk penyesuaian nilai akhir (Katrol Rahasia)" : ""}
                         >
                           <style>{`
                             .final-score-cell:hover .hover-lock {
@@ -3147,18 +3153,18 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <button 
                               onClick={() => handleOpenEditSiswa(student)} 
                               className="btn btn-secondary" 
-                              style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }} 
-                              title={kelas.archived ? "Tidak dapat mengedit kelas terarsip" : "Edit Profil Siswa"}
-                              disabled={kelas.archived}
+                              style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (kelas.archived || isLocked) ? 0.5 : 1, cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer" }} 
+                              title={(kelas.archived || isLocked) ? "Tidak dapat mengedit" : "Edit Profil Siswa"}
+                              disabled={kelas.archived || isLocked}
                             >
                               ✏️
                             </button>
                             <button 
                               onClick={() => handleDeleteSiswa(student.nisn, student.nama)} 
                               className="btn btn-secondary" 
-                              style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--danger)", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }} 
-                              title={kelas.archived ? "Tidak dapat menghapus siswa kelas terarsip" : "Hapus Siswa"}
-                              disabled={kelas.archived}
+                              style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--danger)", opacity: (kelas.archived || isLocked) ? 0.5 : 1, cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer" }} 
+                              title={(kelas.archived || isLocked) ? "Tidak dapat menghapus" : "Hapus Siswa"}
+                              disabled={kelas.archived || isLocked}
                             >
                               🗑️
                             </button>
@@ -3259,8 +3265,8 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Grup Konfigurasi */}
             <div style={{ padding: "8px 14px 4px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>⚙️ Konfigurasi</div>
             {[
-              { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); }, disabled: kelas.archived },
-              { icon: "📊", label: "Atur Status & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); }, disabled: kelas.archived },
+              { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); }, disabled: kelas.archived || isLocked },
+              { icon: "📊", label: "Atur Status & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); }, disabled: kelas.archived || isLocked },
             ].map((item) => (
               <button
                 key={item.label}
@@ -3289,7 +3295,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Grup Operasi Data */}
             <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
             {[
-              { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: kelas.archived },
+              { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: kelas.archived || isLocked },
               { icon: "📥", label: "Ekspor Data Siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
               { icon: "🔌", label: "Ekspor ke E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
             ].map((item) => (
@@ -3318,10 +3324,10 @@ export default function DetailKelas({ params: paramsPromise }) {
               style={{
                 display: "flex", alignItems: "center", gap: "10px",
                 width: "100%", padding: "10px 16px",
-                cursor: (kelas.kolomNilai.length === 0 || kelas.archived) ? "not-allowed" : "pointer",
-                color: (kelas.kolomNilai.length === 0 || kelas.archived) ? "var(--text-muted)" : "var(--text-primary)",
+                cursor: (kelas.kolomNilai.length === 0 || kelas.archived || isLocked) ? "not-allowed" : "pointer",
+                color: (kelas.kolomNilai.length === 0 || kelas.archived || isLocked) ? "var(--text-muted)" : "var(--text-primary)",
                 fontSize: "0.88rem", fontWeight: "600",
-                opacity: (kelas.kolomNilai.length === 0 || kelas.archived) ? 0.5 : 1,
+                opacity: (kelas.kolomNilai.length === 0 || kelas.archived || isLocked) ? 0.5 : 1,
                 transition: "background 0.15s",
                 marginBottom: "4px",
               }}
@@ -3335,7 +3341,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 accept=".xlsx, .xls"
                 style={{ display: "none" }}
                 onChange={(e) => { handleExcelUpload(e); setFabOpen(false); }}
-                disabled={kelas.kolomNilai.length === 0 || kelas.archived}
+                disabled={kelas.kolomNilai.length === 0 || kelas.archived || isLocked}
               />
             </label>
           </div>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 
@@ -17,6 +17,7 @@ export default function ProfilGuru() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -27,6 +28,7 @@ export default function ProfilGuru() {
           setNama(data.nama);
           setUsername(data.username);
           setEmail(data.email);
+          setIsLocked(!!data.is_locked);
         }
       } catch (err) {
         console.error("Gagal memuat profil", err);
@@ -148,6 +150,7 @@ export default function ProfilGuru() {
                 value={nama}
                 onChange={(e) => setNama(e.target.value)}
                 required
+                disabled={isLocked}
               />
             </div>
 
@@ -162,6 +165,7 @@ export default function ProfilGuru() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
+                  disabled={isLocked}
                 />
               </div>
 
@@ -174,6 +178,7 @@ export default function ProfilGuru() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLocked}
                 />
               </div>
             </div>
@@ -198,6 +203,7 @@ export default function ProfilGuru() {
                 className="form-input"
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
+                disabled={isLocked}
               />
             </div>
 
@@ -210,6 +216,7 @@ export default function ProfilGuru() {
                   className="form-input"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={isLocked}
                 />
               </div>
 
@@ -221,6 +228,7 @@ export default function ProfilGuru() {
                   className="form-input"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={isLocked}
                 />
               </div>
             </div>
@@ -239,8 +247,19 @@ export default function ProfilGuru() {
             )}
 
             {/* Submit */}
-            <button type="submit" className="btn btn-primary" style={{ width: "fit-content", padding: "12px 30px", alignSelf: "flex-end" }} disabled={submitting}>
-              {submitting ? "Menyimpan..." : "💾 Perbarui Profil Akun"}
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ 
+                width: "fit-content", 
+                padding: "12px 30px", 
+                alignSelf: "flex-end",
+                opacity: isLocked ? 0.6 : 1,
+                cursor: isLocked ? "not-allowed" : "pointer"
+              }} 
+              disabled={isLocked || submitting}
+            >
+              {submitting ? "Menyimpan..." : isLocked ? "🔒 Akun Terkunci" : "💾 Perbarui Profil Akun"}
             </button>
 
           </form>
