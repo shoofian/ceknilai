@@ -21,8 +21,6 @@ export default function WaliKelasDashboard() {
   const [siswa, setSiswa] = useState([]);
   const [mataPelajaranList, setMataPelajaranList] = useState([]);
   const [activeTab, setActiveTab] = useState("mapel");
-  const [rombelList, setRombelList] = useState([]);
-  const [selectedRombelKey, setSelectedRombelKey] = useState("");
 
   // Subject Detail Modal States
   const [selectedSubjectDetail, setSelectedSubjectDetail] = useState(null);
@@ -41,10 +39,12 @@ export default function WaliKelasDashboard() {
           const data = await res.json();
           if (data.loggedIn && data.user) {
             setGuru(data.user);
-            if (data.user.sekolah_id) {
-              setAuthorized(true);
-            } else {
+            if (!data.user.sekolah_id) {
               setErrorMsg("Asal sekolah Anda belum diatur. Silakan setel sekolah Anda di halaman Profil terlebih dahulu untuk menggunakan dashboard ini.");
+            } else if (!data.user.walikelas_tingkatan || !data.user.walikelas_rombel_nama) {
+              setErrorMsg("Anda belum mengatur kelas perwalian. Silakan buka halaman Profil Saya untuk menentukan Tingkatan dan Rombel perwalian Anda terlebih dahulu.");
+            } else {
+              setAuthorized(true);
             }
           } else {
             router.push("/login");
@@ -62,40 +62,14 @@ export default function WaliKelasDashboard() {
     checkAuth();
   }, [router]);
 
-  // Fetch Rombels list on mount
-  useEffect(() => {
-    if (!authorized || !guru) return;
-    const fetchRombels = async () => {
-      try {
-        const res = await fetch("/api/sekolah/rombel");
-        if (res.ok) {
-          const list = await res.json();
-          setRombelList(list);
-          if (list.length > 0) {
-            let defaultRombel = list[0];
-            if (guru.walikelas_tingkatan && guru.walikelas_rombel_nama) {
-              const found = list.find(r => r.tingkatan === guru.walikelas_tingkatan && r.rombelNama === guru.walikelas_rombel_nama);
-              if (found) defaultRombel = found;
-            }
-            setSelectedRombelKey(`${defaultRombel.tingkatan}-${defaultRombel.rombelNama}`);
-          }
-        }
-      } catch (err) {
-        console.error("Gagal mengambil daftar rombel", err);
-      }
-    };
-    fetchRombels();
-  }, [authorized, guru]);
-
   // Fetch Leger Data when filters change
   useEffect(() => {
-    if (!authorized || !guru || !selectedRombelKey) return;
+    if (!authorized || !guru) return;
 
     const fetchLeger = async () => {
       setLoading(true);
       try {
-        const [tingkatan, rombelNama] = selectedRombelKey.split("-");
-        const res = await fetch(`/api/walikelas/leger?tingkatan=${tingkatan}&rombel_nama=${rombelNama}&tahun_ajaran=${tahunAjaran}&semester=${semester}`);
+        const res = await fetch(`/api/walikelas/leger?tingkatan=${guru.walikelas_tingkatan}&rombel_nama=${guru.walikelas_rombel_nama}&tahun_ajaran=${tahunAjaran}&semester=${semester}`);
         if (res.ok) {
           const data = await res.json();
           setSiswa(data.siswa || []);
@@ -168,8 +142,7 @@ export default function WaliKelasDashboard() {
     csvContent += `LEGER NILAI CONSOLIDATED\n`;
     csvContent += `Sekolah:;${guru?.sekolah?.nama || "-"}\n`;
     csvContent += `Wali Kelas:;${guru?.nama || "-"}\n`;
-    const [tingkatan, rombelNama] = selectedRombelKey.split("-");
-    csvContent += `Rombel:;Kelas ${tingkatan} ${rombelNama}\n`;
+    csvContent += `Rombel:;Kelas ${guru?.walikelas_tingkatan} ${guru?.walikelas_rombel_nama}\n`;
     csvContent += `Periode:;${tahunAjaran} - ${semester}\n\n`;
     
     // Headers
@@ -196,7 +169,7 @@ export default function WaliKelasDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    const rombelStr = selectedRombelKey.replace("-", "_");
+    const rombelStr = `${guru?.walikelas_tingkatan}_${guru?.walikelas_rombel_nama}`;
     link.setAttribute("download", `Leger_${rombelStr.replace(/\s+/g, "_")}_${tahunAjaran.replace(/\//g, "-")}_${semester}.csv`);
     document.body.appendChild(link);
     link.click();
@@ -247,7 +220,7 @@ export default function WaliKelasDashboard() {
         <div>
           <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🏫 Dashboard Wali Kelas</span>
           <h2 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0 6px" }}>
-            {selectedRombelKey ? `Kelas ${selectedRombelKey.split("-").join(" ")}` : "Pilih Rombel"}
+            Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", margin: 0 }}>
             Instansi: <strong>{guru?.sekolah?.nama || "Sekolah Contoh"}</strong> • NPSN: <strong>{guru?.sekolah?.npsn || "-"}</strong>
@@ -261,26 +234,6 @@ export default function WaliKelasDashboard() {
       {/* Filter Toolbar */}
       <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "16px" }}>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)" }}>Rombongan Belajar (Rombel)</label>
-            {rombelList.length > 0 ? (
-              <select
-                className="form-input"
-                value={selectedRombelKey}
-                onChange={(e) => setSelectedRombelKey(e.target.value)}
-                style={{ padding: "6px 12px", fontSize: "0.82rem", width: "max-content", minWidth: "150px", appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-              >
-                {rombelList.map(r => (
-                  <option key={`${r.tingkatan}-${r.rombelNama}`} value={`${r.tingkatan}-${r.rombelNama}`} style={{ backgroundColor: "var(--bg-secondary)" }}>
-                    Kelas {r.tingkatan} {r.rombelNama}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span style={{ fontSize: "0.82rem", color: "var(--text-muted)", padding: "8px 0" }}>Belum ada kelas aktif</span>
-            )}
-          </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <label style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tahun Ajaran</label>
