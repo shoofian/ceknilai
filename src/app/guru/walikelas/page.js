@@ -24,6 +24,11 @@ export default function WaliKelasDashboard() {
   const [rombelList, setRombelList] = useState([]);
   const [selectedRombelKey, setSelectedRombelKey] = useState("");
 
+  // Subject Detail Modal States
+  const [selectedSubjectDetail, setSelectedSubjectDetail] = useState(null);
+  const [loadingSubjectDetail, setLoadingSubjectDetail] = useState(false);
+  const [subjectDetailModalOpen, setSubjectDetailModalOpen] = useState(false);
+
   // Options
   const TAHUN_AJARAN_OPTIONS = ["2023/2024", "2024/2025", "2025/2026", "2026/2027"];
   const SEMESTER_OPTIONS = ["Ganjil", "Genap"];
@@ -107,6 +112,24 @@ export default function WaliKelasDashboard() {
 
     fetchLeger();
   }, [authorized, guru, tahunAjaran, semester]);
+
+  const handleViewSubjectDetail = async (classId) => {
+    setLoadingSubjectDetail(true);
+    setSubjectDetailModalOpen(true);
+    try {
+      const res = await fetch(`/api/kelas/${classId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedSubjectDetail(data);
+      } else {
+        console.error("Gagal memuat detail mapel");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSubjectDetail(false);
+    }
+  };
 
   // EWS Calculations
   const ewsData = (() => {
@@ -367,80 +390,64 @@ export default function WaliKelasDashboard() {
           <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
         </div>
       ) : activeTab === "leger" ? (
-        <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
-          {siswa.length > 0 ? (
-            <div style={{ overflowX: "auto" }}>
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: "80px", minWidth: "80px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, background: "var(--bg-tertiary)" }}>Rank</th>
-                    <th style={{ width: "120px", minWidth: "120px", position: "sticky", left: "80px", zIndex: 12, background: "var(--bg-tertiary)" }}>NISN</th>
-                    <th style={{ width: "220px", minWidth: "220px", maxWidth: "220px", position: "sticky", left: "200px", zIndex: 12, background: "var(--bg-tertiary)", borderRight: "2px solid var(--border-color)" }}>Nama Siswa</th>
-                    {mataPelajaranList.map(mp => (
-                      <th key={mp.id} style={{ textAlign: "center", minWidth: "120px" }}>
-                        <div>{mp.mataPelajaran}</div>
-                        <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)", fontWeight: "500", marginTop: "2px" }}>
-                          KKM: {mp.kkm} {!mp.isNilaiAkhirGenerated && "⏳"}
-                        </div>
-                      </th>
-                    ))}
-                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Rata-Rata</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {siswa.map(s => (
-                    <tr key={s.nisn}>
-                      <td style={{ textAlign: "center", fontWeight: "800", position: "sticky", left: 0, zIndex: 10, background: "var(--bg-secondary)" }}>
-                        <span style={{ 
-                          display: "inline-flex", 
-                          width: "24px", 
-                          height: "24px", 
-                          alignItems: "center", 
-                          justifyContent: "center",
-                          borderRadius: "50%",
-                          backgroundColor: s.ranking === 1 ? "rgba(251, 191, 36, 0.2)" : s.ranking === 2 ? "rgba(226, 232, 240, 0.2)" : s.ranking === 3 ? "rgba(180, 83, 9, 0.15)" : "transparent",
-                          color: s.ranking === 1 ? "#fbbf24" : s.ranking === 2 ? "#e2e8f0" : s.ranking === 3 ? "#b45309" : "var(--text-primary)"
-                        }}>
-                          {s.ranking}
-                        </span>
-                      </td>
-                      <td style={{ fontFamily: "monospace", fontSize: "0.85rem", position: "sticky", left: "80px", zIndex: 10, background: "var(--bg-secondary)" }}>{s.nisn}</td>
-                      <td style={{ fontWeight: "700", position: "sticky", left: "200px", zIndex: 10, background: "var(--bg-secondary)", borderRight: "2px solid var(--border-color)" }}>{s.nama}</td>
-                      {mataPelajaranList.map(mp => {
-                        const score = s.nilaiMapel[mp.mataPelajaran];
-                        const isUnderKkm = score !== undefined && score !== null && score < mp.kkm;
-                        return (
-                          <td 
-                            key={mp.id} 
-                            style={{ 
-                              textAlign: "center", 
-                              fontWeight: "700",
-                              color: isUnderKkm ? "var(--danger)" : "var(--text-primary)",
-                              backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.02)" : "transparent"
-                            }}
-                          >
-                            {score !== undefined && score !== null ? (
-                              <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                <span>{score.toFixed(2)}</span>
-                                {isUnderKkm && <span style={{ fontSize: "0.65rem", color: "var(--danger)" }} title="Di bawah KKM">⚠️</span>}
-                              </div>
-                            ) : (
-                              <span style={{ color: "var(--text-muted)", fontWeight: "400" }}>-</span>
-                            )}
-                          </td>
-                        );
-                      })}
-                      <td style={{ textAlign: "center", fontWeight: "900", backgroundColor: "rgba(59, 130, 246, 0.02)" }}>{s.rataRata.toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div>
+          {mataPelajaranList.length > 0 ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", padding: "10px 0" }}>
+              {mataPelajaranList.map(mp => (
+                <div 
+                  key={mp.id} 
+                  onClick={() => handleViewSubjectDetail(mp.id)}
+                  className="glass-card subject-card"
+                  style={{ 
+                    padding: "20px", 
+                    cursor: "pointer", 
+                    border: "1px solid var(--border-color)", 
+                    transition: "all 0.2s ease",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "12px",
+                    position: "relative",
+                    overflow: "hidden"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <span style={{ fontSize: "2rem" }}>📚</span>
+                    <span className={`badge ${mp.isNilaiAkhirGenerated ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.7rem" }}>
+                      {mp.isNilaiAkhirGenerated ? "✅ Nilai Akhir" : "⏳ Sedang Diinput"}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: "1.15rem", fontWeight: "800", margin: "4px 0" }}>{mp.mataPelajaran}</h4>
+                    <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: "2px 0 8px" }}>
+                      Guru: <strong>{mp.guru?.nama || mp.guru_username}</strong>
+                    </p>
+                    <div style={{ display: "flex", gap: "12px", fontSize: "0.78rem", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
+                      <span>KKM: <strong>{mp.kkm}</strong></span>
+                      <span>Semester: <strong>{mp.semester}</strong></span>
+                    </div>
+                  </div>
+                  
+                  <div style={{ 
+                    position: "absolute", 
+                    bottom: "12px", 
+                    right: "12px", 
+                    fontSize: "0.8rem", 
+                    fontWeight: "700", 
+                    color: "var(--primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }} className="view-detail-label">
+                    Lihat Nilai ➔
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+            <div className="glass-card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
               <span style={{ fontSize: "2.5rem" }}>📭</span>
-              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Nilai</h4>
-              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas aktif atau nilai terinput untuk rombel ini pada periode terpilih.</p>
+              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Mapel Terdaftar</h4>
+              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas aktif atau mata pelajaran untuk rombel ini pada periode terpilih.</p>
             </div>
           )}
         </div>
@@ -556,6 +563,142 @@ export default function WaliKelasDashboard() {
         </div>
       )}
 
+      {/* Subject Detail Modal */}
+      {subjectDetailModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            zIndex: 300,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "900px", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)", padding: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>📚 Detail Nilai Mata Pelajaran</span>
+                <h3 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0" }}>{selectedSubjectDetail?.mataPelajaran || "Loading..."}</h3>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>
+                  Guru Pengampu: <strong>{selectedSubjectDetail?.guru?.nama || selectedSubjectDetail?.guru_username || "-"}</strong> • KKM: <strong>{selectedSubjectDetail?.kkm || "-"}</strong>
+                </p>
+              </div>
+              <button 
+                onClick={() => { setSubjectDetailModalOpen(false); setSelectedSubjectDetail(null); }}
+                className="btn btn-secondary"
+                style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+              >
+                ✕ Tutup
+              </button>
+            </div>
+
+            {loadingSubjectDetail ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+                <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+              </div>
+            ) : selectedSubjectDetail ? (
+              <div style={{ overflowX: "auto" }}>
+                <table className="premium-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: "60px", textAlign: "center" }}>No</th>
+                      <th style={{ width: "120px" }}>NISN</th>
+                      <th>Nama Siswa</th>
+                      {selectedSubjectDetail.kolomNilai?.map(col => (
+                        <th key={col.id} style={{ textAlign: "center", minWidth: "100px" }}>
+                          {col.nama}
+                          <span style={{ display: "block", fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "none", marginTop: "2px" }}>
+                            Bobot: {col.bobot}%
+                          </span>
+                        </th>
+                      ))}
+                      <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Nilai Akhir</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedSubjectDetail.siswa?.map((s, index) => {
+                      let totalNilaiTerisi = 0;
+                      
+                      const getColScore = (student, col) => {
+                        if (col.subKolom && col.subKolom.length > 0) {
+                          let subTotal = 0;
+                          let subFilledWeight = 0;
+                          let subFilledCount = 0;
+                          
+                          col.subKolom.forEach(sub => {
+                            const sc = student.nilai?.[sub.id];
+                            if (sc !== undefined && sc !== null && sc !== "") {
+                              if (col.hitungMetode === "persentase") {
+                                subTotal += Number(sc) * (sub.bobot / 100);
+                                subFilledWeight += sub.bobot;
+                              } else {
+                                subTotal += Number(sc);
+                              }
+                              subFilledCount++;
+                            }
+                          });
+                          
+                          if (subFilledCount === 0) return 0;
+                          return col.hitungMetode === "persentase"
+                            ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0)
+                            : (subTotal / subFilledCount);
+                        } else {
+                          const sc = student.nilai?.[col.id];
+                          return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
+                        }
+                      };
+
+                      selectedSubjectDetail.kolomNilai?.forEach(col => {
+                        const score = getColScore(s, col);
+                        totalNilaiTerisi += score * (col.bobot / 100);
+                      });
+                      
+                      const finalScore = totalNilaiTerisi + (Number(s.nilai?._katrol) || 0);
+                      const isUnderKkm = finalScore < selectedSubjectDetail.kkm;
+
+                      return (
+                        <tr key={s.nisn}>
+                          <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
+                          <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
+                          <td style={{ fontWeight: "700" }}>{s.nama}</td>
+                          {selectedSubjectDetail.kolomNilai?.map(col => {
+                            const score = getColScore(s, col);
+                            return (
+                              <td key={col.id} style={{ textAlign: "center" }}>
+                                {score > 0 ? score.toFixed(1) : "-"}
+                              </td>
+                            );
+                          })}
+                          <td style={{ 
+                            textAlign: "center", 
+                            fontWeight: "900", 
+                            backgroundColor: "rgba(59, 130, 246, 0.02)",
+                            color: isUnderKkm ? "var(--danger)" : "var(--text-primary)"
+                          }}>
+                            {finalScore.toFixed(1)} {isUnderKkm && "⚠️"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                Gagal memuat detail nilai.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
@@ -563,6 +706,14 @@ export default function WaliKelasDashboard() {
         }
         .premium-table tr:hover td {
           background-color: var(--bg-tertiary) !important;
+        }
+        .subject-card:hover {
+          transform: translateY(-4px);
+          border-color: var(--primary) !important;
+          box-shadow: 0 10px 20px rgba(124, 58, 237, 0.08) !important;
+        }
+        .subject-card:hover .view-detail-label {
+          text-decoration: underline;
         }
       `}</style>
 
