@@ -1245,7 +1245,8 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
             tanggalLahir: s.tanggalLahir,
             nilaiMapel: {},
             isSelesaiMapel: {},
-            catatanMapel: {}
+            catatanMapel: {},
+            kehadiran: { H: 0, S: 0, I: 0, A: 0 }
           };
         }
         
@@ -1324,6 +1325,15 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
           const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
           totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
         }
+        
+        // Rekap Kehadiran Siswa
+        const allPertemuan = skema.pertemuan || [];
+        allPertemuan.forEach(p => {
+          const val = s.nilai?.[`_presensi_${p.id}`];
+          if (val && studentsMap[s.nisn].kehadiran[val] !== undefined) {
+            studentsMap[s.nisn].kehadiran[val]++;
+          }
+        });
         
         const finalScore = totalNilaiTerisi + totalPresensiScore + (Number(s.nilai?._katrol) || 0);
         

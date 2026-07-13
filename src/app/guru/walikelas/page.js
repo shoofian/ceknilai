@@ -694,6 +694,7 @@ export default function WaliKelasDashboard() {
           { id: "mapel", label: "📚 Mata Pelajaran" },
           { id: "leger", label: "📊 Buku Leger Nilai" },
           { id: "catatan", label: "📝 Catatan Guru" },
+          { id: "kehadiran", label: "📅 Rekap Kehadiran" },
           { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` },
           { id: "perpaduan", label: "🌓 Perpaduan Semester" }
         ].map(tab => (
@@ -982,6 +983,62 @@ export default function WaliKelasDashboard() {
               <span style={{ fontSize: "2.5rem" }}>📭</span>
               <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Siswa</h4>
               <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada data siswa untuk rombel ini pada periode terpilih.</p>
+            </div>
+          )}
+        </div>
+      ) : activeTab === "kehadiran" ? (
+        <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
+          {siswa.length > 0 ? (
+            <div style={{ overflowX: "auto" }}>
+              <table className="premium-table" style={{ margin: 0, width: "100%" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                    <th style={{ width: "60px", textAlign: "center" }}>No</th>
+                    <th style={{ width: "130px" }}>NISN</th>
+                    <th>Nama Siswa</th>
+                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(16, 185, 129, 0.05)" }}>Hadir (H)</th>
+                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.05)" }}>Sakit (S)</th>
+                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Izin (I)</th>
+                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(239, 68, 68, 0.05)" }}>Alpa (A)</th>
+                    <th style={{ width: "120px", textAlign: "center" }}>Total Pertemuan</th>
+                    <th style={{ width: "120px", textAlign: "center", backgroundColor: "rgba(124, 58, 237, 0.08)" }}>% Kehadiran</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedSiswa.map((s, index) => {
+                    const h = s.kehadiran?.H || 0;
+                    const sakit = s.kehadiran?.S || 0;
+                    const i = s.kehadiran?.I || 0;
+                    const a = s.kehadiran?.A || 0;
+                    const total = h + sakit + i + a;
+                    const percent = total > 0 ? ((h + sakit + i) / total) * 100 : null;
+
+                    return (
+                      <tr key={s.nisn} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                        <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
+                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-secondary)" }}>{s.nisn}</td>
+                        <td style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.01)" }}>{h}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.01)" }}>{sakit}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.01)" }}>{i}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: a > 0 ? "var(--danger)" : "var(--text-muted)", backgroundColor: "rgba(239, 68, 68, 0.01)" }}>
+                          {a > 0 ? a : "-"}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "600" }}>{total}</td>
+                        <td style={{ textAlign: "center", fontWeight: "900", color: percent && percent < 80 ? "var(--danger)" : "var(--primary)", backgroundColor: "rgba(124, 58, 237, 0.02)" }}>
+                          {percent !== null ? `${percent.toFixed(1)}%` : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+              <span style={{ fontSize: "2.5rem" }}>📭</span>
+              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Kehadiran</h4>
+              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada data kehadiran terinput untuk siswa pada periode terpilih.</p>
             </div>
           )}
         </div>
