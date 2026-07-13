@@ -900,6 +900,28 @@ export default function KelolaKelas() {
             </h3>
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* 1. Tingkatan Kelas */}
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tingkatan Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
+                  className="form-input"
+                  value={tingkatan}
+                  onChange={(e) => setTingkatan(e.target.value)}
+                  style={{ 
+                    appearance: "auto", 
+                    backgroundColor: "var(--bg-secondary)", 
+                    color: "var(--text-primary)", 
+                    border: "1px solid var(--border-color)" 
+                  }}
+                >
+                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
+                  {TINGKATAN_OPTIONS.map(t => (
+                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. No./Nama Rombel & Nama Kustom */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
@@ -925,24 +947,33 @@ export default function KelolaKelas() {
                 </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tingkatan Kelas <span style={{ color: "var(--danger)" }}>*</span></label>
-                <select
-                  className="form-input"
-                  value={tingkatan}
-                  onChange={(e) => setTingkatan(e.target.value)}
-                  style={{ 
-                    appearance: "auto", 
-                    backgroundColor: "var(--bg-secondary)", 
-                    color: "var(--text-primary)", 
-                    border: "1px solid var(--border-color)" 
-                  }}
-                >
-                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tingkatan --</option>
-                  {TINGKATAN_OPTIONS.map(t => (
-                    <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
-                  ))}
-                </select>
+              {/* 3. Pratinjau Nama Kelas */}
+              <div style={{ 
+                backgroundColor: "var(--bg-secondary)", 
+                border: "1px dashed var(--border-color)", 
+                borderRadius: "var(--radius-sm)", 
+                padding: "12px 16px",
+                fontSize: "0.85rem",
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px"
+              }}>
+                <span style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>🏷️ Pratinjau Nama Kelas</span>
+                <strong style={{ fontSize: "1rem", color: "var(--primary)" }}>
+                  {(() => {
+                    const getRoman = (num) => {
+                      const roman = { 10: "X", 11: "XI", 12: "XII" };
+                      return roman[num] || num;
+                    };
+                    const romanTingkatan = tingkatan ? getRoman(Number(tingkatan)) : "[Tingkatan]";
+                    const displayRombel = rombelNama.trim() 
+                      ? rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1") 
+                      : "[Rombel]";
+                    return namaKustom.trim()
+                      ? `${romanTingkatan} ${displayRombel} - ${namaKustom.trim()}`
+                      : `${romanTingkatan} ${displayRombel}`;
+                  })()}
+                </strong>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
