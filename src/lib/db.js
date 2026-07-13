@@ -148,7 +148,7 @@ export async function updateGuru(currentUsername, updatedProfile) {
       updatesPayload.tahun_ajaran = updates.tahun_ajaran;
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('guru')
       .update(updatesPayload)
       .eq('username', oldUsername)
@@ -157,6 +157,24 @@ export async function updateGuru(currentUsername, updatedProfile) {
 
     if (error) {
       console.error('Error updating guru:', error);
+      // Self-healing: If column "tahun_ajaran" does not exist in the database (error 42703)
+      if (error.code === '42703' && updatesPayload.tahun_ajaran !== undefined) {
+        console.warn('tahun_ajaran column missing, retrying update without it...');
+        const healedPayload = { ...updatesPayload };
+        delete healedPayload.tahun_ajaran;
+        
+        const retry = await supabase
+          .from('guru')
+          .update(healedPayload)
+          .eq('username', oldUsername)
+          .select()
+          .single();
+          
+        if (!retry.error) {
+          return retry.data;
+        }
+        console.error('Retry failed:', retry.error);
+      }
       return null;
     }
     return data;
@@ -1044,7 +1062,7 @@ export async function updateGuruByAdmin(username, updatedData) {
     if (updatedData.tahun_ajaran !== undefined) {
       payload.tahun_ajaran = updatedData.tahun_ajaran || '2025/2026';
     }
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('guru')
       .update(payload)
       .eq('username', username)
@@ -1052,6 +1070,24 @@ export async function updateGuruByAdmin(username, updatedData) {
       .single();
     if (error) {
       console.error('Error updating guru by admin:', error);
+      // Self-healing: If column "tahun_ajaran" does not exist in the database (error 42703)
+      if (error.code === '42703' && payload.tahun_ajaran !== undefined) {
+        console.warn('tahun_ajaran column missing, retrying update without it...');
+        const healedPayload = { ...payload };
+        delete healedPayload.tahun_ajaran;
+        
+        const retry = await supabase
+          .from('guru')
+          .update(healedPayload)
+          .eq('username', username)
+          .select()
+          .single();
+          
+        if (!retry.error) {
+          return retry.data;
+        }
+        console.error('Retry by admin failed:', retry.error);
+      }
       throw new Error(error.message || 'Gagal memperbarui akun guru');
     }
     return data;
