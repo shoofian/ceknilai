@@ -21,6 +21,7 @@ export default function WaliKelasDashboard() {
   const [siswa, setSiswa] = useState([]);
   const [mataPelajaranList, setMataPelajaranList] = useState([]);
   const [activeTab, setActiveTab] = useState("mapel");
+  const [selectedTingkatan, setSelectedTingkatan] = useState("");
 
   // Subject Detail Modal States
   const [selectedSubjectDetail, setSelectedSubjectDetail] = useState(null);
@@ -44,6 +45,7 @@ export default function WaliKelasDashboard() {
             } else if (!data.user.walikelas_tingkatan || !data.user.walikelas_rombel_nama) {
               setErrorMsg("Anda belum mengatur kelas perwalian. Silakan buka halaman Profil Saya untuk menentukan Tingkatan dan Rombel perwalian Anda terlebih dahulu.");
             } else {
+              setSelectedTingkatan(String(data.user.walikelas_tingkatan));
               setAuthorized(true);
             }
           } else {
@@ -64,12 +66,12 @@ export default function WaliKelasDashboard() {
 
   // Fetch Leger Data when filters change
   useEffect(() => {
-    if (!authorized || !guru) return;
+    if (!authorized || !guru || !selectedTingkatan) return;
 
     const fetchLeger = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/walikelas/leger?tingkatan=${guru.walikelas_tingkatan}&rombel_nama=${guru.walikelas_rombel_nama}&tahun_ajaran=${tahunAjaran}&semester=${semester}`);
+        const res = await fetch(`/api/walikelas/leger?tingkatan=${selectedTingkatan}&rombel_nama=${guru.walikelas_rombel_nama}&tahun_ajaran=${tahunAjaran}&semester=${semester}`);
         if (res.ok) {
           const data = await res.json();
           setSiswa(data.siswa || []);
@@ -85,7 +87,7 @@ export default function WaliKelasDashboard() {
     };
 
     fetchLeger();
-  }, [authorized, guru, tahunAjaran, semester]);
+  }, [authorized, guru, selectedTingkatan, tahunAjaran, semester]);
 
   const handleViewSubjectDetail = async (classId) => {
     setLoadingSubjectDetail(true);
@@ -142,7 +144,7 @@ export default function WaliKelasDashboard() {
     csvContent += `LEGER NILAI CONSOLIDATED\n`;
     csvContent += `Sekolah:;${guru?.sekolah?.nama || "-"}\n`;
     csvContent += `Wali Kelas:;${guru?.nama || "-"}\n`;
-    csvContent += `Rombel:;Kelas ${guru?.walikelas_tingkatan} ${guru?.walikelas_rombel_nama}\n`;
+    csvContent += `Rombel:;Kelas ${selectedTingkatan} ${guru?.walikelas_rombel_nama}\n`;
     csvContent += `Periode:;${tahunAjaran} - ${semester}\n\n`;
     
     // Headers
@@ -169,7 +171,7 @@ export default function WaliKelasDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    const rombelStr = `${guru?.walikelas_tingkatan}_${guru?.walikelas_rombel_nama}`;
+    const rombelStr = `${selectedTingkatan}_${guru?.walikelas_rombel_nama}`;
     link.setAttribute("download", `Leger_${rombelStr.replace(/\s+/g, "_")}_${tahunAjaran.replace(/\//g, "-")}_${semester}.csv`);
     document.body.appendChild(link);
     link.click();
@@ -220,7 +222,7 @@ export default function WaliKelasDashboard() {
         <div>
           <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🏫 Dashboard Wali Kelas</span>
           <h2 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0 6px" }}>
-            Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}
+            Kelas {selectedTingkatan} {guru?.walikelas_rombel_nama}
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", margin: 0 }}>
             Instansi: <strong>{guru?.sekolah?.nama || "Sekolah Contoh"}</strong> • NPSN: <strong>{guru?.sekolah?.npsn || "-"}</strong>
@@ -231,9 +233,23 @@ export default function WaliKelasDashboard() {
         </div>
       </div>
 
-      {/* Filter Toolbar */}
       <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "16px" }}>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+          {guru && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              <label style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan Kelas</label>
+              <select
+                className="form-input"
+                value={selectedTingkatan}
+                onChange={(e) => setSelectedTingkatan(e.target.value)}
+                style={{ padding: "6px 12px", fontSize: "0.82rem", width: "max-content", minWidth: "100px", appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+              >
+                {Array.from({ length: Math.max(1, guru.walikelas_tingkatan - 9) }, (_, i) => 10 + i).map(t => (
+                  <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>Kelas {t}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             <label style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tahun Ajaran</label>
