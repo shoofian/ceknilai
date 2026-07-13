@@ -809,7 +809,7 @@ export default function WaliKelasDashboard() {
                 <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflowY: "auto" }}>
                   
                   {/* Summary Stats Cards */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px", padding: "20px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+                  <div className="stats-grid" style={{ padding: "20px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
                     {[
                       { label: "Jumlah Siswa", value: allStudents.length, color: "var(--text-primary)", icon: "👥", bg: "rgba(255,255,255,0.03)" },
                       { label: "Rata-Rata", value: avg.toFixed(1), color: "var(--primary)", icon: "📈", bg: "rgba(59, 130, 246, 0.05)" },
@@ -943,6 +943,21 @@ export default function WaliKelasDashboard() {
         }
         .subject-card:hover .view-detail-label {
           text-decoration: underline;
+        }
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 12px;
+        }
+        @media (max-width: 992px) {
+          .stats-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+        @media (max-width: 576px) {
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
         }
       `}</style>
 
