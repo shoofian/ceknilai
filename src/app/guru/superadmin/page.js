@@ -29,6 +29,8 @@ export default function SuperadminPanel() {
   const [formNama, setFormNama] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPassword, setFormPassword] = useState("");
+  const [formIsLocked, setFormIsLocked] = useState(false);
+  const [formLockMessage, setFormLockMessage] = useState("");
 
   const router = useRouter();
   const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
@@ -93,6 +95,8 @@ export default function SuperadminPanel() {
     setFormNama("");
     setFormEmail("");
     setFormPassword("");
+    setFormIsLocked(false);
+    setFormLockMessage("");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -103,6 +107,8 @@ export default function SuperadminPanel() {
     setFormNama(guru.nama);
     setFormEmail(guru.email);
     setFormPassword(""); // Leave empty if not changing
+    setFormIsLocked(guru.is_locked || false);
+    setFormLockMessage(guru.lock_message || "");
     setErrorMsg("");
     setModalOpen(true);
   };
@@ -121,6 +127,8 @@ export default function SuperadminPanel() {
     const payload = {
       nama: formNama.trim(),
       email: formEmail.trim(),
+      is_locked: formIsLocked,
+      lock_message: formLockMessage,
     };
     
     if (formPassword) {
@@ -432,7 +440,16 @@ export default function SuperadminPanel() {
                     <tbody>
                       {filteredGurus.map((g) => (
                         <tr key={g.username}>
-                          <td style={{ fontWeight: "700" }}>{g.nama}</td>
+                          <td style={{ fontWeight: "700" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              {g.nama}
+                              {g.is_locked && (
+                                <span className="badge" style={{ backgroundColor: "rgba(239, 68, 68, 0.15)", color: "var(--danger)", border: "none", fontSize: "0.75rem", padding: "2px 6px", fontWeight: "700" }} title={g.lock_message || "Read-Only Locked"}>
+                                  🔒 Terkunci
+                                </span>
+                              )}
+                            </div>
+                          </td>
                           <td><code>{g.username}</code></td>
                           <td>{g.email}</td>
                           <td style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
@@ -535,6 +552,44 @@ export default function SuperadminPanel() {
                   required={!isEditing}
                 />
               </div>
+
+              {isEditing && (
+                <>
+                  <div className="form-group" style={{ marginBottom: 0, marginTop: "4px" }}>
+                    <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: "700" }}>
+                      <input
+                        type="checkbox"
+                        checked={formIsLocked}
+                        onChange={(e) => setFormIsLocked(e.target.checked)}
+                        style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                      />
+                      🔒 Kunci Akun (Read-Only)
+                    </label>
+                  </div>
+
+                  {formIsLocked && (
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Pesan Pemberitahuan Kunci</label>
+                      <textarea
+                        placeholder="Contoh: Akun Anda ditangguhkan sementara. Silakan lakukan pembayaran untuk melanjutkan langganan."
+                        className="form-input"
+                        value={formLockMessage}
+                        onChange={(e) => setFormLockMessage(e.target.value)}
+                        rows={3}
+                        style={{ 
+                          resize: "vertical", 
+                          fontSize: "0.85rem", 
+                          backgroundColor: "rgba(30, 41, 59, 0.7)", 
+                          color: "var(--text-primary)", 
+                          border: "1px solid var(--border-color)",
+                          padding: "8px 12px",
+                          borderRadius: "6px"
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
 
               {errorMsg && (
                 <div style={{ color: "var(--danger)", fontSize: "0.85rem", padding: "6px 0" }}>

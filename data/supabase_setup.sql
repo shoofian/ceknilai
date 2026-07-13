@@ -3,7 +3,9 @@ CREATE TABLE IF NOT EXISTS guru (
   username text PRIMARY KEY,
   password text NOT NULL,
   nama text NOT NULL,
-  email text NOT NULL
+  email text NOT NULL,
+  is_locked boolean DEFAULT false,
+  lock_message text DEFAULT NULL
 );
 
 -- 2. Tabel Kelas
@@ -53,3 +55,10 @@ CREATE TABLE IF NOT EXISTS log_aktivitas_guru (
   detail text NOT NULL,
   created_at timestamp with time zone DEFAULT now()
 );
+
+-- =========================================================================
+-- MIGRATION: RUN THIS IF YOU HAVE AN EXISTING DATABASE
+-- =========================================================================
+-- ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_locked boolean DEFAULT false;
+-- ALTER TABLE guru ADD COLUMN IF NOT EXISTS lock_message text DEFAULT NULL;
+

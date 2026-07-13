@@ -42,6 +42,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
+    const { isGuruLocked } = await import('@/lib/db');
+    if (await isGuruLocked(username)) {
+      return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
+    }
+
     const { nama, mataPelajaran, tahunAjaran, semester, tingkatan, kolomNilai, siswa, skemaPenilaian } = await request.json();
     if (!nama) {
       return NextResponse.json({ error: 'Nama kelas harus diisi' }, { status: 400 });

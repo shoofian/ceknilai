@@ -55,7 +55,7 @@ function mapKelasFromDb(k) {
 
 // === GURU PROFILE ===
 export async function getGuru(username = null) {
-  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
   try {
     let query = supabase.from('guru').select('*');
     if (username) {
@@ -64,12 +64,17 @@ export async function getGuru(username = null) {
     const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
       console.error('Error fetching guru:', error);
-      return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+      return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
     }
-    return data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+    const result = data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+    return {
+      ...result,
+      is_locked: result.is_locked ?? false,
+      lock_message: result.lock_message ?? null
+    };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
-    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
   }
 }
 
@@ -886,12 +891,27 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password');
+      .select('username, nama, email, password, is_locked, lock_message');
     if (error) {
+      // Fallback if columns don't exist yet
+      if (error.code === 'PGRST204' || error.message?.includes('is_locked') || error.message?.includes('lock_message')) {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('guru')
+          .select('username, nama, email, password');
+        if (fallbackError) {
+          console.error('Error fetching all gurus (fallback):', fallbackError);
+          return [];
+        }
+        return fallbackData.map(g => ({ ...g, is_locked: false, lock_message: null }));
+      }
       console.error('Error fetching all gurus:', error);
       return [];
     }
-    return data;
+    return data.map(g => ({
+      ...g,
+      is_locked: g.is_locked ?? false,
+      lock_message: g.lock_message ?? null
+    }));
   } catch (err) {
     console.error('Unexpected error in getAllGurus:', err);
     return [];
@@ -932,6 +952,12 @@ export async function updateGuruByAdmin(username, updatedData) {
     if (updatedData.password) {
       payload.password = updatedData.password;
     }
+    if (updatedData.is_locked !== undefined) {
+      payload.is_locked = !!updatedData.is_locked;
+    }
+    if (updatedData.lock_message !== undefined) {
+      payload.lock_message = updatedData.lock_message;
+    }
     const { data, error } = await supabase
       .from('guru')
       .update(payload)
@@ -946,6 +972,39 @@ export async function updateGuruByAdmin(username, updatedData) {
   } catch (err) {
     console.error('Unexpected error in updateGuruByAdmin:', err);
     throw err;
+  }
+}
+
+export async function isGuruLocked(username) {
+  if (!username) return false;
+  const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
+  if (SUPERADMIN_USERNAMES.includes(username.toLowerCase())) {
+    return false;
+  }
+  try {
+    const guru = await getGuru(username);
+    return !!(guru && guru.is_locked);
+  } catch (err) {
+    console.error('Error checking lock status:', err);
+    return false;
+  }
+}
+
+export async function getGuruLockStatus(username) {
+  if (!username) return { isLocked: false, lockMessage: null };
+  const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
+  if (SUPERADMIN_USERNAMES.includes(username.toLowerCase())) {
+    return { isLocked: false, lockMessage: null };
+  }
+  try {
+    const guru = await getGuru(username);
+    return {
+      isLocked: !!(guru && guru.is_locked),
+      lockMessage: guru ? guru.lock_message : null
+    };
+  } catch (err) {
+    console.error('Error getting lock status:', err);
+    return { isLocked: false, lockMessage: null };
   }
 }
 

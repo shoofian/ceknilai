@@ -24,6 +24,11 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
+    const { isGuruLocked } = await import('@/lib/db');
+    if (await isGuruLocked(username)) {
+      return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { groupName, colIds } = body;

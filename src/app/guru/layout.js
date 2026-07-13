@@ -154,8 +154,11 @@ export default function GuruLayout({ children }) {
 
         {/* User Quick Info */}
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "4px" }}>
-          <p style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-primary)" }}>{guru?.nama}</p>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{guru?.email}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-primary)" }}>{guru?.nama}</span>
+            {guru?.is_locked && <span title="Akun Terkunci (Read-Only)" style={{ fontSize: "0.85rem", cursor: "help" }}>🔒</span>}
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>{guru?.email}</p>
         </div>
 
         {/* Nav Links */}
@@ -269,6 +272,30 @@ export default function GuruLayout({ children }) {
 
         {/* Children Render */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {guru?.is_locked && (
+            <div 
+              style={{ 
+                background: "linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%)",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+                borderRadius: "12px",
+                padding: "16px 20px",
+                marginBottom: "24px",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                boxShadow: "0 4px 20px rgba(239, 68, 68, 0.05)",
+                backdropFilter: "blur(4px)"
+              }}
+            >
+              <div style={{ fontSize: "2rem", display: "flex", alignItems: "center" }}>🔒</div>
+              <div style={{ flex: 1 }}>
+                <h5 style={{ margin: "0 0 4px 0", color: "#f87171", fontWeight: "800", fontSize: "0.95rem" }}>Akun Sedang Dikunci (Read-Only)</h5>
+                <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>
+                  {guru.lock_message || "Akun Anda sementara dikunci oleh superadmin. Anda hanya dapat membaca data dan tidak dapat membuat, mengubah, atau menghapus data."}
+                </p>
+              </div>
+            </div>
+          )}
           {children}
         </div>
       </div>
