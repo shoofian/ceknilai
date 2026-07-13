@@ -953,7 +953,7 @@ export async function getAllGurus() {
       // Fallback
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('guru')
-        .select('username, nama, email, password, is_locked, lock_message');
+        .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, sekolah:sekolah_id(nama, npsn)');
       if (fallbackError) {
         // Fallback level 2
         const { data: fallbackData2, error: fallbackError2 } = await supabase
@@ -963,16 +963,17 @@ export async function getAllGurus() {
           console.log('Error fetching all gurus (fallback 2):', fallbackError2);
           return [];
         }
-        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' }));
+        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026', sekolah: null }));
       }
       return fallbackData.map(g => ({
         ...g,
         is_locked: g.is_locked ?? false,
         lock_message: g.lock_message ?? null,
-        sekolah_id: null,
-        walikelas_tingkatan: null,
-        walikelas_rombel_nama: null,
-        tahun_ajaran: '2025/2026'
+        sekolah_id: g.sekolah_id ?? null,
+        walikelas_tingkatan: g.walikelas_tingkatan ?? null,
+        walikelas_rombel_nama: g.walikelas_rombel_nama ?? null,
+        tahun_ajaran: '2025/2026',
+        sekolah: g.sekolah ?? null
       }));
     }
     return data.map(g => ({
