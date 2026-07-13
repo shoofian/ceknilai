@@ -255,9 +255,11 @@ export default function WaliKelasDashboard() {
     // Build CSV Content
     let csvContent = "\ufeff"; // BOM for excel utf-8
     csvContent += `LEGER NILAI CONSOLIDATED\n`;
+    const romanTingkatan = selectedTingkatan === "10" ? "X" : selectedTingkatan === "11" ? "XI" : selectedTingkatan === "12" ? "XII" : selectedTingkatan;
+    const cleanRombel = guru?.walikelas_rombel_nama?.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1") || "";
     csvContent += `Sekolah:;${guru?.sekolah?.nama || "-"}\n`;
     csvContent += `Wali Kelas:;${guru?.nama || "-"}\n`;
-    csvContent += `Rombel:;Kelas ${selectedTingkatan} ${guru?.walikelas_rombel_nama}\n`;
+    csvContent += `Rombel:;Kelas ${romanTingkatan} ${cleanRombel}\n`;
     csvContent += `Periode:;${tahunAjaran} - ${semester}\n\n`;
     
     // Headers
@@ -559,7 +561,7 @@ export default function WaliKelasDashboard() {
         <div>
           <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🏫 Dashboard Wali Kelas</span>
           <h2 style={{ fontSize: "1.6rem", fontWeight: "900", margin: "4px 0 6px" }}>
-            Kelas {selectedTingkatan} {guru?.walikelas_rombel_nama}
+            Kelas {selectedTingkatan === "10" ? "X" : selectedTingkatan === "11" ? "XI" : selectedTingkatan === "12" ? "XII" : selectedTingkatan} {guru?.walikelas_rombel_nama?.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1")}
           </h2>
           <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", margin: 0 }}>
             Instansi: <strong>{guru?.sekolah?.nama || "Sekolah Contoh"}</strong> • NPSN: <strong>{guru?.sekolah?.npsn || "-"}</strong>

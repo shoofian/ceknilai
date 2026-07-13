@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react";
 
 export default function ProfilGuru() {
+  const detectLevelInRombel = (tingkatan, rombel) => {
+    if (!tingkatan || !rombel) return false;
+    const r = rombel.toUpperCase().trim();
+    const tingkatanPattern = new RegExp(`^(${tingkatan}|${tingkatan === "10" ? "X" : tingkatan === "11" ? "XI" : "XII"})\\b`, 'i');
+    return tingkatanPattern.test(r) || r.startsWith("KELAS");
+  };
+
   const [loading, setLoading] = useState(true);
   const [nama, setNama] = useState("");
   const [username, setUsername] = useState("");
@@ -63,6 +70,22 @@ export default function ProfilGuru() {
     e.preventDefault();
     if (!nama.trim() || !username.trim() || !email.trim()) {
       setErrorMsg("Nama, username, dan email harus diisi.");
+      setSuccessMsg("");
+      return;
+    }
+
+    if (walikelasTingkatan && !walikelasRombelNama.trim()) {
+      setErrorMsg("Nama/No. Rombel perwalian harus diisi jika tingkatan wali kelas ditentukan.");
+      setSuccessMsg("");
+      return;
+    }
+    if (!walikelasTingkatan && walikelasRombelNama.trim()) {
+      setErrorMsg("Tingkatan wali kelas harus diisi jika Rombel perwalian ditentukan.");
+      setSuccessMsg("");
+      return;
+    }
+    if (detectLevelInRombel(walikelasTingkatan, walikelasRombelNama)) {
+      setErrorMsg("Format Rombel tidak sesuai. Cukup tulis nama rombel saja (contoh: \"MIPA 1\", bukan \"XI MIPA 1\" atau \"11 MIPA 1\").");
       setSuccessMsg("");
       return;
     }
@@ -324,6 +347,11 @@ export default function ProfilGuru() {
                   disabled={isLocked || !walikelasTingkatan}
                   required={!!walikelasTingkatan}
                 />
+                {detectLevelInRombel(walikelasTingkatan, walikelasRombelNama) && (
+                  <p style={{ color: "var(--danger)", fontSize: "0.75rem", margin: "4px 0 0 0" }}>
+                    ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{walikelasTingkatan} MIPA 1").
+                  </p>
+                )}
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
