@@ -20,7 +20,7 @@ export default function WaliKelasDashboard() {
   // Data States
   const [siswa, setSiswa] = useState([]);
   const [mataPelajaranList, setMataPelajaranList] = useState([]);
-  const [activeTab, setActiveTab] = useState("leger");
+  const [activeTab, setActiveTab] = useState("mapel");
   const [rombelList, setRombelList] = useState([]);
   const [selectedRombelKey, setSelectedRombelKey] = useState("");
 
@@ -359,6 +359,7 @@ export default function WaliKelasDashboard() {
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
         {[
+          { id: "mapel", label: "📚 Mata Pelajaran" },
           { id: "leger", label: "📊 Buku Leger Nilai" },
           { id: "catatan", label: "📝 Catatan Guru" },
           { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` }
@@ -389,7 +390,7 @@ export default function WaliKelasDashboard() {
         <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
           <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
         </div>
-      ) : activeTab === "leger" ? (
+      ) : activeTab === "mapel" ? (
         <div>
           {mataPelajaranList.length > 0 ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", padding: "10px 0" }}>
@@ -448,6 +449,84 @@ export default function WaliKelasDashboard() {
               <span style={{ fontSize: "2.5rem" }}>📭</span>
               <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Mapel Terdaftar</h4>
               <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas aktif atau mata pelajaran untuk rombel ini pada periode terpilih.</p>
+            </div>
+          )}
+        </div>
+      ) : activeTab === "leger" ? (
+        <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
+          {siswa.length > 0 ? (
+            <div style={{ overflowX: "auto" }}>
+              <table className="premium-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: "80px", minWidth: "80px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, background: "var(--bg-tertiary)" }}>Rank</th>
+                    <th style={{ width: "120px", minWidth: "120px", position: "sticky", left: "80px", zIndex: 12, background: "var(--bg-tertiary)" }}>NISN</th>
+                    <th style={{ width: "220px", minWidth: "220px", maxWidth: "220px", position: "sticky", left: "200px", zIndex: 12, background: "var(--bg-tertiary)", borderRight: "2px solid var(--border-color)" }}>Nama Siswa</th>
+                    {mataPelajaranList.map(mp => (
+                      <th key={mp.id} style={{ textAlign: "center", minWidth: "120px" }}>
+                        <div>{mp.mataPelajaran}</div>
+                        <div style={{ fontSize: "0.68rem", color: "var(--text-secondary)", fontWeight: "500", marginTop: "2px" }}>
+                          KKM: {mp.kkm} {!mp.isNilaiAkhirGenerated && "⏳"}
+                        </div>
+                      </th>
+                    ))}
+                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Rata-Rata</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {siswa.map(s => (
+                    <tr key={s.nisn}>
+                      <td style={{ textAlign: "center", fontWeight: "800", position: "sticky", left: 0, zIndex: 10, background: "var(--bg-secondary)" }}>
+                        <span style={{ 
+                          display: "inline-flex", 
+                          width: "24px", 
+                          height: "24px", 
+                          alignItems: "center", 
+                          justifyContent: "center",
+                          borderRadius: "50%",
+                          backgroundColor: s.ranking === 1 ? "rgba(251, 191, 36, 0.2)" : s.ranking === 2 ? "rgba(226, 232, 240, 0.2)" : s.ranking === 3 ? "rgba(180, 83, 9, 0.15)" : "transparent",
+                          color: s.ranking === 1 ? "#fbbf24" : s.ranking === 2 ? "#e2e8f0" : s.ranking === 3 ? "#b45309" : "var(--text-primary)"
+                        }}>
+                          {s.ranking}
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: "monospace", fontSize: "0.85rem", position: "sticky", left: "80px", zIndex: 10, background: "var(--bg-secondary)" }}>{s.nisn}</td>
+                      <td style={{ fontWeight: "700", position: "sticky", left: "200px", zIndex: 10, background: "var(--bg-secondary)", borderRight: "2px solid var(--border-color)" }}>{s.nama}</td>
+                      {mataPelajaranList.map(mp => {
+                        const score = s.nilaiMapel[mp.mataPelajaran];
+                        const isUnderKkm = score !== undefined && score !== null && score < mp.kkm;
+                        return (
+                          <td 
+                            key={mp.id} 
+                            style={{ 
+                              textAlign: "center", 
+                              fontWeight: "700",
+                              color: isUnderKkm ? "var(--danger)" : "var(--text-primary)",
+                              backgroundColor: isUnderKkm ? "rgba(239, 68, 68, 0.02)" : "transparent"
+                            }}
+                          >
+                            {score !== undefined && score !== null ? (
+                              <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <span>{score.toFixed(2)}</span>
+                                {isUnderKkm && <span style={{ fontSize: "0.65rem", color: "var(--danger)" }} title="Di bawah KKM">⚠️</span>}
+                              </div>
+                            ) : (
+                              <span style={{ color: "var(--text-muted)", fontWeight: "400" }}>-</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                      <td style={{ textAlign: "center", fontWeight: "900", backgroundColor: "rgba(59, 130, 246, 0.02)" }}>{s.rataRata.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+              <span style={{ fontSize: "2.5rem" }}>📭</span>
+              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Nilai</h4>
+              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas aktif atau nilai terinput untuk rombel ini pada periode terpilih.</p>
             </div>
           )}
         </div>
