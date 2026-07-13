@@ -18,22 +18,24 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Sesi tidak valid' }, { status: 401 });
     }
     
-    if (!guru.walikelas_tingkatan || !guru.walikelas_rombel_nama) {
-      return NextResponse.json({ error: 'Akses ditolak. Akun Anda bukan Wali Kelas.' }, { status: 403 });
+    if (!guru.sekolah_id) {
+      return NextResponse.json({ error: 'Akses ditolak. Asal sekolah Anda belum diatur. Harap setel sekolah Anda di halaman profil terlebih dahulu.' }, { status: 400 });
     }
     
     const { searchParams } = new URL(request.url);
+    const tingkatan = searchParams.get('tingkatan');
+    const rombelNama = searchParams.get('rombel_nama');
     const tahunAjaran = searchParams.get('tahun_ajaran');
     const semester = searchParams.get('semester');
     
-    if (!tahunAjaran || !semester) {
-      return NextResponse.json({ error: 'Parameter tahun_ajaran dan semester wajib diisi' }, { status: 400 });
+    if (!tingkatan || !rombelNama || !tahunAjaran || !semester) {
+      return NextResponse.json({ error: 'Parameter tingkatan, rombel_nama, tahun_ajaran, dan semester wajib diisi' }, { status: 400 });
     }
     
     const leger = await getLegerData(
       guru.sekolah_id,
-      guru.walikelas_tingkatan,
-      guru.walikelas_rombel_nama,
+      Number(tingkatan),
+      rombelNama,
       tahunAjaran,
       semester
     );
