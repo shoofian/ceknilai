@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 
 export default function CetakLaporan() {
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(true);
   const [kelas, setKelas] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedClass, setSelectedClass] = useState(null);
@@ -43,6 +44,9 @@ export default function CetakLaporan() {
         if (response.ok) {
           const data = await response.json();
           setGuruProfile(data);
+          if (data && data.username.toLowerCase() !== "shoofian") {
+            setIsAuthorized(false);
+          }
         }
       } catch (err) {
         console.error("Gagal memuat profil guru", err);
@@ -332,6 +336,17 @@ export default function CetakLaporan() {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="container-card animate-fade-in" style={{ padding: "40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "300px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", background: "var(--bg-secondary)" }}>
+        <h2 style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--danger)", marginBottom: "12px" }}>Akses Terbatas</h2>
+        <p style={{ color: "var(--text-secondary)", maxWidth: "500px", lineHeight: "1.6" }}>
+          Fitur Cetak Laporan saat ini masih dalam tahap uji coba terbatas dan hanya dapat diakses oleh akun dengan username <strong>shoofian</strong>.
+        </p>
       </div>
     );
   }

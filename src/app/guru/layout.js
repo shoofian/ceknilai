@@ -72,9 +72,13 @@ export default function GuruLayout({ children }) {
     { name: "🏠 Beranda", path: "/guru" },
     { name: "📚 Daftar Kelas", path: "/guru/kelas" },
     { name: "📁 Arsip Kelas", path: "/guru/arsip" },
-    { name: "🖨️ Cetak Laporan", path: "/guru/laporan" },
-    { name: "👤 Profil Saya", path: "/guru/profil" },
   ];
+
+  if (guru && guru.username.toLowerCase() === "shoofian") {
+    navItems.push({ name: "🖨️ Cetak Laporan", path: "/guru/laporan" });
+  }
+
+  navItems.push({ name: "👤 Profil Saya", path: "/guru/profil" });
 
   if (guru) {
     navItems.splice(2, 0, { name: "👨‍🏫 Wali Kelas", path: "/guru/walikelas" });
