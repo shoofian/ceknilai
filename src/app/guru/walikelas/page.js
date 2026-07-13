@@ -385,8 +385,8 @@ export default function WaliKelasDashboard() {
                   const sc = student.nilai?.[sub.id];
                   if (sc !== undefined && sc !== null && sc !== "") {
                     if (col.hitungMetode === "persentase") {
-                      subTotal += Number(sc) * (sub.bobot / 100);
-                      subFilledWeight += sub.bobot;
+                      subTotal += Number(sc) * (sub.bobot || 0);
+                      subFilledWeight += (sub.bobot || 0);
                     } else { subTotal += Number(sc); }
                     subFilledCount++;
                   }
