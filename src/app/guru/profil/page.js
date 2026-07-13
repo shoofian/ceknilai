@@ -32,6 +32,7 @@ export default function ProfilGuru() {
   // Wali Kelas selection states
   const [walikelasTingkatan, setWalikelasTingkatan] = useState("");
   const [walikelasRombelNama, setWalikelasRombelNama] = useState("");
+  const [walikelasTahunAjaran, setWalikelasTahunAjaran] = useState("2025/2026");
 
   useEffect(() => {
     const fetchProfil = async () => {
@@ -46,6 +47,7 @@ export default function ProfilGuru() {
           setSekolahSearchQuery(data.sekolah?.nama || "");
           setWalikelasTingkatan(data.walikelas_tingkatan || "");
           setWalikelasRombelNama(data.walikelas_rombel_nama || "");
+          setWalikelasTahunAjaran(data.tahun_ajaran || "2025/2026");
           setIsLocked(!!data.is_locked);
         }
       } catch (err) {
@@ -76,7 +78,8 @@ export default function ProfilGuru() {
       email: email.trim(),
       sekolah_id: sekolahId || null,
       walikelas_tingkatan: walikelasTingkatan ? Number(walikelasTingkatan) : null,
-      walikelas_rombel_nama: walikelasTingkatan && cleanRombel ? cleanRombel : null
+      walikelas_rombel_nama: walikelasTingkatan && cleanRombel ? cleanRombel : null,
+      tahun_ajaran: walikelasTahunAjaran
     };
 
     // Validasi penggantian password jika diisi
@@ -290,7 +293,7 @@ export default function ProfilGuru() {
             </div>
 
             {/* Wali Rombel */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "12px" }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Tingkatan Wali Kelas</label>
                 <select
@@ -321,6 +324,22 @@ export default function ProfilGuru() {
                   disabled={isLocked || !walikelasTingkatan}
                   required={!!walikelasTingkatan}
                 />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tahun Pelajaran Wali</label>
+                <select
+                  className="form-input"
+                  value={walikelasTahunAjaran}
+                  onChange={(e) => setWalikelasTahunAjaran(e.target.value)}
+                  disabled={isLocked || !walikelasTingkatan}
+                  required={!!walikelasTingkatan}
+                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                >
+                  <option value="2024/2025">2024/2025</option>
+                  <option value="2025/2026">2025/2026</option>
+                  <option value="2026/2027">2026/2027</option>
+                </select>
               </div>
             </div>
  

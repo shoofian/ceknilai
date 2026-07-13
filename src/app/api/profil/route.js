@@ -40,7 +40,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
     }
 
-    const { nama, username, email, oldPassword, newPassword, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama } = await request.json();
+    const { nama, username, email, oldPassword, newPassword, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran } = await request.json();
 
     if (!nama || !username || !email) {
       return NextResponse.json({ error: 'Nama, username, dan email harus diisi' }, { status: 400 });
@@ -54,7 +54,8 @@ export async function POST(request) {
       email: email.trim(),
       sekolah_id: sekolah_id || null,
       walikelas_tingkatan: walikelas_tingkatan !== undefined ? (walikelas_tingkatan !== null ? Number(walikelas_tingkatan) : null) : undefined,
-      walikelas_rombel_nama: walikelas_rombel_nama !== undefined ? (walikelas_rombel_nama ? walikelas_rombel_nama.trim() : null) : undefined
+      walikelas_rombel_nama: walikelas_rombel_nama !== undefined ? (walikelas_rombel_nama ? walikelas_rombel_nama.trim() : null) : undefined,
+      tahun_ajaran: tahun_ajaran !== undefined ? (tahun_ajaran ? tahun_ajaran.trim() : '2025/2026') : undefined
     };
 
     // Jika ingin mengganti password

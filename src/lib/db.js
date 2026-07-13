@@ -67,7 +67,7 @@ function mapKelasFromDb(k) {
 
 // === GURU PROFILE ===
 export async function getGuru(username = null) {
-  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null };
+  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' };
   try {
     let query = supabase.from('guru').select('*, sekolah:sekolah_id(nama, npsn)');
     if (username) {
@@ -83,7 +83,7 @@ export async function getGuru(username = null) {
       const { data: fbData, error: fbError } = await fallbackQuery.limit(1).maybeSingle();
       if (fbError) {
         console.error('Error fetching guru (fallback):', fbError);
-        return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null };
+        return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, tahun_ajaran: '2025/2026' };
       }
       const result = fbData || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
       return {
@@ -93,6 +93,7 @@ export async function getGuru(username = null) {
         sekolah_id: null,
         walikelas_tingkatan: null,
         walikelas_rombel_nama: null,
+        tahun_ajaran: '2025/2026',
         sekolah: null
       };
     }
@@ -104,11 +105,12 @@ export async function getGuru(username = null) {
       sekolah_id: result.sekolah_id ?? null,
       walikelas_tingkatan: result.walikelas_tingkatan ?? null,
       walikelas_rombel_nama: result.walikelas_rombel_nama ?? null,
+      tahun_ajaran: result.tahun_ajaran ?? '2025/2026',
       sekolah: result.sekolah ?? null
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
-    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null };
+    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' };
   }
 }
 
@@ -141,6 +143,9 @@ export async function updateGuru(currentUsername, updatedProfile) {
     }
     if (updates.walikelas_rombel_nama !== undefined) {
       updatesPayload.walikelas_rombel_nama = updates.walikelas_rombel_nama;
+    }
+    if (updates.tahun_ajaran !== undefined) {
+      updatesPayload.tahun_ajaran = updates.tahun_ajaran;
     }
 
     const { data, error } = await supabase
@@ -943,7 +948,7 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, sekolah:sekolah_id(nama, npsn)');
+      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, sekolah:sekolah_id(nama, npsn)');
     if (error) {
       // Fallback
       const { data: fallbackData, error: fallbackError } = await supabase
@@ -955,10 +960,10 @@ export async function getAllGurus() {
           .from('guru')
           .select('username, nama, email, password');
         if (fallbackError2) {
-          console.error('Error fetching all gurus (fallback 2):', fallbackError2);
+          console.log('Error fetching all gurus (fallback 2):', fallbackError2);
           return [];
         }
-        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null }));
+        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' }));
       }
       return fallbackData.map(g => ({
         ...g,
@@ -966,7 +971,8 @@ export async function getAllGurus() {
         lock_message: g.lock_message ?? null,
         sekolah_id: null,
         walikelas_tingkatan: null,
-        walikelas_rombel_nama: null
+        walikelas_rombel_nama: null,
+        tahun_ajaran: '2025/2026'
       }));
     }
     return data.map(g => ({
@@ -976,6 +982,7 @@ export async function getAllGurus() {
       sekolah_id: g.sekolah_id ?? null,
       walikelas_tingkatan: g.walikelas_tingkatan ?? null,
       walikelas_rombel_nama: g.walikelas_rombel_nama ?? null,
+      tahun_ajaran: g.tahun_ajaran ?? '2025/2026',
       sekolah: g.sekolah ?? null
     }));
   } catch (err) {
@@ -1032,6 +1039,9 @@ export async function updateGuruByAdmin(username, updatedData) {
     }
     if (updatedData.walikelas_rombel_nama !== undefined) {
       payload.walikelas_rombel_nama = updatedData.walikelas_rombel_nama ? normalizeRombelNama(updatedData.walikelas_rombel_nama) : null;
+    }
+    if (updatedData.tahun_ajaran !== undefined) {
+      payload.tahun_ajaran = updatedData.tahun_ajaran || '2025/2026';
     }
     const { data, error } = await supabase
       .from('guru')

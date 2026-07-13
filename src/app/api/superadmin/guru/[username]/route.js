@@ -22,7 +22,7 @@ export async function PATCH(request, { params }) {
     }
 
     const { username } = await params;
-    const { nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama } = await request.json();
+    const { nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran } = await request.json();
 
     if (!nama || !email) {
       return NextResponse.json({ error: 'Nama dan email harus diisi' }, { status: 400 });
@@ -33,7 +33,7 @@ export async function PATCH(request, { params }) {
     }
 
     try {
-      const updatedGuru = await updateGuruByAdmin(username, { nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama });
+      const updatedGuru = await updateGuruByAdmin(username, { nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran });
       const { password: _, ...sanitized } = updatedGuru;
       return NextResponse.json({ success: true, user: sanitized });
     } catch (dbError) {

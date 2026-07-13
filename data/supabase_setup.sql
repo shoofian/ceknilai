@@ -120,6 +120,7 @@ ALTER TABLE kelas ADD COLUMN IF NOT EXISTS nama_kustom text DEFAULT NULL;
 ALTER TABLE guru DROP COLUMN IF EXISTS walikelas_rombel;
 ALTER TABLE guru ADD COLUMN IF NOT EXISTS walikelas_tingkatan integer DEFAULT NULL;
 ALTER TABLE guru ADD COLUMN IF NOT EXISTS walikelas_rombel_nama text DEFAULT NULL;
+ALTER TABLE guru ADD COLUMN IF NOT EXISTS tahun_ajaran text DEFAULT '2025/2026';
 
 
 

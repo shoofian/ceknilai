@@ -28,6 +28,11 @@ export default function WaliKelasDashboard() {
   const [loadingSubjectDetail, setLoadingSubjectDetail] = useState(false);
   const [subjectDetailModalOpen, setSubjectDetailModalOpen] = useState(false);
 
+  // Perpaduan Semester States
+  const [loadingPerpaduan, setLoadingPerpaduan] = useState(false);
+  const [perpaduanSiswa, setPerpaduanSiswa] = useState([]);
+  const [perpaduanMapelList, setPerpaduanMapelList] = useState([]);
+
   // Options
   const TAHUN_AJARAN_OPTIONS = ["2023/2024", "2024/2025", "2025/2026", "2026/2027"];
   const SEMESTER_OPTIONS = ["Ganjil", "Genap"];
@@ -65,6 +70,7 @@ export default function WaliKelasDashboard() {
   };
 
   useEffect(() => {
+    setMounted(true);
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/auth/session");
@@ -72,6 +78,9 @@ export default function WaliKelasDashboard() {
           const data = await res.json();
           if (data.loggedIn && data.user) {
             setGuru(data.user);
+            if (data.user.tahun_ajaran) {
+              setTahunAjaran(data.user.tahun_ajaran);
+            }
             if (!data.user.sekolah_id) {
               setErrorMsg("Asal sekolah Anda belum diatur. Silakan setel sekolah Anda di halaman Profil terlebih dahulu untuk menggunakan dashboard ini.");
             } else if (!data.user.walikelas_tingkatan || !data.user.walikelas_rombel_nama) {
@@ -120,6 +129,73 @@ export default function WaliKelasDashboard() {
 
     fetchLeger();
   }, [authorized, guru, selectedTingkatan, tahunAjaran, semester]);
+
+  // Fetch Perpaduan (Merged Semester) Data
+  useEffect(() => {
+    if (!authorized || !guru || !selectedTingkatan || activeTab !== "perpaduan") return;
+
+    const fetchPerpaduanData = async () => {
+      setLoadingPerpaduan(true);
+      try {
+        const [resGanjil, resGenap] = await Promise.all([
+          fetch(`/api/walikelas/leger?tingkatan=${selectedTingkatan}&rombel_nama=${guru.walikelas_rombel_nama}&tahun_ajaran=${tahunAjaran}&semester=Ganjil`),
+          fetch(`/api/walikelas/leger?tingkatan=${selectedTingkatan}&rombel_nama=${guru.walikelas_rombel_nama}&tahun_ajaran=${tahunAjaran}&semester=Genap`)
+        ]);
+
+        let ganjilData = { siswa: [], mataPelajaranList: [] };
+        let genapData = { siswa: [], mataPelajaranList: [] };
+
+        if (resGanjil.ok) ganjilData = await resGanjil.json();
+        if (resGenap.ok) genapData = await resGenap.json();
+
+        // 1. Unique subject list
+        const mapelSet = new Set();
+        const mapelInfo = {};
+        [...ganjilData.mataPelajaranList, ...genapData.mataPelajaranList].forEach(mp => {
+          mapelSet.add(mp.mataPelajaran);
+          mapelInfo[mp.mataPelajaran] = {
+            mataPelajaran: mp.mataPelajaran,
+            kkm: mp.kkm || 75
+          };
+        });
+        const uniqueMapels = Array.from(mapelSet).map(name => mapelInfo[name]);
+        setPerpaduanMapelList(uniqueMapels);
+
+        // 2. Merged students list
+        const mergedStudentsMap = {};
+        
+        ganjilData.siswa.forEach(s => {
+          mergedStudentsMap[s.nisn] = {
+            nisn: s.nisn,
+            nama: s.nama,
+            nilaiGanjil: s.nilaiMapel || {},
+            nilaiGenap: {}
+          };
+        });
+
+        genapData.siswa.forEach(s => {
+          if (!mergedStudentsMap[s.nisn]) {
+            mergedStudentsMap[s.nisn] = {
+              nisn: s.nisn,
+              nama: s.nama,
+              nilaiGanjil: {},
+              nilaiGenap: s.nilaiMapel || {}
+            };
+          } else {
+            mergedStudentsMap[s.nisn].nilaiGenap = s.nilaiMapel || {};
+          }
+        });
+
+        setPerpaduanSiswa(Object.values(mergedStudentsMap));
+      } catch (err) {
+        console.error("Kesalahan koneksi API perpaduan", err);
+      } finally {
+        setLoadingPerpaduan(false);
+      }
+    };
+
+    fetchPerpaduanData();
+  }, [authorized, guru, selectedTingkatan, tahunAjaran, activeTab]);
 
   const handleViewSubjectDetail = async (classId) => {
     setLoadingSubjectDetail(true);
@@ -300,28 +376,29 @@ export default function WaliKelasDashboard() {
             const kkm = selectedSubjectDetail.skemaPenilaian?.kkm || 75;
             const columns = selectedSubjectDetail.kolomNilai || [];
 
+            const getColScore = (student, col) => {
+              if (col.subKolom && col.subKolom.length > 0) {
+                let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
+                col.subKolom.forEach(sub => {
+                  const sc = student.nilai?.[sub.id];
+                  if (sc !== undefined && sc !== null && sc !== "") {
+                    if (col.hitungMetode === "persentase") {
+                      subTotal += Number(sc) * (sub.bobot / 100);
+                      subFilledWeight += sub.bobot;
+                    } else { subTotal += Number(sc); }
+                    subFilledCount++;
+                  }
+                });
+                if (subFilledCount === 0) return 0;
+                return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
+              } else {
+                const sc = student.nilai?.[col.id];
+                return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
+              }
+            };
+
             const calcFinal = (s) => {
               let total = 0;
-              const getColScore = (student, col) => {
-                if (col.subKolom && col.subKolom.length > 0) {
-                  let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
-                  col.subKolom.forEach(sub => {
-                    const sc = student.nilai?.[sub.id];
-                    if (sc !== undefined && sc !== null && sc !== "") {
-                      if (col.hitungMetode === "persentase") {
-                        subTotal += Number(sc) * (sub.bobot / 100);
-                        subFilledWeight += sub.bobot;
-                      } else { subTotal += Number(sc); }
-                      subFilledCount++;
-                    }
-                  });
-                  if (subFilledCount === 0) return 0;
-                  return col.hitungMetode === "persentase" ? (subFilledWeight > 0 ? subTotal / subFilledWeight : 0) : (subTotal / subFilledCount);
-                } else {
-                  const sc = student.nilai?.[col.id];
-                  return (sc !== undefined && sc !== null && sc !== "") ? Number(sc) : 0;
-                }
-              };
               columns.forEach(col => { total += getColScore(s, col) * (col.bobot / 100); });
               return total + (Number(s.nilai?._katrol) || 0);
             };
@@ -507,17 +584,10 @@ export default function WaliKelasDashboard() {
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <label style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tahun Ajaran</label>
-            <select
-              className="form-input"
-              value={tahunAjaran}
-              onChange={(e) => setTahunAjaran(e.target.value)}
-              style={{ padding: "6px 12px", fontSize: "0.82rem", width: "max-content", minWidth: "120px", appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-            >
-              {TAHUN_AJARAN_OPTIONS.map(ta => (
-                <option key={ta} value={ta} style={{ backgroundColor: "var(--bg-secondary)" }}>{ta}</option>
-              ))}
-            </select>
+            <label style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tahun Pelajaran</label>
+            <div style={{ padding: "6px 12px", fontSize: "0.82rem", fontWeight: "bold", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", display: "flex", alignItems: "center", height: "34px" }}>
+              📅 {tahunAjaran}
+            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
@@ -588,7 +658,8 @@ export default function WaliKelasDashboard() {
           { id: "mapel", label: "📚 Mata Pelajaran" },
           { id: "leger", label: "📊 Buku Leger Nilai" },
           { id: "catatan", label: "📝 Catatan Guru" },
-          { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` }
+          { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` },
+          { id: "perpaduan", label: "🌓 Perpaduan Semester" }
         ].map(tab => (
           <button
             key={tab.id}
@@ -866,7 +937,7 @@ export default function WaliKelasDashboard() {
             </div>
           )}
         </div>
-      ) : (
+      ) : activeTab === "ews" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* High Risk Section */}
@@ -930,7 +1001,119 @@ export default function WaliKelasDashboard() {
           </div>
 
         </div>
-      )}
+      ) : activeTab === "perpaduan" ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }} className="no-print">
+          <div className="glass-card" style={{ padding: "20px" }}>
+            <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "6px" }}>🌓 Perpaduan Semester (Ganjil &amp; Genap)</h4>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: 0 }}>
+              Menampilkan gabungan nilai rata-rata siswa untuk Semester Ganjil dan Semester Genap pada Tahun Pelajaran {tahunAjaran}.
+            </p>
+          </div>
+
+          {loadingPerpaduan ? (
+            <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+              <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+            </div>
+          ) : perpaduanSiswa.length > 0 ? (
+            <div style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflowX: "auto", backgroundColor: "var(--bg-primary)" }}>
+              <table className="premium-table" style={{ margin: 0, width: "100%" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                    <th rowSpan={2} style={{ width: "60px", textAlign: "center", verticalAlign: "middle" }}>No</th>
+                    <th rowSpan={2} style={{ width: "130px", verticalAlign: "middle" }}>NISN</th>
+                    <th rowSpan={2} style={{ minWidth: "180px", verticalAlign: "middle" }}>Nama Siswa</th>
+                    {perpaduanMapelList.map(mp => (
+                      <th key={mp.mataPelajaran} colSpan={3} style={{ textAlign: "center", borderBottom: "1px solid var(--border-color)" }}>
+                        {mp.mataPelajaran} (KKM: {mp.kkm})
+                      </th>
+                    ))}
+                    <th rowSpan={2} style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)", verticalAlign: "middle" }}>Rata Akhir (Ganjil)</th>
+                    <th rowSpan={2} style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(16, 185, 129, 0.05)", verticalAlign: "middle" }}>Rata Akhir (Genap)</th>
+                    <th rowSpan={2} style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(124, 58, 237, 0.08)", verticalAlign: "middle" }}>Rata Akhir (Tahun)</th>
+                  </tr>
+                  <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                    {perpaduanMapelList.map(mp => (
+                      <Fragment key={mp.mataPelajaran}>
+                        <th style={{ textAlign: "center", fontSize: "0.7rem", padding: "6px 4px", fontWeight: "normal" }}>Gj</th>
+                        <th style={{ textAlign: "center", fontSize: "0.7rem", padding: "6px 4px", fontWeight: "normal" }}>Gp</th>
+                        <th style={{ textAlign: "center", fontSize: "0.7rem", padding: "6px 4px", fontWeight: "bold" }}>Avg</th>
+                      </Fragment>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {perpaduanSiswa.map((s, index) => {
+                    const ganjilScores = Object.values(s.nilaiGanjil).map(Number).filter(v => !isNaN(v));
+                    const genapScores = Object.values(s.nilaiGenap).map(Number).filter(v => !isNaN(v));
+                    
+                    const ganjilAvg = ganjilScores.length > 0 ? ganjilScores.reduce((a, b) => a + b, 0) / ganjilScores.length : null;
+                    const genapAvg = genapScores.length > 0 ? genapScores.reduce((a, b) => a + b, 0) / genapScores.length : null;
+
+                    const yearSubjectScores = perpaduanMapelList.map(mp => {
+                      const gj = s.nilaiGanjil[mp.mataPelajaran];
+                      const gp = s.nilaiGenap[mp.mataPelajaran];
+                      const vals = [];
+                      if (gj !== undefined && gj !== null && gj !== "") vals.push(Number(gj));
+                      if (gp !== undefined && gp !== null && gp !== "") vals.push(Number(gp));
+                      return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+                    }).filter(v => v !== null);
+
+                    const yearAvg = yearSubjectScores.length > 0 ? yearSubjectScores.reduce((a, b) => a + b, 0) / yearSubjectScores.length : null;
+
+                    return (
+                      <tr key={s.nisn} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                        <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
+                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-secondary)" }}>{s.nisn}</td>
+                        <td style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</td>
+                        {perpaduanMapelList.map(mp => {
+                          const gjVal = s.nilaiGanjil[mp.mataPelajaran];
+                          const gpVal = s.nilaiGenap[mp.mataPelajaran];
+                          
+                          const gjNum = gjVal !== undefined && gjVal !== null && gjVal !== "" ? Number(gjVal) : null;
+                          const gpNum = gpVal !== undefined && gpVal !== null && gpVal !== "" ? Number(gpVal) : null;
+                          
+                          const subjectAvg = (gjNum !== null || gpNum !== null) 
+                            ? ((gjNum || 0) + (gpNum || 0)) / ((gjNum !== null ? 1 : 0) + (gpNum !== null ? 1 : 0))
+                            : null;
+
+                          return (
+                            <Fragment key={mp.mataPelajaran}>
+                              <td style={{ textAlign: "center", fontSize: "0.82rem", color: gjNum && gjNum < mp.kkm ? "var(--danger)" : "var(--text-primary)" }}>
+                                {gjNum !== null ? gjNum.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                              </td>
+                              <td style={{ textAlign: "center", fontSize: "0.82rem", color: gpNum && gpNum < mp.kkm ? "var(--danger)" : "var(--text-primary)" }}>
+                                {gpNum !== null ? gpNum.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                              </td>
+                              <td style={{ textAlign: "center", fontSize: "0.82rem", fontWeight: "700", backgroundColor: "var(--bg-secondary)", color: subjectAvg && subjectAvg < mp.kkm ? "var(--danger)" : "var(--primary)" }}>
+                                {subjectAvg !== null ? subjectAvg.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                              </td>
+                            </Fragment>
+                          );
+                        })}
+                        <td style={{ textAlign: "center", fontWeight: "700", backgroundColor: "rgba(59, 130, 246, 0.02)" }}>
+                          {ganjilAvg !== null ? ganjilAvg.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "700", backgroundColor: "rgba(16, 185, 129, 0.02)" }}>
+                          {genapAvg !== null ? genapAvg.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "900", color: "var(--primary)", backgroundColor: "rgba(124, 58, 237, 0.04)" }}>
+                          {yearAvg !== null ? yearAvg.toFixed(1) : <span style={{ color: "var(--text-muted)" }}>-</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="glass-card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+              <span style={{ fontSize: "2.5rem" }}>📭</span>
+              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data</h4>
+              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas aktif atau nilai terinput untuk rombel ini pada periode terpilih.</p>
+            </div>
+          )}
+        </div>
+      ) : null}
 
             {renderModal()}
 
