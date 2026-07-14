@@ -126,7 +126,7 @@ export async function POST(request, { params }) {
       }
 
       const cleanNisn = nisn.toString().trim();
-      const cleanNama = nama.toString().trim();
+      const cleanNama = nama.toString().trim().replace(/^muhammad\b\.?/i, 'M.');
       
       // Parse tanggal lahir dengan fungsi robust helper
       const cleanTanggal = parseDateToYmd(tanggalLahir);

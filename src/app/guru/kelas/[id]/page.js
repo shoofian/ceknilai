@@ -1791,7 +1791,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           if (!cols || cols.length === 0 || !cols[nisnIdx]) continue;
           
           const nisnVal = String(cols[nisnIdx]).trim();
-          const namaVal = String(cols[namaIdx]).trim();
+          const namaVal = String(cols[namaIdx]).trim().replace(/^muhammad\b\.?/i, 'M.');
           const tglVal = String(cols[tglIdx]).trim();
           
           if (!nisnVal || !namaVal || !tglVal) continue;

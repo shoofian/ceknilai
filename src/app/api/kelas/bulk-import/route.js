@@ -130,7 +130,7 @@ export async function POST(request) {
 
               formattedStudents.push({
                 nisn: nisn.toString().trim(),
-                nama: sNama.toString().trim(),
+                nama: sNama.toString().trim().replace(/^muhammad\b\.?/i, 'M.'),
                 tanggalLahir: cleanTanggal,
                 nilai: nilai || {},
                 catatan: catatan || '',
