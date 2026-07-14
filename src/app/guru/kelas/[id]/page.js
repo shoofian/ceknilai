@@ -145,10 +145,10 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const formatNameForMobile = (name, isExpanded) => {
     if (!name) return "";
-    if (!isMobile || isExpanded) return name;
+    if (!isMobile || !isExpanded) return name;
     
     const words = name.trim().split(/\s+/);
-    if (words.length <= 3) return name;
+    if (words.length <= 2) return name;
     
     const firstTwo = words.slice(0, 2).join(" ");
     const remainingInitials = words.slice(2).map(w => w ? w[0].toUpperCase() + "." : "").join(" ");
