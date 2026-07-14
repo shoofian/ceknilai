@@ -23,6 +23,7 @@ export default function SuperadminPanel() {
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isSavingGuru, setIsSavingGuru] = useState(false);
   
   // Guru Form Fields
   const [formUsername, setFormUsername] = useState("");
@@ -112,6 +113,7 @@ export default function SuperadminPanel() {
     setFormWalikelasRombelNama("");
     setSekolahSearchQuery("");
     setErrorMsg("");
+    setIsSavingGuru(false);
     setModalOpen(true);
   };
 
@@ -128,6 +130,7 @@ export default function SuperadminPanel() {
     setFormWalikelasRombelNama(guru.walikelas_rombel_nama || "");
     setSekolahSearchQuery(guru.sekolah?.nama || "");
     setErrorMsg("");
+    setIsSavingGuru(false);
     setModalOpen(true);
   };
 
@@ -160,6 +163,7 @@ export default function SuperadminPanel() {
       payload.password = formPassword;
     }
 
+    setIsSavingGuru(true);
     try {
       let res;
       if (isEditing) {
@@ -187,6 +191,8 @@ export default function SuperadminPanel() {
     } catch (err) {
       console.error(err);
       setErrorMsg("Terjadi kesalahan koneksi server.");
+    } finally {
+      setIsSavingGuru(false);
     }
   };
 
@@ -724,11 +730,20 @@ export default function SuperadminPanel() {
               )}
 
               <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
-                <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary">
+                <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" disabled={isSavingGuru}>
                   Batal
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  {isEditing ? "Simpan Perubahan" : "Buat Akun"}
+                <button type="submit" className="btn btn-primary" disabled={isSavingGuru}>
+                  {isSavingGuru ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Memproses...
+                    </>
+                  ) : isEditing ? (
+                    "Simpan Perubahan"
+                  ) : (
+                    "Buat Akun"
+                  )}
                 </button>
               </div>
             </form>

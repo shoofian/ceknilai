@@ -20,6 +20,7 @@ export default function KelolaKelas() {
   const [semester, setSemester] = useState("");
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Filter States
   const [filterTingkatan, setFilterTingkatan] = useState("Semua");
@@ -153,6 +154,7 @@ export default function KelolaKelas() {
     setTahunAjaran("");
     setSemester("");
     setError("");
+    setIsSaving(false);
     setModalOpen(true);
   };
 
@@ -175,6 +177,7 @@ export default function KelolaKelas() {
     setTahunAjaran(TAHUN_AJARAN_OPTIONS.includes(taVal) ? taVal : taVal);
     setSemester(k.semester || "Ganjil");
     setError("");
+    setIsSaving(false);
     setModalOpen(true);
   };
 
@@ -213,6 +216,7 @@ export default function KelolaKelas() {
       ? `${romanTingkatan} ${cleanRombel} - ${namaKustom.trim()}`
       : `${romanTingkatan} ${cleanRombel}`;
 
+    setIsSaving(true);
     try {
       let response;
       const payload = {
@@ -247,6 +251,8 @@ export default function KelolaKelas() {
       fetchKelas();
     } catch (err) {
       setError(err.message || "Terjadi kesalahan.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1055,11 +1061,18 @@ export default function KelolaKelas() {
               )}
 
               <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
-                <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary">
+                <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" disabled={isSaving}>
                   Batal
                 </button>
-                <button type="submit" className="btn btn-primary">
-                  Simpan
+                <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    "Simpan"
+                  )}
                 </button>
               </div>
             </form>
@@ -1238,7 +1251,14 @@ export default function KelolaKelas() {
                   Batal
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={isBulkImporting}>
-                  {isBulkImporting ? "Mengimpor..." : "🚀 Simpan & Impor Kelas"}
+                  {isBulkImporting ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Mengimpor...
+                    </>
+                  ) : (
+                    "🚀 Simpan & Impor Kelas"
+                  )}
                 </button>
               </div>
             </form>
@@ -1411,7 +1431,14 @@ export default function KelolaKelas() {
                   Batal
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={isDuplicating}>
-                  {isDuplicating ? "Menduplikasi..." : "🚀 Simpan & Duplikat"}
+                  {isDuplicating ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Menduplikasi...
+                    </>
+                  ) : (
+                    "🚀 Simpan & Duplikat"
+                  )}
                 </button>
               </div>
             </form>

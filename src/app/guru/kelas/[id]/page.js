@@ -3830,7 +3830,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                   Batal
                 </button>
                 <button type="button" onClick={confirmImport} className="btn btn-success" disabled={importing}>
-                  {importing ? "Mengimpor..." : "✅ Konfirmasi Impor"}
+                  {importing ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Mengimpor...
+                    </>
+                  ) : (
+                    "✅ Konfirmasi Impor"
+                  )}
                 </button>
               </div>
             </div>
@@ -4170,7 +4177,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className="btn btn-primary"
                 disabled={isSavingPresensi || (presensiConfigTemp.digunakan && (!presensiConfigTemp.bobot || presensiConfigTemp.bobot <= 0))}
               >
-                {isSavingPresensi ? "Menyimpan..." : "Simpan Pengaturan"}
+                {isSavingPresensi ? (
+                  <>
+                    <span className="btn-spinner" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  "Simpan Pengaturan"
+                )}
               </button>
             </div>
           </div>
@@ -4364,7 +4378,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                 disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal}
                 style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
-                {isSavingPertemuan ? "Menyimpan..." : "Simpan"}
+                {isSavingPertemuan ? (
+                  <>
+                    <span className="btn-spinner" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  "Simpan"
+                )}
               </button>
             </div>
           </div>
@@ -4432,7 +4453,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                 disabled={savingCatatan[catatanSiswaTerpilih.nisn] || kelas.archived}
                 style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
-                {savingCatatan[catatanSiswaTerpilih.nisn] ? "Menyimpan..." : "💾 Simpan Catatan"}
+                {savingCatatan[catatanSiswaTerpilih.nisn] ? (
+                  <>
+                    <span className="btn-spinner" />
+                    Menyimpan...
+                  </>
+                ) : (
+                  "💾 Simpan Catatan"
+                )}
               </button>
             </div>
           </div>
@@ -5465,16 +5493,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 >
                   {isSavingBobot ? (
                     <>
-                      <span style={{
-                        display: "inline-block",
-                        width: "13px",
-                        height: "13px",
-                        border: "2px solid rgba(255,255,255,0.4)",
-                        borderTopColor: "#fff",
-                        borderRadius: "50%",
-                        animation: "spin 0.7s linear infinite",
-                        flexShrink: 0
-                      }} />
+                      <span className="btn-spinner" />
                       Menyimpan...
                     </>
                   ) : (
@@ -5688,7 +5707,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                   style={{ padding: "6px 16px", fontSize: "0.82rem", minWidth: "90px", display: "flex", justifyContent: "center" }}
                   disabled={isSavingKatrol}
                 >
-                  {isSavingKatrol ? "Menyimpan..." : "Simpan"}
+                  {isSavingKatrol ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    "Simpan"
+                  )}
                 </button>
               </div>
             </div>

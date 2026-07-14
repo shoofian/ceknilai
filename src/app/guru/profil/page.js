@@ -29,6 +29,7 @@ export default function ProfilGuru() {
   const [newSekolahNama, setNewSekolahNama] = useState("");
   const [newSekolahNpsn, setNewSekolahNpsn] = useState("");
   const [registerError, setRegisterError] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
 
   // Smart search states
   const [sekolahSearchQuery, setSekolahSearchQuery] = useState("");
@@ -446,7 +447,16 @@ export default function ProfilGuru() {
               }} 
               disabled={isLocked || submitting}
             >
-              {submitting ? "Menyimpan..." : isLocked ? "🔒 Akun Terkunci" : "💾 Perbarui Profil Akun"}
+              {submitting ? (
+                <>
+                  <span className="btn-spinner" />
+                  Menyimpan...
+                </>
+              ) : isLocked ? (
+                "🔒 Akun Terkunci"
+              ) : (
+                "💾 Perbarui Profil Akun"
+              )}
             </button>
 
           </form>
@@ -535,10 +545,12 @@ export default function ProfilGuru() {
                   type="button"
                   onClick={() => setRegisterModalOpen(false)}
                   className="btn btn-secondary"
+                  disabled={isRegistering}
                 >
                   Batal
                 </button>
                 <button
+                  disabled={isRegistering}
                   onMouseDown={async () => {
                     if (!newSekolahNama.trim() || !newSekolahNpsn.trim()) {
                       setRegisterError("Semua kolom wajib diisi.");
@@ -548,6 +560,7 @@ export default function ProfilGuru() {
                       setRegisterError("NPSN harus berupa 8 digit angka.");
                       return;
                     }
+                    setIsRegistering(true);
                     try {
                       const res = await fetch("/api/sekolah/register", {
                         method: "POST",
@@ -567,11 +580,20 @@ export default function ProfilGuru() {
                     } catch (err) {
                       console.error(err);
                       setRegisterError("Kesalahan koneksi ke server.");
+                    } finally {
+                      setIsRegistering(false);
                     }
                   }}
                   className="btn btn-primary"
                 >
-                  Daftarkan
+                  {isRegistering ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Mendaftarkan...
+                    </>
+                  ) : (
+                    "Daftarkan"
+                  )}
                 </button>
               </div>
             </div>
