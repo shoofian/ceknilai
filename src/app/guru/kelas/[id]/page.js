@@ -145,10 +145,17 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const formatNameForMobile = (name, isExpanded) => {
     if (!name) return "";
-    if (!isMobile || !isExpanded) return name;
+    if (!isMobile) return name;
+
+    let displayName = name.trim();
+    if (/^muhammad\b\.?/i.test(displayName)) {
+      displayName = displayName.replace(/^muhammad\b\.?/i, 'M.');
+    }
+
+    if (!isExpanded) return displayName;
     
-    const words = name.trim().split(/\s+/);
-    if (words.length <= 2) return name;
+    const words = displayName.split(/\s+/);
+    if (words.length <= 2) return displayName;
     
     const firstTwo = words.slice(0, 2).join(" ");
     const remainingInitials = words.slice(2).map(w => w ? w[0].toUpperCase() + "." : "").join(" ");
@@ -1791,7 +1798,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           if (!cols || cols.length === 0 || !cols[nisnIdx]) continue;
           
           const nisnVal = String(cols[nisnIdx]).trim();
-          const namaVal = String(cols[namaIdx]).trim().replace(/^muhammad\b\.?/i, 'M.');
+          const namaVal = String(cols[namaIdx]).trim();
           const tglVal = String(cols[tglIdx]).trim();
           
           if (!nisnVal || !namaVal || !tglVal) continue;
