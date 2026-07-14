@@ -701,24 +701,71 @@ export default function StudentPortal() {
                         <div 
                           className="animate-fade-in" 
                           style={{ 
-                            background: "var(--primary-glow)", 
-                            borderLeft: "4px solid var(--primary)", 
-                            borderRadius: "var(--radius-sm)", 
-                            padding: "16px 20px", 
+                            background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 191, 36, 0.15) 100%)", 
+                            border: "1px solid rgba(245, 158, 11, 0.25)",
+                            borderLeft: "6px solid var(--warning)", 
+                            borderRadius: "var(--radius-md)", 
+                            padding: "20px 24px", 
                             marginBottom: "30px", 
+                            boxShadow: "var(--shadow-md), 0 8px 24px -10px rgba(245, 158, 11, 0.2)",
                             display: "flex", 
                             flexDirection: "column", 
-                            gap: "6px" 
+                            gap: "10px",
+                            position: "relative",
+                            overflow: "hidden"
                           }}
                         >
-                          <span style={{ fontSize: "0.78rem", fontWeight: "800", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
-                            📝 Keterangan Tambahan dari Guru
-                          </span>
-                          <p style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: "600", fontStyle: "italic", margin: 0, lineHeight: "1.5" }}>
+                          {/* Decorative quote mark background */}
+                          <div style={{
+                            position: "absolute",
+                            right: "12px",
+                            bottom: "-15px",
+                            fontSize: "6.5rem",
+                            color: "rgba(245, 158, 11, 0.08)",
+                            fontFamily: "Georgia, serif",
+                            lineHeight: 1,
+                            pointerEvents: "none",
+                            userSelect: "none"
+                          }}>
+                            ”
+                          </div>
+                          
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              backgroundColor: "var(--warning)",
+                              color: "#fff",
+                              fontSize: "1rem",
+                              boxShadow: "0 2px 6px rgba(245, 158, 11, 0.3)"
+                            }}>
+                              📝
+                            </div>
+                            <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              Catatan & Umpan Balik Guru
+                            </span>
+                          </div>
+                          
+                          <p style={{ 
+                            fontSize: "1.05rem", 
+                            color: "var(--text-primary)", 
+                            fontWeight: "600", 
+                            fontStyle: "italic", 
+                            margin: 0, 
+                            lineHeight: "1.6",
+                            paddingLeft: "2px",
+                            position: "relative",
+                            zIndex: 1
+                          }}>
                             "{res.siswa.catatan}"
                           </p>
                         </div>
                       )}
+
 
                       {/* Detailed Grades Table */}
                       <h5 style={{ fontSize: "1.1rem", fontWeight: "600", marginBottom: "12px", fontFamily: "var(--font-heading)" }}>Rincian Komponen Nilai</h5>
