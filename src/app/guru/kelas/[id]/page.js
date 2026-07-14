@@ -1632,19 +1632,22 @@ export default function DetailKelas({ params: paramsPromise }) {
         setSaveStatus(prev => ({ ...prev, [key]: "saved" }));
         
         // Perbarui state lokal nilai siswa secara langsung agar nilai akhir terhitung otomatis tanpa re-fetch lambat
-        const updatedSiswa = kelas.siswa.map(s => {
-          if (s.nisn === studentNisn) {
-            return {
-              ...s,
-              nilai: {
-                ...s.nilai,
-                [colId]: parsedValue
-              }
-            };
-          }
-          return s;
+        setKelas(prevKelas => {
+          if (!prevKelas) return prevKelas;
+          const updatedSiswa = prevKelas.siswa.map(s => {
+            if (s.nisn === studentNisn) {
+              return {
+                ...s,
+                nilai: {
+                  ...s.nilai,
+                  [colId]: parsedValue
+                }
+              };
+            }
+            return s;
+          });
+          return { ...prevKelas, siswa: updatedSiswa };
         });
-        setKelas({ ...kelas, siswa: updatedSiswa });
 
         setTemporaryScores(prev => {
           const next = { ...prev };
