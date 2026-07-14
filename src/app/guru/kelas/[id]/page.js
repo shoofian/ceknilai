@@ -471,7 +471,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       const pertemuanList = skema.pertemuan || [];
       let complete = filledCount === kelas.kolomNilai.length;
       
-      let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+      let attSummary = { H: 0, I: 0, S: 0, A: 0, D: 0 };
       pertemuanList.forEach(p => {
         const val = student.nilai[`_presensi_${p.id}`];
         if (val && attSummary[val] !== undefined) {
@@ -480,8 +480,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       });
 
       if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
-        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
+        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
+        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
         
         // Poin kehadiran rata-rata (hanya dihitung berdasarkan jumlah pertemuan yg sudah diisi)
         const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
@@ -585,12 +585,12 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const presensiStats = useMemo(() => {
     if (!kelas || !kelas.siswa) {
-      return { totalH: 0, totalI: 0, totalS: 0, totalA: 0, avgAttendance: 0, totalPertemuan: 0 };
+      return { totalH: 0, totalI: 0, totalS: 0, totalA: 0, totalD: 0, avgAttendance: 0, totalPertemuan: 0 };
     }
 
     const pertemuanList = kelas.skemaPenilaian?.pertemuan || [];
     const totalP = pertemuanList.length;
-    let totalH = 0, totalI = 0, totalS = 0, totalA = 0;
+    let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalD = 0;
     
     kelas.siswa.forEach(siswa => {
       pertemuanList.forEach(p => {
@@ -599,13 +599,14 @@ export default function DetailKelas({ params: paramsPromise }) {
         else if (status === 'I') totalI++;
         else if (status === 'S') totalS++;
         else if (status === 'A') totalA++;
+        else if (status === 'D') totalD++;
       });
     });
 
     const totalPossible = kelas.siswa.length * totalP;
-    const avgAttendance = totalPossible > 0 ? Math.round((totalH / totalPossible) * 100) : 0;
+    const avgAttendance = totalPossible > 0 ? Math.round(((totalH + totalD) / totalPossible) * 100) : 0;
 
-    return { totalH, totalI, totalS, totalA, avgAttendance, totalPertemuan: totalP };
+    return { totalH, totalI, totalS, totalA, totalD, avgAttendance, totalPertemuan: totalP };
   }, [kelas]);
 
   const toggleCatatanRow = (studentNisn) => {
@@ -2500,6 +2501,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--danger)" }}>{presensiStats.totalA}</span>
                       <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Alpa</span>
                     </div>
+                    <div>
+                      <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "#8b5cf6" }}>{presensiStats.totalD}</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Dispensasi</span>
+                    </div>
                   </div>
                   <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "4px" }}>Akumulasi Kehadiran Kelas</div>
                 </div>
@@ -2665,6 +2670,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--warning)" }}>I</th>
                       <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#3b82f6" }}>S</th>
                       <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--danger)" }}>A</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#8b5cf6" }}>D</th>
                       <th style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-secondary)", color: "var(--primary)", fontWeight: "800" }}>% Hadir</th>
                     </>
                   )}
@@ -2695,7 +2701,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td key={p.id} style={{ textAlign: "center", padding: "6px" }}>
                           <button 
                             onClick={() => {
-                              const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : "";
+                              const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
                               const newSiswa = [...kelas.siswa];
                               newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
                               setKelas({ ...kelas, siswa: newSiswa });
@@ -2706,7 +2712,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             title="Klik untuk mengubah"
                             style={{
                               width: "42px", height: "42px", borderRadius: "10px", border: val === "" ? "1px dashed var(--border-color)" : "none", fontWeight: "800", cursor: "pointer", fontSize: "1.1rem",
-                              backgroundColor: val === 'H' ? "var(--success)" : val === 'I' ? "var(--warning)" : val === 'S' ? "#3b82f6" : val === 'A' ? "var(--danger)" : "transparent",
+                              backgroundColor: val === 'H' ? "var(--success)" : val === 'I' ? "var(--warning)" : val === 'S' ? "#3b82f6" : val === 'A' ? "var(--danger)" : val === 'D' ? "#8b5cf6" : "transparent",
                               color: val === "" ? "var(--text-muted)" : "#fff",
                               transition: "all 0.2s"
                             }}>
@@ -2719,22 +2725,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <td></td>
                     )}
                     {kelas.skemaPenilaian?.pertemuan?.length > 0 && (() => {
-                      let countH = 0, countI = 0, countS = 0, countA = 0;
+                      let countH = 0, countI = 0, countS = 0, countA = 0, countD = 0;
                       (kelas.skemaPenilaian?.pertemuan || []).forEach(p => {
                         const status = siswa.nilai[`_presensi_${p.id}`];
                         if (status === 'H') countH++;
                         else if (status === 'I') countI++;
                         else if (status === 'S') countS++;
                         else if (status === 'A') countA++;
+                        else if (status === 'D') countD++;
                       });
                       const totalP = kelas.skemaPenilaian.pertemuan.length;
-                      const persentase = totalP > 0 ? Math.round((countH / totalP) * 100) : 0;
+                      const persentase = totalP > 0 ? Math.round(((countH + countD) / totalP) * 100) : 0;
                       return (
                         <>
                           <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.02)" }}>{countH}</td>
                           <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>{countI}</td>
                           <td style={{ textAlign: "center", fontWeight: "700", color: "#3b82f6", backgroundColor: "rgba(59, 130, 246, 0.02)" }}>{countS}</td>
                           <td style={{ textAlign: "center", fontWeight: "700", color: "var(--danger)", backgroundColor: "rgba(239, 68, 68, 0.02)" }}>{countA}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.02)" }}>{countD}</td>
                           <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.05)", fontSize: "1rem" }}>
                             {persentase}%
                           </td>
@@ -2751,6 +2759,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (50)</span>
             <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (50)</span>
             <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpa (0)</span>
+            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (100)</span>
           </div>
         </div>
       )}
