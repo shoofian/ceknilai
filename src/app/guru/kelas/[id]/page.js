@@ -145,20 +145,30 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const formatNameForMobile = (name, isExpanded) => {
     if (!name) return "";
+    if (isExpanded) return name;
     if (!isMobile) return name;
 
-    let displayName = name.trim();
-    if (/^muhammad\b\.?/i.test(displayName)) {
-      displayName = displayName.replace(/^muhammad\b\.?/i, 'M.');
+    const originalName = name.trim();
+    const words = originalName.split(/\s+/);
+
+    if (words.length > 2 && /^muhammad\b/i.test(originalName)) {
+      const word1 = "M.";
+      const word2 = words[1];
+      const word3 = words[2];
+      const remainingInitials = words.slice(3).map(w => w ? w[0].toUpperCase() + "." : "").filter(Boolean).join(" ");
+      return `${word1} ${word2} ${word3}${remainingInitials ? " " + remainingInitials : ""}`;
     }
 
-    if (!isExpanded) return displayName;
-    
-    const words = displayName.split(/\s+/);
-    if (words.length <= 2) return displayName;
-    
-    const firstTwo = words.slice(0, 2).join(" ");
-    const remainingInitials = words.slice(2).map(w => w ? w[0].toUpperCase() + "." : "").join(" ");
+    let displayName = originalName;
+    if (/^muhammad\b/i.test(displayName)) {
+      displayName = displayName.replace(/^muhammad\b/i, 'M.');
+    }
+
+    const currentWords = displayName.split(/\s+/);
+    if (currentWords.length <= 2) return displayName;
+
+    const firstTwo = currentWords.slice(0, 2).join(" ");
+    const remainingInitials = currentWords.slice(2).map(w => w ? w[0].toUpperCase() + "." : "").filter(Boolean).join(" ");
     return `${firstTwo} ${remainingInitials}`;
   };
 
