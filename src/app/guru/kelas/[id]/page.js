@@ -3856,7 +3856,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           th.sticky-nama {
             background-color: var(--bg-tertiary) !important;
-            z-index: 11 !important;
+            z-index: 30 !important;
           }
           
           .mobile-scroll-hint {
