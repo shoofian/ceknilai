@@ -3833,9 +3833,9 @@ export default function DetailKelas({ params: paramsPromise }) {
         .sticky-nama {
           position: sticky !important;
           left: 0 !important;
-          max-width: 130px !important;
-          min-width: 130px !important;
-          width: 130px !important;
+          max-width: 150px !important;
+          min-width: 150px !important;
+          width: 150px !important;
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
