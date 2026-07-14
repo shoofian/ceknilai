@@ -3828,37 +3828,38 @@ export default function DetailKelas({ params: paramsPromise }) {
           }
         }
 
-        @media (max-width: 768px) {
-          .sticky-nama {
-            position: sticky !important;
-            left: 0 !important;
-            max-width: 130px !important;
-            min-width: 130px !important;
-            width: 130px !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            background-color: var(--bg-primary);
-            box-shadow: 4px 0 8px rgba(0,0,0,0.08) !important;
-            z-index: 10 !important;
-            transition: all 0.2s ease;
-          }
-          
-          .sticky-nama.expanded-active {
-            max-width: 250px !important;
-            min-width: 250px !important;
-            width: 250px !important;
-            white-space: normal !important;
-            word-break: break-word !important;
-            z-index: 15 !important;
-            overflow: visible !important;
-          }
+        .sticky-nama {
+          position: sticky !important;
+          left: 0 !important;
+          max-width: 130px !important;
+          min-width: 130px !important;
+          width: 130px !important;
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          background-color: var(--bg-primary);
+          box-shadow: 4px 0 8px rgba(0,0,0,0.08) !important;
+          z-index: 10 !important;
+          transition: all 0.2s ease;
+          border-right: 2px solid var(--border-color) !important;
+        }
+        
+        .sticky-nama.expanded-active {
+          max-width: 250px !important;
+          min-width: 250px !important;
+          width: 250px !important;
+          white-space: normal !important;
+          word-break: break-word !important;
+          z-index: 15 !important;
+          overflow: visible !important;
+        }
 
-          th.sticky-nama {
-            background-color: var(--bg-tertiary) !important;
-            z-index: 30 !important;
-          }
-          
+        th.sticky-nama {
+          background-color: var(--bg-tertiary) !important;
+          z-index: 30 !important;
+        }
+
+        @media (max-width: 768px) {
           .mobile-scroll-hint {
             display: block;
             font-size: 0.72rem;
