@@ -2962,7 +2962,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           className={`sticky-nama ${expandedNama[student.nisn] ? 'expanded-active' : ''}`}
                           onClick={() => toggleNamaExpand(student.nisn)}
                           title="Klik untuk melihat nama lengkap"
-                          style={{ fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
+                          style={{ fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                             <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{student.nama}</span>
@@ -3836,6 +3836,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           max-width: 150px !important;
           min-width: 150px !important;
           width: 150px !important;
+          font-size: 0.88rem !important;
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
