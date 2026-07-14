@@ -2862,7 +2862,6 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
               <button 
                 onClick={downloadExcelTemplate} 
-                disabled={kelas.kolomNilai.length === 0} 
                 className="btn btn-secondary" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
@@ -2870,12 +2869,12 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
               
               <label
-                className={`btn btn-secondary ${(kelas.kolomNilai.length === 0 || isLocked) ? "disabled" : ""}`}
+                className={`btn btn-secondary ${isLocked ? "disabled" : ""}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px",
-                  cursor: (kelas.kolomNilai.length === 0 || isLocked) ? "not-allowed" : "pointer",
-                  opacity: (kelas.kolomNilai.length === 0 || isLocked) ? 0.5 : 1,
+                  cursor: isLocked ? "not-allowed" : "pointer",
+                  opacity: isLocked ? 0.5 : 1,
                   margin: 0
                 }}
               >
@@ -2885,7 +2884,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   accept=".xlsx, .xls"
                   style={{ display: "none" }}
                   onChange={handleExcelUpload}
-                  disabled={kelas.kolomNilai.length === 0 || isLocked}
+                  disabled={isLocked}
                 />
               </label>
 
@@ -3289,7 +3288,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
             {[
               { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: kelas.archived || isLocked },
-              { icon: "📥", label: "Ekspor Data Siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 },
+              { icon: "📥", label: "Ekspor Data Siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: false },
               { icon: "🔌", label: "Ekspor ke E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
             ].map((item) => (
               <button
@@ -3317,14 +3316,14 @@ export default function DetailKelas({ params: paramsPromise }) {
               style={{
                 display: "flex", alignItems: "center", gap: "10px",
                 width: "100%", padding: "10px 16px",
-                cursor: (kelas.kolomNilai.length === 0 || kelas.archived || isLocked) ? "not-allowed" : "pointer",
-                color: (kelas.kolomNilai.length === 0 || kelas.archived || isLocked) ? "var(--text-muted)" : "var(--text-primary)",
+                cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer",
+                color: (kelas.archived || isLocked) ? "var(--text-muted)" : "var(--text-primary)",
                 fontSize: "0.88rem", fontWeight: "600",
-                opacity: (kelas.kolomNilai.length === 0 || kelas.archived || isLocked) ? 0.5 : 1,
+                opacity: (kelas.archived || isLocked) ? 0.5 : 1,
                 transition: "background 0.15s",
                 marginBottom: "4px",
               }}
-              onMouseEnter={e => { if (kelas.kolomNilai.length > 0 && !kelas.archived) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+              onMouseEnter={e => { if (!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
               onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
             >
               <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>📤</span>
@@ -3334,7 +3333,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 accept=".xlsx, .xls"
                 style={{ display: "none" }}
                 onChange={(e) => { handleExcelUpload(e); setFabOpen(false); }}
-                disabled={kelas.kolomNilai.length === 0 || kelas.archived || isLocked}
+                disabled={kelas.archived || isLocked}
               />
             </label>
           </div>
