@@ -2681,12 +2681,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </td>
                   </tr>
                 ) : kelas.siswa.map((siswa, sIdx) => (
-                  <tr key={siswa.nisn}>
+                  <tr key={siswa.nisn} style={{ backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                     <td 
                       className={`sticky-nama ${expandedNama[siswa.nisn] ? 'expanded-active' : ''}`}
                       onClick={() => toggleNamaExpand(siswa.nisn)}
                       title="Klik untuk melihat nama lengkap"
-                      style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: "var(--bg-primary)", cursor: "pointer" }}
+                      style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", cursor: "pointer" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                         <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, expandedNama[siswa.nisn])}</span>
