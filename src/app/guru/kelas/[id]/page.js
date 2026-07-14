@@ -2964,34 +2964,32 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
                             <button
-                              onClick={() => toggleCatatanRow(student.nisn)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCatatanRow(student.nisn);
+                              }}
                               style={{
-                                background: "none",
-                                border: "none",
+                                background: student.catatan ? "rgba(245, 158, 11, 0.12)" : "rgba(148, 163, 184, 0.08)",
+                                border: student.catatan ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid rgba(148, 163, 184, 0.2)",
+                                color: student.catatan ? "var(--warning)" : "var(--text-muted)",
+                                borderRadius: "6px",
                                 cursor: "pointer",
-                                padding: "2px",
-                                fontSize: "0.95rem",
+                                padding: "4px 8px",
                                 display: "inline-flex",
                                 alignItems: "center",
-                                opacity: student.catatan ? 1 : 0.4,
-                                transition: "opacity 0.2s ease"
+                                gap: "4px",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                transition: "all 0.2s ease",
+                                outline: "none"
                               }}
-                              title={student.catatan ? "Lihat/Edit Keterangan Tambahan" : "Tambah Keterangan Tambahan"}
+                              title={student.catatan ? "Lihat/Edit Catatan Guru" : "Tambah Catatan Guru"}
                             >
-                              💬
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              <span>{student.catatan ? "Catatan" : "+ Catatan"}</span>
                             </button>
-                            {student.catatan && (
-                              <span 
-                                style={{ 
-                                  width: "6px", 
-                                  height: "6px", 
-                                  borderRadius: "50%", 
-                                  backgroundColor: "var(--success)", 
-                                  display: "inline-block" 
-                                }}
-                                title="Ada keterangan tambahan"
-                              ></span>
-                            )}
                           </div>
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>

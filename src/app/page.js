@@ -735,15 +735,16 @@ export default function StudentPortal() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "50%",
+                              width: "34px",
+                              height: "34px",
+                              borderRadius: "8px",
                               backgroundColor: "var(--warning)",
                               color: "#fff",
-                              fontSize: "1rem",
-                              boxShadow: "0 2px 6px rgba(245, 158, 11, 0.3)"
+                              boxShadow: "0 4px 10px rgba(245, 158, 11, 0.3)"
                             }}>
-                              📝
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
                             </div>
                             <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                               Catatan & Umpan Balik Guru
