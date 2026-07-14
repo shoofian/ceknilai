@@ -131,6 +131,29 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
   const isLocked = !!(guruProfile && guruProfile.is_locked);
+  
+  // State & handler untuk deteksi mobile screen
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const formatNameForMobile = (name, isExpanded) => {
+    if (!name) return "";
+    if (!isMobile || isExpanded) return name;
+    
+    const words = name.trim().split(/\s+/);
+    if (words.length <= 3) return name;
+    
+    const firstTwo = words.slice(0, 2).join(" ");
+    const remainingInitials = words.slice(2).map(w => w ? w[0].toUpperCase() + "." : "").join(" ");
+    return `${firstTwo} ${remainingInitials}`;
+  };
 
   // States untuk Bagikan Overview
   const [isGeneratingOverview, setIsGeneratingOverview] = useState(false);
@@ -2666,7 +2689,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: "var(--bg-primary)", cursor: "pointer" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
-                        <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{siswa.nama}</span>
+                        <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, expandedNama[siswa.nisn])}</span>
                       </div>
                     </td>
                     {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
@@ -2965,7 +2988,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           style={{ fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
-                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{student.nama}</span>
+                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, expandedNama[student.nisn])}</span>
                           </div>
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
