@@ -2665,7 +2665,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                       title="Klik untuk melihat nama lengkap"
                       style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: "var(--bg-primary)", cursor: "pointer" }}
                     >
-                      {siswa.nama}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
+                        <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{siswa.nama}</span>
+                      </div>
                     </td>
                     {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
                       const val = siswa.nilai[`_presensi_${p.id}`] || "";
@@ -2962,8 +2964,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                           title="Klik untuk melihat nama lengkap"
                           style={{ fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>{student.nama}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
+                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{student.nama}</span>
                           </div>
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
@@ -3857,6 +3859,12 @@ export default function DetailKelas({ params: paramsPromise }) {
           word-break: break-word !important;
           z-index: 15 !important;
           overflow: visible !important;
+        }
+        
+        .sticky-nama.expanded-active span {
+          white-space: normal !important;
+          overflow: visible !important;
+          text-overflow: clip !important;
         }
 
         th.sticky-nama {
