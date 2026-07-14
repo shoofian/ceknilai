@@ -317,7 +317,7 @@ export default function ProfilGuru() {
             {/* Wali Rombel */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "12px" }}>
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tingkatan Wali Kelas</label>
+                <label className="form-label">Tingkatan Wali Kelas <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                 <select
                   className="form-input"
                   value={walikelasTingkatan}
@@ -383,7 +383,7 @@ export default function ProfilGuru() {
 
             {/* Password input fields */}
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Password Lama</label>
+              <label className="form-label">Password Lama <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
               <input
                 type="password"
                 placeholder="Masukkan kata sandi saat ini"
@@ -396,7 +396,7 @@ export default function ProfilGuru() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Password Baru</label>
+                <label className="form-label">Password Baru <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                 <input
                   type="password"
                   placeholder="Minimal 6 karakter"
@@ -408,7 +408,7 @@ export default function ProfilGuru() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Konfirmasi Password Baru</label>
+                <label className="form-label">Konfirmasi Password Baru <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                 <input
                   type="password"
                   placeholder="Ulangi password baru"

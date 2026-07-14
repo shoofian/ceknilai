@@ -1415,7 +1415,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
     }
 
-    if (totalBobot !== 100) {
+    if (totalBobot > 100) {
       alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
     }
 
@@ -5526,7 +5526,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <label style={{ fontSize: "0.82rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
-                  🔒 Tambahan Poin Katrol (Rahasia)
+                  🔒 Tambahan Poin Katrol (Rahasia) <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span>
                 </label>
                 <input
                   type="number"

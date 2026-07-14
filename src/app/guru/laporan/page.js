@@ -465,7 +465,7 @@ export default function CetakLaporan() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">NIP Guru Pengampu</label>
+                <label className="form-label">NIP Guru Pengampu <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                 <input 
                   type="text" 
                   value={nipGuru} 

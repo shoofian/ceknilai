@@ -565,7 +565,7 @@ export default function SuperadminPanel() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0, position: "relative" }}>
-                <label className="form-label">Asal Sekolah</label>
+                <label className="form-label">Asal Sekolah <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                 <div style={{ position: "relative" }}>
                   <input
                     type="text"
@@ -637,7 +637,7 @@ export default function SuperadminPanel() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "12px" }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Tingkatan Wali Kelas</label>
+                  <label className="form-label">Tingkatan Wali Kelas <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                   <select
                     className="form-input"
                     value={formWalikelasTingkatan}
@@ -695,7 +695,7 @@ export default function SuperadminPanel() {
 
                   {formIsLocked && (
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Pesan Pemberitahuan Kunci</label>
+                      <label className="form-label">Pesan Pemberitahuan Kunci <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
                       <textarea
                         placeholder="Contoh: Akun Anda ditangguhkan sementara. Silakan lakukan pembayaran untuk melanjutkan langganan."
                         className="form-input"
