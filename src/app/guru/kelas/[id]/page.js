@@ -3839,16 +3839,11 @@ export default function DetailKelas({ params: paramsPromise }) {
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
-          background-color: var(--bg-primary) !important;
           box-shadow: 4px 0 8px rgba(0,0,0,0.08) !important;
           z-index: 10 !important;
           transition: all 0.2s ease;
           border-right: 2px solid var(--border-color) !important;
           padding-right: 16px !important;
-        }
-        
-        tr:nth-child(even) .sticky-nama {
-          background-color: var(--bg-secondary) !important;
         }
         
         .sticky-nama.expanded-active {
