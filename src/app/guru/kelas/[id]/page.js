@@ -3842,6 +3842,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           z-index: 10 !important;
           transition: all 0.2s ease;
           border-right: 2px solid var(--border-color) !important;
+          padding-right: 16px !important;
         }
         
         .sticky-nama.expanded-active {
