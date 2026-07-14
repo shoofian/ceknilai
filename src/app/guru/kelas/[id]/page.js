@@ -3833,9 +3833,9 @@ export default function DetailKelas({ params: paramsPromise }) {
         .sticky-nama {
           position: sticky !important;
           left: 0 !important;
-          max-width: 30% !important;
-          min-width: 30% !important;
-          width: 30% !important;
+          max-width: 130px !important;
+          min-width: 130px !important;
+          width: 130px !important;
           white-space: nowrap !important;
           overflow: hidden !important;
           text-overflow: ellipsis !important;
@@ -3847,9 +3847,9 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
         
         .sticky-nama.expanded-active {
-          max-width: 380px !important;
-          min-width: 280px !important;
-          width: 70% !important;
+          max-width: 250px !important;
+          min-width: 250px !important;
+          width: 250px !important;
           white-space: normal !important;
           word-break: break-word !important;
           z-index: 15 !important;
