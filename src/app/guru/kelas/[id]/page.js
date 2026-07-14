@@ -162,7 +162,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Catatan Siswa
   const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
   const [catatanSiswaTerpilih, setCatatanSiswaTerpilih] = useState(null); // Siswa yang sedang diedit catatannya di modal
-  const [expandedNama, setExpandedNama] = useState({}); // { [nisn]: boolean }
+  const [isNamaColumnExpanded, setIsNamaColumnExpanded] = useState(false);
   const [catatanDraft, setCatatanDraft] = useState({}); // { [nisn]: string }
   const [savingCatatan, setSavingCatatan] = useState({}); // { [nisn]: boolean }
   const [temporaryScores, setTemporaryScores] = useState({}); // For real-time updates while typing
@@ -621,11 +621,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       return { ...prev, [studentNisn]: isOpen };
     });
   };
-  const toggleNamaExpand = (studentNisn) => {
-    setExpandedNama(prev => ({
-      ...prev,
-      [studentNisn]: !prev[studentNisn]
-    }));
+  const toggleNamaExpand = () => {
+    setIsNamaColumnExpanded(prev => !prev);
   };
 
   const saveCatatan = async (studentNisn) => {
@@ -2683,13 +2680,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                 ) : kelas.siswa.map((siswa, sIdx) => (
                   <tr key={siswa.nisn} style={{ backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                     <td 
-                      className={`sticky-nama ${expandedNama[siswa.nisn] ? 'expanded-active' : ''}`}
-                      onClick={() => toggleNamaExpand(siswa.nisn)}
+                      className={`sticky-nama ${isNamaColumnExpanded ? 'expanded-active' : ''}`}
+                      onClick={toggleNamaExpand}
                       title="Klik untuk melihat nama lengkap"
                       style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", cursor: "pointer" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
-                        <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, expandedNama[siswa.nisn])}</span>
+                        <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, isNamaColumnExpanded)}</span>
                       </div>
                     </td>
                     {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
@@ -2982,13 +2979,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {student.nisn}
                         </td>
                         <td 
-                          className={`sticky-nama ${expandedNama[student.nisn] ? 'expanded-active' : ''}`}
-                          onClick={() => toggleNamaExpand(student.nisn)}
+                          className={`sticky-nama ${isNamaColumnExpanded ? 'expanded-active' : ''}`}
+                          onClick={toggleNamaExpand}
                           title="Klik untuk melihat nama lengkap"
                           style={{ fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
-                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, expandedNama[student.nisn])}</span>
+                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
                           </div>
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
