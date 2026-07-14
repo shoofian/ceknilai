@@ -3122,6 +3122,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                             >
                               🖨️
                             </button>
+                            <button 
+                              onClick={() => handleOpenEditSiswa(student)} 
+                              className="btn btn-secondary" 
+                              style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (kelas.archived || isLocked) ? 0.5 : 1, cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer" }} 
+                              title={(kelas.archived || isLocked) ? "Tidak dapat mengedit" : "Edit Profil Siswa"}
+                              disabled={kelas.archived || isLocked}
+                            >
+                              ✏️
+                            </button>
                             <button
                               onClick={() => {
                                 setCatatanSiswaTerpilih(student);
@@ -3149,15 +3158,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                                   <span style={{ position: "absolute", top: "-3px", right: "-3px", width: "7px", height: "7px", backgroundColor: "var(--warning)", borderRadius: "50%", border: "1px solid var(--bg-secondary)" }}></span>
                                 )}
                               </div>
-                            </button>
-                            <button 
-                              onClick={() => handleOpenEditSiswa(student)} 
-                              className="btn btn-secondary" 
-                              style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (kelas.archived || isLocked) ? 0.5 : 1, cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer" }} 
-                              title={(kelas.archived || isLocked) ? "Tidak dapat mengedit" : "Edit Profil Siswa"}
-                              disabled={kelas.archived || isLocked}
-                            >
-                              ✏️
                             </button>
                             <button 
                               onClick={() => handleDeleteSiswa(student.nisn, student.nama)} 
