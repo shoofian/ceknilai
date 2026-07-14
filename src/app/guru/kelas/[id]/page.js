@@ -5119,7 +5119,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <div className="animate-fade-in aspect-content-detail">
                       {/* Name & Weight Row */}
-                      <div className="aspect-form-row" style={{ display: "grid", gridTemplateColumns: !activeAspect.isGroup ? "2fr 1fr 1fr" : "3fr 1fr", gap: "12px" }}>
+                      <div className="aspect-form-row" style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "12px" }}>
                         <div className="form-group" style={{ margin: 0 }}>
                           <label className="form-label">Nama Aspek Penilaian</label>
                           <input
@@ -5152,31 +5152,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                             style={{ padding: "10px 14px", textAlign: "center", width: "100%" }}
                           />
                         </div>
-                        {!activeAspect.isGroup && (
-                          <div className="form-group" style={{ margin: 0 }}>
-                            <label className="form-label">Nilai Default</label>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              className="form-input"
-                              placeholder="0-100"
-                              value={activeAspect.defaultNilai !== null && activeAspect.defaultNilai !== undefined ? activeAspect.defaultNilai : ""}
-                              onChange={(e) => {
-                                if (e.target.value === "" || (/^\d*$/.test(e.target.value) && Number(e.target.value) <= 100)) {
-                                  const val = e.target.value === "" ? null : Number(e.target.value);
-                                  if (isNew) handleNewAspectChange(activeAspect.id, 'defaultNilai', val);
-                                  else {
-                                    const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, defaultNilai: val } : c);
-                                    setKelas({ ...kelas, kolomNilai: newCols });
-                                  }
-                                }
-                              }}
-                              style={{ padding: "10px 14px", textAlign: "center", width: "100%" }}
-                              title="Nilai awal otomatis untuk aspek ini saat siswa baru ditambahkan"
-                            />
-                          </div>
-                        )}
                       </div>
 
                       {/* TP/KD Description Field */}
@@ -5393,28 +5368,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                     />
                                   )}
 
-                                  <input
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    className="form-input"
-                                    placeholder="Def. Nilai"
-                                    value={sub.defaultNilai !== null && sub.defaultNilai !== undefined ? sub.defaultNilai : ""}
-                                    onChange={(e) => {
-                                      if (e.target.value === "" || (/^\d*$/.test(e.target.value) && Number(e.target.value) <= 100)) {
-                                        const val = e.target.value === "" ? null : Number(e.target.value);
-                                        if (isNew) {
-                                          const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, defaultNilai: val } : s);
-                                          handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
-                                        } else {
-                                          const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, defaultNilai: val } : s) } : c);
-                                          setKelas({ ...kelas, kolomNilai: newCols });
-                                        }
-                                      }
-                                    }}
-                                    style={{ padding: "6px 8px", fontSize: "0.85rem", width: "75px", textAlign: "center" }}
-                                    title="Nilai default untuk sub-aspek ini"
-                                  />
+
 
                                   <button
                                     onClick={() => {
