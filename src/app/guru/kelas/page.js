@@ -641,75 +641,64 @@ export default function KelolaKelas() {
     setIsBulkImporting(true);
 
     try {
-      let successCount = 0;
+      // 1. Client-side check for student matching
       for (const form of validForms) {
-        const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
-        
-        // Auto-Trimming and construction
-        const getRoman = (num) => {
-          const roman = { 10: "X", 11: "XI", 12: "XII" };
-          return roman[num] || num;
-        };
-        const romanTingkatan = getRoman(Number(form.tingkatan));
-        const cleanRombel = form.rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1");
-        const combinedNama = form.namaKustom.trim() 
-          ? `${romanTingkatan} ${cleanRombel} - ${form.namaKustom.trim()}`
-          : `${romanTingkatan} ${cleanRombel}`;
+        const studentsForThisClass = parsedStudents.filter((s) => s.rombel === form.sourceRombel);
+        if (studentsForThisClass.length === 0) {
+          throw new Error(
+            `Tidak ada siswa ditemukan untuk rombel "${form.sourceRombel}" di berkas yang diunggah. ` +
+            `Periksa apakah nama rombel di berkas sudah sesuai dengan pilihan di dropdown.`
+          );
+        }
+      }
 
-        // 1. Create Class
-        const resKelas = await fetch("/api/kelas", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+      // 2. Prepare bulk payload
+      const payload = {
+        classes: validForms.map((form) => {
+          const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
+          const getRoman = (num) => {
+            const roman = { 10: "X", 11: "XI", 12: "XII" };
+            return roman[num] || num;
+          };
+          const romanTingkatan = getRoman(Number(form.tingkatan));
+          const cleanRombel = form.rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1");
+          const combinedNama = form.namaKustom.trim() 
+            ? `${romanTingkatan} ${cleanRombel} - ${form.namaKustom.trim()}`
+            : `${romanTingkatan} ${cleanRombel}`;
+
+          const studentsForThisClass = parsedStudents.filter((s) => s.rombel === form.sourceRombel);
+
+          return {
             nama: combinedNama,
             tingkatan: Number(form.tingkatan),
             rombelNama: cleanRombel,
             namaKustom: form.namaKustom.trim() || null,
             mataPelajaran: effectiveMapel,
             tahunAjaran: form.tahunAjaran.trim(),
-            semester: form.semester.trim()
-          }),
-        });
+            semester: form.semester.trim(),
+            siswaList: studentsForThisClass
+          };
+        })
+      };
 
-        if (!resKelas.ok) {
-          const errData = await resKelas.json();
-          throw new Error(`Gagal membuat kelas ${combinedNama}: ${errData.error}`);
-        }
+      // 3. Send single HTTP Request
+      const res = await fetch("/api/kelas/bulk-import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
 
-        const dataKelas = await resKelas.json();
-        const newClassId = dataKelas.kelas.id;
-
-        // 2. Import Students
-        const studentsForThisClass = parsedStudents.filter((s) => s.rombel === form.sourceRombel);
-        if (studentsForThisClass.length > 0) {
-          const resStudents = await fetch(`/api/kelas/${newClassId}/import`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ siswaList: studentsForThisClass }),
-          });
-
-          if (!resStudents.ok) {
-            const errData = await resStudents.json().catch(() => ({}));
-            throw new Error(
-              `Gagal mengimpor siswa kelas "${combinedNama}": ${
-                errData.error || `HTTP ${resStudents.status}`
-              }`
-            );
-          }
-
-          const importResult = await resStudents.json().catch(() => ({}));
-          console.info(`Kelas "${combinedNama}": ${importResult.addedCount ?? 0} siswa ditambahkan.`);
-        } else {
-          // Warn user: class form exists but no students matched that rombel
-          throw new Error(
-            `Tidak ada siswa ditemukan untuk rombel "${form.sourceRombel}" di berkas yang diunggah. ` +
-            `Periksa apakah nama rombel di berkas sudah sesuai dengan pilihan di dropdown.`
-          );
-        }
-        successCount++;
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Gagal melakukan impor massal (HTTP ${res.status})`);
       }
 
-      triggerConfirm(`${successCount} Kelas beserta siswanya berhasil diimpor!`, null, { title: "Impor Berhasil", confirmText: "Selesai", cancelText: "" });
+      const resData = await res.json();
+      if (resData.errors && resData.errors.length > 0) {
+        console.warn("Some classes failed during bulk import:", resData.errors);
+      }
+
+      triggerConfirm(`${resData.results?.length ?? 0} Kelas beserta siswanya berhasil diimpor!`, null, { title: "Impor Berhasil", confirmText: "Selesai", cancelText: "" });
       setBulkModalOpen(false);
       fetchKelas();
     } catch (err) {
