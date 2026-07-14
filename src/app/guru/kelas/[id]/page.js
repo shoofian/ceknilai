@@ -138,6 +138,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Catatan Siswa
   const [openCatatan, setOpenCatatan] = useState({}); // { [nisn]: boolean }
+  const [catatanSiswaTerpilih, setCatatanSiswaTerpilih] = useState(null); // Siswa yang sedang diedit catatannya di modal
   const [expandedNama, setExpandedNama] = useState({}); // { [nisn]: boolean }
   const [catatanDraft, setCatatanDraft] = useState({}); // { [nisn]: string }
   const [savingCatatan, setSavingCatatan] = useState({}); // { [nisn]: boolean }
@@ -615,8 +616,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       });
       if (response.ok) {
         fetchClassDetail();
-        // Tutup baris catatan setelah berhasil menyimpan
-        setOpenCatatan(prev => ({ ...prev, [studentNisn]: false }));
+        // Tutup modal catatan setelah berhasil menyimpan
+        setCatatanSiswaTerpilih(null);
       } else {
         alert("Gagal menyimpan catatan.");
       }
@@ -3122,7 +3123,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                               🖨️
                             </button>
                             <button
-                              onClick={() => toggleCatatanRow(student.nisn)}
+                              onClick={() => {
+                                setCatatanSiswaTerpilih(student);
+                                setCatatanDraft(prev => ({
+                                  ...prev,
+                                  [student.nisn]: student.catatan || ""
+                                }));
+                              }}
                               className="btn btn-secondary"
                               style={{ 
                                 padding: "6px 8px", 
@@ -3164,45 +3171,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           </div>
                         </td>
                       </tr>
-                      {openCatatan[student.nisn] && (
-                        <tr style={{ backgroundColor: "rgba(59,130,246,0.02)" }}>
-                          <td colSpan={5 + kelas.kolomNilai.length} style={{ padding: "12px 24px", borderBottom: "1px solid var(--border-color)" }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxWidth: "600px" }}>
-                              <label style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                📝 Keterangan Tambahan / Catatan untuk {student.nama}
-                              </label>
-                              <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
-                                <textarea
-                                  className="form-input"
-                                  placeholder={kelas.archived ? "Kelas diarsipkan, catatan tidak dapat diubah" : "Tulis bimbingan akademik, keterangan ketidakhadiran, atau umpan balik lainnya di sini..."}
-                                  value={catatanDraft[student.nisn] !== undefined ? catatanDraft[student.nisn] : (student.catatan || "")}
-                                  onChange={(e) => setCatatanDraft({ ...catatanDraft, [student.nisn]: e.target.value })}
-                                  rows={2}
-                                  disabled={kelas.archived}
-                                  style={{ padding: "8px 12px", fontSize: "0.85rem", resize: "vertical", width: "100%", minHeight: "50px", margin: 0, cursor: kelas.archived ? "not-allowed" : "text" }}
-                                />
-                                <div style={{ display: "flex", gap: "6px" }}>
-                                  <button
-                                    onClick={() => saveCatatan(student.nisn)}
-                                    className="btn btn-primary"
-                                    disabled={savingCatatan[student.nisn] || kelas.archived}
-                                    style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap", opacity: kelas.archived ? 0.5 : 1, cursor: kelas.archived ? "not-allowed" : "pointer" }}
-                                  >
-                                    {savingCatatan[student.nisn] ? "Menyimpan..." : "💾 Simpan"}
-                                  </button>
-                                  <button
-                                    onClick={() => setOpenCatatan({ ...openCatatan, [student.nisn]: false })}
-                                    className="btn btn-secondary"
-                                    style={{ padding: "6px 12px", fontSize: "0.8rem", whiteSpace: "nowrap" }}
-                                  >
-                                    Batal
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
+
                     </Fragment>
                   );
                 })
@@ -4350,6 +4319,67 @@ export default function DetailKelas({ params: paramsPromise }) {
         kelas={kelas}
         students={sortedStudents}
       />
+
+      {/* ============= MODAL CATATAN GURU ============= */}
+      {catatanSiswaTerpilih && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1200, padding: "16px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "550px", display: "flex", flexDirection: "column", gap: "16px", padding: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.3rem" }}>📝</span>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Catatan Perkembangan Siswa</h3>
+              </div>
+              <button onClick={() => setCatatanSiswaTerpilih(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            <div>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px", lineHeight: "1.4" }}>
+                Tulis bimbingan akademik, keterangan ketidakhadiran, atau catatan perkembangan lainnya untuk siswa bernama <strong>{catatanSiswaTerpilih.nama}</strong> (NISN: {catatanSiswaTerpilih.nisn}).
+              </p>
+
+              <textarea
+                className="form-input"
+                placeholder={kelas.archived ? "Kelas diarsipkan, catatan tidak dapat diubah" : "Tulis catatan perkembangan siswa di sini..."}
+                value={catatanDraft[catatanSiswaTerpilih.nisn] !== undefined ? catatanDraft[catatanSiswaTerpilih.nisn] : (catatanSiswaTerpilih.catatan || "")}
+                onChange={(e) => setCatatanDraft({ ...catatanDraft, [catatanSiswaTerpilih.nisn]: e.target.value })}
+                rows={4}
+                disabled={kelas.archived}
+                style={{ 
+                  padding: "12px", 
+                  fontSize: "0.9rem", 
+                  width: "100%", 
+                  borderRadius: "var(--radius-sm)",
+                  borderColor: "var(--border-color)",
+                  outline: "none",
+                  resize: "vertical", 
+                  minHeight: "100px", 
+                  cursor: kelas.archived ? "not-allowed" : "text" 
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
+              <button 
+                type="button" 
+                onClick={() => setCatatanSiswaTerpilih(null)} 
+                className="btn btn-secondary" 
+                style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                onClick={() => saveCatatan(catatanSiswaTerpilih.nisn)} 
+                className="btn btn-primary"
+                disabled={savingCatatan[catatanSiswaTerpilih.nisn] || kelas.archived}
+                style={{ padding: "8px 20px", fontSize: "0.85rem" }}
+              >
+                {savingCatatan[catatanSiswaTerpilih.nisn] ? "Menyimpan..." : "💾 Simpan Catatan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============= MODAL PANDUAN PENGGUNAAN FITUR ============= */}
       {panduanModalOpen && (
