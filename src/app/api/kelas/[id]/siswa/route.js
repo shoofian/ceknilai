@@ -45,11 +45,28 @@ export async function POST(request, { params }) {
         return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
       }
 
+      const initialNilai = nilai || {};
+      if (kelas.kolomNilai && kelas.kolomNilai.length > 0) {
+        kelas.kolomNilai.forEach(col => {
+          if (col.isGroup && col.subKolom) {
+            col.subKolom.forEach(sub => {
+              if (initialNilai[sub.id] === undefined || initialNilai[sub.id] === null || initialNilai[sub.id] === "") {
+                initialNilai[sub.id] = sub.defaultNilai !== undefined && sub.defaultNilai !== null ? sub.defaultNilai : null;
+              }
+            });
+          } else {
+            if (initialNilai[col.id] === undefined || initialNilai[col.id] === null || initialNilai[col.id] === "") {
+              initialNilai[col.id] = col.defaultNilai !== undefined && col.defaultNilai !== null ? col.defaultNilai : null;
+            }
+          }
+        });
+      }
+
       const addedSiswa = await addSiswaToKelas(id, {
         nisn: nisn.trim(),
         nama: nama.trim(),
         tanggalLahir,
-        nilai: nilai || {}
+        nilai: initialNilai
       }, username);
       
       if (!addedSiswa) {

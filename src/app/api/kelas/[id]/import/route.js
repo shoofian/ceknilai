@@ -149,7 +149,7 @@ export async function POST(request, { params }) {
               if (nilai && nilai[keyName] !== undefined && nilai[keyName] !== null && nilai[keyName] !== '') {
                 cleanedNilai[sub.id] = Number(nilai[keyName]);
               } else {
-                cleanedNilai[sub.id] = null;
+                cleanedNilai[sub.id] = sub.defaultNilai !== undefined && sub.defaultNilai !== null ? sub.defaultNilai : null;
               }
             }
           });
@@ -161,7 +161,7 @@ export async function POST(request, { params }) {
           } else if (nilai && nilai[col.nama] !== undefined && nilai[col.nama] !== null && nilai[col.nama] !== '') {
             cleanedNilai[col.id] = Number(nilai[col.nama]);
           } else {
-            cleanedNilai[col.id] = null;
+            cleanedNilai[col.id] = col.defaultNilai !== undefined && col.defaultNilai !== null ? col.defaultNilai : null;
           }
         }
       });

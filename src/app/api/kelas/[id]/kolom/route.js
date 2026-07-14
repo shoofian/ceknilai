@@ -21,7 +21,7 @@ export async function POST(request, { params }) {
     }
 
     const { id } = await params;
-    const { nama, bobot, isGroup, subKolom, hitungMetode } = await request.json();
+    const { nama, bobot, isGroup, subKolom, hitungMetode, defaultNilai } = await request.json();
 
     if (!nama || bobot === undefined) {
       return NextResponse.json(
@@ -40,7 +40,8 @@ export async function POST(request, { params }) {
       id: columnId,
       nama: nama.trim(),
       bobot: Number(bobot),
-      isGroup: !!isGroup
+      isGroup: !!isGroup,
+      defaultNilai: defaultNilai !== undefined && defaultNilai !== null && defaultNilai !== "" ? Number(defaultNilai) : null
     };
     
     if (newColumn.isGroup && Array.isArray(subKolom)) {
@@ -49,7 +50,8 @@ export async function POST(request, { params }) {
       newColumn.subKolom = subKolom.map((sub, i) => ({
         id: `${columnId}-sub-${Date.now()}-${i}`,
         nama: sub.nama.trim(),
-        bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+        bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null,
+        defaultNilai: sub.defaultNilai !== undefined && sub.defaultNilai !== null && sub.defaultNilai !== "" ? Number(sub.defaultNilai) : null
       }));
     }
 
@@ -74,10 +76,10 @@ export async function POST(request, { params }) {
         let updatedNilai = { ...(siswa.nilai || {}) };
         if (newColumn.isGroup && newColumn.subKolom) {
           newColumn.subKolom.forEach(sub => {
-            updatedNilai[sub.id] = null;
+            updatedNilai[sub.id] = sub.defaultNilai !== undefined && sub.defaultNilai !== null ? sub.defaultNilai : null;
           });
         } else {
-          updatedNilai[columnId] = null;
+          updatedNilai[columnId] = newColumn.defaultNilai !== undefined && newColumn.defaultNilai !== null ? newColumn.defaultNilai : null;
         }
 
         return sb.from('siswa')
@@ -133,7 +135,8 @@ export async function PATCH(request, { params }) {
         id: col.id,
         nama: col.nama.trim(),
         bobot: Number(col.bobot),
-        isGroup: !!col.isGroup
+        isGroup: !!col.isGroup,
+        defaultNilai: col.defaultNilai !== undefined && col.defaultNilai !== null && col.defaultNilai !== "" ? Number(col.defaultNilai) : null
       };
       if (cleanCol.isGroup) {
         // Simpan hitungMetode agar metode perhitungan (rata-rata / persentase) terjaga
@@ -142,7 +145,8 @@ export async function PATCH(request, { params }) {
           cleanCol.subKolom = col.subKolom.map(sub => ({
             id: sub.id || `${cleanCol.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2,4)}`,
             nama: sub.nama.trim(),
-            bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+            bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null,
+            defaultNilai: sub.defaultNilai !== undefined && sub.defaultNilai !== null && sub.defaultNilai !== "" ? Number(sub.defaultNilai) : null
           }));
         }
       }
@@ -169,10 +173,15 @@ export async function PATCH(request, { params }) {
           if (col.isGroup && col.subKolom) {
             col.subKolom.forEach(sub => {
               if (updatedNilai[sub.id] === undefined) {
-                updatedNilai[sub.id] = null;
+                updatedNilai[sub.id] = sub.defaultNilai !== undefined && sub.defaultNilai !== null ? sub.defaultNilai : null;
                 changed = true;
               }
             });
+          } else {
+            if (updatedNilai[col.id] === undefined) {
+              updatedNilai[col.id] = col.defaultNilai !== undefined && col.defaultNilai !== null ? col.defaultNilai : null;
+              changed = true;
+            }
           }
         });
 
