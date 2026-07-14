@@ -2555,7 +2555,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
               <thead>
                 <tr>
-                  <th className="sticky-nama" style={{ width: "250px", position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
+                  <th className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
                   {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
                     <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
                       <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</div>
@@ -2881,7 +2881,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
                         NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
-                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ width: "240px", minWidth: "240px", position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
                         Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Tanggal Lahir</th>
@@ -2960,7 +2960,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           className={`sticky-nama ${expandedNama[student.nisn] ? 'expanded-active' : ''}`}
                           onClick={() => toggleNamaExpand(student.nisn)}
                           title="Klik untuk melihat nama lengkap"
-                          style={{ width: "240px", minWidth: "240px", fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
+                          style={{ fontWeight: "700", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span>{student.nama}</span>
