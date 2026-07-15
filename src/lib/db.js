@@ -58,7 +58,7 @@ function mapKelasFromDb(k) {
     siswa: (k.siswa || []).map(s => ({
       nisn: s.nisn,
       nama: s.nama,
-      tanggalLahir: s.tanggal_lahir,
+      tanggalLahir: s.tanggal_lahir === '1900-01-01' ? '' : s.tanggal_lahir,
       nilai: s.nilai || {},
       catatan: s.catatan || ""
     }))
@@ -309,7 +309,7 @@ export async function createKelas(newKelas, guruUsername = null) {
         kelas_id: id,
         nisn: s.nisn,
         nama: s.nama,
-        tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : null,
+        tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : '1900-01-01',
         nilai: s.nilai || {},
         catatan: s.catatan || ""
       }));
@@ -449,7 +449,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
           kelas_id: id,
           nisn: s.nisn,
           nama: s.nama,
-          tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : null,
+          tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : '1900-01-01',
           nilai: s.nilai || {},
           catatan: s.catatan || ""
         }));
@@ -520,7 +520,7 @@ export async function addSiswaToKelas(kelasId, siswaBaru, guruUsername = null) {
       kelas_id: kelasId,
       nisn: siswaBaru.nisn,
       nama: siswaBaru.nama,
-      tanggal_lahir: (siswaBaru.tanggalLahir && siswaBaru.tanggalLahir.toString().trim() !== "") ? siswaBaru.tanggalLahir : null,
+      tanggal_lahir: (siswaBaru.tanggalLahir && siswaBaru.tanggalLahir.toString().trim() !== "") ? siswaBaru.tanggalLahir : '1900-01-01',
       nilai: nilai,
       catatan: siswaBaru.catatan || ""
     };
@@ -539,7 +539,7 @@ export async function addSiswaToKelas(kelasId, siswaBaru, guruUsername = null) {
     return {
       nisn: data.nisn,
       nama: data.nama,
-      tanggalLahir: data.tanggal_lahir,
+      tanggalLahir: data.tanggal_lahir === '1900-01-01' ? '' : data.tanggal_lahir,
       nilai: data.nilai || {},
       catatan: data.catatan || ""
     };
@@ -558,7 +558,7 @@ export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa, guruUserna
     const updates = {};
     if (updatedSiswa.nama !== undefined) updates.nama = updatedSiswa.nama;
     if (updatedSiswa.tanggalLahir !== undefined) {
-      updates.tanggal_lahir = (updatedSiswa.tanggalLahir && updatedSiswa.tanggalLahir.toString().trim() !== "") ? updatedSiswa.tanggalLahir : null;
+      updates.tanggal_lahir = (updatedSiswa.tanggalLahir && updatedSiswa.tanggalLahir.toString().trim() !== "") ? updatedSiswa.tanggalLahir : '1900-01-01';
     }
     if (updatedSiswa.nilai !== undefined) updates.nilai = updatedSiswa.nilai;
     if (updatedSiswa.catatan !== undefined) updates.catatan = updatedSiswa.catatan;
@@ -579,7 +579,7 @@ export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa, guruUserna
     return {
       nisn: data.nisn,
       nama: data.nama,
-      tanggalLahir: data.tanggal_lahir,
+      tanggalLahir: data.tanggal_lahir === '1900-01-01' ? '' : data.tanggal_lahir,
       nilai: data.nilai || {},
       catatan: data.catatan || ""
     };
