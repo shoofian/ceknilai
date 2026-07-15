@@ -16,7 +16,7 @@ export default function KelolaKelas() {
   const [tingkatan, setTingkatan] = useState("");
   const [mataPelajaran, setMataPelajaran] = useState("");
   const [mataPelajaranCustom, setMataPelajaranCustom] = useState("");
-  const [tahunAjaran, setTahunAjaran] = useState("");
+  const [tahunAjaran, setTahunAjaran] = useState(`${new Date().getFullYear()}/${new Date().getFullYear() + 1}`);
   const [semester, setSemester] = useState("");
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
@@ -55,7 +55,7 @@ export default function KelolaKelas() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [parsedClasses, setParsedClasses] = useState([]);
   const [parsedStudents, setParsedStudents] = useState([]);
-  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), tingkatan: "", rombelNama: "", namaKustom: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" }]);
+  const [bulkForms, setBulkForms] = useState([{ id: Date.now(), tingkatan: "", rombelNama: "", namaKustom: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`, semester: "Ganjil", sourceRombel: "" }]);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
@@ -554,7 +554,7 @@ export default function KelolaKelas() {
           namaKustom: "",
           mataPelajaran: "",
           mataPelajaranCustom: "",
-          tahunAjaran: "",
+          tahunAjaran: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`,
           semester: "Ganjil",
           sourceRombel: ""
         }];
@@ -601,7 +601,7 @@ export default function KelolaKelas() {
 
       const isLastFilled = updated[updated.length - 1].rombelNama.trim() !== "" || updated[updated.length - 1].sourceRombel !== "";
       if (isLastFilled) {
-        updated.push({ id: Date.now(), tingkatan: "", rombelNama: "", namaKustom: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: "", semester: "Ganjil", sourceRombel: "" });
+        updated.push({ id: Date.now(), tingkatan: "", rombelNama: "", namaKustom: "", mataPelajaran: "", mataPelajaranCustom: "", tahunAjaran: `${new Date().getFullYear()}/${new Date().getFullYear() + 1}`, semester: "Ganjil", sourceRombel: "" });
       }
 
       return updated;
