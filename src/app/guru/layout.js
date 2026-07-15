@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import OnboardingGuide from "@/components/OnboardingGuide";
 
 export default function GuruLayout({ children }) {
   const [loading, setLoading] = useState(true);
@@ -305,6 +306,7 @@ export default function GuruLayout({ children }) {
             </div>
           )}
           {children}
+          <OnboardingGuide />
         </div>
       </div>
 
