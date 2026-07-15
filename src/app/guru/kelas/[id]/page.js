@@ -1307,6 +1307,21 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         if (aspectsToAdd.length > 0) {
           const updatedCols = [...kelas.kolomNilai, ...aspectsToAdd];
+          
+          // Urutkan aspek berdasarkan urutan di kelas asal agar susunannya sama
+          const sourceOrderMap = new Map();
+          sourceClass.kolomNilai.forEach((col, idx) => {
+            sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
+          });
+          
+          updatedCols.sort((a, b) => {
+            const aName = a.nama.trim().toLowerCase();
+            const bName = b.nama.trim().toLowerCase();
+            const aIdx = sourceOrderMap.has(aName) ? sourceOrderMap.get(aName) : 999999;
+            const bIdx = sourceOrderMap.has(bName) ? sourceOrderMap.get(bName) : 999999;
+            return aIdx - bIdx;
+          });
+
           setKelas({ ...kelas, kolomNilai: updatedCols });
           setNewAspects([]); // Bersihkan newAspects jika ada aspek yang disalin
           setActiveAspectId(aspectsToAdd[0].id); // Pilih aspek pertama yang baru disalin
