@@ -2644,6 +2644,17 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
               <thead>
                 <tr>
+                  <th style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                    <input
+                      type="checkbox"
+                      checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
+                      onChange={handleSelectAllStudents}
+                      style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                    />
+                  </th>
+                  <th style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                    No
+                  </th>
                   <th className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
                   {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
                     <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
@@ -2743,12 +2754,23 @@ export default function DetailKelas({ params: paramsPromise }) {
               <tbody>
                 {kelas.siswa.length === 0 ? (
                   <tr>
-                    <td colSpan={(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
+                    <td colSpan={kelas.skemaPenilaian?.pertemuan?.length > 0 ? (kelas.skemaPenilaian.pertemuan.length + 9) : 4} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)" }}>
                       Belum ada siswa di kelas ini.
                     </td>
                   </tr>
                 ) : kelas.siswa.map((siswa, sIdx) => (
                   <tr key={siswa.nisn} style={{ backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
+                    <td style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedNisns.includes(siswa.nisn)}
+                        onChange={() => handleSelectStudent(siswa.nisn)}
+                        style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                      />
+                    </td>
+                    <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                      {sIdx + 1}
+                    </td>
                     <td 
                       className={`sticky-nama ${isNamaColumnExpanded ? 'expanded-active' : ''}`}
                       onClick={toggleNamaExpand}
