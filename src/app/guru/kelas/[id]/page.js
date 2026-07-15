@@ -110,7 +110,14 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Presensi
   const [presensiModalOpen, setPresensiModalOpen] = useState(false);
   const [isSavingPresensi, setIsSavingPresensi] = useState(false);
-  const [isPresensiLocked, setIsPresensiLocked] = useState(true);
+  const [unlockedPertemuanIds, setUnlockedPertemuanIds] = useState([]);
+  const togglePertemuanLock = (pertemuanId) => {
+    setUnlockedPertemuanIds(prev => 
+      prev.includes(pertemuanId) 
+        ? prev.filter(id => id !== pertemuanId) 
+        : [...prev, pertemuanId]
+    );
+  };
   // temporary settings while configuring
   const [presensiConfigTemp, setPresensiConfigTemp] = useState({ digunakan: false, bobot: 0 });
 
@@ -2529,14 +2536,20 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
               <button 
-                onClick={() => setIsPresensiLocked(!isPresensiLocked)} 
+                onClick={() => {
+                  if (unlockedPertemuanIds.length > 0) {
+                    setUnlockedPertemuanIds([]);
+                  } else {
+                    setUnlockedPertemuanIds((kelas.skemaPenilaian?.pertemuan || []).map(p => p.id));
+                  }
+                }} 
                 className="btn" 
                 style={{ 
                   fontSize: "0.85rem", 
                   padding: "8px 16px",
-                  backgroundColor: isPresensiLocked ? "rgba(30, 41, 59, 0.6)" : "rgba(239, 68, 68, 0.2)",
-                  color: isPresensiLocked ? "var(--text-primary)" : "#ef4444",
-                  border: isPresensiLocked ? "1px solid var(--border-color)" : "1px solid #ef4444",
+                  backgroundColor: unlockedPertemuanIds.length > 0 ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.6)",
+                  color: unlockedPertemuanIds.length > 0 ? "#ef4444" : "var(--text-primary)",
+                  border: unlockedPertemuanIds.length > 0 ? "1px solid #ef4444" : "1px solid var(--border-color)",
                   borderRadius: "var(--radius-md)",
                   cursor: "pointer",
                   display: "flex",
@@ -2546,7 +2559,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   transition: "all 0.2s"
                 }}
               >
-                {isPresensiLocked ? "🔒 Edit Terkunci" : "🔓 Edit Aktif"}
+                {unlockedPertemuanIds.length > 0 ? "🔒 Kunci Semua Kolom" : "🔓 Buka Semua Kolom"}
               </button>
               <button onClick={() => {
                 setPresensiConfigTemp(kelas.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 });
@@ -2694,7 +2707,26 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <th className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
                   {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
                     <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
-                      <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</div>
+                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</span>
+                        <button 
+                          onClick={() => togglePertemuanLock(p.id)} 
+                          style={{
+                            background: unlockedPertemuanIds.includes(p.id) ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.8)",
+                            border: unlockedPertemuanIds.includes(p.id) ? "1px solid #ef4444" : "1px solid var(--border-color)",
+                            borderRadius: "4px",
+                            padding: "2px 4px",
+                            color: unlockedPertemuanIds.includes(p.id) ? "#ef4444" : "var(--text-muted)",
+                            cursor: "pointer",
+                            fontSize: "0.68rem",
+                            lineHeight: 1,
+                            transition: "all 0.2s"
+                          }}
+                          title={unlockedPertemuanIds.includes(p.id) ? "Klik untuk mengunci kolom ini" : "Klik untuk membuka kunci kolom ini"}
+                        >
+                          {unlockedPertemuanIds.includes(p.id) ? "🔓" : "🔒"}
+                        </button>
+                      </div>
                       <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500", marginTop: "2px" }}>{p.tanggal}</div>
                       {p.materi && (
                         <div 
@@ -2823,7 +2855,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td key={p.id} style={{ textAlign: "center", padding: "6px" }}>
                           <button 
                             onClick={() => {
-                              if (isPresensiLocked) return;
+                              const isLocked = !unlockedPertemuanIds.includes(p.id);
+                              if (isLocked) return;
                               const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
                               const newSiswa = [...kelas.siswa];
                               newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
@@ -2832,15 +2865,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                               // Trigger auto save reusing handleSaveScore logic
                               handleSaveScore(siswa.nisn, `_presensi_${p.id}`, nextVal);
                             }}
-                            title={isPresensiLocked ? "Tabel terkunci. Aktifkan Edit Mode untuk mengubah." : "Klik untuk mengubah"}
+                            title={!unlockedPertemuanIds.includes(p.id) ? "Kolom terkunci. Klik ikon gembok di atas/bawah kolom untuk mengedit." : "Klik untuk mengubah"}
                             style={{
                               width: "42px", height: "42px", borderRadius: "10px", border: val === "" ? "1px dashed var(--border-color)" : "none", fontWeight: "800", 
-                              cursor: isPresensiLocked ? "not-allowed" : "pointer", 
+                              cursor: !unlockedPertemuanIds.includes(p.id) ? "not-allowed" : "pointer", 
                               fontSize: "1.1rem",
                               backgroundColor: val === 'H' ? "var(--success)" : val === 'I' ? "var(--warning)" : val === 'S' ? "#3b82f6" : val === 'A' ? "var(--danger)" : val === 'D' ? "#8b5cf6" : "transparent",
                               color: val === "" ? "var(--text-muted)" : "#fff",
                               transition: "all 0.2s",
-                              opacity: isPresensiLocked && val === "" ? 0.35 : 1
+                              opacity: !unlockedPertemuanIds.includes(p.id) && val === "" ? 0.35 : 1
                             }}>
                             {val || "-"}
                           </button>
@@ -2878,6 +2911,42 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr style={{ backgroundColor: "var(--bg-tertiary)", borderTop: "2px solid var(--border-color)" }}>
+                  <td colSpan={3} style={{ textAlign: "right", fontWeight: "700", padding: "10px 16px", color: "var(--text-secondary)", fontSize: "0.8rem" }}>
+                    Status Kunci:
+                  </td>
+                  {(kelas.skemaPenilaian?.pertemuan || []).map(p => (
+                    <td key={p.id} style={{ textAlign: "center", padding: "8px" }}>
+                      <button 
+                        onClick={() => togglePertemuanLock(p.id)} 
+                        style={{
+                          background: unlockedPertemuanIds.includes(p.id) ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.8)",
+                          border: unlockedPertemuanIds.includes(p.id) ? "1px solid #ef4444" : "1px solid var(--border-color)",
+                          borderRadius: "4px",
+                          padding: "2px 6px",
+                          color: unlockedPertemuanIds.includes(p.id) ? "#ef4444" : "var(--text-muted)",
+                          cursor: "pointer",
+                          fontSize: "0.68rem",
+                          fontWeight: "bold",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          transition: "all 0.2s",
+                          marginLeft: "auto",
+                          marginRight: "auto"
+                        }}
+                        title={unlockedPertemuanIds.includes(p.id) ? "Klik untuk mengunci kolom ini" : "Klik untuk membuka kunci kolom ini"}
+                      >
+                        {unlockedPertemuanIds.includes(p.id) ? "🔓" : "🔒"}
+                      </button>
+                    </td>
+                  ))}
+                  {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
+                    <td colSpan={6}></td>
+                  )}
+                </tr>
+              </tfoot>
             </table>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "0 24px", marginTop: "10px" }}>
@@ -2890,14 +2959,20 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
 
             <button 
-              onClick={() => setIsPresensiLocked(!isPresensiLocked)} 
+              onClick={() => {
+                if (unlockedPertemuanIds.length > 0) {
+                  setUnlockedPertemuanIds([]);
+                } else {
+                  setUnlockedPertemuanIds((kelas.skemaPenilaian?.pertemuan || []).map(p => p.id));
+                }
+              }} 
               className="btn" 
               style={{ 
                 fontSize: "0.85rem", 
                 padding: "8px 16px",
-                backgroundColor: isPresensiLocked ? "rgba(30, 41, 59, 0.6)" : "rgba(239, 68, 68, 0.2)",
-                color: isPresensiLocked ? "var(--text-primary)" : "#ef4444",
-                border: isPresensiLocked ? "1px solid var(--border-color)" : "1px solid #ef4444",
+                backgroundColor: unlockedPertemuanIds.length > 0 ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.6)",
+                color: unlockedPertemuanIds.length > 0 ? "#ef4444" : "var(--text-primary)",
+                border: unlockedPertemuanIds.length > 0 ? "1px solid #ef4444" : "1px solid var(--border-color)",
                 borderRadius: "var(--radius-md)",
                 cursor: "pointer",
                 display: "flex",
@@ -2907,7 +2982,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 transition: "all 0.2s"
               }}
             >
-              {isPresensiLocked ? "🔒 Edit Terkunci" : "🔓 Edit Aktif"}
+              {unlockedPertemuanIds.length > 0 ? "🔒 Kunci Semua Kolom" : "🔓 Buka Semua Kolom"}
             </button>
           </div>
         </div>
