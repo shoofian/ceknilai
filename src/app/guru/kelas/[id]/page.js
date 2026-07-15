@@ -110,6 +110,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Presensi
   const [presensiModalOpen, setPresensiModalOpen] = useState(false);
   const [isSavingPresensi, setIsSavingPresensi] = useState(false);
+  const [isPresensiLocked, setIsPresensiLocked] = useState(true);
   // temporary settings while configuring
   const [presensiConfigTemp, setPresensiConfigTemp] = useState({ digunakan: false, bobot: 0 });
 
@@ -2526,7 +2527,27 @@ export default function DetailKelas({ params: paramsPromise }) {
                 Kelola kehadiran siswa. Klik pada sel untuk mengubah status: <strong style={{color:"var(--success)"}}>H</strong> (Hadir), <strong style={{color:"var(--warning)"}}>I</strong> (Izin), <strong style={{color:"#3b82f6"}} >S</strong> (Sakit), <strong style={{color:"var(--danger)"}}>A</strong> (Alpa).
               </p>
             </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+              <button 
+                onClick={() => setIsPresensiLocked(!isPresensiLocked)} 
+                className="btn" 
+                style={{ 
+                  fontSize: "0.85rem", 
+                  padding: "8px 16px",
+                  backgroundColor: isPresensiLocked ? "rgba(30, 41, 59, 0.6)" : "rgba(239, 68, 68, 0.2)",
+                  color: isPresensiLocked ? "var(--text-primary)" : "#ef4444",
+                  border: isPresensiLocked ? "1px solid var(--border-color)" : "1px solid #ef4444",
+                  borderRadius: "var(--radius-md)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  fontWeight: "700",
+                  transition: "all 0.2s"
+                }}
+              >
+                {isPresensiLocked ? "🔒 Edit Terkunci" : "🔓 Edit Aktif"}
+              </button>
               <button onClick={() => {
                 setPresensiConfigTemp(kelas.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 });
                 setPresensiModalOpen(true);
@@ -2802,6 +2823,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <td key={p.id} style={{ textAlign: "center", padding: "6px" }}>
                           <button 
                             onClick={() => {
+                              if (isPresensiLocked) return;
                               const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
                               const newSiswa = [...kelas.siswa];
                               newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
@@ -2810,12 +2832,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                               // Trigger auto save reusing handleSaveScore logic
                               handleSaveScore(siswa.nisn, `_presensi_${p.id}`, nextVal);
                             }}
-                            title="Klik untuk mengubah"
+                            title={isPresensiLocked ? "Tabel terkunci. Aktifkan Edit Mode untuk mengubah." : "Klik untuk mengubah"}
                             style={{
-                              width: "42px", height: "42px", borderRadius: "10px", border: val === "" ? "1px dashed var(--border-color)" : "none", fontWeight: "800", cursor: "pointer", fontSize: "1.1rem",
+                              width: "42px", height: "42px", borderRadius: "10px", border: val === "" ? "1px dashed var(--border-color)" : "none", fontWeight: "800", 
+                              cursor: isPresensiLocked ? "not-allowed" : "pointer", 
+                              fontSize: "1.1rem",
                               backgroundColor: val === 'H' ? "var(--success)" : val === 'I' ? "var(--warning)" : val === 'S' ? "#3b82f6" : val === 'A' ? "var(--danger)" : val === 'D' ? "#8b5cf6" : "transparent",
                               color: val === "" ? "var(--text-muted)" : "#fff",
-                              transition: "all 0.2s"
+                              transition: "all 0.2s",
+                              opacity: isPresensiLocked && val === "" ? 0.35 : 1
                             }}>
                             {val || "-"}
                           </button>
@@ -2855,12 +2880,35 @@ export default function DetailKelas({ params: paramsPromise }) {
               </tbody>
             </table>
           </div>
-          <div style={{ display: "flex", gap: "20px", fontSize: "0.85rem", color: "var(--text-secondary)", justifyContent: "center", marginTop: "10px", flexWrap: "wrap", padding: "0 20px" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--success)" }}></div> Hadir (100)</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (50)</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (50)</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpa (0)</span>
-            <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (100)</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "0 24px", marginTop: "10px" }}>
+            <div style={{ display: "flex", gap: "20px", fontSize: "0.85rem", color: "var(--text-secondary)", flexWrap: "wrap" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--success)" }}></div> Hadir (100)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (50)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (50)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpa (0)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (100)</span>
+            </div>
+
+            <button 
+              onClick={() => setIsPresensiLocked(!isPresensiLocked)} 
+              className="btn" 
+              style={{ 
+                fontSize: "0.85rem", 
+                padding: "8px 16px",
+                backgroundColor: isPresensiLocked ? "rgba(30, 41, 59, 0.6)" : "rgba(239, 68, 68, 0.2)",
+                color: isPresensiLocked ? "var(--text-primary)" : "#ef4444",
+                border: isPresensiLocked ? "1px solid var(--border-color)" : "1px solid #ef4444",
+                borderRadius: "var(--radius-md)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontWeight: "700",
+                transition: "all 0.2s"
+              }}
+            >
+              {isPresensiLocked ? "🔒 Edit Terkunci" : "🔓 Edit Aktif"}
+            </button>
           </div>
         </div>
       )}
