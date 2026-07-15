@@ -443,11 +443,6 @@ export default function KelolaKelas() {
           return;
         }
 
-        if (tglIdx === -1) {
-          setDapodikUploadError("Kolom 'Tanggal Lahir' tidak ditemukan di dalam berkas. Siswa tidak berhasil ditambahkan.");
-          return;
-        }
-
         const extractedStudents = [];
         const uniqueClasses = new Set();
         const warnings = [];

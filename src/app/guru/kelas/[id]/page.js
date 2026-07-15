@@ -1799,8 +1799,8 @@ export default function DetailKelas({ params: paramsPromise }) {
         const namaIdx = headers.indexOf("Nama");
         const tglIdx = headers.indexOf("Tanggal Lahir (YYYY-MM-DD)");
         
-        if (nisnIdx === -1 || namaIdx === -1 || tglIdx === -1) {
-          alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: NISN, Nama, Tanggal Lahir (YYYY-MM-DD)");
+        if (nisnIdx === -1 || namaIdx === -1) {
+          alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: NISN, Nama");
           return;
         }
         
@@ -1812,7 +1812,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           const nisnVal = String(cols[nisnIdx]).trim();
           const namaVal = String(cols[namaIdx]).trim();
-          const tglVal = String(cols[tglIdx]).trim();
+          const tglVal = tglIdx !== -1 ? String(cols[tglIdx]).trim() : "";
           
           if (!nisnVal || !namaVal) continue;
           
