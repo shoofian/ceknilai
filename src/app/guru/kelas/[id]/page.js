@@ -985,8 +985,8 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const handleSiswaSubmit = async (e) => {
     e.preventDefault();
-    if (!nisn.trim() || !namaSiswa.trim() || !tanggalLahir) {
-      setSiswaError("Semua bidang harus diisi.");
+    if (!nisn.trim() || !namaSiswa.trim()) {
+      setSiswaError("NISN dan Nama Siswa harus diisi.");
       return;
     }
 
@@ -998,7 +998,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             nama: namaSiswa.trim(), 
-            tanggalLahir
+            tanggalLahir: tanggalLahir || null
           }),
         });
       } else {
@@ -1008,7 +1008,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           body: JSON.stringify({ 
             nisn: nisn.trim(), 
             nama: namaSiswa.trim(), 
-            tanggalLahir
+            tanggalLahir: tanggalLahir || null
           }),
         });
       }

@@ -123,10 +123,13 @@ export async function POST(request) {
           if (Array.isArray(siswaList)) {
             for (const s of siswaList) {
               const { nisn, nama: sNama, tanggalLahir, nilai, catatan } = s;
-              if (!nisn || !sNama || !tanggalLahir) continue;
+              if (!nisn || !sNama) continue;
 
-              const cleanTanggal = parseDateToYmd(tanggalLahir);
-              if (!cleanTanggal) continue;
+              let cleanTanggal = null;
+              if (tanggalLahir && tanggalLahir.toString().trim() !== '') {
+                cleanTanggal = parseDateToYmd(tanggalLahir);
+                if (!cleanTanggal) continue;
+              }
 
               formattedStudents.push({
                 nisn: nisn.toString().trim(),

@@ -23,20 +23,22 @@ export async function POST(request, { params }) {
     const { id } = await params;
     const { nisn, nama, tanggalLahir, nilai } = await request.json();
 
-    if (!nisn || !nama || !tanggalLahir) {
+    if (!nisn || !nama) {
       return NextResponse.json(
-        { error: 'NISN, Nama, dan Tanggal Lahir harus diisi' },
+        { error: 'NISN dan Nama harus diisi' },
         { status: 400 }
       );
     }
 
-    // Validasi format tanggal YYYY-MM-DD
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    if (!dateRegex.test(tanggalLahir)) {
-      return NextResponse.json(
-        { error: 'Format tanggal lahir harus YYYY-MM-DD (contoh: 2010-05-20)' },
-        { status: 400 }
-      );
+    // Validasi format tanggal YYYY-MM-DD jika diisi
+    if (tanggalLahir && tanggalLahir.trim() !== '') {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(tanggalLahir)) {
+        return NextResponse.json(
+          { error: 'Format tanggal lahir harus YYYY-MM-DD (contoh: 2010-05-20)' },
+          { status: 400 }
+        );
+      }
     }
 
     try {

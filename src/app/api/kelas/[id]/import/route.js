@@ -120,19 +120,22 @@ export async function POST(request, { params }) {
     for (const item of siswaList) {
       const { nisn, nama, tanggalLahir, nilai } = item;
       
-      if (!nisn || !nama || !tanggalLahir) {
-        console.warn(`[Import API] Skipped student due to missing fields: nisn=${!!nisn}, nama=${!!nama}, tanggalLahir=${!!tanggalLahir}`);
+      if (!nisn || !nama) {
+        console.warn(`[Import API] Skipped student due to missing fields: nisn=${!!nisn}, nama=${!!nama}`);
         continue; // Skip baris tidak lengkap
       }
 
       const cleanNisn = nisn.toString().trim();
       const cleanNama = nama.toString().trim();
       
-      // Parse tanggal lahir dengan fungsi robust helper
-      const cleanTanggal = parseDateToYmd(tanggalLahir);
-      if (!cleanTanggal) {
-        console.warn(`[Import API] Skipped student "${cleanNama}" (${cleanNisn}) due to invalid date format: "${tanggalLahir}"`);
-        continue; // Skip jika format tanggal tidak dapat diidentifikasi
+      // Parse tanggal lahir dengan fungsi robust helper jika ada
+      let cleanTanggal = null;
+      if (tanggalLahir && tanggalLahir.toString().trim() !== '') {
+        cleanTanggal = parseDateToYmd(tanggalLahir);
+        if (!cleanTanggal) {
+          console.warn(`[Import API] Skipped student "${cleanNama}" (${cleanNisn}) due to invalid date format: "${tanggalLahir}"`);
+          continue; // Skip jika format tanggal tidak dapat diidentifikasi
+        }
       }
 
       // Bersihkan nilai agar sesuai dengan kolomNilai yang ada
