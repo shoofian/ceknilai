@@ -21,6 +21,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   
   // States untuk Siswa
   const [siswaModalOpen, setSiswaModalOpen] = useState(false);
+  const [selectedNisns, setSelectedNisns] = useState([]);
   const [isEditingSiswa, setIsEditingSiswa] = useState(false);
   const [oldNisn, setOldNisn] = useState("");
   const [nisn, setNisn] = useState("");
@@ -1048,6 +1049,49 @@ export default function DetailKelas({ params: paramsPromise }) {
         confirmText: "Ya, Hapus",
         isDanger: true
       }
+    );
+  };
+  const handleSelectStudent = (studentNisn) => {
+    setSelectedNisns((prev) =>
+      prev.includes(studentNisn)
+        ? prev.filter((id) => id !== studentNisn)
+        : [...prev, studentNisn]
+    );
+  };
+
+  const handleSelectAllStudents = () => {
+    if (!kelas || !kelas.siswa) return;
+    if (selectedNisns.length === kelas.siswa.length) {
+      setSelectedNisns([]);
+    } else {
+      setSelectedNisns(kelas.siswa.map((s) => s.nisn));
+    }
+  };
+
+  const handleBulkDeleteStudents = () => {
+    if (selectedNisns.length === 0) return;
+    
+    triggerConfirm(
+      `⚠️ PERINGATAN MASAL!\nApakah Anda yakin ingin menghapus ${selectedNisns.length} siswa secara sekaligus?\nTindakan ini bersifat PERMANEN dan akan menghapus semua data siswa beserta nilai mereka di kelas ini!`,
+      async () => {
+        try {
+          const deletePromises = selectedNisns.map((studentNisn) =>
+            fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+              method: "DELETE",
+            })
+          );
+          
+          await Promise.all(deletePromises);
+          
+          setSelectedNisns([]);
+          fetchClassDetail();
+          triggerConfirm(`Berhasil menghapus ${deletePromises.length} siswa secara sekaligus.`, null, { title: "Sukses", confirmText: "OK", cancelText: "" });
+        } catch (err) {
+          console.error("Bulk delete failed", err);
+          alert("Gagal melakukan hapus massal.");
+        }
+      },
+      { title: "⚠️ Hapus Massal Siswa", confirmText: "Hapus Sekaligus", cancelText: "Batal", isDanger: true }
     );
   };
 
@@ -2928,6 +2972,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 23 }}>
+                        <input
+                          type="checkbox"
+                          checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
+                          onChange={handleSelectAllStudents}
+                          style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                        />
+                      </th>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
                         NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
@@ -3003,6 +3055,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr style={{ backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
+                        <td style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedNisns.includes(student.nisn)}
+                            onChange={() => handleSelectStudent(student.nisn)}
+                            style={{ cursor: "pointer", width: "16px", height: "16px" }}
+                          />
+                        </td>
                         <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
@@ -3227,7 +3287,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <td colSpan={6 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
                     Belum ada data siswa di kelas ini. Silakan klik tombol <strong>👤 Tambah Siswa</strong> pada Panel Kontrol untuk memulai pengisian nilai.
                   </td>
                 </tr>
@@ -3247,6 +3307,70 @@ export default function DetailKelas({ params: paramsPromise }) {
 
 
       </>
+      )}
+
+      {/* Bulk Action Bar */}
+      {selectedNisns.length > 0 && (
+        <div
+          className="no-print animate-fade-in"
+          style={{
+            position: "fixed",
+            bottom: "32px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "rgba(15, 23, 42, 0.85)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            borderRadius: "16px",
+            padding: "14px 28px",
+            display: "flex",
+            alignItems: "center",
+            gap: "24px",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.25)",
+            zIndex: 150,
+            color: "#fff",
+          }}
+        >
+          <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>
+            📋 {selectedNisns.length} Siswa Terpilih
+          </span>
+          <div style={{ width: "1px", height: "24px", backgroundColor: "rgba(255, 255, 255, 0.2)" }} />
+          <button
+            onClick={handleBulkDeleteStudents}
+            disabled={isLocked}
+            className="btn btn-primary"
+            style={{
+              backgroundColor: "var(--danger)",
+              borderColor: "transparent",
+              color: "#fff",
+              padding: "8px 16px",
+              fontSize: "0.85rem",
+              fontWeight: "700",
+              borderRadius: "8px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              cursor: isLocked ? "not-allowed" : "pointer",
+            }}
+          >
+            🗑️ Hapus Massal
+          </button>
+          <button
+            onClick={() => setSelectedNisns([])}
+            className="btn btn-secondary"
+            style={{
+              padding: "8px 16px",
+              fontSize: "0.85rem",
+              fontWeight: "600",
+              borderRadius: "8px",
+              color: "#ccc",
+              borderColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: "transparent",
+            }}
+          >
+            Batal
+          </button>
+        </div>
       )}
 
       {/* ===== FAB + Dropdown Menu ===== */}
