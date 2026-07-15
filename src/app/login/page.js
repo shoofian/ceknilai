@@ -20,7 +20,7 @@ export default function LoginGuru() {
         if (response.ok) {
           const data = await response.json();
           if (data.loggedIn) {
-            router.push("/guru");
+            router.push("/guru/kelas");
           }
         }
       } catch (err) {
@@ -55,8 +55,8 @@ export default function LoginGuru() {
         throw new Error(data.error || "Gagal masuk");
       }
 
-      // Berhasil masuk, arahkan ke dashboard guru
-      router.push("/guru");
+      // Berhasil masuk, arahkan ke daftar kelas guru
+      router.push("/guru/kelas");
     } catch (err) {
       setError(err.message || "Username atau password salah.");
     } finally {
