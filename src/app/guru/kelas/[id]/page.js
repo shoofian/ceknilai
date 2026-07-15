@@ -1814,7 +1814,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           const namaVal = String(cols[namaIdx]).trim();
           const tglVal = String(cols[tglIdx]).trim();
           
-          if (!nisnVal || !namaVal || !tglVal) continue;
+          if (!nisnVal || !namaVal) continue;
           
           const nilaiObj = {};
           kelas.kolomNilai.forEach(col => {

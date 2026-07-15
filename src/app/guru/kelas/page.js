@@ -523,11 +523,10 @@ export default function KelolaKelas() {
           if (!nisnVal) missingFields.push("NISN");
           if (!namaVal) missingFields.push("Nama");
           if (!rombelVal) missingFields.push("Rombel");
-          if (!tglVal) missingFields.push("Tanggal Lahir");
 
           if (missingFields.length > 0) {
             // Catat baris bermasalah jika ada setidaknya salah satu data terisi (bukan baris kosong)
-            if (nisnVal || namaVal || rombelVal || tglVal) {
+            if (nisnVal || namaVal || rombelVal) {
               const identifier = namaVal || nisnVal || `Baris ${i + 1}`;
               warnings.push(`Siswa "${identifier}" (Baris ${i + 1}) dilewati karena data tidak lengkap: ${missingFields.join(", ")} tidak ditemukan.`);
             }
