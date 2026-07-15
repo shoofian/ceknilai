@@ -2980,6 +2980,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
                         />
                       </th>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                        No
+                      </th>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
                         NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
@@ -3062,6 +3065,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                             onChange={() => handleSelectStudent(student.nisn)}
                             style={{ cursor: "pointer", width: "16px", height: "16px" }}
                           />
+                        </td>
+                        <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                          {idx + 1}
                         </td>
                         <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
@@ -3287,7 +3293,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 })
               ) : (
                 <tr>
-                  <td colSpan={6 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <td colSpan={7 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
                     Belum ada data siswa di kelas ini. Silakan klik tombol <strong>👤 Tambah Siswa</strong> pada Panel Kontrol untuk memulai pengisian nilai.
                   </td>
                 </tr>
