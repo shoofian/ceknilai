@@ -803,7 +803,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleOpenAddPertemuan = () => {
     setIsEditingPertemuan(false);
     setSelectedPertemuanId("");
-    setPertemuanNama(`Pertemuan ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
+    setPertemuanNama(`Pert. ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
     setPertemuanTanggal(new Date().toISOString().split('T')[0]);
     setPertemuanMateri("");
     setPertemuanKegiatan("");
@@ -2706,28 +2706,34 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </th>
                   <th className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
                   {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
-                    <th key={p.id} style={{ minWidth: "120px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
-                      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>{p.nama}</span>
+                    <th key={p.id} style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)" }} title={p.nama}>
+                          {p.nama.replace(/Pertemuan/i, "Pert.")}
+                        </span>
+                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
                         <button 
                           onClick={() => togglePertemuanLock(p.id)} 
                           style={{
                             background: unlockedPertemuanIds.includes(p.id) ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.8)",
                             border: unlockedPertemuanIds.includes(p.id) ? "1px solid #ef4444" : "1px solid var(--border-color)",
                             borderRadius: "4px",
-                            padding: "2px 4px",
+                            padding: "2px 6px",
                             color: unlockedPertemuanIds.includes(p.id) ? "#ef4444" : "var(--text-muted)",
                             cursor: "pointer",
                             fontSize: "0.68rem",
                             lineHeight: 1,
+                            marginTop: "4px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
                             transition: "all 0.2s"
                           }}
                           title={unlockedPertemuanIds.includes(p.id) ? "Klik untuk mengunci kolom ini" : "Klik untuk membuka kunci kolom ini"}
                         >
-                          {unlockedPertemuanIds.includes(p.id) ? "🔓" : "🔒"}
+                          {unlockedPertemuanIds.includes(p.id) ? "🔓 Buka" : "🔒 Kunci"}
                         </button>
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500", marginTop: "2px" }}>{p.tanggal}</div>
                       {p.materi && (
                         <div 
                           onClick={() => handleOpenEditPertemuan(p)}
