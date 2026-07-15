@@ -41,6 +41,27 @@ export default function ProfilGuru() {
   const [walikelasRombelNama, setWalikelasRombelNama] = useState("");
   const [walikelasTahunAjaran, setWalikelasTahunAjaran] = useState("2025/2026");
 
+  // Report config states (Global)
+  const [namaSekolah, setNamaSekolah] = useState("");
+  const [alamatSekolah, setAlamatSekolah] = useState("");
+  const [telpSekolah, setTelpSekolah] = useState("");
+  const [kotaCetak, setKotaCetak] = useState("");
+  const [namaKepsek, setNamaKepsek] = useState("");
+  const [nipKepsek, setNipKepsek] = useState("");
+  const [nipGuru, setNipGuru] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setNamaSekolah(localStorage.getItem("rep_namaSekolah") || "");
+      setAlamatSekolah(localStorage.getItem("rep_alamatSekolah") || "");
+      setTelpSekolah(localStorage.getItem("rep_telpSekolah") || "");
+      setKotaCetak(localStorage.getItem("rep_kotaCetak") || "");
+      setNamaKepsek(localStorage.getItem("rep_namaKepsek") || "");
+      setNipKepsek(localStorage.getItem("rep_nipKepsek") || "");
+      setNipGuru(localStorage.getItem("rep_nipGuru") || "");
+    }
+  }, []);
+
   useEffect(() => {
     const fetchProfil = async () => {
       try {
@@ -136,6 +157,18 @@ export default function ProfilGuru() {
       const data = await response.json();
       if (response.ok) {
         setSuccessMsg("🎉 Profil Anda berhasil diperbarui!");
+        
+        // Save report config to localStorage
+        if (typeof window !== "undefined") {
+          localStorage.setItem("rep_namaSekolah", namaSekolah.trim());
+          localStorage.setItem("rep_alamatSekolah", alamatSekolah.trim());
+          localStorage.setItem("rep_telpSekolah", telpSekolah.trim());
+          localStorage.setItem("rep_kotaCetak", kotaCetak.trim());
+          localStorage.setItem("rep_namaKepsek", namaKepsek.trim());
+          localStorage.setItem("rep_nipKepsek", nipKepsek.trim());
+          localStorage.setItem("rep_nipGuru", nipGuru.trim());
+        }
+
         // Reset password fields
         setOldPassword("");
         setNewPassword("");
@@ -371,6 +404,107 @@ export default function ProfilGuru() {
               </div>
             </div>
  
+            {/* Divider */}
+            <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "10px 0" }}></div>
+
+            {/* LAPORAN & SEKOLAH HEADER */}
+            <div>
+              <h5 style={{ fontSize: "0.95rem", fontWeight: "700" }}>🏫 Informasi Sekolah & Kepala Sekolah (Laporan)</h5>
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>
+                Pengaturan nama sekolah, alamat, dan data kepala sekolah untuk cetak laporan hasil belajar (KHS).
+              </p>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Sekolah</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: SMA Negeri 1 CekNilai"
+                  className="form-input"
+                  value={namaSekolah}
+                  onChange={(e) => setNamaSekolah(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Alamat Sekolah</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Jl. Raya Pendidikan No. 12"
+                  className="form-input"
+                  value={alamatSekolah}
+                  onChange={(e) => setAlamatSekolah(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Telepon Sekolah</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: (021) 123456"
+                  className="form-input"
+                  value={telpSekolah}
+                  onChange={(e) => setTelpSekolah(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Kota Penerbitan Laporan</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Jakarta"
+                  className="form-input"
+                  value={kotaCetak}
+                  onChange={(e) => setKotaCetak(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Kepala Sekolah</label>
+                <input
+                  type="text"
+                  placeholder="Nama Kepala Sekolah beserta gelar"
+                  className="form-input"
+                  value={namaKepsek}
+                  onChange={(e) => setNamaKepsek(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NIP Kepala Sekolah</label>
+                <input
+                  type="text"
+                  placeholder="NIP Kepala Sekolah"
+                  className="form-input"
+                  value={nipKepsek}
+                  onChange={(e) => setNipKepsek(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">NIP Guru Pengampu <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
+              <input
+                type="text"
+                placeholder="NIP Anda"
+                className="form-input"
+                value={nipGuru}
+                onChange={(e) => setNipGuru(e.target.value)}
+                disabled={isLocked}
+              />
+            </div>
+
             {/* Divider */}
             <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "10px 0" }}></div>
 

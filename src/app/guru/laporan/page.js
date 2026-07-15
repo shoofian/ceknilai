@@ -11,13 +11,13 @@ export default function CetakLaporan() {
   const [guruProfile, setGuruProfile] = useState(null);
 
   // === DYNAMIC REPORT KOP & SIGNATURE SETTINGS (stored in localStorage) ===
-  const [namaSekolah, setNamaSekolah] = useState("Sekolah Menengah Atas Digital CekNilai");
-  const [alamatSekolah, setAlamatSekolah] = useState("Jl. Edukasi Pintar No. 45, Jakarta Selatan");
-  const [telpSekolah, setTelpSekolah] = useState("(021) 7890123");
-  const [namaKepsek, setNamaKepsek] = useState("Drs. H. Mulyadi, M.Pd.");
-  const [nipKepsek, setNipKepsek] = useState("19680512 199403 1 002");
-  const [kotaCetak, setKotaCetak] = useState("Jakarta");
-  const [nipGuru, setNipGuru] = useState("-");
+  const [namaSekolah, setNamaSekolah] = useState("");
+  const [alamatSekolah, setAlamatSekolah] = useState("");
+  const [telpSekolah, setTelpSekolah] = useState("");
+  const [namaKepsek, setNamaKepsek] = useState("");
+  const [nipKepsek, setNipKepsek] = useState("");
+  const [kotaCetak, setKotaCetak] = useState("");
+  const [nipGuru, setNipGuru] = useState("");
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
@@ -101,13 +101,13 @@ export default function CetakLaporan() {
             if (config.nipGuru !== undefined) setNipGuru(config.nipGuru);
           } else {
             // Fallback to localStorage or defaults
-            const savedNamaSekolah = localStorage.getItem("rep_namaSekolah") || "Sekolah Menengah Atas Digital CekNilai";
-            const savedAlamatSekolah = localStorage.getItem("rep_alamatSekolah") || "Jl. Edukasi Pintar No. 45, Jakarta Selatan";
-            const savedTelpSekolah = localStorage.getItem("rep_telpSekolah") || "(021) 7890123";
-            const savedNamaKepsek = localStorage.getItem("rep_namaKepsek") || "Drs. H. Mulyadi, M.Pd.";
-            const savedNipKepsek = localStorage.getItem("rep_nipKepsek") || "19680512 199403 1 002";
-            const savedKotaCetak = localStorage.getItem("rep_kotaCetak") || "Jakarta";
-            const savedNipGuru = localStorage.getItem("rep_nipGuru") || "-";
+            const savedNamaSekolah = localStorage.getItem("rep_namaSekolah") || "";
+            const savedAlamatSekolah = localStorage.getItem("rep_alamatSekolah") || "";
+            const savedTelpSekolah = localStorage.getItem("rep_telpSekolah") || "";
+            const savedNamaKepsek = localStorage.getItem("rep_namaKepsek") || "";
+            const savedNipKepsek = localStorage.getItem("rep_nipKepsek") || "";
+            const savedKotaCetak = localStorage.getItem("rep_kotaCetak") || "";
+            const savedNipGuru = localStorage.getItem("rep_nipGuru") || "";
 
             setNamaSekolah(savedNamaSekolah);
             setAlamatSekolah(savedAlamatSekolah);
@@ -480,13 +480,13 @@ export default function CetakLaporan() {
               <button 
                 type="button" 
                 onClick={() => {
-                  setNamaSekolah("Sekolah Menengah Atas Digital CekNilai");
-                  setAlamatSekolah("Jl. Edukasi Pintar No. 45, Jakarta Selatan");
-                  setTelpSekolah("(021) 7890123");
-                  setNamaKepsek("Drs. H. Mulyadi, M.Pd.");
-                  setNipKepsek("19680512 199403 1 002");
-                  setKotaCetak("Jakarta");
-                  setNipGuru("-");
+                  setNamaSekolah("");
+                  setAlamatSekolah("");
+                  setTelpSekolah("");
+                  setNamaKepsek("");
+                  setNipKepsek("");
+                  setKotaCetak("");
+                  setNipGuru("");
                 }} 
                 className="btn btn-secondary" 
                 style={{ padding: "8px 16px", fontSize: "0.85rem" }}

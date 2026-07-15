@@ -5900,14 +5900,14 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         const statusKelulusan = finalScore >= (skema.kkm || 75) ? "LULUS" : "TIDAK LULUS";
 
-        const config = skema.laporanConfig || {
-          namaSekolah: "Sekolah Menengah Atas Digital CekNilai",
-          alamatSekolah: "Jl. Edukasi Pintar No. 45, Jakarta Selatan",
-          telpSekolah: "(021) 7890123",
-          namaKepsek: "Drs. H. Mulyadi, M.Pd.",
-          nipKepsek: "19680512 199403 1 002",
-          kotaCetak: "Jakarta",
-          nipGuru: "-"
+        const config = {
+          namaSekolah: skema.laporanConfig?.namaSekolah || (typeof window !== "undefined" ? localStorage.getItem("rep_namaSekolah") : "") || "",
+          alamatSekolah: skema.laporanConfig?.alamatSekolah || (typeof window !== "undefined" ? localStorage.getItem("rep_alamatSekolah") : "") || "",
+          telpSekolah: skema.laporanConfig?.telpSekolah || (typeof window !== "undefined" ? localStorage.getItem("rep_telpSekolah") : "") || "",
+          namaKepsek: skema.laporanConfig?.namaKepsek || (typeof window !== "undefined" ? localStorage.getItem("rep_namaKepsek") : "") || "",
+          nipKepsek: skema.laporanConfig?.nipKepsek || (typeof window !== "undefined" ? localStorage.getItem("rep_nipKepsek") : "") || "",
+          kotaCetak: skema.laporanConfig?.kotaCetak || (typeof window !== "undefined" ? localStorage.getItem("rep_kotaCetak") : "") || "",
+          nipGuru: skema.laporanConfig?.nipGuru || (typeof window !== "undefined" ? localStorage.getItem("rep_nipGuru") : "") || ""
         };
 
         // Hitung rekap presensi

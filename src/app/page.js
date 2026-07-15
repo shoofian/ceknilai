@@ -847,13 +847,13 @@ export default function StudentPortal() {
                       {/* PORTRAIT KHS / RAPOR BAYANGAN PRINT-ONLY VIEW */}
                       {(() => {
                         const config = res.skemaPenilaian?.laporanConfig || res.skema?.laporanConfig || {
-                          namaSekolah: "Sekolah Menengah Atas Digital CekNilai",
-                          alamatSekolah: "Jl. Edukasi Pintar No. 45, Jakarta Selatan",
-                          telpSekolah: "(021) 7890123",
-                          namaKepsek: "Drs. H. Mulyadi, M.Pd.",
-                          nipKepsek: "19680512 199403 1 002",
-                          kotaCetak: "Jakarta",
-                          nipGuru: "-"
+                          namaSekolah: "",
+                          alamatSekolah: "",
+                          telpSekolah: "",
+                          namaKepsek: "",
+                          nipKepsek: "",
+                          kotaCetak: "",
+                          nipGuru: ""
                         };
 
                         return (
