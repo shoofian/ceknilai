@@ -42,7 +42,6 @@ export default function ProfilGuru() {
   const [walikelasTahunAjaran, setWalikelasTahunAjaran] = useState("2025/2026");
 
   // Report config states (Global)
-  const [namaSekolah, setNamaSekolah] = useState("");
   const [alamatSekolah, setAlamatSekolah] = useState("");
   const [telpSekolah, setTelpSekolah] = useState("");
   const [kotaCetak, setKotaCetak] = useState("");
@@ -52,7 +51,6 @@ export default function ProfilGuru() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setNamaSekolah(localStorage.getItem("rep_namaSekolah") || "");
       setAlamatSekolah(localStorage.getItem("rep_alamatSekolah") || "");
       setTelpSekolah(localStorage.getItem("rep_telpSekolah") || "");
       setKotaCetak(localStorage.getItem("rep_kotaCetak") || "");
@@ -160,7 +158,7 @@ export default function ProfilGuru() {
         
         // Save report config to localStorage
         if (typeof window !== "undefined") {
-          localStorage.setItem("rep_namaSekolah", namaSekolah.trim());
+          localStorage.setItem("rep_namaSekolah", sekolahSearchQuery.trim());
           localStorage.setItem("rep_alamatSekolah", alamatSekolah.trim());
           localStorage.setItem("rep_telpSekolah", telpSekolah.trim());
           localStorage.setItem("rep_kotaCetak", kotaCetak.trim());
@@ -417,18 +415,6 @@ export default function ProfilGuru() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama Sekolah</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: SMA Negeri 1 CekNilai"
-                  className="form-input"
-                  value={namaSekolah}
-                  onChange={(e) => setNamaSekolah(e.target.value)}
-                  disabled={isLocked}
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Alamat Sekolah</label>
                 <input
                   type="text"
@@ -439,9 +425,7 @@ export default function ProfilGuru() {
                   disabled={isLocked}
                 />
               </div>
-            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Telepon Sekolah</label>
                 <input
@@ -453,7 +437,9 @@ export default function ProfilGuru() {
                   disabled={isLocked}
                 />
               </div>
+            </div>
 
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label">Kota Penerbitan Laporan</label>
                 <input
@@ -462,6 +448,18 @@ export default function ProfilGuru() {
                   className="form-input"
                   value={kotaCetak}
                   onChange={(e) => setKotaCetak(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">NIP Guru Pengampu <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
+                <input
+                  type="text"
+                  placeholder="NIP Anda"
+                  className="form-input"
+                  value={nipGuru}
+                  onChange={(e) => setNipGuru(e.target.value)}
                   disabled={isLocked}
                 />
               </div>
@@ -491,18 +489,6 @@ export default function ProfilGuru() {
                   disabled={isLocked}
                 />
               </div>
-            </div>
-
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">NIP Guru Pengampu <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
-              <input
-                type="text"
-                placeholder="NIP Anda"
-                className="form-input"
-                value={nipGuru}
-                onChange={(e) => setNipGuru(e.target.value)}
-                disabled={isLocked}
-              />
             </div>
 
             {/* Divider */}
