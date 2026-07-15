@@ -309,11 +309,15 @@ export async function createKelas(newKelas, guruUsername = null) {
         kelas_id: id,
         nisn: s.nisn,
         nama: s.nama,
-        tanggal_lahir: s.tanggalLahir,
+        tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : null,
         nilai: s.nilai || {},
         catatan: s.catatan || ""
       }));
-      await supabase.from('siswa').insert(studentsToInsert);
+      const { error: sInsertError } = await supabase.from('siswa').insert(studentsToInsert);
+      if (sInsertError) {
+        console.error('Error inserting students in createKelas:', sInsertError);
+        throw sInsertError;
+      }
     }
 
     return getKelasById(id);
@@ -445,7 +449,7 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
           kelas_id: id,
           nisn: s.nisn,
           nama: s.nama,
-          tanggal_lahir: s.tanggalLahir,
+          tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : null,
           nilai: s.nilai || {},
           catatan: s.catatan || ""
         }));
@@ -516,7 +520,7 @@ export async function addSiswaToKelas(kelasId, siswaBaru, guruUsername = null) {
       kelas_id: kelasId,
       nisn: siswaBaru.nisn,
       nama: siswaBaru.nama,
-      tanggal_lahir: siswaBaru.tanggalLahir,
+      tanggal_lahir: (siswaBaru.tanggalLahir && siswaBaru.tanggalLahir.toString().trim() !== "") ? siswaBaru.tanggalLahir : null,
       nilai: nilai,
       catatan: siswaBaru.catatan || ""
     };
@@ -553,7 +557,9 @@ export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa, guruUserna
     if (!kelas) return null;
     const updates = {};
     if (updatedSiswa.nama !== undefined) updates.nama = updatedSiswa.nama;
-    if (updatedSiswa.tanggalLahir !== undefined) updates.tanggal_lahir = updatedSiswa.tanggalLahir;
+    if (updatedSiswa.tanggalLahir !== undefined) {
+      updates.tanggal_lahir = (updatedSiswa.tanggalLahir && updatedSiswa.tanggalLahir.toString().trim() !== "") ? updatedSiswa.tanggalLahir : null;
+    }
     if (updatedSiswa.nilai !== undefined) updates.nilai = updatedSiswa.nilai;
     if (updatedSiswa.catatan !== undefined) updates.catatan = updatedSiswa.catatan;
 
