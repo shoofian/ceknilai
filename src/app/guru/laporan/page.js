@@ -19,6 +19,7 @@ export default function CetakLaporan() {
   const [kotaCetak, setKotaCetak] = useState("");
   const [nipGuru, setNipGuru] = useState("");
   const [showSettings, setShowSettings] = useState(false);
+  const [isPopup, setIsPopup] = useState(false);
 
   useEffect(() => {
     const fetchAllKelas = async () => {
@@ -31,6 +32,7 @@ export default function CetakLaporan() {
           // Parse query parameter to pre-select class
           const params = new URLSearchParams(window.location.search);
           const qId = params.get("kelasId") || params.get("id");
+          setIsPopup(params.get("popup") === "true");
           
           if (qId && data.some(k => k.id === qId)) {
             setSelectedClassId(qId);
@@ -366,42 +368,44 @@ export default function CetakLaporan() {
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
       
-      {/* Page Title & Class Selector - Hidden in print */}
-      <div className="page-title-section no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: 0 }}>
-        <div>
-          <h1 className="page-title">Cetak Laporan Nilai</h1>
-          <p className="page-subtitle">Pilih kelas untuk melihat analisis hasil belajar dan cetak laporan resmi kelas.</p>
-        </div>
-        
-        {/* Class Selection Dropdown & Settings button */}
-        {kelas.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            <button 
-              onClick={() => setShowSettings(!showSettings)} 
-              className="btn btn-secondary" 
-              style={{ padding: "10px 16px", display: "inline-flex", alignItems: "center", gap: "8px", border: "1px solid var(--border-color)" }}
-            >
-              ⚙️ {showSettings ? "Tutup Kop & Ttd" : "Atur Kop & Tanda Tangan"}
-            </button>
-
-            <div className="form-group" style={{ marginBottom: 0, flexDirection: "row", alignItems: "center", gap: "10px" }}>
-              <label className="form-label" style={{ whiteSpace: "nowrap" }}>Pilih Kelas:</label>
-              <select
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className="form-input"
-                style={{ width: "220px", padding: "10px 16px" }}
-              >
-                {kelas.map((k) => (
-                  <option key={k.id} value={k.id}>
-                    {k.nama} - {k.mataPelajaran || "Informatika"} (Sem. {k.semester || "Ganjil"} - {k.tahunAjaran}) {k.archived ? "[Arsip]" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Page Title & Class Selector - Hidden in print and popup mode */}
+      {!isPopup && (
+        <div className="page-title-section no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: 0 }}>
+          <div>
+            <h1 className="page-title">Cetak Laporan Nilai</h1>
+            <p className="page-subtitle">Pilih kelas untuk melihat analisis hasil belajar dan cetak laporan resmi kelas.</p>
           </div>
-        )}
-      </div>
+          
+          {/* Class Selection Dropdown & Settings button */}
+          {kelas.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <button 
+                onClick={() => setShowSettings(!showSettings)} 
+                className="btn btn-secondary" 
+                style={{ padding: "10px 16px", display: "inline-flex", alignItems: "center", gap: "8px", border: "1px solid var(--border-color)" }}
+              >
+                ⚙️ {showSettings ? "Tutup Kop & Ttd" : "Atur Kop & Tanda Tangan"}
+              </button>
+
+              <div className="form-group" style={{ marginBottom: 0, flexDirection: "row", alignItems: "center", gap: "10px" }}>
+                <label className="form-label" style={{ whiteSpace: "nowrap" }}>Pilih Kelas:</label>
+                <select
+                  value={selectedClassId}
+                  onChange={(e) => setSelectedClassId(e.target.value)}
+                  className="form-input"
+                  style={{ width: "220px", padding: "10px 16px" }}
+                >
+                  {kelas.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.nama} - {k.mataPelajaran || "Informatika"} (Sem. {k.semester || "Ganjil"} - {k.tahunAjaran}) {k.archived ? "[Arsip]" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Customizable Settings Panel for Report Kop and Signatures */}
       {showSettings && (
@@ -520,12 +524,14 @@ export default function CetakLaporan() {
       ) : selectedClass && (
         <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
           
-          {/* Action Print Button - Hidden in print */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }} className="no-print">
-            <button onClick={handlePrint} className="btn btn-primary" style={{ padding: "12px 28px" }}>
-              🖨️ Cetak / Simpan PDF
-            </button>
-          </div>
+          {/* Action Print Button - Hidden in print and popup mode */}
+          {!isPopup && (
+            <div style={{ display: "flex", justifyContent: "flex-end" }} className="no-print">
+              <button onClick={handlePrint} className="btn btn-primary" style={{ padding: "12px 28px" }}>
+                🖨️ Cetak / Simpan PDF
+              </button>
+            </div>
+          )}
 
           {/* Premium Printable Gradebook Report Layout */}
           <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "24px", border: "1px solid var(--border-color)", padding: "40px" }} id="printable-area">
