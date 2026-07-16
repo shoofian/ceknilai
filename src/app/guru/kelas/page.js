@@ -65,8 +65,9 @@ export default function KelolaKelas() {
     return /^(10|11|12|X|XI|XII)\b/i.test(r) || r.startsWith("KELAS");
   };
 
-  // Dapodik Upload Modal States
-  const [dapodikUploadModalOpen, setDapodikUploadModalOpen] = useState(false);
+  // Excel/Dapodik Upload Modal States
+  const [creationMethod, setCreationMethod] = useState(null); // 'manual', 'excel', or null
+  const [hoverMethod, setHoverMethod] = useState(null); // 'manual', 'excel', or null
   const [dapodikUploadError, setDapodikUploadError] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [importWarnings, setImportWarnings] = useState([]);
@@ -155,6 +156,8 @@ export default function KelolaKelas() {
     setSemester("");
     setError("");
     setIsSaving(false);
+    setCreationMethod(null);
+    setHoverMethod(null);
     setModalOpen(true);
   };
 
@@ -178,6 +181,8 @@ export default function KelolaKelas() {
     setSemester(k.semester || "Ganjil");
     setError("");
     setIsSaving(false);
+    setCreationMethod("manual");
+    setHoverMethod("manual");
     setModalOpen(true);
   };
 
@@ -560,7 +565,7 @@ export default function KelolaKelas() {
         }];
 
         setBulkForms(initialForms);
-        setDapodikUploadModalOpen(false); // Close the upload/instruction modal
+        setModalOpen(false); // Close the main Add Class modal
         setBulkModalOpen(true); // Open the configuration modal
         setBulkError("");
       } catch (err) {
@@ -721,14 +726,6 @@ export default function KelolaKelas() {
         </div>
         <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <button 
-            onClick={() => { setDapodikUploadModalOpen(true); setDapodikUploadError(""); }} 
-            className="btn btn-secondary" 
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
-            disabled={isLocked}
-          >
-            📥 Impor Kelas Dapodik
-          </button>
-          <button 
             onClick={handleOpenAdd} 
             className="btn btn-primary"
             style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
@@ -883,10 +880,8 @@ export default function KelolaKelas() {
           </button>
         </div>
       )}
-
       </div>
 
-      {/* Glassmorphism Modal for Add/Edit Class */}
       {modalOpen && (
         <div
           style={{
@@ -904,175 +899,344 @@ export default function KelolaKelas() {
             padding: "20px"
           }}
         >
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "450px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "20px" }}>
-              {isEditing ? "✏️ Edit Kelas" : "➕ Tambah Kelas Baru"}
-            </h3>
-
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              {/* 1 & 2. Tingkatan & No./Nama Rombel Bersandingan */}
-              <div style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "12px" }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Tingkatan <span style={{ color: "var(--danger)" }}>*</span></label>
-                  <select
-                    className="form-input"
-                    value={tingkatan}
-                    onChange={(e) => setTingkatan(e.target.value)}
-                    style={{ 
-                      appearance: "auto", 
-                      backgroundColor: "var(--bg-secondary)", 
-                      color: "var(--text-primary)", 
-                      border: "1px solid var(--border-color)" 
+          <div 
+            className="glass-card animate-fade-in modal-content-scroll" 
+            style={{ 
+              width: "100%", 
+              maxWidth: isEditing || creationMethod === "manual" ? "450px" : (creationMethod === "excel" ? "600px" : "680px"), 
+              border: "1px solid var(--border-focus)", 
+              boxShadow: "0 20px 40px rgba(0,0,0,0.3)",
+              maxHeight: "90vh",
+              overflowY: "auto"
+            }}
+          >
+            {creationMethod === null && !isEditing ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
+                  <h3 style={{ fontSize: "1.3rem", fontWeight: "800", margin: 0 }}>➕ Tambah Kelas Baru</h3>
+                  <button onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
+                </div>
+                <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", margin: 0 }}>Pilih metode pembuatan kelas yang paling sesuai dengan kebutuhan Anda:</p>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "8px" }}>
+                  {/* Pilihan 1: Impor Excel */}
+                  <div 
+                    onClick={() => { setCreationMethod("excel"); setDapodikUploadError(""); }}
+                    onMouseEnter={() => setHoverMethod("excel")}
+                    onMouseLeave={() => setHoverMethod(null)}
+                    style={{
+                      border: hoverMethod === "excel" ? "1px solid var(--primary)" : "1px solid var(--border-color)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "20px",
+                      cursor: "pointer",
+                      backgroundColor: hoverMethod === "excel" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      transition: "var(--transition)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px"
                     }}
                   >
-                    <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih --</option>
-                    {TINGKATAN_OPTIONS.map(t => (
-                      <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
-                  <input
-                    type="text"
-                    placeholder="Contoh: MIPA 1 atau 1"
-                    className="form-input"
-                    value={rombelNama}
-                    onChange={(e) => setRombelNama(e.target.value)}
-                    required
-                  />
-                  {detectLevelInRombel(tingkatan, rombelNama) && (
-                    <span style={{ color: "var(--warning)", fontSize: "0.75rem", marginTop: "4px", display: "block", lineHeight: "1.3" }}>
-                      ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{tingkatan} MIPA 1").
+                    <span style={{ fontSize: "2rem" }}>📥</span>
+                    <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>Impor dari Berkas Excel (atau Dapodik)</strong>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                      <strong>Direkomendasikan untuk banyak kelas.</strong> Cukup unggah berkas excel/csv data siswa, sistem akan otomatis membaca daftar rombel dan nama siswa tanpa perlu mengetik satu-per-satu.
                     </span>
-                  )}
+                  </div>
+
+                  {/* Pilihan 2: Buat Manual */}
+                  <div 
+                    onClick={() => setCreationMethod("manual")}
+                    onMouseEnter={() => setHoverMethod("manual")}
+                    onMouseLeave={() => setHoverMethod(null)}
+                    style={{
+                      border: hoverMethod === "manual" ? "1px solid var(--primary)" : "1px solid var(--border-color)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "20px",
+                      cursor: "pointer",
+                      backgroundColor: hoverMethod === "manual" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      transition: "var(--transition)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px"
+                    }}
+                  >
+                    <span style={{ fontSize: "2rem" }}>✍️</span>
+                    <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>Buat Kelas Manual</strong>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                      <strong>Direkomendasikan untuk 1-2 kelas / kelas kustom.</strong> Buat identitas kelas (Tingkatan, Rombel, Mapel) sekarang, lalu masukkan data siswa secara manual nanti (seperti kelas remedial, ekskul, dll.).
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
+                  <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" style={{ fontSize: "0.85rem" }}>
+                    Batal
+                  </button>
                 </div>
               </div>
+            ) : creationMethod === "excel" && !isEditing ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                {/* Header */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.4rem" }}>📥</span>
+                    <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Impor Kelas dari Berkas Excel</h3>
+                  </div>
+                  <button onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
+                </div>
 
-              {/* 3. Pratinjau Nama Kelas */}
-              <div style={{ 
-                backgroundColor: "var(--bg-secondary)", 
-                border: "1px dashed var(--border-color)", 
-                borderRadius: "var(--radius-sm)", 
-                padding: "12px 16px",
-                fontSize: "0.85rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px"
-              }}>
-                <span style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>🏷️ Pratinjau Nama Kelas</span>
-                <strong style={{ fontSize: "1rem", color: "var(--primary)" }}>
-                  {(() => {
-                    const getRoman = (num) => {
-                      const roman = { 10: "X", 11: "XI", 12: "XII" };
-                      return roman[num] || num;
-                    };
-                    const romanTingkatan = tingkatan ? getRoman(Number(tingkatan)) : "[Tingkatan]";
-                    const displayRombel = rombelNama.trim() 
-                      ? rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1") 
-                      : "[Rombel]";
-                    return namaKustom.trim()
-                      ? `${romanTingkatan} ${displayRombel} - ${namaKustom.trim()}`
-                      : `${romanTingkatan} ${displayRombel}`;
-                  })()}
-                </strong>
-              </div>
+                {/* Petunjuk Penggunaan & Kolom Minimal */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <h4 style={{ fontSize: "1rem", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>📋 Petunjuk Berkas Excel:</h4>
+                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0, lineHeight: "1.5" }}>
+                    Anda dapat menggunakan berkas ekspor <strong>Dapodik</strong> langsung dari operator sekolah, atau membuat berkas Excel sendiri (format <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>) yang memiliki kolom wajib berikut:
+                  </p>
+                  <ul style={{ fontSize: "0.82rem", color: "var(--text-secondary)", paddingLeft: "18px", lineHeight: "1.5", display: "flex", flexDirection: "column", gap: "4px", margin: 0 }}>
+                    <li><strong>NISN</strong> (Nomor Induk Siswa Nasional)</li>
+                    <li><strong>Nama</strong> (atau <em>Nama Siswa</em> / <em>Nama Peserta Didik</em>)</li>
+                    <li><strong>Rombel</strong> (atau <em>Kelas</em> / <em>Rombongan Belajar</em>)</li>
+                    <li><strong>Tanggal Lahir</strong> (opsional)</li>
+                  </ul>
+                  <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", margin: 0, fontStyle: "italic" }}>
+                    * Catatan: Jika berkas Excel memiliki kolom lain (seperti Jenis Kelamin, Alamat, dll.), Anda tidak perlu menghapusnya. Sistem otomatis mengabaikan kolom lainnya.
+                  </p>
+                </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Mata Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
-                <select
-                  className="form-input"
-                  value={mataPelajaran}
-                  onChange={(e) => { setMataPelajaran(e.target.value); if (e.target.value !== "Lainnya") setMataPelajaranCustom(""); }}
-                  style={{ 
-                    appearance: "auto", 
-                    backgroundColor: "var(--bg-secondary)", 
-                    color: "var(--text-primary)", 
-                    border: "1px solid var(--border-color)" 
-                  }}
-                >
-                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Mata Pelajaran --</option>
-                  {MATA_PELAJARAN_OPTIONS.map(mp => (
-                    <option key={mp} value={mp} style={{ backgroundColor: "var(--bg-secondary)" }}>{mp}</option>
-                  ))}
-                </select>
-                {mataPelajaran === "Lainnya" && (
-                  <input
-                    type="text"
-                    placeholder="Ketik nama mata pelajaran..."
-                    className="form-input"
-                    value={mataPelajaranCustom}
-                    onChange={(e) => setMataPelajaranCustom(e.target.value)}
-                    style={{ marginTop: "8px" }}
-                  />
+                {/* Error Banner */}
+                {dapodikUploadError && (
+                  <div style={{ padding: "12px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.82rem", border: "1px solid rgba(239, 68, 68, 0.15)" }}>
+                    ❌ {dapodikUploadError}
+                  </div>
                 )}
-              </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tahun Ajaran <span style={{ color: "var(--danger)" }}>*</span></label>
-                <select
-                  className="form-input"
-                  value={tahunAjaran}
-                  onChange={(e) => setTahunAjaran(e.target.value)}
-                  style={{ 
-                    appearance: "auto", 
-                    backgroundColor: "var(--bg-secondary)", 
-                    color: "var(--text-primary)", 
-                    border: "1px solid var(--border-color)" 
+                {/* Upload Area */}
+                <div
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  style={{
+                    position: "relative",
+                    border: dragActive ? "2px dashed var(--primary)" : "2px dashed var(--border-color)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "40px 20px",
+                    backgroundColor: dragActive ? "rgba(59,130,246,0.08)" : "rgba(59,130,246,0.02)",
+                    cursor: "pointer",
+                    textAlign: "center",
+                    transition: "var(--transition)"
                   }}
                 >
-                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tahun Ajaran --</option>
-                  {TAHUN_AJARAN_OPTIONS.map(ta => (
-                    <option key={ta} value={ta} style={{ backgroundColor: "var(--bg-secondary)" }}>{ta}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Semester <span style={{ color: "var(--danger)" }}>*</span></label>
-                <select
-                  className="form-input"
-                  value={semester}
-                  onChange={(e) => setSemester(e.target.value)}
-                  style={{ 
-                    appearance: "auto", 
-                    backgroundColor: "var(--bg-secondary)", 
-                    color: "var(--text-primary)", 
-                    border: "1px solid var(--border-color)" 
-                  }}
-                >
-                  <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Semester --</option>
-                  <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
-                  <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
-                </select>
-              </div>
-
-              {error && (
-                <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
-                  ❌ {error}
+                  <input
+                    type="file"
+                    accept=".csv, .xlsx, .xls"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        processDapodikFile(e.target.files[0]);
+                      }
+                    }}
+                    style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" }}
+                  />
+                  <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>📁</div>
+                  <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", display: "block" }}>
+                    Klik atau seret berkas Excel ke sini
+                  </span>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
+                    Mendukung format .xlsx, .xls, atau .csv
+                  </span>
                 </div>
-              )}
 
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
-                <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" disabled={isSaving}>
-                  Batal
-                </button>
-                <button type="submit" className="btn btn-primary" disabled={isSaving}>
-                  {isSaving ? (
-                    <>
-                      <span className="btn-spinner" />
-                      Menyimpan...
-                    </>
-                  ) : (
-                    "Simpan"
-                  )}
-                </button>
+                {/* Footer */}
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
+                  <button type="button" onClick={() => setCreationMethod(null)} className="btn btn-secondary" style={{ fontSize: "0.85rem" }}>
+                    ⬅️ Kembali
+                  </button>
+                  <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" style={{ fontSize: "0.85rem" }}>
+                    Batal
+                  </button>
+                </div>
               </div>
-            </form>
+            ) : (
+              <>
+                <h3 style={{ fontSize: "1.5rem", fontWeight: "800", marginBottom: "20px" }}>
+                  {isEditing ? "✏️ Edit Kelas" : "➕ Tambah Kelas Baru Manual"}
+                </h3>
+
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  {/* 1 & 2. Tingkatan & No./Nama Rombel Bersandingan */}
+                  <div style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "12px" }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Tingkatan <span style={{ color: "var(--danger)" }}>*</span></label>
+                      <select
+                        className="form-input"
+                        value={tingkatan}
+                        onChange={(e) => setTingkatan(e.target.value)}
+                        style={{ 
+                          appearance: "auto", 
+                          backgroundColor: "var(--bg-secondary)", 
+                          color: "var(--text-primary)", 
+                          border: "1px solid var(--border-color)" 
+                        }}
+                      >
+                        <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih --</option>
+                        {TINGKATAN_OPTIONS.map(t => (
+                          <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: MIPA 1 atau 1"
+                        className="form-input"
+                        value={rombelNama}
+                        onChange={(e) => setRombelNama(e.target.value)}
+                        required
+                      />
+                      {detectLevelInRombel(tingkatan, rombelNama) && (
+                        <span style={{ color: "var(--warning)", fontSize: "0.75rem", marginTop: "4px", display: "block", lineHeight: "1.3" }}>
+                          ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{tingkatan} MIPA 1").
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3. Pratinjau Nama Kelas */}
+                  <div style={{ 
+                    backgroundColor: "var(--bg-secondary)", 
+                    border: "1px dashed var(--border-color)", 
+                    borderRadius: "var(--radius-sm)", 
+                    padding: "12px 16px",
+                    fontSize: "0.85rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px"
+                  }}>
+                    <span style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>🏷️ Pratinjau Nama Kelas</span>
+                    <strong style={{ fontSize: "1rem", color: "var(--primary)" }}>
+                      {(() => {
+                        const getRoman = (num) => {
+                          const roman = { 10: "X", 11: "XI", 12: "XII" };
+                          return roman[num] || num;
+                        };
+                        const romanTingkatan = tingkatan ? getRoman(Number(tingkatan)) : "[Tingkatan]";
+                        const displayRombel = rombelNama.trim() 
+                          ? rombelNama.trim().toUpperCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").replace(/\b0+(\d+)\b/g, "$1") 
+                          : "[Rombel]";
+                        return namaKustom.trim()
+                          ? `${romanTingkatan} ${displayRombel} - ${namaKustom.trim()}`
+                          : `${romanTingkatan} ${displayRombel}`;
+                      })()}
+                    </strong>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Mata Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                    <select
+                      className="form-input"
+                      value={mataPelajaran}
+                      onChange={(e) => { setMataPelajaran(e.target.value); if (e.target.value !== "Lainnya") setMataPelajaranCustom(""); }}
+                      style={{ 
+                        appearance: "auto", 
+                        backgroundColor: "var(--bg-secondary)", 
+                        color: "var(--text-primary)", 
+                        border: "1px solid var(--border-color)" 
+                      }}
+                    >
+                      <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Mata Pelajaran --</option>
+                      {MATA_PELAJARAN_OPTIONS.map(mp => (
+                        <option key={mp} value={mp} style={{ backgroundColor: "var(--bg-secondary)" }}>{mp}</option>
+                      ))}
+                    </select>
+                    {mataPelajaran === "Lainnya" && (
+                      <input
+                        type="text"
+                        placeholder="Ketik nama mata pelajaran..."
+                        className="form-input"
+                        value={mataPelajaranCustom}
+                        onChange={(e) => setMataPelajaranCustom(e.target.value)}
+                        style={{ marginTop: "8px" }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Tahun Ajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                    <select
+                      className="form-input"
+                      value={tahunAjaran}
+                      onChange={(e) => setTahunAjaran(e.target.value)}
+                      style={{ 
+                        appearance: "auto", 
+                        backgroundColor: "var(--bg-secondary)", 
+                        color: "var(--text-primary)", 
+                        border: "1px solid var(--border-color)" 
+                      }}
+                    >
+                      <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Tahun Ajaran --</option>
+                      {TAHUN_AJARAN_OPTIONS.map(ta => (
+                        <option key={ta} value={ta} style={{ backgroundColor: "var(--bg-secondary)" }}>{ta}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Semester <span style={{ color: "var(--danger)" }}>*</span></label>
+                    <select
+                      className="form-input"
+                      value={semester}
+                      onChange={(e) => setSemester(e.target.value)}
+                      style={{ 
+                        appearance: "auto", 
+                        backgroundColor: "var(--bg-secondary)", 
+                        color: "var(--text-primary)", 
+                        border: "1px solid var(--border-color)" 
+                      }}
+                    >
+                      <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Semester --</option>
+                      <option value="Ganjil" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Ganjil</option>
+                      <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
+                    </select>
+                  </div>
+
+                  {error && (
+                    <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
+                      ❌ {error}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "10px", justifyContent: "space-between", marginTop: "10px" }}>
+                    {!isEditing ? (
+                      <button type="button" onClick={() => setCreationMethod(null)} className="btn btn-secondary" disabled={isSaving}>
+                        ⬅️ Kembali
+                      </button>
+                    ) : (
+                      <div />
+                    )}
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" disabled={isSaving}>
+                        Batal
+                      </button>
+                      <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                        {isSaving ? (
+                          <>
+                            <span className="btn-spinner" />
+                            Menyimpan...
+                          </>
+                        ) : (
+                          "Simpan"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
+
 
       {/* Bulk Modal for Dapodik Import */}
       {bulkModalOpen && (
@@ -1440,98 +1604,7 @@ export default function KelolaKelas() {
         </div>
       )}
 
-      {/* Modal for Dapodik Import Guide & Upload */}
-      {dapodikUploadModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.6)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 300,
-            backdropFilter: "blur(6px)"
-          }}
-          className="animate-fade-in"
-        >
-          <div className="glass-card modal-content-scroll" style={{ width: "90%", maxWidth: "600px", padding: "26px", display: "flex", flexDirection: "column", gap: "18px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflowY: "auto", border: "1px solid var(--primary)", boxShadow: "0 20px 40px rgba(59,130,246,0.2)" }}>
-            
-            {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "1.4rem" }}>📥</span>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Impor Kelas Dapodik</h3>
-              </div>
-              <button onClick={() => { setDapodikUploadModalOpen(false); setDapodikUploadError(""); }} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
-            </div>
 
-            {/* Petunjuk Penggunaan */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <h4 style={{ fontSize: "1.02rem", fontWeight: "800", color: "var(--text-primary)" }}>📋 Petunjuk Penggunaan:</h4>
-              <ol style={{ fontSize: "0.82rem", color: "var(--text-secondary)", paddingLeft: "18px", lineHeight: "1.6", display: "flex", flexDirection: "column", gap: "6px" }}>
-                <li>Unduh data peserta didik dari <strong>aplikasi Dapodik</strong> sekolah Anda (format berkas yang didukung: <code>.xlsx</code>, <code>.xls</code>, atau <code>.csv</code>). Berkas data ini bisa Anda dapatkan dengan meminta bantuan <strong>operator atau admin sekolah</strong> Anda.</li>
-                <li>Unggah berkas tersebut pada area unggahan di bawah ini.</li>
-                <li>Sistem akan mendeteksi daftar rombel secara otomatis, lalu Anda dapat mengatur penamaan kelas target sebelum disimpan ke CekNilai.</li>
-              </ol>
-            </div>
-
-            {/* Error Banner */}
-            {dapodikUploadError && (
-              <div style={{ padding: "12px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.82rem", border: "1px solid rgba(239, 68, 68, 0.15)" }}>
-                ❌ {dapodikUploadError}
-              </div>
-            )}
-
-            {/* Upload Area */}
-            <div
-              onDragEnter={handleDrag}
-              onDragOver={handleDrag}
-              onDragLeave={handleDrag}
-              onDrop={handleDrop}
-              style={{
-                position: "relative",
-                border: dragActive ? "2px dashed var(--primary)" : "2px dashed var(--border-color)",
-                borderRadius: "var(--radius-sm)",
-                padding: "40px 20px",
-                backgroundColor: dragActive ? "rgba(59,130,246,0.08)" : "rgba(59,130,246,0.02)",
-                cursor: "pointer",
-                textAlign: "center",
-                transition: "var(--transition)"
-              }}
-            >
-              <input
-                type="file"
-                accept=".csv, .xlsx, .xls"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                    processDapodikFile(e.target.files[0]);
-                  }
-                }}
-                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" }}
-              />
-              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>📁</div>
-              <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", display: "block" }}>
-                Klik atau seret berkas Dapodik ke sini
-              </span>
-              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
-                Mendukung format .xlsx, .xls, atau .csv
-              </span>
-            </div>
-
-            {/* Footer / Action buttons */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
-              <button type="button" onClick={() => { setDapodikUploadModalOpen(false); setDapodikUploadError(""); }} className="btn btn-secondary" style={{ fontSize: "0.85rem" }}>
-                Batal
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* ===== GLOBAL CUSTOM CONFIRMATION MODAL ===== */}
       {confirmConfig.isOpen && (
