@@ -767,7 +767,7 @@ export default function CetakLaporan() {
           width: 100% !important;
           border-collapse: collapse !important;
           margin-top: 10px !important;
-          background-color: #ffffff !important;
+          background: #ffffff !important;
         }
         #printable-area th, #printable-area td {
           border: 1px solid #94a3b8 !important;
@@ -776,9 +776,10 @@ export default function CetakLaporan() {
           line-height: 1.3 !important;
           vertical-align: middle !important;
           text-align: left;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
         }
         #printable-area th {
-          background-color: #f1f5f9 !important;
+          background: #f1f5f9 !important;
           font-weight: 800 !important;
           color: #0f172a !important;
           font-size: 0.74rem !important;
@@ -788,8 +789,8 @@ export default function CetakLaporan() {
         #printable-area td {
           color: #1e293b !important;
         }
-        #printable-area tbody tr:nth-of-type(even) {
-          background-color: #f8fafc !important;
+        #printable-area tbody tr:nth-of-type(even) td {
+          background: #f8fafc !important;
         }
         
         @media print {
@@ -799,6 +800,20 @@ export default function CetakLaporan() {
             padding: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
+          }
+          #printable-area table {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          #printable-area th {
+            background: #f1f5f9 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          #printable-area tbody tr:nth-of-type(even) td {
+            background: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
           .report-signature {
             page-break-inside: avoid !important;
