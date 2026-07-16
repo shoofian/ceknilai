@@ -768,6 +768,7 @@ export default function CetakLaporan() {
           border-collapse: collapse !important;
           margin-top: 10px !important;
           background: #ffffff !important;
+          table-layout: auto !important;
         }
         #printable-area th, #printable-area td {
           border: 1px solid #94a3b8 !important;
@@ -804,6 +805,7 @@ export default function CetakLaporan() {
           #printable-area table {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            table-layout: auto !important;
           }
           #printable-area th {
             background: #f1f5f9 !important;
