@@ -103,7 +103,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [gradeB, setGradeB] = useState(75);
   const [gradeC, setGradeC] = useState(65);
   const [gradeD, setGradeD] = useState(50);
-  const [kkm, setKkm] = useState(75);
+  const [kkm, setKkm] = useState("");
   // Label status untuk setiap rentang
   const [statusA, setStatusA] = useState('A');
   const [statusB, setStatusB] = useState('B');
@@ -487,8 +487,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const analyticsData = useMemo(() => {
     if (!kelas || !kelas.siswa || kelas.siswa.length === 0 || kelas.kolomNilai.length === 0) return null;
 
-    const skema = kelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
-    const kkmVal = skema.kkm ?? 75;
+    const skema = kelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "" };
+    const kkmVal = (skema.kkm !== undefined && skema.kkm !== null && skema.kkm !== "") ? Number(skema.kkm) : null;
 
     // Calculate full score for each student
     const studentScores = kelas.siswa.map(student => {
@@ -540,7 +540,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         else predikat = skema.statusD || "D";
       }
 
-      return { ...student, finalScore: parseFloat(total.toFixed(2)), complete, predikat, lulus: complete && total >= kkmVal, attSummary };
+      return { ...student, finalScore: parseFloat(total.toFixed(2)), complete, predikat, lulus: complete && (kkmVal !== null ? total >= kkmVal : false), attSummary };
     });
 
     // Ranking: sort descending by finalScore (only complete)
@@ -598,7 +598,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             const aspekLabel = `${col.nama} › ${sub.nama}`;
             if (!isSFilled) {
               issues.push({ aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
-            } else if (Number(sc) < kkmVal) {
+            } else if (kkmVal !== null && Number(sc) < kkmVal) {
               issues.push({ aspek: aspekLabel, status: "Di bawah KKM" });
             }
           });
@@ -606,7 +606,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           const { score, isFilled } = getColScore(s, col, null);
           if (!isFilled) {
             issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
-          } else if (Number(score) < kkmVal) {
+          } else if (kkmVal !== null && Number(score) < kkmVal) {
             issues.push({ aspek: col.nama, status: "Di bawah KKM" });
           }
         }
@@ -704,7 +704,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           setGradeB(data.skemaPenilaian.B ?? 75);
           setGradeC(data.skemaPenilaian.C ?? 65);
           setGradeD(data.skemaPenilaian.D ?? 50);
-          setKkm(data.skemaPenilaian.kkm ?? 75);
+          setKkm(data.skemaPenilaian.kkm ?? "");
           setStatusA(data.skemaPenilaian.statusA ?? 'A');
           setStatusB(data.skemaPenilaian.statusB ?? 'B');
           setStatusC(data.skemaPenilaian.statusC ?? 'C');
@@ -3806,7 +3806,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                      <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>Tingkat Kelulusan</p>
                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
                        <div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#10b981" }}></div>
-                       <div style={{ flex: 1, fontSize: "1.1rem", fontWeight: "700", color: "#e2e8f0" }}>Lulus (≥ {kelas?.kkm ?? 75})</div>
+                       <div style={{ flex: 1, fontSize: "1.1rem", fontWeight: "700", color: "#e2e8f0" }}>Lulus (≥ {kelas?.skemaPenilaian?.kkm !== undefined && kelas?.skemaPenilaian?.kkm !== null && kelas?.skemaPenilaian?.kkm !== "" ? kelas.skemaPenilaian.kkm : "Belum Diatur ⚠️"})</div>
                        <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#10b981" }}>{pass}</div>
                      </div>
                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -3859,7 +3859,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                              <div style={{ fontSize: "1rem", color: "#94a3b8", fontWeight: "600", marginTop: "4px" }}>Bobot {aspect.bobot}%</div>
                            </div>
                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                             <div style={{ fontSize: "2.5rem", fontWeight: "900", lineHeight: 1, color: aspect.avg >= (kelas?.kkm ?? 75) ? "#10b981" : "#f43f5e" }}>
+                             <div style={{ fontSize: "2.5rem", fontWeight: "900", lineHeight: 1, color: (kelas?.skemaPenilaian?.kkm !== undefined && kelas?.skemaPenilaian?.kkm !== null && kelas?.skemaPenilaian?.kkm !== "" && aspect.avg >= kelas.skemaPenilaian.kkm) ? "#10b981" : "#f43f5e" }}>
                                {aspect.avg}
                              </div>
                              <div style={{ fontSize: "0.85rem", color: "#eab308", fontWeight: "700" }}>🏆 {aspect.topStudent}</div>
@@ -5899,7 +5899,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {/* KKM */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
                   <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
-                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
+                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(e.target.value === "" ? "" : Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
                 </div>
                 
                 {/* Actions */}

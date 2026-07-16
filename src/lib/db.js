@@ -39,7 +39,7 @@ function mapKelasFromDb(k) {
     tingkatan: k.tingkatan || null,
     archived: !!k.archived,
     isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
-    skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
+    skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "", statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
     kolomNilai: (k.kolom_nilai || []).map(col => {
       const groupConfig = k.skema_penilaian?.kolomAspekGroup?.[col.id];
       return {
@@ -279,7 +279,7 @@ export async function createKelas(newKelas, guruUsername = null) {
       archived: false,
       is_nilai_akhir_generated: false,
       guru_username: guruUsername || 'guru',
-      skema_penilaian: newKelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75, statusA: "A", statusB: "B", statusC: "C", statusD: "D" }
+      skema_penilaian: newKelas.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "", statusA: "A", statusB: "B", statusC: "C", statusD: "D" }
     };
 
     const { data, error } = await supabase
@@ -670,7 +670,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const nilaiObj = s.nilai || {};
 
       // Ambil skema penilaian kustom dari kelas atau gunakan default
-      const skema = k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+      const skema = k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "" };
       const hiddenAspek = Array.isArray(skema.hiddenAspek) ? skema.hiddenAspek : [];
 
       kolomNilai.forEach(col => {
@@ -1314,7 +1314,7 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
         });
         
         // Hitung Kehadiran (Presensi) jika digunakan
-        const skema = k.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: 75 };
+        const skema = k.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "" };
         const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
         const pertemuanList = skema.pertemuan || [];
         let totalPresensiScore = 0;
