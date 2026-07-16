@@ -27,7 +27,14 @@ export default function CetakLaporan() {
         if (response.ok) {
           const data = await response.json();
           setKelas(data);
-          if (data.length > 0) {
+          
+          // Parse query parameter to pre-select class
+          const params = new URLSearchParams(window.location.search);
+          const qId = params.get("kelasId") || params.get("id");
+          
+          if (qId && data.some(k => k.id === qId)) {
+            setSelectedClassId(qId);
+          } else if (data.length > 0) {
             setSelectedClassId(data[0].id);
           }
         }

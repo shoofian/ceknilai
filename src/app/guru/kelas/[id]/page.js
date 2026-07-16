@@ -3154,6 +3154,14 @@ export default function DetailKelas({ params: paramsPromise }) {
               </label>
 
               <button 
+                onClick={() => window.location.href = `/guru/laporan?kelasId=${kelas.id}`}
+                className="btn btn-secondary" 
+                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+              >
+                🖨️ Cetak Laporan
+              </button>
+
+              <button 
                 onClick={() => setRaporModalOpen(true)} 
                 disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0} 
                 className="btn btn-primary" 
