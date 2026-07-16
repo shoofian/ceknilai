@@ -44,7 +44,9 @@ export default function CetakLaporan() {
         if (response.ok) {
           const data = await response.json();
           setGuruProfile(data);
-          // Remove username check to allow all teachers access to print reports
+          if (data && data.username.toLowerCase() !== "shoofian") {
+            setIsAuthorized(false);
+          }
         }
       } catch (err) {
         console.error("Gagal memuat profil guru", err);
@@ -341,10 +343,18 @@ export default function CetakLaporan() {
     );
   }
 
+  if (!isAuthorized) {
+    return (
+      <div className="container-card animate-fade-in" style={{ padding: "40px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "300px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", background: "var(--bg-secondary)" }}>
+        <h2 style={{ fontSize: "1.8rem", fontWeight: "800", color: "var(--danger)", marginBottom: "12px" }}>Akses Terbatas</h2>
+        <p style={{ color: "var(--text-secondary)", maxWidth: "500px", lineHeight: "1.6" }}>
+          Fitur Cetak Laporan saat ini masih dalam tahap uji coba terbatas dan hanya dapat diakses oleh akun dengan username <strong>shoofian</strong>.
+        </p>
+      </div>
+    );
+  }
 
-
-  const presensiConfig = selectedClass?.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 };
-  const hasPresensi = !!(presensiConfig.digunakan && (selectedClass?.skemaPenilaian?.pertemuan || []).length > 0);
+  const hasPresensi = !!(selectedClass?.skemaPenilaian?.pertemuan && selectedClass.skemaPenilaian.pertemuan.length > 0);
 
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
