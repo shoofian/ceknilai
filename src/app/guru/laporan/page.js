@@ -246,7 +246,9 @@ export default function CetakLaporan() {
     let passCount = 0;
     let scoresList = [];
 
-    selectedClass.siswa.forEach(siswa => {
+    // Sort siswa secara alfabetis berdasarkan nama
+    const sortedSiswa = [...selectedClass.siswa].sort((a, b) => a.nama.localeCompare(b.nama, "id", { sensitivity: "base" }));
+    sortedSiswa.forEach(siswa => {
       // Hitung nilai akhir terbobot secara proporsional sesuai dengan logika di Buku Nilai
       let totalBobotTerisi = 0;
       let totalNilaiTerisi = 0;
@@ -316,7 +318,8 @@ export default function CetakLaporan() {
         nilai: calculatedGrades,
         nilaiAkhir: finalScoreRounded,
         predikat,
-        statusKelulusan
+        statusKelulusan,
+        attSummary
       });
     });
 
@@ -350,6 +353,9 @@ export default function CetakLaporan() {
       </div>
     );
   }
+
+  const presensiConfig = selectedClass?.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 };
+  const hasPresensi = !!(presensiConfig.digunakan && (selectedClass?.skemaPenilaian?.pertemuan || []).length > 0);
 
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -600,6 +606,14 @@ export default function CetakLaporan() {
                         <span style={{ fontSize: "0.78em", fontWeight: "400", opacity: 0.8 }}>({col.bobot}%)</span>
                       </th>
                     ))}
+                    {hasPresensi && (
+                      <>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Hadir">H</th>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Sakit">S</th>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Izin">I</th>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Alpa">A</th>
+                      </>
+                    )}
                     <th style={{ textAlign: "center", width: "72px", backgroundColor: "#dce6f1" }}>N. Akhir</th>
                     <th style={{ textAlign: "center", width: "80px" }}>Predikat</th>
                     <th style={{ textAlign: "center", width: "110px" }}>Kelulusan</th>
@@ -618,6 +632,16 @@ export default function CetakLaporan() {
                           {report.nilai[col.id]}
                         </td>
                       ))}
+
+                      {/* Presence columns */}
+                      {hasPresensi && (
+                        <>
+                          <td style={{ textAlign: "center", color: "#16a34a" }}>{report.attSummary?.H || 0}</td>
+                          <td style={{ textAlign: "center", color: "#3b82f6" }}>{report.attSummary?.S || 0}</td>
+                          <td style={{ textAlign: "center", color: "#d97706" }}>{report.attSummary?.I || 0}</td>
+                          <td style={{ textAlign: "center", color: "#dc2626" }}>{report.attSummary?.A || 0}</td>
+                        </>
+                      )}
 
                       {/* Final weighted score */}
                       <td style={{ textAlign: "center", fontWeight: "800", color: "#2563eb", backgroundColor: "rgba(59,130,246,0.05)" }}>
@@ -712,6 +736,10 @@ export default function CetakLaporan() {
             padding: 0 !important;
             background: transparent !important;
             box-shadow: none !important;
+          }
+          .report-signature {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
