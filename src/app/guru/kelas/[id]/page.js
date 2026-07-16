@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, useMemo, Fragment } from "react";
+import { useState, useEffect, use, useMemo, Fragment, useRef } from "react";
 import Modal from '@/components/Modal';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,10 @@ export default function DetailKelas({ params: paramsPromise }) {
   
   // State Onboarding
   const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+  
+  // State Print Preview
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const iframeRef = useRef(null);
   
   // States untuk Siswa
   const [siswaModalOpen, setSiswaModalOpen] = useState(false);
@@ -3154,7 +3158,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               </label>
 
               <button 
-                onClick={() => window.open(`/guru/laporan?kelasId=${kelas.id}&popup=true`, 'Cetak Laporan', 'width=1100,height=850,scrollbars=yes')}
+                onClick={() => setIsPreviewOpen(true)}
                 className="btn btn-secondary" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >
@@ -6379,6 +6383,49 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         );
       })()}
+
+      {/* ============= MODAL PRATINJAU CETAK LAPORAN ============= */}
+      {isPreviewOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1300, padding: "16px" }} className="animate-fade-in">
+          <div className="glass-card" style={{ width: "95%", maxWidth: "1050px", height: "90vh", display: "flex", flexDirection: "column", gap: "16px", padding: "24px", backgroundColor: "var(--bg-primary)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "1.4rem" }}>🖨️</span>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Pratinjau Cetak Laporan - {kelas.nama}</h3>
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button 
+                  onClick={() => {
+                    if (iframeRef.current) {
+                      iframeRef.current.contentWindow.print();
+                    }
+                  }} 
+                  className="btn btn-primary"
+                  style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", padding: "6px 16px" }}
+                >
+                  🖨️ Cetak PDF
+                </button>
+                <button 
+                  onClick={() => setIsPreviewOpen(false)} 
+                  className="btn btn-secondary"
+                  style={{ fontSize: "0.85rem", padding: "6px 16px" }}
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+            
+            <div style={{ flex: 1, position: "relative", width: "100%", borderRadius: "var(--radius-sm)", overflow: "hidden", border: "1px solid var(--border-color)", backgroundColor: "#ffffff" }}>
+              <iframe
+                ref={iframeRef}
+                src={`/guru/laporan?kelasId=${kelas.id}&popup=true`}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                title="Pratinjau Cetak"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );

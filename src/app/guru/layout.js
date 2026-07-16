@@ -81,9 +81,7 @@ export default function GuruLayout({ children }) {
     { name: "📁 Arsip Kelas", path: "/guru/arsip" },
   ];
 
-  if (guru && guru.username.toLowerCase() === "shoofian") {
-    navItems.push({ name: "🖨️ Cetak Laporan", path: "/guru/laporan" });
-  }
+  // Cetak Laporan is now hidden from sidebar navigation as it is accessible as a modal preview inside Kelola Kelas.
 
   navItems.push({ name: "👤 Profil Saya", path: "/guru/profil" });
 
