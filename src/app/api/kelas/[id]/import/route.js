@@ -113,6 +113,7 @@ export async function POST(request, { params }) {
 
     let addedCount = 0;
     let updatedCount = 0;
+    const skipped = [];
 
     // Clone daftar siswa kelas saat ini
     const currentStudents = [...kelas.siswa];
@@ -122,6 +123,7 @@ export async function POST(request, { params }) {
       
       if (!nisn || !nama) {
         console.warn(`[Import API] Skipped student due to missing fields: nisn=${!!nisn}, nama=${!!nama}`);
+        skipped.push({ name: nama || 'Tanpa Nama', reason: 'NISN atau Nama kosong' });
         continue; // Skip baris tidak lengkap
       }
 
@@ -134,6 +136,7 @@ export async function POST(request, { params }) {
         cleanTanggal = parseDateToYmd(tanggalLahir);
         if (!cleanTanggal) {
           console.warn(`[Import API] Skipped student "${cleanNama}" (${cleanNisn}) due to invalid date format: "${tanggalLahir}"`);
+          skipped.push({ name: cleanNama, reason: `Format tanggal lahir tidak valid ("${tanggalLahir}")` });
           continue; // Skip jika format tanggal tidak dapat diidentifikasi
         }
       }
@@ -202,7 +205,8 @@ export async function POST(request, { params }) {
       success: true,
       message: `Impor berhasil: ${addedCount} siswa baru ditambahkan, ${updatedCount} siswa diperbarui.`,
       addedCount,
-      updatedCount
+      updatedCount,
+      skipped: skipped.length > 0 ? skipped : null
     });
   } catch (error) {
     console.error('Error in POST import API:', error);

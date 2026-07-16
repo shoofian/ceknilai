@@ -695,15 +695,25 @@ export default function KelolaKelas() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `Gagal melakukan impor massal (HTTP ${res.status})`);
+        let errMsg = errData.error || `Gagal melakukan impor massal (HTTP ${res.status})`;
+        if (errData.detail && Array.isArray(errData.detail) && errData.detail.length > 0) {
+          errMsg += "\n\nDetail Kesalahan:\n" + errData.detail.map(d => `- ${d}`).join("\n");
+        }
+        throw new Error(errMsg);
       }
 
       const resData = await res.json();
       if (resData.errors && resData.errors.length > 0) {
         console.warn("Some classes failed during bulk import:", resData.errors);
+        const detailMsg = "\n\nNamun, beberapa kelas/siswa mengalami masalah/dilewati:\n" + resData.errors.map(d => `- ${d}`).join("\n");
+        triggerConfirm(
+          `${resData.results?.length ?? 0} Kelas berhasil diimpor.${detailMsg}`,
+          null,
+          { title: "Impor Selesai dengan Catatan", confirmText: "Selesai", cancelText: "" }
+        );
+      } else {
+        triggerConfirm(`${resData.results?.length ?? 0} Kelas beserta siswanya berhasil diimpor!`, null, { title: "Impor Berhasil", confirmText: "Selesai", cancelText: "" });
       }
-
-      triggerConfirm(`${resData.results?.length ?? 0} Kelas beserta siswanya berhasil diimpor!`, null, { title: "Impor Berhasil", confirmText: "Selesai", cancelText: "" });
       setBulkModalOpen(false);
       fetchKelas();
     } catch (err) {
@@ -1628,7 +1638,7 @@ export default function KelolaKelas() {
               </div>
             </div>
             
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line" }}>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line", maxHeight: "250px", overflowY: "auto" }}>
               {confirmConfig.message}
             </p>
             

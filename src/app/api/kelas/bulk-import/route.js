@@ -120,15 +120,22 @@ export async function POST(request) {
 
           // Parse and format students list
           const formattedStudents = [];
+          const skippedStudents = [];
           if (Array.isArray(siswaList)) {
             for (const s of siswaList) {
               const { nisn, nama: sNama, tanggalLahir, nilai, catatan } = s;
-              if (!nisn || !sNama) continue;
+              if (!nisn || !sNama) {
+                skippedStudents.push(`${sNama || 'Tanpa Nama'} (NISN atau Nama kosong)`);
+                continue;
+              }
 
               let cleanTanggal = null;
               if (tanggalLahir && tanggalLahir.toString().trim() !== '') {
                 cleanTanggal = parseDateToYmd(tanggalLahir);
-                if (!cleanTanggal) continue;
+                if (!cleanTanggal) {
+                  skippedStudents.push(`${sNama} (Format tanggal lahir tidak valid: "${tanggalLahir}")`);
+                  continue;
+                }
               }
 
               formattedStudents.push({
@@ -156,6 +163,10 @@ export async function POST(request) {
             },
             username
           );
+
+          if (skippedStudents.length > 0) {
+            errors.push(`Kelas "${cls.nama}": ${skippedStudents.length} siswa dilewati karena data tidak valid [${skippedStudents.join(', ')}]`);
+          }
 
           results.push({
             nama: cls.nama,

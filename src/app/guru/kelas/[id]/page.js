@@ -1951,15 +1951,20 @@ export default function DetailKelas({ params: paramsPromise }) {
       
       const data = await response.json();
       if (response.ok) {
-        alert(data.message || "Impor data berhasil!");
-        setPreviewModalOpen(false);
-        fetchClassDetail();
+        let msg = data.message || "Impor data berhasil!";
+        if (data.skipped && data.skipped.length > 0) {
+          msg += "\n\nCatatan (Beberapa siswa dilewati):\n" + data.skipped.map(s => `- ${s.name}: ${s.reason}`).join("\n");
+        }
+        triggerAlert(msg, () => {
+          setPreviewModalOpen(false);
+          fetchClassDetail();
+        }, { title: data.skipped && data.skipped.length > 0 ? "Impor Berhasil dengan Catatan" : "Impor Berhasil" });
       } else {
-        alert(data.error || "Gagal mengimpor data.");
+        triggerAlert(data.error || "Gagal mengimpor data.", null, { title: "Impor Gagal", isDanger: true });
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi server saat mengimpor.");
+      triggerAlert("Terjadi kesalahan koneksi server saat mengimpor.", null, { title: "Galat Koneksi", isDanger: true });
     } finally {
       setImporting(false);
     }
@@ -5995,7 +6000,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </div>
             
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line" }}>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line", maxHeight: "250px", overflowY: "auto" }}>
               {confirmConfig.message}
             </p>
             
