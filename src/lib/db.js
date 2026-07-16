@@ -855,7 +855,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
       const pertemuanList = skema.pertemuan || [];
       
-      let totalH = 0, totalI = 0, totalS = 0, totalA = 0;
+      let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalD = 0;
       const daftarHadir = [];
 
       pertemuanList.forEach(p => {
@@ -864,6 +864,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         else if (status === 'I') totalI++;
         else if (status === 'S') totalS++;
         else if (status === 'A') totalA++;
+        else if (status === 'D') totalD++;
         
         daftarHadir.push({
           pertemuanId: p.id,
@@ -874,15 +875,15 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         });
       });
 
-      const attCount = totalH + totalS + totalI + totalA;
-      const attTotal = (totalH * 100) + (totalS * 50) + (totalI * 50) + (totalA * 0);
+      const attCount = totalH + totalS + totalI + totalA + totalD;
+      const attTotal = (totalH * 100) + (totalS * 50) + (totalI * 50) + (totalA * 0) + (totalD * 100);
       const avgAttendance = attCount > 0 ? Math.round(attTotal / attCount) : 0;
 
       const rekapPresensi = {
         digunakan: !!presensiConfig.digunakan,
         bobot: presensiConfig.bobot || 0,
         totalPertemuan: pertemuanList.length,
-        summary: { H: totalH, I: totalI, S: totalS, A: totalA },
+        summary: { H: totalH, I: totalI, S: totalS, A: totalA, D: totalD },
         persentase: avgAttendance,
         detail: daftarHadir
       };

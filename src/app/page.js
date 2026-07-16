@@ -1003,16 +1003,24 @@ export default function StudentPortal() {
                                   </thead>
                                   <tbody>
                                     <tr>
-                                      <td>1. Sakit (S)</td>
-                                      <td>{res.rekapPresensi.summary.S} hari</td>
+                                      <td>1. Hadir (H)</td>
+                                      <td>{res.rekapPresensi.summary.H || 0} hari</td>
                                     </tr>
                                     <tr>
                                       <td>2. Izin (I)</td>
-                                      <td>{res.rekapPresensi.summary.I} hari</td>
+                                      <td>{res.rekapPresensi.summary.I || 0} hari</td>
                                     </tr>
                                     <tr>
-                                      <td>3. Tanpa Keterangan (A)</td>
-                                      <td>{res.rekapPresensi.summary.A} hari</td>
+                                      <td>3. Sakit (S)</td>
+                                      <td>{res.rekapPresensi.summary.S || 0} hari</td>
+                                    </tr>
+                                    <tr>
+                                      <td>4. Dispensasi (D)</td>
+                                      <td>{res.rekapPresensi.summary.D || 0} hari</td>
+                                    </tr>
+                                    <tr>
+                                      <td>5. Alpha (A)</td>
+                                      <td>{res.rekapPresensi.summary.A || 0} hari</td>
                                     </tr>
                                   </tbody>
                                 </table>
@@ -1114,26 +1122,30 @@ export default function StudentPortal() {
                             </div>
                             
                             {/* Attendance Summary Cards */}
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "10px", textAlign: "center" }}>
-                              <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.7rem", color: "var(--success)", fontWeight: "800" }}>HADIR</div>
-                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--success)" }}>{res.rekapPresensi.summary.H}</div>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "6px", textAlign: "center" }}>
+                              <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--success)", fontWeight: "800" }}>HADIR</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--success)" }}>{res.rekapPresensi.summary.H}</div>
                               </div>
-                              <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.7rem", color: "var(--warning)", fontWeight: "800" }}>IZIN</div>
-                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--warning)" }}>{res.rekapPresensi.summary.I}</div>
+                              <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--warning)", fontWeight: "800" }}>IZIN</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--warning)" }}>{res.rekapPresensi.summary.I}</div>
                               </div>
-                              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.7rem", color: "#3b82f6", fontWeight: "800" }}>SAKIT</div>
-                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#3b82f6" }}>{res.rekapPresensi.summary.S}</div>
+                              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "#3b82f6", fontWeight: "800" }}>SAKIT</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#3b82f6" }}>{res.rekapPresensi.summary.S}</div>
                               </div>
-                              <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.7rem", color: "var(--danger)", fontWeight: "800" }}>ALFA</div>
-                                <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--danger)" }}>{res.rekapPresensi.summary.A}</div>
+                              <div style={{ background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "#8b5cf6", fontWeight: "800" }}>DISPEN</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#8b5cf6" }}>{res.rekapPresensi.summary.D || 0}</div>
                               </div>
-                              <div style={{ background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 5px", borderRadius: "var(--radius-sm)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                                <div style={{ fontSize: "0.65rem", color: "var(--primary)", fontWeight: "800" }}>PERSENTASE</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)" }}>{res.rekapPresensi.persentase}%</div>
+                              <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--danger)", fontWeight: "800" }}>ALPHA</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--danger)" }}>{res.rekapPresensi.summary.A}</div>
+                              </div>
+                              <div style={{ background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <div style={{ fontSize: "0.6rem", color: "var(--primary)", fontWeight: "800" }}>HADIR %</div>
+                                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--primary)" }}>{res.rekapPresensi.persentase}%</div>
                               </div>
                             </div>
 
@@ -1164,11 +1176,13 @@ export default function StudentPortal() {
                                             p.status === 'H' ? "rgba(16, 185, 129, 0.15)" :
                                             p.status === 'I' ? "rgba(245, 158, 11, 0.15)" :
                                             p.status === 'S' ? "rgba(59, 130, 246, 0.15)" :
+                                            p.status === 'D' ? "rgba(139, 92, 246, 0.15)" :
                                             p.status === 'A' ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
                                           color:
                                             p.status === 'H' ? "var(--success)" :
                                             p.status === 'I' ? "var(--warning)" :
                                             p.status === 'S' ? "#3b82f6" :
+                                            p.status === 'D' ? "#8b5cf6" :
                                             p.status === 'A' ? "var(--danger)" : "var(--text-muted)"
                                         }}>
                                           {p.status}
