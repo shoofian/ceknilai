@@ -595,9 +595,9 @@ export default function CetakLaporan() {
               <table className="premium-table">
                 <thead>
                   <tr>
-                    <th style={{ width: "36px", textAlign: "center" }}>No</th>
-                    <th style={{ width: "108px" }}>NISN</th>
-                    <th style={{ minWidth: "160px" }}>Nama Siswa</th>
+                    <th style={{ width: "50px", textAlign: "center", whiteSpace: "nowrap" }}>No</th>
+                    <th style={{ width: "108px", textAlign: "center" }}>NISN</th>
+                    <th style={{ minWidth: "160px", textAlign: "left" }}>Nama Siswa</th>
                     {selectedClass.kolomNilai.map(col => (
                       <th key={col.id} style={{ textAlign: "center", minWidth: "80px" }}>
                         {col.nama}
@@ -667,9 +667,9 @@ export default function CetakLaporan() {
                 <table className="premium-table" style={{ width: "100%" }}>
                   <thead>
                     <tr style={{ backgroundColor: "#f3f4f6" }}>
-                      <th style={{ width: "40px", textAlign: "center" }}>No</th>
-                      <th style={{ width: "120px" }}>NISN</th>
-                      <th>Nama Siswa</th>
+                      <th style={{ width: "50px", textAlign: "center", whiteSpace: "nowrap" }}>No</th>
+                      <th style={{ width: "120px", textAlign: "center" }}>NISN</th>
+                      <th style={{ textAlign: "left" }}>Nama Siswa</th>
                       <th style={{ textAlign: "center", width: "80px" }}>Hadir</th>
                       <th style={{ textAlign: "center", width: "80px" }}>Izin</th>
                       <th style={{ textAlign: "center", width: "80px" }}>Sakit</th>
@@ -776,7 +776,6 @@ export default function CetakLaporan() {
           font-size: 0.78rem !important;
           line-height: 1.3 !important;
           vertical-align: middle !important;
-          text-align: left;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
         }
         #printable-area th {
