@@ -3154,7 +3154,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               </label>
 
               <button 
-                onClick={() => window.location.href = `/guru/laporan?kelasId=${kelas.id}`}
+                onClick={() => window.open(`/guru/laporan?kelasId=${kelas.id}&popup=true`, 'Cetak Laporan', 'width=1100,height=850,scrollbars=yes')}
                 className="btn btn-secondary" 
                 style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
               >

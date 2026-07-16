@@ -10,17 +10,23 @@ export default function GuruLayout({ children }) {
   const [guru, setGuru] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [isPopup, setIsPopup] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  // Inisialisasi mode dari localStorage saat pertama mount
+  // Inisialisasi mode dari localStorage saat pertama mount dan cek status popup
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const dark = saved ? saved === "dark" : prefersDark;
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
-  }, []);
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setIsPopup(params.get("popup") === "true");
+    }
+  }, [pathname]);
 
   // Toggle dark mode dan simpan ke localStorage
   const toggleDark = () => {
@@ -104,6 +110,14 @@ export default function GuruLayout({ children }) {
             100% { transform: rotate(360deg); }
           }
         `}</style>
+      </div>
+    );
+  }
+
+  if (isPopup) {
+    return (
+      <div className="popup-layout" style={{ padding: "20px 0", backgroundColor: "var(--bg-primary)", minHeight: "100vh" }}>
+        {children}
       </div>
     );
   }
