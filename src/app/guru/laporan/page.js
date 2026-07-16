@@ -644,10 +644,11 @@ export default function CetakLaporan() {
 
                       {/* Graduation status */}
                       <td style={{ textAlign: "center" }}>
-                        <span
-                          className={`badge ${report.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`}
-                          style={{ fontSize: "0.7rem", width: "100%", justifyContent: "center", display: "inline-flex" }}
-                        >
+                        <span style={{
+                          fontWeight: "800",
+                          fontSize: "0.8rem",
+                          color: report.statusKelulusan === "LULUS" ? "#16a34a" : "#dc2626"
+                        }}>
                           {report.statusKelulusan}
                         </span>
                       </td>
@@ -759,6 +760,36 @@ export default function CetakLaporan() {
           .align-left-mobile {
             text-align: left !important;
           }
+        }
+        
+        /* Premium concise table style for print-safe area */
+        #printable-area table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          margin-top: 10px !important;
+          background-color: #ffffff !important;
+        }
+        #printable-area th, #printable-area td {
+          border: 1px solid #94a3b8 !important;
+          padding: 6px 10px !important;
+          font-size: 0.78rem !important;
+          line-height: 1.3 !important;
+          vertical-align: middle !important;
+          text-align: left;
+        }
+        #printable-area th {
+          background-color: #f1f5f9 !important;
+          font-weight: 800 !important;
+          color: #0f172a !important;
+          font-size: 0.74rem !important;
+          text-transform: uppercase !important;
+          letter-spacing: 0.02em !important;
+        }
+        #printable-area td {
+          color: #1e293b !important;
+        }
+        #printable-area tbody tr:nth-of-type(even) {
+          background-color: #f8fafc !important;
         }
         
         @media print {
