@@ -192,6 +192,10 @@ export default function KelolaKelas() {
       setError("Nomor/Nama Rombel harus diisi.");
       return;
     }
+    if (detectLevelInRombel(tingkatan, rombelNama)) {
+      setError("Nama Rombel tidak boleh diawali dengan tingkatan (angka/romawi). Cukup tulis nama rombel saja, contoh: 'MIPA 1'.");
+      return;
+    }
     if (!tingkatan) {
       setError("Tingkatan kelas harus dipilih.");
       return;
@@ -630,6 +634,10 @@ export default function KelolaKelas() {
     for (const form of validForms) {
       if (!form.tingkatan) {
         setBulkError(`Tingkatan kelas harus diisi untuk rombel "${form.rombelNama}".`);
+        return;
+      }
+      if (detectLevelInRombel(form.tingkatan, form.rombelNama)) {
+        setBulkError(`Nama Rombel untuk "${form.rombelNama}" tidak boleh diawali dengan tingkatan (angka/romawi). Cukup tulis nama rombel saja.`);
         return;
       }
       const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
