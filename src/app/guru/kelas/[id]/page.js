@@ -15,6 +15,14 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState(null);
+
+  const studentsWithoutBirthDate = useMemo(() => {
+    if (!kelas || !kelas.siswa) return [];
+    return kelas.siswa.filter(s => {
+      const dob = s.tanggalLahir ? s.tanggalLahir.toString().trim() : "";
+      return !dob || dob === "-" || dob === "1900-01-01";
+    });
+  }, [kelas]);
   
   // State Onboarding
   const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
@@ -2007,6 +2015,28 @@ export default function DetailKelas({ params: paramsPromise }) {
           <span style={{ fontSize: "1.4rem" }}>📁</span>
           <div>
             <strong>Kelas ini telah diarsipkan.</strong> Anda hanya dapat melihat data kelas dan tidak dapat melakukan pengeditan atau perubahan nilai.
+          </div>
+        </div>
+      )}
+
+      {/* Warning Banner for Missing Birth Dates */}
+      {studentsWithoutBirthDate.length > 0 && (
+        <div style={{
+          padding: "16px 20px",
+          borderRadius: "var(--radius-sm)",
+          backgroundColor: "var(--warning-glow)",
+          border: "1px solid rgba(245, 158, 11, 0.25)",
+          color: "var(--text-primary)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          fontSize: "0.9rem",
+          fontWeight: "500",
+          boxShadow: "var(--shadow-sm)"
+        }} className="animate-fade-in">
+          <span style={{ fontSize: "1.4rem" }}>⚠️</span>
+          <div>
+            <strong>Lengkapi Tanggal Lahir Siswa!</strong> Terdapat <strong>{studentsWithoutBirthDate.length} siswa</strong> di kelas ini yang belum memiliki tanggal lahir yang valid. Silakan lengkapi agar siswa dapat melakukan <strong>cek nilai mandiri</strong> menggunakan NISN dan tanggal lahir mereka.
           </div>
         </div>
       )}
