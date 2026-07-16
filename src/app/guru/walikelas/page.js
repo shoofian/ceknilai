@@ -441,15 +441,15 @@ export default function WaliKelasDashboard() {
               let totalPresensiScore = 0;
               
               if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-                let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+                let attSummary = { H: 0, I: 0, S: 0, A: 0, D: 0 };
                 pertemuanList.forEach(p => {
                   const val = s.nilai?.[`_presensi_${p.id}`];
                   if (val && attSummary[val] !== undefined) {
                     attSummary[val]++;
                   }
                 });
-                let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
-                let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
+                let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
+                let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
                 const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
                 totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
               }
@@ -996,12 +996,13 @@ export default function WaliKelasDashboard() {
                     <th style={{ width: "60px", textAlign: "center" }}>No</th>
                     <th style={{ width: "130px" }}>NISN</th>
                     <th>Nama Siswa</th>
-                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(16, 185, 129, 0.05)" }}>Hadir (H)</th>
-                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.05)" }}>Sakit (S)</th>
-                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Izin (I)</th>
-                    <th style={{ width: "100px", textAlign: "center", backgroundColor: "rgba(239, 68, 68, 0.05)" }}>Alpa (A)</th>
-                    <th style={{ width: "120px", textAlign: "center" }}>Total Pertemuan</th>
-                    <th style={{ width: "120px", textAlign: "center", backgroundColor: "rgba(124, 58, 237, 0.08)" }}>% Kehadiran</th>
+                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(16, 185, 129, 0.05)" }}>Hadir (H)</th>
+                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.05)" }}>Izin (I)</th>
+                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Sakit (S)</th>
+                    <th style={{ width: "95px", textAlign: "center", backgroundColor: "rgba(139, 92, 246, 0.05)" }}>Dispensasi (D)</th>
+                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(239, 68, 68, 0.05)" }}>Alpha (A)</th>
+                    <th style={{ width: "110px", textAlign: "center" }}>Total Pertemuan</th>
+                    <th style={{ width: "110px", textAlign: "center", backgroundColor: "rgba(124, 58, 237, 0.08)" }}>% Kehadiran</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1010,8 +1011,9 @@ export default function WaliKelasDashboard() {
                     const sakit = s.kehadiran?.S || 0;
                     const i = s.kehadiran?.I || 0;
                     const a = s.kehadiran?.A || 0;
-                    const total = h + sakit + i + a;
-                    const percent = total > 0 ? ((h + sakit + i) / total) * 100 : null;
+                    const d = s.kehadiran?.D || 0;
+                    const total = h + sakit + i + a + d;
+                    const percent = total > 0 ? ((h + d) / total) * 100 : null;
 
                     return (
                       <tr key={s.nisn} style={{ borderBottom: "1px solid var(--border-color)" }}>
@@ -1019,8 +1021,9 @@ export default function WaliKelasDashboard() {
                         <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-secondary)" }}>{s.nisn}</td>
                         <td style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</td>
                         <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.01)" }}>{h}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.01)" }}>{sakit}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.01)" }}>{i}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.01)" }}>{i}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.01)" }}>{sakit}</td>
+                        <td style={{ textAlign: "center", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.01)" }}>{d}</td>
                         <td style={{ textAlign: "center", fontWeight: "700", color: a > 0 ? "var(--danger)" : "var(--text-muted)", backgroundColor: "rgba(239, 68, 68, 0.01)" }}>
                           {a > 0 ? a : "-"}
                         </td>

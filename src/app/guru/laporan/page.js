@@ -270,7 +270,7 @@ export default function CetakLaporan() {
       const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
       const pertemuanList = skema.pertemuan || [];
       
-      let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+      let attSummary = { H: 0, I: 0, S: 0, A: 0, D: 0 };
       pertemuanList.forEach(p => {
         const val = siswa.nilai[`_presensi_${p.id}`];
         if (val && attSummary[val] !== undefined) {
@@ -279,8 +279,8 @@ export default function CetakLaporan() {
       });
 
       if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
-        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
+        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
+        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
         
         const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
         total += attAvg * (presensiConfig.bobot / 100);
@@ -609,9 +609,10 @@ export default function CetakLaporan() {
                     {hasPresensi && (
                       <>
                         <th style={{ textAlign: "center", width: "35px" }} title="Hadir">H</th>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Sakit">S</th>
                         <th style={{ textAlign: "center", width: "35px" }} title="Izin">I</th>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Alpa">A</th>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Sakit">S</th>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Dispensasi">D</th>
+                        <th style={{ textAlign: "center", width: "35px" }} title="Alpha">A</th>
                       </>
                     )}
                     <th style={{ textAlign: "center", width: "72px", backgroundColor: "#dce6f1" }}>N. Akhir</th>
@@ -637,8 +638,9 @@ export default function CetakLaporan() {
                       {hasPresensi && (
                         <>
                           <td style={{ textAlign: "center", color: "#16a34a" }}>{report.attSummary?.H || 0}</td>
+                          <td style={{ textAlign: "center", color: "var(--warning)" }}>{report.attSummary?.I || 0}</td>
                           <td style={{ textAlign: "center", color: "#3b82f6" }}>{report.attSummary?.S || 0}</td>
-                          <td style={{ textAlign: "center", color: "#d97706" }}>{report.attSummary?.I || 0}</td>
+                          <td style={{ textAlign: "center", color: "#8b5cf6" }}>{report.attSummary?.D || 0}</td>
                           <td style={{ textAlign: "center", color: "#dc2626" }}>{report.attSummary?.A || 0}</td>
                         </>
                       )}

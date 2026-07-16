@@ -1252,7 +1252,7 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
             nilaiMapel: {},
             isSelesaiMapel: {},
             catatanMapel: {},
-            kehadiran: { H: 0, S: 0, I: 0, A: 0 }
+            kehadiran: { H: 0, S: 0, I: 0, A: 0, D: 0 }
           };
         }
         
@@ -1319,15 +1319,15 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
         let totalPresensiScore = 0;
         
         if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-          let attSummary = { H: 0, I: 0, S: 0, A: 0 };
+          let attSummary = { H: 0, I: 0, S: 0, A: 0, D: 0 };
           pertemuanList.forEach(p => {
             const val = s.nilai?.[`_presensi_${p.id}`];
             if (val && attSummary[val] !== undefined) {
               attSummary[val]++;
             }
           });
-          let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A;
-          let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0);
+          let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
+          let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
           const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
           totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
         }

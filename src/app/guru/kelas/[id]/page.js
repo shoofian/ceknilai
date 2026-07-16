@@ -2566,7 +2566,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>📅 Tabel Presensi (Kehadiran)</h4>
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                Kelola kehadiran siswa. Klik pada sel untuk mengubah status: <strong style={{color:"var(--success)"}}>H</strong> (Hadir), <strong style={{color:"var(--warning)"}}>I</strong> (Izin), <strong style={{color:"#3b82f6"}} >S</strong> (Sakit), <strong style={{color:"var(--danger)"}}>A</strong> (Alpa).
+                Kelola kehadiran siswa. Klik pada sel untuk mengubah status: <strong style={{color:"var(--success)"}}>H</strong> (Hadir), <strong style={{color:"var(--warning)"}}>I</strong> (Izin), <strong style={{color:"#3b82f6"}} >S</strong> (Sakit), <strong style={{color:"#8b5cf6"}}>D</strong> (Dispensasi), <strong style={{color:"var(--danger)"}}>A</strong> (Alpha).
               </p>
             </div>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
@@ -2647,7 +2647,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </div>
                     <div>
                       <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--danger)" }}>{presensiStats.totalA}</span>
-                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Alpa</span>
+                      <span style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginLeft: "4px", fontWeight: "600" }}>Alpha</span>
                     </div>
                     <div>
                       <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "#8b5cf6" }}>{presensiStats.totalD}</span>
@@ -2995,7 +2995,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--success)" }}></div> Hadir (100)</span>
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (50)</span>
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (50)</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpa (0)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpha (0)</span>
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (100)</span>
             </div>
 
@@ -4624,12 +4624,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "6px" }}>
                   <label style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-secondary)" }}>⚡ Presensi Massal Cepat (Bulk)</label>
                   <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Ubah status kehadiran seluruh siswa di pertemuan ini secara serentak.</p>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px", marginTop: "4px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "6px", marginTop: "4px" }}>
                     {[
                       { val: 'H', label: 'Hadir', bg: 'rgba(16, 185, 129, 0.1)', color: '#34d399', border: 'rgba(16, 185, 129, 0.2)' },
                       { val: 'I', label: 'Izin', bg: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.2)' },
                       { val: 'S', label: 'Sakit', bg: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.2)' },
-                      { val: 'A', label: 'Alpa', bg: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
+                      { val: 'D', label: 'Dispensasi', bg: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', border: 'rgba(139, 92, 246, 0.2)' },
+                      { val: 'A', label: 'Alpha', bg: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
                       { val: '', label: 'Kosong', bg: 'rgba(100, 116, 139, 0.1)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.2)' }
                     ].map(item => (
                       <button
@@ -4694,7 +4695,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <option value="H">🟢 Hadir (Semua)</option>
                     <option value="I">🟡 Izin (Semua)</option>
                     <option value="S">🔵 Sakit (Semua)</option>
-                    <option value="A">🔴 Alpa (Semua)</option>
+                    <option value="D">🟣 Dispensasi (Semua)</option>
+                    <option value="A">🔴 Alpha (Semua)</option>
                   </select>
                 </div>
               )}
