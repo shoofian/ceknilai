@@ -605,15 +605,6 @@ export default function CetakLaporan() {
                         <span style={{ fontSize: "0.78em", fontWeight: "400", opacity: 0.8 }}>({col.bobot}%)</span>
                       </th>
                     ))}
-                    {hasPresensi && (
-                      <>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Hadir">H</th>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Izin">I</th>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Sakit">S</th>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Dispensasi">D</th>
-                        <th style={{ textAlign: "center", width: "35px" }} title="Alpha">A</th>
-                      </>
-                    )}
                     <th style={{ textAlign: "center", width: "72px", backgroundColor: "#dce6f1" }}>N. Akhir</th>
                     <th style={{ textAlign: "center", width: "80px" }}>Predikat</th>
                     <th style={{ textAlign: "center", width: "110px" }}>Kelulusan</th>
@@ -632,17 +623,6 @@ export default function CetakLaporan() {
                           {report.nilai[col.id]}
                         </td>
                       ))}
-
-                      {/* Presence columns */}
-                      {hasPresensi && (
-                        <>
-                          <td style={{ textAlign: "center", color: "#16a34a" }}>{report.attSummary?.H || 0}</td>
-                          <td style={{ textAlign: "center", color: "var(--warning)" }}>{report.attSummary?.I || 0}</td>
-                          <td style={{ textAlign: "center", color: "#3b82f6" }}>{report.attSummary?.S || 0}</td>
-                          <td style={{ textAlign: "center", color: "#8b5cf6" }}>{report.attSummary?.D || 0}</td>
-                          <td style={{ textAlign: "center", color: "#dc2626" }}>{report.attSummary?.A || 0}</td>
-                        </>
-                      )}
 
                       {/* Final weighted score */}
                       <td style={{ textAlign: "center", fontWeight: "800", color: "#2563eb", backgroundColor: "rgba(59,130,246,0.05)" }}>
@@ -676,6 +656,57 @@ export default function CetakLaporan() {
                 </tbody>
               </table>
             </div>
+
+            {/* TABEL REKAP PRESENSI TERPISAH */}
+            {hasPresensi && (
+              <div style={{ marginTop: "24px", pageBreakInside: "avoid", breakInside: "avoid" }}>
+                <h3 style={{ fontSize: "0.95rem", fontWeight: "800", marginBottom: "8px", borderBottom: "2px solid #333", paddingBottom: "4px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                  📅 Rekapitulasi Kehadiran Siswa
+                </h3>
+                <table className="premium-table" style={{ width: "100%" }}>
+                  <thead>
+                    <tr style={{ backgroundColor: "#f3f4f6" }}>
+                      <th style={{ width: "40px", textAlign: "center" }}>No</th>
+                      <th style={{ width: "120px" }}>NISN</th>
+                      <th>Nama Siswa</th>
+                      <th style={{ textAlign: "center", width: "80px" }}>Hadir</th>
+                      <th style={{ textAlign: "center", width: "80px" }}>Izin</th>
+                      <th style={{ textAlign: "center", width: "80px" }}>Sakit</th>
+                      <th style={{ textAlign: "center", width: "100px" }}>Dispensasi</th>
+                      <th style={{ textAlign: "center", width: "80px" }}>Alpha</th>
+                      <th style={{ textAlign: "center", width: "100px", backgroundColor: "#e2e8f0" }}>% Kehadiran</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentReports.map((report, idx) => {
+                      const h = report.attSummary?.H || 0;
+                      const i = report.attSummary?.I || 0;
+                      const s = report.attSummary?.S || 0;
+                      const d = report.attSummary?.D || 0;
+                      const a = report.attSummary?.A || 0;
+                      const total = h + i + s + d + a;
+                      const percentage = total > 0 ? Math.round(((h + d) / total) * 100) : 100;
+                      
+                      return (
+                        <tr key={report.nisn}>
+                          <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                          <td style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{report.nisn}</td>
+                          <td style={{ fontWeight: "700" }}>{report.nama}</td>
+                          <td style={{ textAlign: "center", color: "#16a34a" }}>{h}</td>
+                          <td style={{ textAlign: "center", color: "var(--warning)" }}>{i}</td>
+                          <td style={{ textAlign: "center", color: "#3b82f6" }}>{s}</td>
+                          <td style={{ textAlign: "center", color: "#8b5cf6" }}>{d}</td>
+                          <td style={{ textAlign: "center", color: "#dc2626" }}>{a}</td>
+                          <td style={{ textAlign: "center", fontWeight: "800", backgroundColor: "rgba(226, 232, 240, 0.3)" }}>
+                            {percentage}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {/* KKM Footnote */}
             <p className="report-footnote" style={{ fontSize: "0.8rem", color: "#6b7280", fontStyle: "italic", borderTop: "1px solid #e5e7eb", paddingTop: "8px", marginTop: "4px" }}>
