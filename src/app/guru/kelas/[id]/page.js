@@ -4626,12 +4626,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>Ubah status kehadiran seluruh siswa di pertemuan ini secara serentak.</p>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "6px", marginTop: "4px" }}>
                     {[
-                      { val: 'H', label: 'Hadir', bg: 'rgba(16, 185, 129, 0.1)', color: '#34d399', border: 'rgba(16, 185, 129, 0.2)' },
-                      { val: 'I', label: 'Izin', bg: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', border: 'rgba(245, 158, 11, 0.2)' },
-                      { val: 'S', label: 'Sakit', bg: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: 'rgba(59, 130, 246, 0.2)' },
-                      { val: 'D', label: 'Dispensasi', bg: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', border: 'rgba(139, 92, 246, 0.2)' },
-                      { val: 'A', label: 'Alpha', bg: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'rgba(239, 68, 68, 0.2)' },
-                      { val: '', label: 'Kosong', bg: 'rgba(100, 116, 139, 0.1)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.2)' }
+                      { val: 'H', label: 'Hadir', bg: 'var(--success)', color: '#ffffff', border: 'var(--success)' },
+                      { val: 'I', label: 'Izin', bg: 'var(--warning)', color: '#ffffff', border: 'var(--warning)' },
+                      { val: 'S', label: 'Sakit', bg: 'var(--primary)', color: '#ffffff', border: 'var(--primary)' },
+                      { val: 'D', label: 'Dispensasi', bg: '#8b5cf6', color: '#ffffff', border: '#8b5cf6' },
+                      { val: 'A', label: 'Alpha', bg: 'var(--danger)', color: '#ffffff', border: 'var(--danger)' },
+                      { val: '', label: 'Kosong', bg: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: 'var(--border-color)' }
                     ].map(item => (
                       <button
                         key={item.val}
