@@ -95,6 +95,12 @@ export default function GuruLayout({ children }) {
 
   navItems.push({ name: "🌐 Portal Siswa", path: "/" });
 
+  navItems.push({
+    name: "💬 Chat Bantuan (WA)",
+    path: "https://wa.me/6285157544004?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai%20Cek%20Nilai.",
+    isExternal: true
+  });
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-primary)" }}>
@@ -185,7 +191,45 @@ export default function GuruLayout({ children }) {
         {/* Nav Links */}
         <nav style={{ flex: 1, padding: "20px 12px", display: "flex", flexDirection: "column", gap: "6px" }}>
           {navItems.map((item) => {
-            const isActive = pathname === item.path || (item.path !== "/guru" && pathname.startsWith(item.path));
+            const isActive = !item.isExternal && (pathname === item.path || (item.path !== "/guru" && pathname.startsWith(item.path)));
+
+            if (item.isExternal) {
+              return (
+                <a
+                  key={item.name}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    padding: "12px 16px",
+                    fontSize: "0.9rem",
+                    borderRadius: "var(--radius-sm)",
+                    boxShadow: "none",
+                    backgroundColor: "transparent",
+                    color: "var(--text-secondary)",
+                    fontWeight: "500",
+                    transition: "var(--transition)",
+                    textDecoration: "none"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "var(--success)";
+                    e.currentTarget.style.backgroundColor = "var(--success-glow)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "var(--text-secondary)";
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  {item.name}
+                </a>
+              );
+            }
+
             return (
               <Link
                 key={item.path}

@@ -169,8 +169,8 @@ export default function OnboardingGuide() {
           <style>{`
             .onboarding-guide-btn {
               position: fixed;
-              bottom: 28px;
-              right: 96px;
+              bottom: 24px;
+              right: 24px;
               background-color: var(--primary);
               color: #ffffff;
               border: none;
