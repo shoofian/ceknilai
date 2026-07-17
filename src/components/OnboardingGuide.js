@@ -162,7 +162,7 @@ export default function OnboardingGuide() {
           style={{
             position: "fixed",
             bottom: "24px",
-            right: "24px",
+            right: "90px",
             backgroundColor: "var(--primary)",
             color: "#ffffff",
             border: "none",
