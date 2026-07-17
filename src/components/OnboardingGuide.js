@@ -156,39 +156,68 @@ export default function OnboardingGuide() {
     // Selalu tampilkan tombol bantuan mengambang di pojok kanan bawah dashboard guru
     if (pathname && pathname.startsWith("/guru")) {
       return (
-        <button
-          onClick={handleResetDismiss}
-          className="no-print"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "90px",
-            backgroundColor: "var(--primary)",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "50px",
-            padding: "12px 20px",
-            fontSize: "0.9rem",
-            fontWeight: "600",
-            boxShadow: "var(--shadow-lg), 0 0 15px var(--primary-glow)",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            zIndex: 99,
-            transition: "var(--transition)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-3px)";
-            e.currentTarget.style.backgroundColor = "var(--primary-hover)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.backgroundColor = "var(--primary)";
-          }}
-        >
-          <span>💡</span> Panduan Memulai {hasNoClasses && <span style={{ width: "8px", height: "8px", backgroundColor: "var(--danger)", borderRadius: "50%", display: "inline-block" }}></span>}
-        </button>
+        <>
+          <button
+            onClick={handleResetDismiss}
+            className="no-print onboarding-guide-btn"
+            title="Panduan Memulai Cek Nilai"
+          >
+            <span style={{ display: "flex", alignItems: "center" }}>💡</span>
+            <span className="onboarding-guide-text">Panduan Memulai</span>
+            {hasNoClasses && <span className="onboarding-guide-badge"></span>}
+          </button>
+          <style>{`
+            .onboarding-guide-btn {
+              position: fixed;
+              bottom: 28px;
+              right: 96px;
+              background-color: var(--primary);
+              color: #ffffff;
+              border: none;
+              border-radius: 50px;
+              padding: 12px 20px;
+              font-size: 0.9rem;
+              font-weight: 600;
+              box-shadow: var(--shadow-lg), 0 0 15px var(--primary-glow);
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              z-index: 99;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .onboarding-guide-btn:hover {
+              transform: translateY(-3px);
+              background-color: var(--primary-hover);
+              box-shadow: var(--shadow-lg), 0 4px 20px rgba(59, 130, 246, 0.35);
+            }
+            .onboarding-guide-badge {
+              width: 8px;
+              height: 8px;
+              background-color: var(--danger);
+              border-radius: 50%;
+              display: inline-block;
+            }
+            @media (max-width: 768px) {
+              .onboarding-guide-btn {
+                bottom: 16px;
+                right: 16px;
+                padding: 0;
+                width: 46px;
+                height: 46px;
+                border-radius: 50%;
+                justify-content: center;
+                gap: 0;
+              }
+              .onboarding-guide-text {
+                display: none;
+              }
+              .onboarding-guide-btn:hover {
+                transform: scale(1.05);
+              }
+            }
+          `}</style>
+        </>
       );
     }
     return null;

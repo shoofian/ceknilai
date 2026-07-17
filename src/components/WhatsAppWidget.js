@@ -187,15 +187,23 @@ export default function WhatsAppWidget() {
           }
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
           .whatsapp-widget-container {
-            bottom: 20px;
-            left: 20px;
+            bottom: 16px;
+            left: 16px;
+            gap: 0;
+          }
+          .wa-fab-btn {
+            width: 46px;
+            height: 46px;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+          }
+          .wa-icon {
+            width: 22px;
+            height: 22px;
           }
           .wa-tooltip-bubble {
-            left: 68px;
-            padding: 6px 12px;
-            font-size: 0.8rem;
+            display: none !important;
           }
         }
       `}</style>
