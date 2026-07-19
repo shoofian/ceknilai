@@ -586,13 +586,20 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
 
       {/* Embedded Animations and Keyframes */}
       <style jsx global>{`
+        #reader {
+          width: 100% !important;
+          height: 100% !important;
+          border: none !important;
+        }
         #reader video {
           object-fit: cover !important;
           width: 100% !important;
           height: 100% !important;
         }
-        #reader {
-          border: none !important;
+        /* Enforce wrapper divs injected by html5-qrcode to fill the square container fully */
+        #reader div, #reader > div {
+          width: 100% !important;
+          height: 100% !important;
         }
         /* Hide html5-qrcode default stretched/buggy canvas overlay and borders */
         #reader canvas {
@@ -601,6 +608,8 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         #reader__scan_region {
           border: none !important;
           box-shadow: none !important;
+          width: 100% !important;
+          height: 100% !important;
         }
         @keyframes spin {
           to { transform: rotate(360deg); }
