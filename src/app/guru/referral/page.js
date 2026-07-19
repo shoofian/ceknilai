@@ -488,7 +488,7 @@ export default function ReferralPage() {
               // Define custom styles for each reward card type to look extremely premium
               let badgeBg = 'var(--bg-tertiary)';
               let badgeColor = 'var(--text-muted)';
-              let statusLabel = `⏳ Kurang ${reward.price - data.balance} Poin`;
+              let statusLabel = `🚀 Kumpulkan ${reward.price - data.balance} Poin Lagi`;
               let statusBg = 'rgba(245, 158, 11, 0.1)';
               let statusColor = 'var(--warning)';
 
