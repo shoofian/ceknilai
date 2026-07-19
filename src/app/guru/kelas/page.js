@@ -743,7 +743,14 @@ export default function KelolaKelas() {
           <h1 className="page-title">Manajemen Kelas</h1>
           <p className="page-subtitle">Buat dan kelola kelas aktif untuk tahun ajaran berjalan.</p>
         </div>
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+          <Link 
+            href="/guru/arsip" 
+            className="btn btn-outline"
+            style={{ display: "flex", alignItems: "center", gap: "6px", textDecoration: "none", fontSize: "0.9rem", padding: "10px 16px" }}
+          >
+            📁 Arsip Kelas
+          </Link>
           <button 
             onClick={handleOpenAdd} 
             className="btn btn-primary"

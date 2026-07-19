@@ -78,7 +78,6 @@ export default function GuruLayout({ children }) {
   const navItems = [
     { name: "🏠 Beranda", path: "/guru" },
     { name: "📚 Daftar Kelas", path: "/guru/kelas" },
-    { name: "📁 Arsip Kelas", path: "/guru/arsip" },
   ];
 
   // Cetak Laporan is now hidden from sidebar navigation as it is accessible as a modal preview inside Kelola Kelas.
@@ -93,8 +92,6 @@ export default function GuruLayout({ children }) {
   if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
     navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
   }
-
-  navItems.push({ name: "🌐 Portal Siswa", path: "/" });
 
   navItems.push({
     name: "💬 Chat Bantuan (WA)",
