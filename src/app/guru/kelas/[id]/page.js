@@ -156,12 +156,12 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(true);
 
   // States untuk Presensi Realtime Monitor
-  const [realtimeSyncActive, setRealtimeSyncActive] = useState(false);
+  const [realtimeSyncActive, setRealtimeSyncActive] = useState(true);
   const [recentScannedStudents, setRecentScannedStudents] = useState([]);
   const prevPresenceRef = useRef({});
 
   useEffect(() => {
-    if (!realtimeSyncActive || !kelas?.id) return;
+    if (!realtimeSyncActive || !kelas?.id || activeTab !== 'presensi') return;
 
     const meetings = kelas?.skemaPenilaian?.pertemuan || [];
     if (meetings.length === 0) return;
@@ -223,7 +223,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [realtimeSyncActive, kelas?.id, kelas?.skemaPenilaian?.pertemuan]);
+  }, [realtimeSyncActive, kelas?.id, kelas?.skemaPenilaian?.pertemuan, activeTab]);
 
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
