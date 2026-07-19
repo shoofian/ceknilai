@@ -233,11 +233,6 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           cameraConfig,
           {
             fps: 30, // Higher frame rate for smoother and faster scanning
-            qrbox: (width, height) => {
-              // Target 75% of view area for optimal scanning focus
-              const size = Math.min(width, height) * 0.75;
-              return { width: size, height: size };
-            },
             aspectRatio: 1.0 // Request square 1:1 aspect ratio from camera
           },
           (decodedText) => {
@@ -654,21 +649,6 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         }
         #reader video {
           object-fit: cover !important;
-          width: 100% !important;
-          height: 100% !important;
-        }
-        /* Enforce wrapper divs injected by html5-qrcode to fill the square container fully */
-        #reader div, #reader > div {
-          width: 100% !important;
-          height: 100% !important;
-        }
-        /* Hide html5-qrcode default stretched/buggy canvas overlay and borders */
-        #reader canvas {
-          display: none !important;
-        }
-        #reader__scan_region {
-          border: none !important;
-          box-shadow: none !important;
           width: 100% !important;
           height: 100% !important;
         }
