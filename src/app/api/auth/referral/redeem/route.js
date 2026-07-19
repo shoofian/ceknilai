@@ -11,10 +11,9 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 const REWARDS = {
-  free_1m: { name: 'Gratis 1 Bulan Premium', price: 20 },
-  free_3m: { name: 'Gratis 3 Bulan Premium', price: 50 },
-  free_12m: { name: 'Gratis 1 Tahun Premium', price: 150 },
-  cash_1m: { name: 'Uang Tunai Rp 1.000.000', price: 7000 }
+  free_1m: { name: 'Gratis 1 Bulan Premium', price: 130 },
+  free_12m: { name: 'Gratis 1 Tahun Premium', price: 1060 },
+  cash_1m: { name: 'Uang Tunai Rp 1.000.000', price: 6500 }
 };
 
 export async function POST(request) {

@@ -26,6 +26,17 @@ export default function ReferralPage() {
   const [copied, setCopied] = useState(false);
   const [copiedBank, setCopiedBank] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+
+  const setTodayDateTime = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    setTanggalTransfer(`${year}-${month}-${day}T${hours}:${minutes}`);
+  };
 
   const fetchReferralData = async () => {
     try {
@@ -101,6 +112,7 @@ export default function ReferralPage() {
       setNomorRekening('');
       setTanggalTransfer('');
       setReferralInput('');
+      setPaymentModalOpen(false);
       fetchReferralData();
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan sistem.');
@@ -145,10 +157,9 @@ export default function ReferralPage() {
   };
 
   const rewardList = [
-    { id: 'free_1m', name: '🎁 Gratis 1 Bulan Premium', price: 20, desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh.' },
-    { id: 'free_3m', name: '🔥 Gratis 3 Bulan Premium', price: 50, desc: 'Dapatkan akses kelas premium selama 3 bulan tanpa biaya tambahan.' },
-    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 150, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' },
-    { id: 'cash_1m', name: '💵 Uang Tunai Rp 1.000.000', price: 7000, desc: 'Tukarkan poin Anda dengan uang tunai Rp 1.000.000 (ditransfer langsung ke rekening bank Anda setelah divalidasi admin).' }
+    { id: 'free_1m', name: '🎁 Gratis 1 Bulan Premium', price: 130, desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh.' },
+    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 1060, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' },
+    { id: 'cash_1m', name: '💵 Uang Tunai Rp 1.000.000', price: 6500, desc: 'Tukarkan poin Anda dengan uang tunai Rp 1.000.000 (ditransfer langsung ke rekening bank Anda setelah divalidasi admin).' }
   ];
 
   if (loading && data.referralCode === '') {
@@ -430,100 +441,32 @@ export default function ReferralPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: '#fff', fontSize: '0.72rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>3</span>
-              <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Isi Konfirmasi Pembayaran</span>
+              <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Kirim Konfirmasi Pembayaran</span>
             </div>
-
-            <form onSubmit={handleConfirmPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Nama Lengkap Pengirim <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Contoh: Budi Santoso"
-                    value={namaGuru}
-                    onChange={(e) => setNamaGuru(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Bank Asal Transfer <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <select
-                    className="form-input"
-                    value={namaBank}
-                    onChange={(e) => setNamaBank(e.target.value)}
-                    required
-                    style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-                  >
-                    <option value="">Pilih bank...</option>
-                    <option>BCA</option>
-                    <option>Mandiri</option>
-                    <option>BNI</option>
-                    <option>BRI</option>
-                    <option>BSI</option>
-                    <option>DANA</option>
-                    <option>OVO</option>
-                    <option>GoPay</option>
-                    <option>ShopeePay</option>
-                    <option>Lainnya</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Nomor Rekening / No. HP <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="Nomor rekening pengirim"
-                    value={nomorRekening}
-                    onChange={(e) => setNomorRekening(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Tanggal & Waktu Transfer <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <input
-                    type="datetime-local"
-                    className="form-input"
-                    value={tanggalTransfer}
-                    onChange={(e) => setTanggalTransfer(e.target.value)}
-                    required
-                    style={{ colorScheme: 'dark' }}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Kode Referral Rekan Guru <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(Opsional)</span></span>
-                  {data.isFirstPaymentClaimed && (
-                    <span style={{ fontSize: '0.72rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah diklaim</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Username guru yang merekomendasikan (misal: budi_guru)"
-                  value={referralInput}
-                  onChange={(e) => setReferralInput(e.target.value)}
-                  disabled={data.isFirstPaymentClaimed}
-                />
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                  * Hanya berlaku satu kali pada pembayaran pertama. Kosongkan jika tidak ada.
-                </span>
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', padding: '13px', marginTop: '4px', fontWeight: '700', fontSize: '0.9rem' }}
-                disabled={submittingPayment}
-              >
-                {submittingPayment ? '⏳ Memproses...' : `✉️ Kirim Konfirmasi · ${paket === 'tahunan' ? 'Rp 159.000 / Tahun' : 'Rp 19.000 / Bulan'}`}
-              </button>
-            </form>
+            
+            <button
+              onClick={() => setPaymentModalOpen(true)}
+              className="btn btn-primary animate-pulse"
+              style={{
+                width: '100%',
+                padding: '14px',
+                marginTop: '4px',
+                fontWeight: '700',
+                fontSize: '0.92rem',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, var(--primary), #4f46e5)',
+                boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                border: 'none',
+                color: '#ffffff'
+              }}
+            >
+              ✉️ Kirim Konfirmasi Pembayaran &rarr;
+            </button>
           </div>
 
         </div>
@@ -785,6 +728,190 @@ export default function ReferralPage() {
           )}
         </div>
       </div>
+
+      {/* Pop-up Modal Konfirmasi Pembayaran */}
+      {paymentModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '16px'
+        }}>
+          <div className="glass-card animate-fade-in" style={{
+            padding: '28px',
+            maxWidth: '560px',
+            width: '100%',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            position: 'relative',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h4 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+                  ✉️ Konfirmasi Pembayaran
+                </h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                  Konfirmasi pembayaran untuk paket: <strong style={{ color: paket === 'tahunan' ? '#eab308' : 'var(--primary)' }}>{paket === 'tahunan' ? '👑 Paket Tahunan (Rp 159.000)' : '📦 Paket Bulanan (Rp 19.000)'}</strong>
+                </p>
+              </div>
+              <button
+                onClick={() => setPaymentModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  lineHeight: '1',
+                  marginTop: '-4px'
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleConfirmPayment} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nama Lengkap Pengirim <span style={{ color: 'var(--danger)' }}>*</span></label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Contoh: Budi Santoso"
+                  value={namaGuru}
+                  onChange={(e) => setNamaGuru(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Bank Asal Transfer <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <select
+                    className="form-input"
+                    value={namaBank}
+                    onChange={(e) => setNamaBank(e.target.value)}
+                    required
+                    style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="">Pilih bank...</option>
+                    <option>BCA</option>
+                    <option>Mandiri</option>
+                    <option>BNI</option>
+                    <option>BRI</option>
+                    <option>BSI</option>
+                    <option>DANA</option>
+                    <option>OVO</option>
+                    <option>GoPay</option>
+                    <option>ShopeePay</option>
+                    <option>Lainnya</option>
+                  </select>
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nomor Rekening / No. HP <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Nomor rekening pengirim"
+                    value={nomorRekening}
+                    onChange={(e) => setNomorRekening(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Tanggal & Waktu Transfer <span style={{ color: 'var(--danger)' }}>*</span></span>
+                  <span 
+                    onClick={setTodayDateTime} 
+                    style={{ 
+                      color: 'var(--primary)', 
+                      cursor: 'pointer', 
+                      fontSize: '0.72rem', 
+                      fontWeight: '700', 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '4px', 
+                      backgroundColor: 'var(--primary-glow)', 
+                      padding: '2px 8px', 
+                      borderRadius: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="Set ke tanggal & waktu saat ini"
+                  >
+                    ⚡ Hari Ini
+                  </span>
+                </label>
+                <input
+                  type="datetime-local"
+                  className="form-input"
+                  value={tanggalTransfer}
+                  onChange={(e) => setTanggalTransfer(e.target.value)}
+                  required
+                  style={{ colorScheme: 'dark' }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Kode Referral Rekan Guru <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(Opsional)</span></span>
+                  {data.isFirstPaymentClaimed && (
+                    <span style={{ fontSize: '0.72rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah diklaim</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Username guru yang merekomendasikan (misal: budi_guru)"
+                  value={referralInput}
+                  onChange={(e) => setReferralInput(e.target.value)}
+                  disabled={data.isFirstPaymentClaimed}
+                />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  * Hanya berlaku satu kali pada pembayaran pertama. Kosongkan jika tidak ada.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPaymentModalOpen(false)}
+                  className="btn btn-secondary"
+                  style={{ flex: 1, padding: '12px' }}
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ flex: 2, padding: '12px', fontWeight: '700' }}
+                  disabled={submittingPayment}
+                >
+                  {submittingPayment ? '⏳ Memproses...' : '✉️ Kirim Konfirmasi'}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
