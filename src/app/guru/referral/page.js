@@ -400,8 +400,8 @@ export default function ReferralPage() {
             </div>
             <div style={{ backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
               {/* Bank row */}
-              {[{ label: 'Bank BCA', value: '1234567890', sub: 'a.n. Shoofian / CekNilai' }, { label: 'Bank Mandiri', value: '0987654321', sub: 'a.n. Shoofian / CekNilai' }].map((bank, i) => (
-                <div key={i} style={{ padding: '12px 16px', borderBottom: i === 0 ? '1px solid var(--border-color)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+              {[{ label: '⚪ Bank BRI', value: '343601002122509', sub: 'a.n. Wahyu Shofian' }, { label: '🔵 BPD Kaltimtara', value: '0068360137', sub: 'a.n. Wahyu Shofian' }, { label: '🟡 Bank Jago', value: '105853689778', sub: 'a.n. Wahyu Shofian' }].map((bank, i) => (
+                <div key={i} style={{ padding: '12px 16px', borderBottom: i < 2 ? '1px solid var(--border-color)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                   <div>
                     <div style={{ fontWeight: '700', fontSize: '0.82rem' }}>{bank.label}</div>
                     <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: '800', letterSpacing: '1px', marginTop: '2px' }}>{bank.value}</div>
