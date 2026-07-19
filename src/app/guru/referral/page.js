@@ -274,6 +274,75 @@ export default function ReferralPage() {
           </div>
         </div>
 
+        {/* Masa Aktif Premium Card */}
+        <div 
+          className="glass-card" 
+          style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between', 
+            padding: '24px', 
+            minHeight: '160px',
+            border: '1px solid var(--border-color)',
+            background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.04) 0%, rgba(253, 224, 71, 0.01) 100%)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Background decoration */}
+          <div style={{ position: 'absolute', right: '-15px', bottom: '-15px', fontSize: '5rem', opacity: 0.08, pointerEvents: 'none' }}>👑</div>
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              👑 Masa Aktif Akun Premium
+            </h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
+              Status lisensi premium CekNilai untuk guru aktif.
+            </p>
+          </div>
+          <div style={{ marginTop: '12px' }}>
+            {data.premiumUntil ? (
+              <div>
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  fontSize: '0.85rem', 
+                  fontWeight: '800', 
+                  color: new Date(data.premiumUntil) > new Date() ? 'var(--success)' : 'var(--danger)',
+                  backgroundColor: new Date(data.premiumUntil) > new Date() ? 'var(--success-glow)' : 'var(--danger-glow)',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  border: `1px solid ${new Date(data.premiumUntil) > new Date() ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`
+                }}>
+                  {new Date(data.premiumUntil) > new Date() ? '● PREMIUM AKTIF' : '● EXPIRED'}
+                </span>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', marginTop: '8px', color: 'var(--text-primary)' }}>
+                  Hingga: {new Date(data.premiumUntil).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  fontSize: '0.85rem', 
+                  fontWeight: '800', 
+                  color: 'var(--text-muted)',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  padding: '6px 12px',
+                  borderRadius: '20px',
+                  border: '1px solid var(--border-color)'
+                }}>
+                  ● BELUM AKTIF
+                </span>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>
+                  Silakan lakukan aktivasi di form konfirmasi pembayaran.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* Rules Modal */}

@@ -263,6 +263,28 @@ export default function SuperadminPanel() {
         alert("Terjadi kesalahan koneksi server.");
       }
     }
+  const handleCancelPayment = async (logId, username) => {
+    if (confirm(`Apakah Anda yakin ingin membatalkan transaksi untuk @${username}?\nAkun guru akan kembali dikunci dan poin referral yang dikreditkan dari transaksi ini akan ditarik kembali.`)) {
+      try {
+        const res = await fetch("/api/superadmin/pembayaran/cancel", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logId, targetUsername: username })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          alert(data.message || "Transaksi berhasil dibatalkan.");
+          fetchData();
+        } else {
+          const data = await res.json();
+          alert(data.error || "Gagal membatalkan transaksi.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi server.");
+      }
+    }
   };
 
   const handleLockGuru = async (username) => {
@@ -772,7 +794,66 @@ export default function SuperadminPanel() {
 
               </div>
 
-              {/* Row 2: Manajemen Saldo Poin Guru */}
+              {/* Row 2: Transaksi Terverifikasi */}
+              <div className="glass-card" style={{ padding: "24px" }}>
+                <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>✅ Transaksi Terverifikasi</h4>
+                <div style={{ overflowY: "auto", maxHeight: "250px" }}>
+                  {teacherLogs.filter(l => l.aksi === "PAYMENT_APPROVED").length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                      Belum ada transaksi terverifikasi.
+                    </div>
+                  ) : (
+                    <table className="premium-table" style={{ width: "100%", margin: 0 }}>
+                      <thead>
+                        <tr>
+                          <th>Waktu</th>
+                          <th>Guru</th>
+                          <th>Paket</th>
+                          <th>Rincian Pembayaran</th>
+                          <th style={{ textAlign: "center" }}>Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {teacherLogs
+                          .filter(l => l.aksi === "PAYMENT_APPROVED")
+                          .map(log => {
+                            const detail = log.detail || '';
+                            const paketMatch = detail.match(/PAKET:(BULANAN|TAHUNAN)/);
+                            const buktiMatch = detail.match(/BUKTI:(.+?)(?=\s*\|\s*REFERRAL:|$)/);
+                            const paket = paketMatch ? paketMatch[1] : '-';
+                            const bukti = buktiMatch ? buktiMatch[1].trim() : detail;
+
+                            return (
+                              <tr key={log.id}>
+                                <td style={{ fontSize: "0.78rem" }}>
+                                  {new Date(log.timestamp).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                </td>
+                                <td style={{ fontWeight: "700" }}>{log.namaGuru} (@{log.username})</td>
+                                <td>
+                                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "rgba(234,179,8,0.15)" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "#eab308" : "var(--primary)" }}>
+                                    {paket === "TAHUNAN" ? "👑 Tahunan" : "📦 Bulanan"}
+                                  </span>
+                                </td>
+                                <td style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{bukti}</td>
+                                <td style={{ textAlign: "center" }}>
+                                  <button
+                                    onClick={() => handleCancelPayment(log.id, log.username)}
+                                    className="btn btn-secondary"
+                                    style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }}
+                                  >
+                                    ❌ Batalkan Verifikasi
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              </div>
+
+              {/* Row 3: Manajemen Saldo Poin Guru */}
               <div className="glass-card" style={{ padding: "24px" }}>
                 <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>👤 Saldo Poin & Penyesuaian Guru</h4>
                 <div style={{ overflowX: "auto" }}>
