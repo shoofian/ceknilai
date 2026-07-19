@@ -445,7 +445,21 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
-  const [activeTab, setActiveTab] = useState('nilai');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem(`activeTab_${classId}`);
+      return saved || 'nilai';
+    }
+    return 'nilai';
+  });
+
+  // Persist activeTab on refresh
+  useEffect(() => {
+    if (typeof window !== "undefined" && activeTab) {
+      sessionStorage.setItem(`activeTab_${classId}`, activeTab);
+    }
+  }, [activeTab, classId]);
+
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
 
