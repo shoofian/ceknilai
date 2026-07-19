@@ -151,9 +151,9 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [agendaCollapsed, setAgendaCollapsed] = useState(true);
   const [defaultBulkStatus, setDefaultBulkStatus] = useState(""); // empty/blank by default
 
-  // States untuk Panduan Bantuan
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
   const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
+  const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(true);
 
   // States untuk Presensi Realtime Monitor
   const [realtimeSyncActive, setRealtimeSyncActive] = useState(false);
@@ -3335,115 +3335,147 @@ export default function DetailKelas({ params: paramsPromise }) {
         {/* Panel Kontrol Kelas (Quick Actions) */}
         <div id="konfigurasi-kelas" className="glass-card" style={{
           margin: "0 24px 20px 24px",
-          padding: "20px 24px",
+          padding: panelKontrolExpanded ? "20px 24px" : "12px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: "16px",
+          gap: panelKontrolExpanded ? "16px" : "0px",
           border: "1px solid var(--border-color)",
-          boxShadow: "var(--shadow-sm)"
+          boxShadow: "var(--shadow-sm)",
+          transition: "all 0.2s ease"
         }}>
-
-          {/* Section: Panduan & Bantuan */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>💡 Bantuan</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              <button 
-                onClick={() => { setPanduanActiveTab("aspek"); setPanduanModalOpen(true); }} 
-                className="btn btn-secondary"
-                style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border-color)" }}
-              >
-                📖 Panduan & Cara Penggunaan Fitur
-              </button>
-            </div>
+          {/* Header Bar with Toggle */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
+              ⚙️ Konfigurasi & Operasi Data
+            </span>
+            <button
+              onClick={() => setPanelKontrolExpanded(!panelKontrolExpanded)}
+              className="btn btn-outline"
+              type="button"
+              style={{
+                fontSize: "0.75rem",
+                padding: "4px 10px",
+                borderRadius: "6px",
+                borderColor: "var(--border-color)",
+                cursor: "pointer",
+                fontWeight: "700",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px"
+              }}
+            >
+              {panelKontrolExpanded ? "🔼 Minimize Panel" : "🔽 Tampilkan Panel"}
+            </button>
           </div>
 
-          {/* Divider */}
-          <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
+          {panelKontrolExpanded && (
+            <>
+              {/* Divider */}
+              <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
 
-          {/* Section: Konfigurasi */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              <button 
-                onClick={() => setKolomModalOpen(true)} 
-                className="btn btn-outline" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
-                disabled={isLocked}
-              >
-                ⚖️ Atur Aspek & Bobot
-              </button>
-              <button 
-                onClick={() => setRangeModalOpen(true)} 
-                className="btn btn-outline" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
-                disabled={isLocked}
-              >
-                📊 Atur Status & KKM
-              </button>
-            </div>
-          </div>
+              {/* Section: Panduan & Bantuan */}
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>💡 Bantuan</span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  <button 
+                    onClick={() => { setPanduanActiveTab("aspek"); setPanduanModalOpen(true); }} 
+                    className="btn btn-secondary"
+                    style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border-color)" }}
+                  >
+                    📖 Panduan & Cara Penggunaan Fitur
+                  </button>
+                </div>
+              </div>
 
-          {/* Divider */}
-          <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
+              {/* Divider */}
+              <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
 
-          {/* Section: Operasi Data */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>🛠️ Operasi Data</span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-              <button 
-                onClick={handleOpenAddSiswa} 
-                className="btn btn-secondary" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
-                disabled={isLocked}
-              >
-                👤 Tambah Siswa
-              </button>
-              <button 
-                onClick={downloadExcelTemplate} 
-                className="btn btn-secondary" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
-              >
-                📥 Ekspor Data Siswa
-              </button>
-              
-              <label
-                className={`btn btn-secondary ${isLocked ? "disabled" : ""}`}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "6px",
-                  fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px",
-                  cursor: isLocked ? "not-allowed" : "pointer",
-                  opacity: isLocked ? 0.5 : 1,
-                  margin: 0
-                }}
-              >
-                <span>📤</span> Impor Data Siswa
-                <input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  style={{ display: "none" }}
-                  onChange={handleExcelUpload}
-                  disabled={isLocked}
-                />
-              </label>
+              {/* Section: Konfigurasi */}
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  <button 
+                    onClick={() => setKolomModalOpen(true)} 
+                    className="btn btn-outline" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                    disabled={isLocked}
+                  >
+                    ⚖️ Atur Aspek & Bobot
+                  </button>
+                  <button 
+                    onClick={() => setRangeModalOpen(true)} 
+                    className="btn btn-outline" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                    disabled={isLocked}
+                  >
+                    📊 Atur Status & KKM
+                  </button>
+                </div>
+              </div>
 
-              <button 
-                onClick={() => setIsPreviewOpen(true)}
-                className="btn btn-secondary" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
-              >
-                🖨️ Cetak Laporan
-              </button>
+              {/* Divider */}
+              <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
 
-              <button 
-                onClick={() => setRaporModalOpen(true)} 
-                disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0} 
-                className="btn btn-primary" 
-                style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
-              >
-                📋 Ekspor ke E-Rapor
-              </button>
-            </div>
-          </div>
+              {/* Section: Operasi Data */}
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>🛠️ Operasi Data</span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                  <button 
+                    onClick={handleOpenAddSiswa} 
+                    className="btn btn-secondary" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                    disabled={isLocked}
+                  >
+                    👤 Tambah Siswa
+                  </button>
+                  <button 
+                    onClick={downloadExcelTemplate} 
+                    className="btn btn-secondary" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                  >
+                    📥 Ekspor Data Siswa
+                  </button>
+                  
+                  <label
+                    className={`btn btn-secondary ${isLocked ? "disabled" : ""}`}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "6px",
+                      fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px",
+                      cursor: isLocked ? "not-allowed" : "pointer",
+                      opacity: isLocked ? 0.5 : 1,
+                      margin: 0
+                    }}
+                  >
+                    <span>📤</span> Impor Data Siswa
+                    <input
+                      type="file"
+                      accept=".xlsx, .xls"
+                      style={{ display: "none" }}
+                      onChange={handleExcelUpload}
+                      disabled={isLocked}
+                    />
+                  </label>
+
+                  <button 
+                    onClick={() => setIsPreviewOpen(true)}
+                    className="btn btn-secondary" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                  >
+                    🖨️ Cetak Laporan
+                  </button>
+
+                  <button 
+                    onClick={() => setRaporModalOpen(true)} 
+                    disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0} 
+                    className="btn btn-primary" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                  >
+                    📋 Ekspor ke E-Rapor
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
