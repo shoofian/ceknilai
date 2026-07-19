@@ -415,7 +415,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
             border: `2px solid ${
               scanStatus === 'success' ? 'var(--success)' : 
               scanStatus === 'error' ? 'var(--danger)' : 
-              cooldownTime > 0 ? 'var(--primary)' : 'var(--border-color)'
+              isScanning ? 'var(--primary)' : 'var(--border-color)'
             }`,
             boxShadow: scanStatus === 'success' ? '0 0 20px rgba(16, 185, 129, 0.25)' : 
                        scanStatus === 'error' ? '0 0 20px rgba(239, 68, 68, 0.25)' : 'none',
