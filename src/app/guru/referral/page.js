@@ -135,8 +135,7 @@ export default function ReferralPage() {
   const rewardList = [
     { id: 'free_1m', name: '🎁 Gratis 1 Bulan Premium', price: 20, desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh.' },
     { id: 'free_3m', name: '🔥 Gratis 3 Bulan Premium', price: 50, desc: 'Dapatkan akses kelas premium selama 3 bulan tanpa biaya tambahan.' },
-    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 150, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' },
-    { id: 'merch_tshirt', name: '👕 Kaos CekNilai Eksklusif', price: 100, desc: 'Merchandise eksklusif kaos premium katun CekNilai (akan dikirim ke alamat sekolah Anda).' }
+    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 150, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' }
   ];
 
   if (loading && data.referralCode === '') {
@@ -560,6 +559,45 @@ export default function ReferralPage() {
                 </div>
               );
             })}
+
+            {/* Upcoming Reward Card */}
+            <div 
+              className="glass-card animate-fade-in" 
+              style={{ 
+                padding: '16px 20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '14px',
+                border: '1px dashed var(--border-color)',
+                background: 'rgba(255, 255, 255, 0.01)',
+                opacity: 0.8
+              }}
+            >
+              <div 
+                style={{ 
+                  width: '42px', 
+                  height: '42px', 
+                  borderRadius: '10px', 
+                  backgroundColor: 'var(--bg-tertiary)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: '1.2rem',
+                  color: 'var(--text-muted)',
+                  border: '1px dashed var(--border-color)',
+                  flexShrink: 0
+                }}
+              >
+                ⏳
+              </div>
+              <div>
+                <h5 style={{ margin: 0, fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-muted)' }}>Hadiah Lain Segera Datang</h5>
+                <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0', lineHeight: 1.4 }}>
+                  Kami sedang menyiapkan berbagai merchandise dan reward menarik lainnya untuk Anda!
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
 
