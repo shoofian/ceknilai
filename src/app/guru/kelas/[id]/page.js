@@ -10,6 +10,7 @@ import RaporIntegrationModal from "@/components/RaporIntegrationModal";
 import dynamic from "next/dynamic";
 
 const QrScannerModal = dynamic(() => import("@/components/QrScannerModal"), { ssr: false });
+const QrCardGeneratorModal = dynamic(() => import("@/components/QrCardGeneratorModal"), { ssr: false });
 
 
 export default function DetailKelas({ params: paramsPromise }) {
@@ -128,6 +129,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [presensiModalOpen, setPresensiModalOpen] = useState(false);
   const [isSavingPresensi, setIsSavingPresensi] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrCardModalOpen, setQrCardModalOpen] = useState(false);
   const [unlockedPertemuanIds, setUnlockedPertemuanIds] = useState([]);
   const togglePertemuanLock = (pertemuanId) => {
     setUnlockedPertemuanIds(prev => 
@@ -3259,6 +3261,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                     👤 Tambah Siswa
                   </button>
                   <button 
+                    onClick={() => setQrCardModalOpen(true)}
+                    className="btn btn-secondary" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                  >
+                    📇 Cetak Kartu & QR
+                  </button>
+                  <button 
                     onClick={downloadExcelTemplate} 
                     className="btn btn-secondary" 
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
@@ -4906,6 +4915,12 @@ export default function DetailKelas({ params: paramsPromise }) {
         }}
         kelas={kelas}
         onMarkPresence={handleQrMarkPresence}
+      />
+
+      <QrCardGeneratorModal
+        isOpen={qrCardModalOpen}
+        onClose={() => setQrCardModalOpen(false)}
+        kelas={kelas}
       />
 
       {/* ============= MODAL CATATAN GURU ============= */}
