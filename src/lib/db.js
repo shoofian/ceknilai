@@ -161,6 +161,28 @@ export async function getGuruByEmail(email) {
   }
 }
 
+async function cascadeUsernameChange(oldUsername, newUsername) {
+  if (!supabase || !oldUsername || !newUsername) return;
+  const oldLower = oldUsername.trim().toLowerCase();
+  const newLower = newUsername.trim().toLowerCase();
+  if (oldLower === newLower) return;
+  try {
+    // 1. Update kelas table
+    await supabase
+      .from('kelas')
+      .update({ guru_username: newLower })
+      .eq('guru_username', oldLower);
+      
+    // 2. Update log_aktivitas_guru table
+    await supabase
+      .from('log_aktivitas_guru')
+      .update({ guru_username: newLower })
+      .eq('guru_username', oldLower);
+  } catch (err) {
+    console.error('Failed to cascade username change:', err);
+  }
+}
+
 export async function updateGuru(currentUsername, updatedProfile) {
   if (!supabase) return null;
   try {
@@ -218,11 +240,18 @@ export async function updateGuru(currentUsername, updatedProfile) {
           .single();
           
         if (!retry.error) {
+          if (updatesPayload.username) {
+            await cascadeUsernameChange(oldUsername, updatesPayload.username);
+          }
           return retry.data;
         }
         console.error('Retry failed:', retry.error);
       }
       return null;
+    }
+
+    if (updatesPayload.username) {
+      await cascadeUsernameChange(oldUsername, updatesPayload.username);
     }
     return data;
   } catch (err) {
