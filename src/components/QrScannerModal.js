@@ -11,6 +11,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
   const [scanStatus, setScanStatus] = useState('idle'); // 'idle' | 'success' | 'error'
   const [lastScannedStudent, setLastScannedStudent] = useState(null);
   const [scanHistory, setScanHistory] = useState([]);
+  const [modalTab, setModalTab] = useState('scanner'); // 'scanner' | 'history'
 
   const html5QrCodeRef = useRef(null);
   const activePertemuanIdRef = useRef('');
@@ -191,6 +192,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
       lastScannedTimeRef.current = 0;
       setLastScannedStudent(null);
       setScanStatus('idle');
+      setModalTab('scanner');
     }
   }, [isOpen]);
 
@@ -341,8 +343,66 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           </button>
         </div>
 
+        {/* Tab Selector */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '16px' }}>
+          <button
+            type="button"
+            onClick={() => setModalTab('scanner')}
+            style={{
+              flex: 1,
+              padding: '10px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: modalTab === 'scanner' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: modalTab === 'scanner' ? 'var(--text-primary)' : 'var(--text-muted)',
+              fontWeight: '700',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s'
+            }}
+          >
+            📷 Kamera Scan
+          </button>
+          <button
+            type="button"
+            onClick={() => setModalTab('history')}
+            style={{
+              flex: 1,
+              padding: '10px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: modalTab === 'history' ? '2px solid var(--primary)' : '2px solid transparent',
+              color: modalTab === 'history' ? 'var(--text-primary)' : 'var(--text-muted)',
+              fontWeight: '700',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              transition: 'all 0.2s'
+            }}
+          >
+            📋 Riwayat Sesi
+            <span style={{ 
+              backgroundColor: scanHistory.length > 0 ? 'var(--primary)' : 'var(--bg-tertiary)', 
+              color: scanHistory.length > 0 ? '#fff' : 'var(--text-muted)',
+              fontSize: '0.7rem',
+              padding: '2px 6px',
+              borderRadius: '10px',
+              fontWeight: '800'
+            }}>
+              {scanHistory.length}
+            </span>
+          </button>
+        </div>
+
         {/* Configuration Selectors */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: modalTab === 'scanner' ? 'grid' : 'none', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
           {/* Pertemuan selector */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
@@ -421,7 +481,8 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
             boxShadow: scanStatus === 'success' ? '0 0 20px rgba(16, 185, 129, 0.25)' : 
                        scanStatus === 'error' ? '0 0 20px rgba(239, 68, 68, 0.25)' : 'none',
             transition: 'all 0.3s ease',
-            flexShrink: 0
+            flexShrink: 0,
+            display: modalTab === 'scanner' ? 'block' : 'none'
           }}
         >
           {/* Scanner element */}
@@ -502,7 +563,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         </div>
 
         {/* Scan History Log */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+        <div style={{ display: modalTab === 'history' ? 'flex' : 'none', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
               Riwayat Sesi Ini ({scanHistory.length} siswa)
@@ -525,7 +586,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
               borderRadius: '8px', 
               border: '1px solid var(--border-color)',
               padding: '6px',
-              height: '140px', // Directly lock the height to exactly 140px
+              height: '320px', // Directly lock the height to exactly 320px inside the tab view
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
