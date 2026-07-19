@@ -502,7 +502,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         </div>
 
         {/* Scan History Log */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', height: '180px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
               Riwayat Sesi Ini ({scanHistory.length} siswa)
@@ -525,8 +525,8 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
               borderRadius: '8px', 
               border: '1px solid var(--border-color)',
               padding: '6px',
+              height: '140px', // Directly lock the height to exactly 140px
               overflowY: 'auto',
-              flex: 1,
               display: 'flex',
               flexDirection: 'column',
               gap: '4px'
