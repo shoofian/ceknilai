@@ -20,6 +20,7 @@ export default function ReferralPage() {
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [redeemingId, setRedeemingId] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const fetchReferralData = async () => {
     try {
@@ -152,12 +153,21 @@ export default function ReferralPage() {
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
       
-      {/* Page Title */}
-      <div>
-        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>🎁 Program Referral & Poin</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '4px' }}>
-          Undang rekan guru lain menggunakan CekNilai, kumpulkan poin, dan klaim hadiah premium secara gratis!
-        </p>
+      {/* Page Title & Header Actions */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>🎁 Program Referral & Poin</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '4px' }}>
+            Undang rekan guru lain menggunakan CekNilai, kumpulkan poin, dan klaim hadiah premium secara gratis!
+          </p>
+        </div>
+        <button 
+          onClick={() => setRulesOpen(true)}
+          className="btn btn-secondary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', fontWeight: '600' }}
+        >
+          💡 Ketentuan Program
+        </button>
       </div>
 
       {error && (
@@ -243,27 +253,69 @@ export default function ReferralPage() {
 
       </div>
 
-      {/* Referral Rules Information Info Box */}
-      <div 
-        style={{ 
-          backgroundColor: 'rgba(99, 102, 241, 0.06)', 
-          border: '1px dashed rgba(99, 102, 241, 0.3)', 
-          borderRadius: '12px', 
-          padding: '16px 20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px'
-        }}
-      >
-        <h5 style={{ margin: 0, color: 'var(--primary)', fontWeight: '800', fontSize: '0.9rem' }}>💡 Ketentuan Program Rekomendasi & Poin:</h5>
-        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: 1.5 }}>
-          <li>Kedua guru (pengundang & yang diundang) akan **sama-sama mendapatkan poin** setelah pembayaran pertama berhasil diverifikasi.</li>
-          <li>**Paket Langganan Tahunan**: +30 Poin untuk masing-masing guru.</li>
-          <li>**Paket Langganan Bulanan**: +10 Poin untuk masing-masing guru.</li>
-          <li>Setiap guru yang baru mendaftar hanya dapat mengklaim kode rekomendasi **sekali saja** pada saat konfirmasi pembayaran pertama mereka.</li>
-          <li>Poin tidak akan hangus dan dapat diakumulasikan terus-menerus untuk ditukar dengan perpanjangan premium kapan saja.</li>
-        </ul>
-      </div>
+      {/* Rules Modal */}
+      {rulesOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card modal-content-scroll" style={{ width: "100%", maxWidth: "500px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>
+                💡 Ketentuan Program Rekomendasi
+              </h3>
+              <button 
+                onClick={() => setRulesOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              <p style={{ margin: 0 }}>
+                Selamat datang di Program Referral CekNilai! Dapatkan keuntungan bersama rekan guru Anda dengan mengikuti aturan berikut:
+              </p>
+              <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li>
+                  <strong>Keuntungan Bersama</strong>: Kedua guru (pemberi & penerima kode) akan sama-sama mendapatkan poin setelah transaksi pembayaran pertama sukses diverifikasi oleh admin.
+                </li>
+                <li>
+                  <strong>Poin Berdasarkan Paket</strong>:
+                  <ul style={{ paddingLeft: '20px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <li>🚀 <strong>Paket Langganan Tahunan (Rp 159.000)</strong>: Mendapatkan <strong>30 Poin</strong> untuk masing-masing guru.</li>
+                    <li>📦 <strong>Paket Langganan Bulanan (Rp 19.000)</strong>: Mendapatkan <strong>10 Poin</strong> untuk masing-masing guru.</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Batas Klaim Kode</strong>: Setiap guru yang baru terdaftar hanya diperbolehkan mengklaim kode rekomendasi <strong>sekali saja</strong> pada saat melakukan konfirmasi pembayaran pertama mereka.
+                </li>
+                <li>
+                  <strong>Kemandirian Kode</strong>: Anda tidak diperbolehkan memasukkan atau mengklaim kode referral milik Anda sendiri.
+                </li>
+                <li>
+                  <strong>Akumulasi Poin</strong>: Poin Anda tidak akan pernah hangus dan dapat ditukarkan kapan saja dengan hadiah premium di tabel penukaran.
+                </li>
+              </ul>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+              <button onClick={() => setRulesOpen(false)} className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
+                Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Payment Form & Gift Redeem Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
