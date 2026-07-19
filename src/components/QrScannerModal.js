@@ -196,6 +196,58 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
     }
   }, [isOpen]);
 
+  // Real-time synchronization of scanHistory with the database
+  useEffect(() => {
+    if (!isOpen || !kelas?.id || !activePertemuanId) return;
+
+    const syncHistory = async () => {
+      try {
+        const response = await fetch(`/api/kelas/${kelas.id}`);
+        if (response.ok) {
+          const freshKelas = await response.json();
+          
+          // Find all students marked as 'H' (Hadir) for the active meeting
+          const presentStudents = (freshKelas.siswa || []).filter(
+            s => s.nilai[`_presensi_${activePertemuanId}`] === 'H'
+          );
+
+          setScanHistory(prev => {
+            // Merge existing scan history with database presence to preserve timestamps
+            const updated = [...prev];
+            let hasChanges = false;
+            
+            presentStudents.forEach(s => {
+              const exists = updated.some(h => h.nisn === s.nisn);
+              if (!exists) {
+                // If it's a new presence from database, append it with current time
+                updated.unshift({
+                  nama: s.nama,
+                  nisn: s.nisn,
+                  time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                  status: 'Hadir'
+                });
+                hasChanges = true;
+              }
+            });
+
+            // Return updated list (newest first)
+            return hasChanges ? [...updated] : prev;
+          });
+        }
+      } catch (err) {
+        console.error("Failed to sync scanner history:", err);
+      }
+    };
+
+    // Initial sync
+    syncHistory();
+
+    // Poll database every 3 seconds to synchronize phone scan history with laptop scanner modal
+    const interval = setInterval(syncHistory, 3000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, kelas?.id, activePertemuanId]);
+
   // Unified useEffect to handle scanner lifecycle
   useEffect(() => {
     let isMounted = true;
