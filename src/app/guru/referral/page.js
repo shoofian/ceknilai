@@ -15,11 +15,16 @@ export default function ReferralPage() {
   
   // Form states
   const [paket, setPaket] = useState('bulanan');
-  const [bukti, setBukti] = useState('');
+  // Structured payment form fields
+  const [namaGuru, setNamaGuru] = useState('');
+  const [namaBank, setNamaBank] = useState('');
+  const [nomorRekening, setNomorRekening] = useState('');
+  const [tanggalTransfer, setTanggalTransfer] = useState('');
   const [referralInput, setReferralInput] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [redeemingId, setRedeemingId] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [copiedBank, setCopiedBank] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
 
   const fetchReferralData = async () => {
@@ -54,8 +59,8 @@ export default function ReferralPage() {
 
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
-    if (!bukti.trim()) {
-      alert('Silakan masukkan bukti pembayaran (misal: atas nama pengirim atau nomor rekening).');
+    if (!namaGuru.trim() || !namaBank.trim() || !nomorRekening.trim() || !tanggalTransfer) {
+      alert('Mohon lengkapi semua kolom yang wajib diisi.');
       return;
     }
 
@@ -63,13 +68,17 @@ export default function ReferralPage() {
     setError('');
     setSuccessMsg('');
 
+    // Build structured proof string from individual fields
+    const harga = paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000';
+    const buktiTerstruktur = `Nama: ${namaGuru.trim()} | Bank: ${namaBank.trim()} | No. Rek/HP: ${nomorRekening.trim()} | Paket: ${paket.toUpperCase()} (${harga}) | Tanggal: ${tanggalTransfer}`;
+
     try {
       const res = await fetch('/api/auth/referral/confirm-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paket,
-          bukti: bukti.trim(),
+          bukti: buktiTerstruktur,
           referralCode: referralInput.trim()
         })
       });
@@ -87,7 +96,10 @@ export default function ReferralPage() {
       }
 
       setSuccessMsg(successText);
-      setBukti('');
+      setNamaGuru('');
+      setNamaBank('');
+      setNomorRekening('');
+      setTanggalTransfer('');
       setReferralInput('');
       fetchReferralData();
     } catch (err) {
@@ -320,71 +332,200 @@ export default function ReferralPage() {
       {/* Confirmation Payment Form & Gift Redeem Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
         
-        {/* Payment Confirmation Section */}
-        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* Payment Confirmation Section — Full Redesign */}
+        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Header */}
           <div>
-            <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>💳 Konfirmasi Pembayaran & Klaim Referral</h4>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Masukkan bukti transaksi pembayaran Anda. Jika ini pembayaran pertama Anda, masukkan kode referral rekan Anda untuk klaim bonus poin bersama.
+            <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>💳 Langganan & Konfirmasi Pembayaran</h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>
+              Ikuti 3 langkah mudah di bawah ini untuk mengaktifkan akun premium Anda.
             </p>
           </div>
 
-          <form onSubmit={handleConfirmPayment} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Paket Langganan</label>
-              <select 
-                className="form-input" 
-                value={paket} 
-                onChange={(e) => setPaket(e.target.value)}
-                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+          {/* STEP 1: Pilih Paket */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: '#fff', fontSize: '0.72rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>1</span>
+              <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Pilih Paket Langganan</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {/* Bulanan */}
+              <div
+                onClick={() => setPaket('bulanan')}
+                style={{
+                  border: paket === 'bulanan' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  backgroundColor: paket === 'bulanan' ? 'var(--primary-glow)' : 'var(--bg-secondary)',
+                  transition: 'all 0.15s ease',
+                  position: 'relative'
+                }}
               >
-                <option value="bulanan">Langganan Bulanan (Rp 19.000 / Bulan)</option>
-                <option value="tahunan">Langganan Tahunan (Rp 159.000 / Tahun) - Poin Lebih Banyak!</option>
-              </select>
+                {paket === 'bulanan' && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: '#fff' }}>✓</div>}
+                <div style={{ fontSize: '1.3rem', marginBottom: '6px' }}>📦</div>
+                <div style={{ fontWeight: '800', fontSize: '0.88rem' }}>Bulanan</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>Rp 19.000</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>per bulan</div>
+              </div>
+              {/* Tahunan */}
+              <div
+                onClick={() => setPaket('tahunan')}
+                style={{
+                  border: paket === 'tahunan' ? '2px solid #eab308' : '1px solid var(--border-color)',
+                  borderRadius: '12px',
+                  padding: '14px',
+                  cursor: 'pointer',
+                  backgroundColor: paket === 'tahunan' ? 'rgba(234,179,8,0.08)' : 'var(--bg-secondary)',
+                  transition: 'all 0.15s ease',
+                  position: 'relative'
+                }}
+              >
+                {paket === 'tahunan' && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: '#000' }}>✓</div>}
+                <div style={{ position: 'absolute', top: '0', left: '0', backgroundColor: '#eab308', color: '#000', fontSize: '0.55rem', fontWeight: '800', padding: '2px 8px', borderRadius: '12px 0 8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Hemat 30%</div>
+                <div style={{ fontSize: '1.3rem', marginBottom: '6px', marginTop: '6px' }}>👑</div>
+                <div style={{ fontWeight: '800', fontSize: '0.88rem' }}>Tahunan</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#eab308', marginTop: '4px' }}>Rp 159.000</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>per tahun · +100 Poin Referral</div>
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 2: Transfer ke Rekening */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: '#fff', fontSize: '0.72rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>2</span>
+              <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Transfer ke Rekening Berikut</span>
+            </div>
+            <div style={{ backgroundColor: 'var(--bg-tertiary)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+              {/* Bank row */}
+              {[{ label: 'Bank BCA', value: '1234567890', sub: 'a.n. Shoofian / CekNilai' }, { label: 'Bank Mandiri', value: '0987654321', sub: 'a.n. Shoofian / CekNilai' }].map((bank, i) => (
+                <div key={i} style={{ padding: '12px 16px', borderBottom: i === 0 ? '1px solid var(--border-color)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '0.82rem' }}>{bank.label}</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '1rem', fontWeight: '800', letterSpacing: '1px', marginTop: '2px' }}>{bank.value}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{bank.sub}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(bank.value); setCopiedBank(bank.value); setTimeout(() => setCopiedBank(''), 2000); }}
+                    className={`btn ${copiedBank === bank.value ? 'btn-success' : 'btn-secondary'}`}
+                    style={{ padding: '4px 12px', fontSize: '0.72rem', flexShrink: 0 }}
+                  >
+                    {copiedBank === bank.value ? '✓ Tersalin' : '📋 Salin'}
+                  </button>
+                </div>
+              ))}
+              <div style={{ padding: '10px 16px', backgroundColor: 'rgba(99,102,241,0.05)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--primary)' }}>
+                  Nominal: {paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000'}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>— Transfer sesuai paket yang dipilih</span>
+              </div>
+            </div>
+          </div>
+
+          {/* STEP 3: Isi Form Konfirmasi */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '22px', height: '22px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: '#fff', fontSize: '0.72rem', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>3</span>
+              <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Isi Konfirmasi Pembayaran</span>
             </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Bukti Transfer / Detail Pengirim</label>
-              <textarea 
-                className="form-input" 
-                placeholder="Contoh: Transfer via Bank Mandiri a.n. Budi Santoso sebesar Rp 159.000, tanggal 19 Juli 2026 jam 14:00"
-                rows="3"
-                value={bukti}
-                onChange={(e) => setBukti(e.target.value)}
-                required
-                style={{ resize: 'none' }}
-              />
-            </div>
+            <form onSubmit={handleConfirmPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nama Lengkap Pengirim <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: Budi Santoso"
+                    value={namaGuru}
+                    onChange={(e) => setNamaGuru(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Bank Asal Transfer <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <select
+                    className="form-input"
+                    value={namaBank}
+                    onChange={(e) => setNamaBank(e.target.value)}
+                    required
+                    style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                  >
+                    <option value="">Pilih bank...</option>
+                    <option>BCA</option>
+                    <option>Mandiri</option>
+                    <option>BNI</option>
+                    <option>BRI</option>
+                    <option>BSI</option>
+                    <option>DANA</option>
+                    <option>OVO</option>
+                    <option>GoPay</option>
+                    <option>ShopeePay</option>
+                    <option>Lainnya</option>
+                  </select>
+                </div>
+              </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>Kode Referral Rekomendasi (Opsional)</span>
-                {data.isFirstPaymentClaimed && (
-                  <span style={{ fontSize: '0.72rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah mengklaim sebelumnya</span>
-                )}
-              </label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Masukkan username/kode referral guru lain"
-                value={referralInput}
-                onChange={(e) => setReferralInput(e.target.value)}
-                disabled={data.isFirstPaymentClaimed}
-              />
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                *Hanya berlaku untuk konfirmasi pembayaran pertama kali. Kosongkan jika tidak ada.
-              </span>
-            </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Nomor Rekening / No. HP <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Nomor rekening pengirim"
+                    value={nomorRekening}
+                    onChange={(e) => setNomorRekening(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Tanggal & Waktu Transfer <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input
+                    type="datetime-local"
+                    className="form-input"
+                    value={tanggalTransfer}
+                    onChange={(e) => setTanggalTransfer(e.target.value)}
+                    required
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
 
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              style={{ width: '100%', padding: '12px', marginTop: '4px' }}
-              disabled={submittingPayment}
-            >
-              {submittingPayment ? 'Memproses Konfirmasi...' : '✉️ Kirim Konfirmasi Pembayaran'}
-            </button>
-          </form>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Kode Referral Rekan Guru <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>(Opsional)</span></span>
+                  {data.isFirstPaymentClaimed && (
+                    <span style={{ fontSize: '0.72rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah diklaim</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Username guru yang merekomendasikan (misal: budi_guru)"
+                  value={referralInput}
+                  onChange={(e) => setReferralInput(e.target.value)}
+                  disabled={data.isFirstPaymentClaimed}
+                />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  * Hanya berlaku satu kali pada pembayaran pertama. Kosongkan jika tidak ada.
+                </span>
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '13px', marginTop: '4px', fontWeight: '700', fontSize: '0.9rem' }}
+                disabled={submittingPayment}
+              >
+                {submittingPayment ? '⏳ Memproses...' : `✉️ Kirim Konfirmasi · ${paket === 'tahunan' ? 'Rp 159.000 / Tahun' : 'Rp 19.000 / Bulan'}`}
+              </button>
+            </form>
+          </div>
+
         </div>
 
         {/* Gift Redeem Section */}
