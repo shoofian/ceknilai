@@ -263,6 +263,8 @@ export default function SuperadminPanel() {
         alert("Terjadi kesalahan koneksi server.");
       }
     }
+  };
+
   const handleCancelPayment = async (logId, username) => {
     if (confirm(`Apakah Anda yakin ingin membatalkan transaksi untuk @${username}?\nAkun guru akan kembali dikunci dan poin referral yang dikreditkan dari transaksi ini akan ditarik kembali.`)) {
       try {
