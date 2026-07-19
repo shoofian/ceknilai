@@ -187,7 +187,8 @@ export default function DetailKelas({ params: paramsPromise }) {
             const isPresent = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
             
             if (!wasPresent && isPresent) {
-              newScanned.push({ nama: s.nama, nisn: s.nisn });
+              const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              newScanned.push({ nama: s.nama, nisn: s.nisn, time: nowTime });
             }
             
             // Update ref
@@ -2823,27 +2824,46 @@ export default function DetailKelas({ params: paramsPromise }) {
                     ) : (
                       <div>
                         <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "8px", fontWeight: "600" }}>
-                          Siswa yang baru melakukan scan:
+                          Daftar Siswa Terpindai Sesi Ini:
                         </div>
-                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                          {recentScannedStudents.map((s, index) => (
+                        <div 
+                          style={{ 
+                            backgroundColor: 'var(--bg-secondary)', 
+                            borderRadius: '8px', 
+                            border: '1px solid var(--border-color)',
+                            padding: '8px',
+                            maxHeight: '260px', 
+                            overflowY: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '6px'
+                          }}
+                        >
+                          {recentScannedStudents.map((item, idx) => (
                             <div 
-                              key={s.nisn + '-' + index} 
+                              key={item.nisn + '-' + idx}
                               className="animate-fade-in"
-                              style={{ 
-                                fontSize: "0.8rem", 
-                                padding: "6px 12px", 
-                                backgroundColor: "var(--success-glow)", 
-                                color: "var(--success)", 
-                                border: "1px solid rgba(16, 185, 129, 0.2)", 
-                                borderRadius: "20px", 
-                                fontWeight: "700",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px"
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '8px 12px',
+                                borderRadius: '6px',
+                                backgroundColor: idx === 0 ? 'rgba(16, 185, 129, 0.06)' : 'rgba(255,255,255,0.01)',
+                                border: idx === 0 ? '1px dashed rgba(16, 185, 129, 0.3)' : '1px solid transparent',
+                                fontSize: '0.82rem'
                               }}
                             >
-                              <span>🟢</span> {s.nama} <code style={{ fontSize: "0.7rem", opacity: 0.8 }}>({s.nisn})</code>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{item.nama}</span>
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>NISN: {item.nisn}</span>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                <span style={{ fontSize: '0.7rem', backgroundColor: 'rgba(16,185,129,0.15)', color: 'var(--success)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                  Hadir
+                                </span>
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{item.time}</span>
+                              </div>
                             </div>
                           ))}
                         </div>
