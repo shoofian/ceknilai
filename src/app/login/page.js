@@ -35,51 +35,51 @@ export default function LoginGuru() {
     checkSession();
   }, [router]);
 
-  // Load Google Identity Services script
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
+  // Load Google Identity Services script (Temporarily Hidden)
+  // useEffect(() => {
+  //   const script = document.createElement("script");
+  //   script.src = "https://accounts.google.com/gsi/client";
+  //   script.async = true;
+  //   script.defer = true;
+  //   document.body.appendChild(script);
+  // 
+  //   return () => {
+  //     document.body.removeChild(script);
+  //   };
+  // }, []);
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  // Google Sign-In Callback setup
-  useEffect(() => {
-    window.handleGoogleCallback = async (response) => {
-      try {
-        setLoading(true);
-        setError("");
-        
-        const res = await fetch("/api/auth/google", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ credential: response.credential }),
-        });
-        
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Gagal masuk dengan Google");
-        }
-        
-        router.push("/guru/kelas");
-      } catch (err) {
-        setError(err.message || "Gagal masuk menggunakan akun Google Anda.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    return () => {
-      delete window.handleGoogleCallback;
-    };
-  }, [router]);
+  // Google Sign-In Callback setup (Temporarily Hidden)
+  // useEffect(() => {
+  //   window.handleGoogleCallback = async (response) => {
+  //     try {
+  //       setLoading(true);
+  //       setError("");
+  //       
+  //       const res = await fetch("/api/auth/google", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({ credential: response.credential }),
+  //       });
+  //       
+  //       const data = await res.json();
+  //       if (!res.ok) {
+  //         throw new Error(data.error || "Gagal masuk dengan Google");
+  //       }
+  //       
+  //       router.push("/guru/kelas");
+  //     } catch (err) {
+  //       setError(err.message || "Gagal masuk menggunakan akun Google Anda.");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  // 
+  //   return () => {
+  //     delete window.handleGoogleCallback;
+  //   };
+  // }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -331,14 +331,14 @@ export default function LoginGuru() {
             </button>
           </form>
 
-          {/* Divider */}
+          {/* Google Login Component (Temporarily Hidden) */}
+          {/* 
           <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "8px 0" }}>
             <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-color)" }} />
             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>ATAU</span>
             <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-color)" }} />
           </div>
 
-          {/* Google Login Component */}
           {googleClientId ? (
             <>
               <div 
@@ -395,6 +395,7 @@ export default function LoginGuru() {
               Masuk dengan Google
             </button>
           )}
+          */}
 
           {/* Promo Section */}
           <div style={{ marginTop: "8px", textAlign: "center", borderTop: "1px dashed var(--border-color)", paddingTop: "16px" }}>
