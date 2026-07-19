@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
 import RaporIntegrationModal from "@/components/RaporIntegrationModal";
+import dynamic from "next/dynamic";
+
+const QrScannerModal = dynamic(() => import("@/components/QrScannerModal"), { ssr: false });
+
 
 export default function DetailKelas({ params: paramsPromise }) {
   const params = use(paramsPromise);
@@ -122,6 +126,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Presensi
   const [presensiModalOpen, setPresensiModalOpen] = useState(false);
   const [isSavingPresensi, setIsSavingPresensi] = useState(false);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
   const [unlockedPertemuanIds, setUnlockedPertemuanIds] = useState([]);
   const togglePertemuanLock = (pertemuanId) => {
     setUnlockedPertemuanIds(prev => 
@@ -956,6 +961,29 @@ export default function DetailKelas({ params: paramsPromise }) {
     } catch (err) {
       console.error("Score save failed", err);
     }
+  };
+
+  const handleQrMarkPresence = async (studentNisn, pertemuanId, status) => {
+    if (!kelas || !kelas.siswa) return;
+
+    // 1. Update state secara lokal langsung agar responsif
+    const updatedSiswa = kelas.siswa.map(s => {
+      if (s.nisn === studentNisn) {
+        return {
+          ...s,
+          nilai: {
+            ...s.nilai,
+            [`_presensi_${pertemuanId}`]: status
+          }
+        };
+      }
+      return s;
+    });
+    
+    setKelas({ ...kelas, siswa: updatedSiswa });
+
+    // 2. Simpan ke backend
+    await handleSaveScore(studentNisn, `_presensi_${pertemuanId}`, status);
   };
 
   const handleBulkPresensi = async (pertemuanId, status) => {
@@ -2605,6 +2633,32 @@ export default function DetailKelas({ params: paramsPromise }) {
                 setPresensiModalOpen(true);
               }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
                 ⚙️ Pengaturan Presensi
+              </button>
+              <button 
+                onClick={() => {
+                  if (!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) {
+                    alert("Belum ada pertemuan. Silakan buat pertemuan terlebih dahulu dengan tombol 'Tambah Pertemuan' sebelum menggunakan pemindai QR.");
+                    return;
+                  }
+                  setQrModalOpen(true);
+                }} 
+                className="btn" 
+                style={{ 
+                  fontSize: "0.85rem", 
+                  padding: "8px 16px",
+                  backgroundColor: "rgba(59, 130, 246, 0.15)",
+                  color: "#3b82f6",
+                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                  borderRadius: "var(--radius-md)",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.2s"
+                }}
+              >
+                📷 Scan QR Presensi
               </button>
               <button onClick={handleOpenAddPertemuan} className="btn btn-primary" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
                 ➕ Tambah Pertemuan
@@ -4732,6 +4786,13 @@ export default function DetailKelas({ params: paramsPromise }) {
         onClose={() => setRaporModalOpen(false)}
         kelas={kelas}
         students={sortedStudents}
+      />
+
+      <QrScannerModal
+        isOpen={qrModalOpen}
+        onClose={() => setQrModalOpen(false)}
+        kelas={kelas}
+        onMarkPresence={handleQrMarkPresence}
       />
 
       {/* ============= MODAL CATATAN GURU ============= */}

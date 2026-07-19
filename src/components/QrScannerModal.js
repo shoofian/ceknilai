@@ -1,0 +1,614 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from 'react';
+
+export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence }) {
+  const [cameras, setCameras] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState('');
+  const [activePertemuanId, setActivePertemuanId] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [scanStatus, setScanStatus] = useState('idle'); // 'idle' | 'success' | 'error'
+  const [lastScannedStudent, setLastScannedStudent] = useState(null);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [scanHistory, setScanHistory] = useState([]);
+
+  const html5QrCodeRef = useRef(null);
+  const cooldownRef = useRef(false);
+  const cooldownTimerRef = useRef(null);
+
+  // Auto-select the latest meeting
+  useEffect(() => {
+    if (kelas?.skemaPenilaian?.pertemuan?.length > 0) {
+      const meetings = kelas.skemaPenilaian.pertemuan;
+      // Default to the last created meeting (newest)
+      setActivePertemuanId(meetings[meetings.length - 1].id);
+    }
+  }, [kelas]);
+
+  // Clean up timers on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+    };
+  }, []);
+
+  // Web Audio API beep sound generator
+  const playBeep = (success) => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      if (success) {
+        // High-pitched sweet beep for success
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(900, audioCtx.currentTime); // A5 note
+        gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        oscillator.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+        oscillator.stop(audioCtx.currentTime + 0.16);
+      } else {
+        // Double lower buzzer beep for errors
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(180, audioCtx.currentTime); // F3 note
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        oscillator.start();
+        
+        // Rapid drop and beep twice
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+        oscillator.stop(audioCtx.currentTime + 0.13);
+        
+        // Second beep shortly after
+        setTimeout(() => {
+          try {
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(180, audioCtx.currentTime);
+            gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            osc2.start();
+            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+            osc2.stop(audioCtx.currentTime + 0.13);
+          } catch (e) {}
+        }, 180);
+      }
+    } catch (err) {
+      console.error("Web Audio API not supported or blocked by user gesture:", err);
+    }
+  };
+
+  // Cooldown timer handler
+  const startCooldown = (seconds) => {
+    cooldownRef.current = true;
+    setCooldownTime(seconds);
+
+    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+
+    let remaining = seconds;
+    cooldownTimerRef.current = setInterval(() => {
+      remaining -= 1;
+      setCooldownTime(remaining);
+      
+      if (remaining <= 0) {
+        clearInterval(cooldownTimerRef.current);
+        cooldownRef.current = false;
+        setScanStatus('idle');
+        setLastScannedStudent(null);
+      }
+    }, 1000);
+  };
+
+  // Main QR scan callback
+  const handleScanResult = (decodedText) => {
+    if (cooldownRef.current || !activePertemuanId) return;
+
+    const scannedNisn = decodedText.trim();
+    const student = kelas?.siswa?.find(s => s.nisn === scannedNisn || s.id === scannedNisn);
+
+    if (student) {
+      const isAlreadyPresent = student.nilai[`_presensi_${activePertemuanId}`] === 'H';
+      
+      playBeep(true);
+      setLastScannedStudent({
+        nama: student.nama,
+        nisn: student.nisn,
+        alreadyPresent: isAlreadyPresent,
+        success: true
+      });
+      setScanStatus('success');
+
+      // Add to session history
+      setScanHistory(prev => {
+        // Prevent duplicate listing in session history
+        const exists = prev.some(h => h.nisn === student.nisn);
+        if (exists) return prev;
+        return [{
+          nama: student.nama,
+          nisn: student.nisn,
+          time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          status: 'Hadir'
+        }, ...prev];
+      });
+
+      // Invoke attendance update callback
+      onMarkPresence(student.nisn, activePertemuanId, 'H');
+
+      // Trigger 3s cooldown for success
+      startCooldown(3);
+    } else {
+      playBeep(false);
+      setLastScannedStudent({
+        nama: 'Tidak Terdaftar',
+        nisn: scannedNisn,
+        notFound: true,
+        success: false
+      });
+      setScanStatus('error');
+
+      // Cooldown 1.5 seconds for error to let them scan the next card
+      startCooldown(1.5);
+    }
+  };
+
+  // Camera scanner manager
+  const startCamera = async (cameraId) => {
+    if (!html5QrCodeRef.current) return;
+    
+    if (html5QrCodeRef.current.isScanning) {
+      try {
+        await html5QrCodeRef.current.stop();
+      } catch (e) {
+        console.error("Stop scanning error during restart:", e);
+      }
+    }
+
+    try {
+      setIsScanning(true);
+      setErrorMsg('');
+      await html5QrCodeRef.current.start(
+        cameraId || { facingMode: "environment" },
+        {
+          fps: 15,
+          qrbox: (width, height) => {
+            const size = Math.min(width, height) * 0.65;
+            return { width: size, height: size };
+          }
+        },
+        (decodedText) => {
+          handleScanResult(decodedText);
+        },
+        (errorMessage) => {
+          // Ignore verbose scanner framing logs
+        }
+      );
+    } catch (err) {
+      console.error("Failed to start camera scan:", err);
+      setErrorMsg("Kamera tidak dapat diakses. Pastikan izin kamera telah diberikan.");
+      setIsScanning(false);
+    }
+  };
+
+  // Initialize html5-qrcode instance
+  useEffect(() => {
+    let isMounted = true;
+
+    const initScanner = async () => {
+      try {
+        const { Html5Qrcode } = await import('html5-qrcode');
+        if (!isMounted) return;
+
+        const html5QrCode = new Html5Qrcode("reader");
+        html5QrCodeRef.current = html5QrCode;
+
+        // Get list of cameras
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          setCameras(devices);
+          // Set default camera: environment/back camera if available
+          const backCam = devices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear') || 
+            device.label.toLowerCase().includes('environment')
+          );
+          const defaultCamId = backCam ? backCam.id : devices[0].id;
+          setSelectedCameraId(defaultCamId);
+        } else {
+          // If no cameras found, fallback to environment constraint directly
+          setSelectedCameraId('environment');
+        }
+      } catch (err) {
+        console.error("Error setting up Html5Qrcode:", err);
+        setErrorMsg("Sistem pemindai gagal dimuat.");
+      }
+    };
+
+    if (isOpen) {
+      initScanner();
+      setScanHistory([]);
+    }
+
+    return () => {
+      isMounted = false;
+      if (html5QrCodeRef.current) {
+        const stopScanning = async () => {
+          if (html5QrCodeRef.current.isScanning) {
+            try {
+              await html5QrCodeRef.current.stop();
+            } catch (e) {
+              console.error("Error stopping scanner during unmount:", e);
+            }
+          }
+        };
+        stopScanning();
+      }
+    };
+  }, [isOpen]);
+
+  // Start scanning when camera, meeting, or scanner instance changes
+  useEffect(() => {
+    if (isOpen && html5QrCodeRef.current && selectedCameraId && activePertemuanId) {
+      startCamera(selectedCameraId === 'environment' ? { facingMode: "environment" } : selectedCameraId);
+    }
+
+    return () => {
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(err => console.error("Error stopping scanner:", err));
+        setIsScanning(false);
+      }
+    };
+  }, [isOpen, selectedCameraId, activePertemuanId]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(15, 23, 42, 0.85)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999,
+        padding: '20px',
+      }}
+    >
+      <div
+        className="glass-card animate-fade-in"
+        style={{
+          width: '100%',
+          maxWidth: '560px',
+          background: 'var(--bg-primary)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '24px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '16px',
+          maxHeight: '90vh',
+          overflowY: 'auto'
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '14px' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              📷 Presensi QR Code Siswa
+            </h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Scan barcode/QR Code kartu siswa untuk kehadiran otomatis
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+              onClose();
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.4rem',
+              cursor: 'pointer',
+              color: 'var(--text-muted)',
+              transition: 'color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+            aria-label="Tutup"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Configuration Selectors */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {/* Pertemuan selector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              Pilih Pertemuan
+            </label>
+            <select
+              value={activePertemuanId}
+              onChange={(e) => setActivePertemuanId(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {kelas?.skemaPenilaian?.pertemuan?.map(p => (
+                <option key={p.id} value={p.id}>{p.nama} ({p.tanggal})</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Camera selector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              Pilih Kamera
+            </label>
+            <select
+              value={selectedCameraId}
+              onChange={(e) => setSelectedCameraId(e.target.value)}
+              disabled={cameras.length === 0}
+              style={{
+                width: '100%',
+                padding: '8px 10px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                outline: 'none',
+                cursor: 'pointer',
+                textOverflow: 'ellipsis'
+              }}
+            >
+              {cameras.length === 0 ? (
+                <option value="environment">Kamera Belakang (Bawaan)</option>
+              ) : (
+                cameras.map(cam => (
+                  <option key={cam.id} value={cam.id}>{cam.label || `Kamera ${cam.id.slice(0, 5)}`}</option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+
+        {/* Camera Viewfinder Box */}
+        <div 
+          style={{ 
+            position: 'relative', 
+            width: '100%', 
+            aspectRatio: '4/3', 
+            borderRadius: '12px', 
+            overflow: 'hidden',
+            backgroundColor: '#090d16',
+            border: `2px solid ${
+              scanStatus === 'success' ? 'var(--success)' : 
+              scanStatus === 'error' ? 'var(--danger)' : 
+              cooldownTime > 0 ? 'var(--primary)' : 'var(--border-color)'
+            }`,
+            boxShadow: scanStatus === 'success' ? '0 0 20px rgba(16, 185, 129, 0.25)' : 
+                       scanStatus === 'error' ? '0 0 20px rgba(239, 68, 68, 0.25)' : 'none',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {/* Scanner element */}
+          <div id="reader" style={{ width: '100%', height: '100%' }}></div>
+
+          {/* Loader or error messages */}
+          {!isScanning && !errorMsg && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'var(--text-secondary)' }}>
+              <div style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.85rem' }}>Mengaktifkan kamera...</span>
+            </div>
+          )}
+
+          {errorMsg && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center', gap: '8px', color: 'var(--danger)' }}>
+              <span style={{ fontSize: '2rem' }}>⚠️</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{errorMsg}</span>
+            </div>
+          )}
+
+          {/* Visual Overlay: Scanner targeting bracket overlay when active */}
+          {isScanning && scanStatus === 'idle' && (
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '60%', height: '60%', border: '2px solid rgba(255, 255, 255, 0.3)', borderRadius: '12px', position: 'relative' }}>
+                {/* Scanner Laser effect */}
+                <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', backgroundColor: 'rgba(59, 130, 246, 0.8)', boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)', animation: 'scanline 2s ease-in-out infinite' }} />
+                
+                {/* Framing brackets */}
+                <div style={{ position: 'absolute', top: -2, left: -2, width: '16px', height: '16px', borderTop: '4px solid var(--primary)', borderLeft: '4px solid var(--primary)', borderTopLeftRadius: '8px' }} />
+                <div style={{ position: 'absolute', top: -2, right: -2, width: '16px', height: '16px', borderTop: '4px solid var(--primary)', borderRight: '4px solid var(--primary)', borderTopRightRadius: '8px' }} />
+                <div style={{ position: 'absolute', bottom: -2, left: -2, width: '16px', height: '16px', borderBottom: '4px solid var(--primary)', borderLeft: '4px solid var(--primary)', borderBottomLeftRadius: '8px' }} />
+                <div style={{ position: 'absolute', bottom: -2, right: -2, width: '16px', height: '16px', borderBottom: '4px solid var(--primary)', borderRight: '4px solid var(--primary)', borderBottomRightRadius: '8px' }} />
+              </div>
+            </div>
+          )}
+
+          {/* Cooldown Overlay */}
+          {cooldownTime > 0 && lastScannedStudent && (
+            <div 
+              style={{ 
+                position: 'absolute', 
+                inset: 0, 
+                backgroundColor: 'rgba(15, 23, 42, 0.85)', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                gap: '12px',
+                color: '#fff',
+                padding: '24px',
+                textAlign: 'center',
+                animation: 'fadeIn 0.2s'
+              }}
+            >
+              {lastScannedStudent.notFound ? (
+                <>
+                  <div style={{ fontSize: '3rem', animation: 'shake 0.4s' }}>❌</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--danger)' }}>SISWA TIDAK TERDAFTAR</div>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace' }}>ID: {lastScannedStudent.nisn}</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '3rem', animation: 'bounce 0.5s' }}>🟢</div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--success)' }}>PRESENSI BERHASIL!</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 700 }}>{lastScannedStudent.nama}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace' }}>NISN: {lastScannedStudent.nisn}</div>
+                  {lastScannedStudent.alreadyPresent && (
+                    <div style={{ fontSize: '0.75rem', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: 'var(--warning)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                      Sudah Tercatat Hadir Sebelumnya
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Progress Cooldown Countdown */}
+              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
+                  Siap memindai dalam {cooldownTime} detik...
+                </span>
+                <div style={{ width: '120px', height: '4px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div 
+                    style={{ 
+                      width: `${(cooldownTime / (lastScannedStudent.notFound ? 1.5 : 3)) * 100}%`, 
+                      height: '100%', 
+                      backgroundColor: lastScannedStudent.notFound ? 'var(--danger)' : 'var(--success)',
+                      transition: 'width 1s linear'
+                    }} 
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Scan History Log */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: '120px', maxHeight: '200px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+              Riwayat Sesi Ini ({scanHistory.length} siswa)
+            </span>
+            {scanHistory.length > 0 && (
+              <button 
+                onClick={() => setScanHistory([])}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', cursor: 'pointer', fontWeight: '600' }}
+                onMouseEnter={(e) => e.target.style.color = 'var(--text-primary)'}
+                onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          
+          <div 
+            style={{ 
+              backgroundColor: 'var(--bg-secondary)', 
+              borderRadius: '8px', 
+              border: '1px solid var(--border-color)',
+              padding: '6px',
+              overflowY: 'auto',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px'
+            }}
+          >
+            {scanHistory.length === 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                Belum ada siswa yang dipindai dalam sesi ini.
+              </div>
+            ) : (
+              scanHistory.map((item, idx) => (
+                <div 
+                  key={item.nisn + idx}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '6px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: idx === 0 ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.01)',
+                    border: idx === 0 ? '1px dashed rgba(16, 185, 129, 0.3)' : '1px solid transparent',
+                    fontSize: '0.8rem',
+                    animation: idx === 0 ? 'fadeIn 0.3s' : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{item.nama}</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>NISN: {item.nisn}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                    <span style={{ fontSize: '0.7rem', backgroundColor: 'rgba(16,185,129,0.15)', color: 'var(--success)', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold' }}>
+                      {item.status}
+                    </span>
+                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{item.time}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '14px', marginTop: '4px' }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+              onClose();
+            }}
+            className="btn btn-secondary"
+            style={{ padding: '8px 24px', fontSize: '0.85rem' }}
+          >
+            Selesai
+          </button>
+        </div>
+      </div>
+
+      {/* Embedded Animations and Keyframes */}
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes scanline {
+          0% { top: 0%; }
+          50% { top: 100%; }
+          100% { top: 0%; }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-6px); }
+          75% { transform: translateX(6px); }
+        }
+        @keyframes bounce {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
+        }
+      `}</style>
+    </div>
+  );
+}
