@@ -230,12 +230,13 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         await html5QrCode.start(
           cameraConfig,
           {
-            fps: 24, // Higher scan rate for faster detection
+            fps: 30, // Higher frame rate for smoother and faster scanning
             qrbox: (width, height) => {
-              // Increase box to 85% of view area to capture codes easily
-              const size = Math.min(width, height) * 0.85;
+              // Target 75% of view area for optimal scanning focus
+              const size = Math.min(width, height) * 0.75;
               return { width: size, height: size };
-            }
+            },
+            aspectRatio: 1.333333 // Request 4:3 aspect ratio from camera to match preview box aspect ratio
           },
           (decodedText) => {
             handleScanResult(decodedText);
@@ -584,6 +585,14 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
 
       {/* Embedded Animations and Keyframes */}
       <style jsx global>{`
+        #reader video {
+          object-fit: cover !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        #reader {
+          border: none !important;
+        }
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
