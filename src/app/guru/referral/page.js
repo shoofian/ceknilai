@@ -390,57 +390,176 @@ export default function ReferralPage() {
         {/* Gift Redeem Section */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>🎁 Tukar Hadiah (Redeem)</h4>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>🎁 Penukaran Hadiah Premium</h4>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-              Pilih paket penukaran hadiah di bawah ini menggunakan poin saldo referral Anda.
+              Kumpulkan poin Anda dan tukarkan langsung dengan reward masa pakai gratis atau merchandise eksklusif.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {rewardList.map((reward) => (
-              <div 
-                key={reward.id} 
-                className="glass-card" 
-                style={{ 
-                  padding: '14px 18px', 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  gap: '16px',
-                  border: data.balance >= reward.price ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid var(--border-color)',
-                  opacity: data.balance >= reward.price ? 1 : 0.8
-                }}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: '800', fontSize: '0.88rem' }}>{reward.name}</span>
-                    <span 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {rewardList.map((reward) => {
+              const progressPercent = Math.min(100, Math.round((data.balance / reward.price) * 100));
+              const isEligible = data.balance >= reward.price;
+              
+              // Define custom styles for each reward card type to look extremely premium
+              let badgeBg = 'var(--bg-tertiary)';
+              let badgeColor = 'var(--text-muted)';
+              let statusLabel = `⏳ Kurang ${reward.price - data.balance} Poin`;
+              let statusBg = 'rgba(245, 158, 11, 0.1)';
+              let statusColor = 'var(--warning)';
+
+              if (isEligible) {
+                badgeBg = 'rgba(16, 185, 129, 0.1)';
+                badgeColor = 'var(--success)';
+                statusLabel = '✨ Siap Ditukar';
+                statusBg = 'rgba(16, 185, 129, 0.15)';
+                statusColor = 'var(--success)';
+              }
+
+              // Card themes based on value
+              let cardBg = 'var(--bg-secondary)';
+              let iconEmoji = '🎁';
+              let themeColor = 'var(--primary)';
+
+              if (reward.id === 'free_1m') {
+                iconEmoji = '⚡';
+                themeColor = '#10b981'; // Emerald
+              } else if (reward.id === 'free_3m') {
+                iconEmoji = '🔥';
+                themeColor = '#f97316'; // Orange
+              } else if (reward.id === 'free_12m') {
+                iconEmoji = '👑';
+                themeColor = '#eab308'; // Gold
+                cardBg = 'linear-gradient(to bottom right, var(--bg-secondary), rgba(234, 179, 8, 0.03))';
+              } else if (reward.id === 'merch_tshirt') {
+                iconEmoji = '👕';
+                themeColor = '#8b5cf6'; // Purple
+              }
+
+              return (
+                <div 
+                  key={reward.id} 
+                  className="glass-card animate-fade-in" 
+                  style={{ 
+                    padding: '20px', 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    gap: '14px',
+                    border: isEligible ? `1px solid ${themeColor}40` : '1px solid var(--border-color)',
+                    background: cardBg,
+                    boxShadow: isEligible ? `0 8px 24px ${themeColor}12` : 'none',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                >
+                  
+                  {/* Popular / Best value flags */}
+                  {reward.id === 'free_3m' && (
+                    <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: '#f97316', color: '#fff', fontSize: '0.65rem', fontWeight: '800', padding: '4px 12px', borderBottomLeftRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      🔥 Populer
+                    </div>
+                  )}
+                  {reward.id === 'free_12m' && (
+                    <div style={{ position: 'absolute', top: 0, right: 0, backgroundColor: '#eab308', color: '#000', fontSize: '0.65rem', fontWeight: '800', padding: '4px 12px', borderBottomLeftRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      👑 Terbaik
+                    </div>
+                  )}
+
+                  {/* Header info */}
+                  <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                    <div 
                       style={{ 
-                        fontSize: '0.72rem', 
-                        backgroundColor: data.balance >= reward.price ? 'var(--primary-glow)' : 'var(--bg-tertiary)', 
-                        color: data.balance >= reward.price ? 'var(--primary)' : 'var(--text-muted)', 
-                        padding: '2px 8px', 
+                        width: '46px', 
+                        height: '46px', 
                         borderRadius: '12px', 
-                        fontWeight: '700' 
+                        backgroundColor: isEligible ? `${themeColor}20` : 'var(--bg-tertiary)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontSize: '1.4rem',
+                        border: `1px solid ${isEligible ? themeColor + '30' : 'var(--border-color)'}`,
+                        flexShrink: 0
                       }}
                     >
-                      {reward.price} Poin
-                    </span>
+                      {iconEmoji}
+                    </div>
+
+                    <div style={{ flex: 1, paddingRight: reward.id === 'free_3m' || reward.id === 'free_12m' ? '80px' : '0' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+                        <h5 style={{ margin: 0, fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{reward.name.split(' ').slice(1).join(' ')}</h5>
+                        <span style={{ fontSize: '0.78rem', fontWeight: '800', color: themeColor }}>
+                          ({reward.price} Poin)
+                        </span>
+                      </div>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                        {reward.desc}
+                      </p>
+                    </div>
                   </div>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
-                    {reward.desc}
-                  </p>
+
+                  {/* Progress Section */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem', fontWeight: '600' }}>
+                      <span style={{ color: 'var(--text-secondary)' }}>Progres Poin:</span>
+                      <span style={{ color: isEligible ? 'var(--success)' : 'var(--text-primary)' }}>
+                        {data.balance} / {reward.price} Poin ({progressPercent}%)
+                      </span>
+                    </div>
+
+                    {/* Progress Bar Container */}
+                    <div style={{ width: '100%', height: '8px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '99px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                      <div 
+                        style={{ 
+                          width: `${progressPercent}%`, 
+                          height: '100%', 
+                          background: isEligible 
+                            ? 'linear-gradient(90deg, #10b981, #34d399)' 
+                            : `linear-gradient(90deg, var(--primary), ${themeColor})`, 
+                          borderRadius: '99px',
+                          transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }} 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Footer actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', gap: '10px' }}>
+                    <span 
+                      style={{ 
+                        fontSize: '0.7rem', 
+                        fontWeight: '700', 
+                        padding: '4px 10px', 
+                        borderRadius: '6px', 
+                        backgroundColor: statusBg, 
+                        color: statusColor,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      {statusLabel}
+                    </span>
+
+                    <button 
+                      onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
+                      className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ 
+                        padding: '8px 16px', 
+                        fontSize: '0.78rem', 
+                        minWidth: '110px',
+                        boxShadow: isEligible ? `0 4px 12px ${themeColor}30` : 'none',
+                        fontWeight: '700'
+                      }}
+                      disabled={!isEligible || redeemingId !== null}
+                    >
+                      {redeemingId === reward.id ? 'Memproses...' : isEligible ? '⚡ Tukar Sekarang' : 'Poin Belum Cukup'}
+                    </button>
+                  </div>
+
                 </div>
-                <button 
-                  onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
-                  className={`btn ${data.balance >= reward.price ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ padding: '8px 16px', fontSize: '0.78rem', minWidth: '75px' }}
-                  disabled={data.balance < reward.price || redeemingId !== null}
-                >
-                  {redeemingId === reward.id ? 'Memproses...' : 'Tukar'}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
