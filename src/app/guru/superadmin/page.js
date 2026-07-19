@@ -41,6 +41,13 @@ export default function SuperadminPanel() {
   const [sekolahSearchResults, setSekolahSearchResults] = useState([]);
   const [showSekolahDropdown, setShowSekolahDropdown] = useState(false);
 
+  // Points Adjustment States
+  const [pointsModalOpen, setPointsModalOpen] = useState(false);
+  const [pointsTargetUsername, setPointsTargetUsername] = useState("");
+  const [pointsAmount, setPointsAmount] = useState("");
+  const [pointsReason, setPointsReason] = useState("");
+  const [savingPoints, setSavingPoints] = useState(false);
+
   const router = useRouter();
   const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
 
@@ -221,6 +228,137 @@ export default function SuperadminPanel() {
     }
   };
 
+  const calculateGuruPoints = (username) => {
+    let balance = 0;
+    const logsForGuru = teacherLogs.filter(l => l.username?.toLowerCase() === username.toLowerCase());
+    for (const log of logsForGuru) {
+      if (log.aksi === 'REFERRAL_POINTS' || log.aksi === 'REDEEM_POINTS') {
+        const match = log.detail.match(/POINTS:([+-]?\d+)/);
+        if (match) {
+          balance += parseInt(match[1], 10);
+        }
+      }
+    }
+    return balance;
+  };
+
+  const handleApprovePayment = async (username) => {
+    if (confirm(`Setujui konfirmasi pembayaran dan aktifkan akun guru @${username}?`)) {
+      try {
+        const res = await fetch(`/api/superadmin/guru/${username}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            is_locked: false,
+            lock_message: ""
+          }),
+        });
+
+        if (res.ok) {
+          alert("Selesai! Akun guru berhasil diaktifkan.");
+          fetchData();
+        } else {
+          const data = await res.json();
+          alert(data.error || "Gagal mengaktifkan akun guru.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi server.");
+      }
+    }
+  };
+
+  const handleLockGuru = async (username) => {
+    const reason = prompt("Masukkan pesan alasan penguncian akun (misal: Langganan kedaluwarsa):");
+    if (reason === null) return;
+
+    try {
+      const res = await fetch(`/api/superadmin/guru/${username}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          is_locked: true,
+          lock_message: reason.trim() || "Akun ditangguhkan sementara. Silakan hubungi admin."
+        }),
+      });
+
+      if (res.ok) {
+        alert("Selesai! Akun guru berhasil dikunci.");
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Gagal mengunci akun guru.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi server.");
+    }
+  };
+
+  const handleCompleteRedeem = async (logId, username, detail) => {
+    if (confirm(`Tandai permintaan penukaran hadiah ini sebagai SELESAI diproses?`)) {
+      try {
+        const cleanDetail = detail.split('|')[1]?.trim() || detail;
+        const resPoints = await fetch("/api/superadmin/poin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            targetUsername: username,
+            points: 0,
+            description: `PROSES_SELESAI | Penukaran Hadiah: ${cleanDetail} telah diproses oleh Admin`
+          })
+        });
+
+        if (resPoints.ok) {
+          alert("Selesai! Permintaan penukaran hadiah ditandai selesai.");
+          fetchData();
+        } else {
+          alert("Gagal memperbarui status penukaran.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan.");
+      }
+    }
+  };
+
+  const handlePointsSubmit = async (e) => {
+    e.preventDefault();
+    if (!pointsAmount || !pointsReason.trim()) {
+      alert("Harap isi jumlah poin dan alasan penyesuaian.");
+      return;
+    }
+
+    setSavingPoints(true);
+    try {
+      const res = await fetch("/api/superadmin/poin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUsername: pointsTargetUsername,
+          points: pointsAmount,
+          description: pointsReason.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setPointsModalOpen(false);
+        setPointsAmount("");
+        setPointsReason("");
+        alert("Penyesuaian poin berhasil disimpan.");
+        fetchData();
+      } else {
+        alert(data.error || "Gagal menyesuaikan poin.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi server.");
+    } finally {
+      setSavingPoints(false);
+    }
+  };
+
   // Filtered lists
   const filteredLogs = logs.filter(log => 
     log.namaSiswa.toLowerCase().includes(searchLogQuery.toLowerCase()) ||
@@ -283,6 +421,13 @@ export default function SuperadminPanel() {
           style={{ padding: "8px 16px", borderRadius: "8px" }}
         >
           🔑 Manajemen Akun Guru
+        </button>
+        <button
+          onClick={() => setActiveTab("pembayaran")}
+          className={`btn ${activeTab === "pembayaran" ? "btn-primary" : "btn-secondary"}`}
+          style={{ padding: "8px 16px", borderRadius: "8px" }}
+        >
+          💳 Pembayaran & Referral
         </button>
       </div>
 
@@ -501,10 +646,155 @@ export default function SuperadminPanel() {
                   </table>
                 </div>
               ) : (
-                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                <div style={{ center: "center", padding: "40px", color: "var(--text-muted)" }}>
                   Tidak ada guru yang ditemukan.
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === "pembayaran" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              
+              {/* Row 1: Konfirmasi Pembayaran & Redeem Poin */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "24px" }}>
+                
+                {/* 1. Konfirmasi Pembayaran */}
+                <div className="glass-card" style={{ padding: "24px" }}>
+                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>💳 Konfirmasi Pembayaran</h4>
+                  <div style={{ overflowY: "auto", maxHeight: "350px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {teacherLogs.filter(l => l.aksi === "PAYMENT_CONFIRMATION").length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                        Belum ada konfirmasi pembayaran masuk.
+                      </div>
+                    ) : (
+                      teacherLogs
+                        .filter(l => l.aksi === "PAYMENT_CONFIRMATION")
+                        .map(log => {
+                          const isLocked = gurus.find(g => g.username.toLowerCase() === log.username.toLowerCase())?.is_locked;
+                          return (
+                            <div key={log.id} style={{ padding: "14px", border: "1px solid var(--border-color)", borderRadius: "8px", backgroundColor: "var(--bg-secondary)" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                                <span style={{ fontWeight: "700", fontSize: "0.9rem" }}>{log.namaGuru} (@{log.username})</span>
+                                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                  {new Date(log.timestamp).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                                </span>
+                              </div>
+                              <p style={{ margin: "8px 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                                {log.detail}
+                              </p>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+                                <span style={{ fontSize: "0.75rem", fontWeight: "600", color: isLocked ? "var(--danger)" : "var(--success)" }}>
+                                  {isLocked ? "🔒 Akun Terkunci" : "✅ Akun Aktif"}
+                                </span>
+                                {isLocked ? (
+                                  <button onClick={() => handleApprovePayment(log.username)} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
+                                    🔓 Setujui & Buka Akun
+                                  </button>
+                                ) : (
+                                  <button onClick={() => handleLockGuru(log.username)} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }}>
+                                    🔒 Kunci Akun
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Permintaan Penukaran Poin (Redeem) */}
+                <div className="glass-card" style={{ padding: "24px" }}>
+                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>🎁 Permintaan Penukaran Poin</h4>
+                  <div style={{ overflowY: "auto", maxHeight: "350px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {teacherLogs.filter(l => l.aksi === "REDEEM_POINTS").length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                        Belum ada permintaan penukaran poin.
+                      </div>
+                    ) : (
+                      teacherLogs
+                        .filter(l => l.aksi === "REDEEM_POINTS")
+                        .map(log => {
+                          const isProcessed = teacherLogs.some(
+                            x => x.username.toLowerCase() === log.username.toLowerCase() && 
+                            x.detail.includes("PROSES_SELESAI") && 
+                            x.detail.includes(log.detail.split('|')[1]?.trim() || "")
+                          );
+
+                          return (
+                            <div key={log.id} style={{ padding: "14px", border: "1px solid var(--border-color)", borderRadius: "8px", backgroundColor: "var(--bg-secondary)", opacity: isProcessed ? 0.75 : 1 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                                <span style={{ fontWeight: "700", fontSize: "0.9rem" }}>{log.namaGuru} (@{log.username})</span>
+                                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                  {new Date(log.timestamp).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
+                                </span>
+                              </div>
+                              <p style={{ margin: "8px 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                                {log.detail}
+                              </p>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+                                <span style={{ fontSize: "0.75rem", fontWeight: "600", color: isProcessed ? "var(--success)" : "var(--warning)" }}>
+                                  {isProcessed ? "✅ Selesai Diproses" : "⏳ Menunggu Proses"}
+                                </span>
+                                {!isProcessed && (
+                                  <button onClick={() => handleCompleteRedeem(log.id, log.username, log.detail)} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
+                                    Tandai Selesai
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Row 2: Manajemen Saldo Poin Guru */}
+              <div className="glass-card" style={{ padding: "24px" }}>
+                <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>👤 Saldo Poin & Penyesuaian Guru</h4>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="premium-table">
+                    <thead>
+                      <tr>
+                        <th>Nama Lengkap</th>
+                        <th>Username</th>
+                        <th style={{ textAlign: "center", width: "150px" }}>Saldo Poin</th>
+                        <th style={{ textAlign: "center", width: "200px" }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {gurus.map(g => {
+                        const pts = calculateGuruPoints(g.username);
+                        return (
+                          <tr key={g.username}>
+                            <td style={{ fontWeight: "700" }}>{g.nama}</td>
+                            <td><code>{g.username}</code></td>
+                            <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)" }}>{pts} Poin</td>
+                            <td style={{ textAlign: "center" }}>
+                              <button 
+                                onClick={() => {
+                                  setPointsTargetUsername(g.username);
+                                  setPointsAmount("");
+                                  setPointsReason("");
+                                  setPointsModalOpen(true);
+                                }} 
+                                className="btn btn-secondary" 
+                                style={{ padding: "6px 12px", fontSize: "0.8rem" }}
+                              >
+                                ➕/➖ Atur Poin Manual
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
           )}
         </>
@@ -744,6 +1034,69 @@ export default function SuperadminPanel() {
                   ) : (
                     "Buat Akun"
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Points Adjustment Modal */}
+      {pointsModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card modal-content-scroll" style={{ width: "100%", maxWidth: "400px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "800", marginBottom: "16px" }}>
+              ⚙️ Penyesuaian Poin Manual
+            </h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "16px" }}>
+              Menyesuaikan poin untuk guru <strong>@{pointsTargetUsername}</strong>. Poin akan langsung tercatat di riwayat mutasi poin guru tersebut.
+            </p>
+
+            <form onSubmit={handlePointsSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Jumlah Poin (Gunakan minus untuk mengurangi)</label>
+                <input
+                  type="number"
+                  placeholder="Contoh: 30 atau -20"
+                  className="form-input"
+                  value={pointsAmount}
+                  onChange={(e) => setPointsAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Keterangan Penyesuaian</label>
+                <textarea
+                  placeholder="Contoh: Bonus pendaftaran seminar CekNilai atau Koreksi poin ganda"
+                  className="form-input"
+                  value={pointsReason}
+                  onChange={(e) => setPointsReason(e.target.value)}
+                  rows={3}
+                  required
+                  style={{ resize: "none" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button type="button" onClick={() => setPointsModalOpen(false)} className="btn btn-secondary" disabled={savingPoints}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={savingPoints}>
+                  {savingPoints ? "Menyimpan..." : "Simpan Poin"}
                 </button>
               </div>
             </form>
