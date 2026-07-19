@@ -286,8 +286,8 @@ export default function ReferralPage() {
                 onChange={(e) => setPaket(e.target.value)}
                 style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
               >
-                <option value="bulanan">Langganan Bulanan (Rp 29.000 / Bulan)</option>
-                <option value="tahunan">Langganan Tahunan (Rp 199.000 / Tahun) - Poin Lebih Banyak!</option>
+                <option value="bulanan">Langganan Bulanan (Rp 19.000 / Bulan)</option>
+                <option value="tahunan">Langganan Tahunan (Rp 159.000 / Tahun) - Poin Lebih Banyak!</option>
               </select>
             </div>
 
@@ -295,7 +295,7 @@ export default function ReferralPage() {
               <label className="form-label">Bukti Transfer / Detail Pengirim</label>
               <textarea 
                 className="form-input" 
-                placeholder="Contoh: Transfer via Bank Mandiri a.n. Budi Santoso sebesar Rp 199.000, tanggal 19 Juli 2026 jam 14:00"
+                placeholder="Contoh: Transfer via Bank Mandiri a.n. Budi Santoso sebesar Rp 159.000, tanggal 19 Juli 2026 jam 14:00"
                 rows="3"
                 value={bukti}
                 onChange={(e) => setBukti(e.target.value)}
