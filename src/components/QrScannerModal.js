@@ -596,6 +596,14 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         #reader {
           border: none !important;
         }
+        /* Hide html5-qrcode default stretched/buggy canvas overlay and borders */
+        #reader canvas {
+          display: none !important;
+        }
+        #reader__scan_region {
+          border: none !important;
+          box-shadow: none !important;
+        }
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
