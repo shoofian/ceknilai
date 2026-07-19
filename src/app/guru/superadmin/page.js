@@ -704,19 +704,18 @@ export default function SuperadminPanel() {
                                 </p>
                               </div>
 
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px", gap: "8px", flexWrap: "wrap" }}>
                                 <span style={{ fontSize: "0.75rem", fontWeight: "600", color: isLocked ? "var(--danger)" : "var(--success)" }}>
-                                  {isLocked ? "🔒 Akun Terkunci" : "✅ Akun Aktif"}
+                                  {isLocked ? "🔒 Akun Terkunci" : "✅ Akun Aktif (Menunggu Verifikasi)"}
                                 </span>
-                                {isLocked ? (
+                                <div style={{ display: "flex", gap: "6px" }}>
                                   <button onClick={() => handleApprovePayment(log.username)} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
-                                    🔓 Setujui & Buka Akun
+                                    ✅ Verifikasi & Kreditkan Poin
                                   </button>
-                                ) : (
                                   <button onClick={() => handleLockGuru(log.username)} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }}>
-                                    🔒 Kunci Akun
+                                    🔒 Tolak
                                   </button>
-                                )}
+                                </div>
                               </div>
                             </div>
                           );

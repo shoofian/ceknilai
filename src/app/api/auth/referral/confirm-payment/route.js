@@ -64,7 +64,7 @@ export async function POST(request) {
       }
     }
 
-    // Store payment as PENDING — points will only be credited after Superadmin approves
+    // Store payment as PENDING — points will only be credited after Superadmin verifies
     const referralInfo = referralValid
       ? ` | REFERRAL:${referralCode.trim().toLowerCase()}`
       : '';
@@ -75,9 +75,16 @@ export async function POST(request) {
       `PAKET:${paket.toUpperCase()} | BUKTI:${bukti}${referralInfo}`
     );
 
+    // Optimistic unlock: give access immediately while Superadmin verifies payment
+    // If payment turns out to be invalid, Superadmin can re-lock the account manually
+    await supabase
+      .from('guru')
+      .update({ is_locked: false, lock_message: '' })
+      .eq('username', username);
+
     return NextResponse.json({
       success: true,
-      message: 'Konfirmasi pembayaran berhasil dikirim. Akun Anda akan diaktifkan setelah diverifikasi oleh admin.',
+      message: 'Konfirmasi pembayaran berhasil dikirim! Akun Anda kini sudah aktif. Poin referral akan dikreditkan setelah pembayaran diverifikasi admin.',
       referralQueued: referralValid,
       referralError: referralError || null
     });
