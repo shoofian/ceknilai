@@ -81,7 +81,7 @@ export default function ReferralPage() {
 
     // Build structured proof string from individual fields
     const harga = paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000';
-    const buktiTerstruktur = `Nama: ${namaGuru.trim()} | Bank: ${namaBank.trim()} | No. Rek/HP: ${nomorRekening.trim()} | Paket: ${paket.toUpperCase()} (${harga}) | Tanggal: ${tanggalTransfer}`;
+    const buktiTerstruktur = `Nama: ${namaGuru.trim()} | Bank: ${namaBank.trim()} | No. HP: ${nomorRekening.trim()} | Paket: ${paket.toUpperCase()} (${harga}) | Tanggal: ${tanggalTransfer}`;
 
     try {
       const res = await fetch('/api/auth/referral/confirm-payment', {
@@ -824,11 +824,11 @@ export default function ReferralPage() {
                 </div>
                 
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Nomor Rekening / No. HP <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <label className="form-label">No. HP Pengirim <span style={{ color: 'var(--danger)' }}>*</span></label>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Nomor rekening pengirim"
+                    placeholder="Contoh: 081234567890"
                     value={nomorRekening}
                     onChange={(e) => setNomorRekening(e.target.value)}
                     required
