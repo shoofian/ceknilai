@@ -155,6 +155,8 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
   const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
+  const [configModalTab, setConfigModalTab] = useState('aspek'); // 'aspek' | 'status'
+
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = sessionStorage.getItem("panelKontrolExpanded");
@@ -2219,6 +2221,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </span>
             <button
               onClick={() => {
+                setConfigModalTab('aspek');
                 setKolomModalOpen(true);
                 const configCard = document.getElementById("konfigurasi-kelas");
                 if (configCard) {
@@ -3239,20 +3242,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <button 
-                    onClick={() => setKolomModalOpen(true)} 
+                    onClick={() => { setConfigModalTab('aspek'); setKolomModalOpen(true); }} 
                     className="btn btn-outline" 
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
                     disabled={isLocked}
                   >
-                    ⚖️ Atur Aspek & Bobot
-                  </button>
-                  <button 
-                    onClick={() => setRangeModalOpen(true)} 
-                    className="btn btn-outline" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
-                    disabled={isLocked}
-                  >
-                    📊 Atur Status & KKM
+                    ⚙️ Atur Aspek, Bobot & KKM
                   </button>
                 </div>
               </div>
@@ -3772,8 +3767,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Grup Konfigurasi */}
             <div style={{ padding: "8px 14px 4px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>⚙️ Konfigurasi</div>
             {[
-              { icon: "⚖️", label: "Atur Aspek & Bobot Nilai", onClick: () => { setKolomModalOpen(true); setFabOpen(false); }, disabled: kelas.archived || isLocked },
-              { icon: "📊", label: "Atur Status & KKM", onClick: () => { setRangeModalOpen(true); setFabOpen(false); }, disabled: kelas.archived || isLocked },
+              { icon: "⚙️", label: "Atur Aspek, Bobot & KKM", onClick: () => { setConfigModalTab('aspek'); setKolomModalOpen(true); setFabOpen(false); }, disabled: kelas.archived || isLocked },
             ].map((item) => (
               <button
                 key={item.label}
@@ -5388,13 +5382,35 @@ export default function DetailKelas({ params: paramsPromise }) {
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
           <div className="glass-card aspect-modal-card animate-fade-in">
             <div className="aspect-modal-header">
-              <div>
-                <h3>⚖️ Atur Aspek & Bobot Nilai</h3>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Kelola aspek penilaian, bobot, dan sub-aspek.</p>
+              <div style={{ flex: 1 }}>
+                <h3>⚙️ Pengaturan Kelas</h3>
+                <div style={{ display: "flex", gap: "4px", marginTop: "10px", backgroundColor: "var(--bg-secondary)", padding: "3px", borderRadius: "8px", border: "1px solid var(--border-color)", width: "fit-content" }}>
+                  <button
+                    onClick={() => setConfigModalTab('aspek')}
+                    style={{
+                      padding: "6px 14px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                      backgroundColor: configModalTab === 'aspek' ? "var(--primary)" : "transparent",
+                      color: configModalTab === 'aspek' ? "#fff" : "var(--text-secondary)"
+                    }}
+                  >
+                    ⚖️ Aspek & Bobot
+                  </button>
+                  <button
+                    onClick={() => setConfigModalTab('status')}
+                    style={{
+                      padding: "6px 14px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                      backgroundColor: configModalTab === 'status' ? "var(--primary)" : "transparent",
+                      color: configModalTab === 'status' ? "#fff" : "var(--text-secondary)"
+                    }}
+                  >
+                    📊 Status & KKM
+                  </button>
+                </div>
               </div>
               <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
+            {configModalTab === 'aspek' ? (<>
             <div className="aspect-modal-container">
               {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
               <div className={`aspect-sidebar-panel ${mobileActiveView === "list" ? "show-mobile" : "hide-mobile"}`}>
@@ -5992,6 +6008,61 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </button>
               </div>
             </div>
+            </>) : (
+            /* ===== TAB: Status & KKM ===== */
+            <div style={{ overflowY: "auto", flex: 1, padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
+                Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
+              </p>
+                
+                {/* Header grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
+                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
+                </div>
+                
+                {/* A */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
+                  <input type="number" className="form-input" value={gradeA} min={0} max={100} onChange={e => setGradeA(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* B */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
+                  <input type="number" className="form-input" value={gradeB} min={0} max={100} onChange={e => setGradeB(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* C */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
+                  <input type="number" className="form-input" value={gradeC} min={0} max={100} onChange={e => setGradeC(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* D */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
+                  <input type="number" className="form-input" value={gradeD} min={0} max={100} onChange={e => setGradeD(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                </div>
+                
+                {/* KKM */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
+                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(e.target.value === "" ? "" : Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
+                </div>
+                
+                {/* Actions */}
+                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
+                  <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
+                  <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
+                </div>
+            </div>
+            )}
           </div>
         </div>
       )}
@@ -6045,73 +6116,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
 
-      {/* ===== MODAL: Atur Status Nilai & KKM ===== */}
-      {rangeModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
-          <div className="glass-card animate-fade-in modal-content-scroll" style={{ width: "100%", maxWidth: "500px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "24px 24px 16px 24px" }}>
-              <div>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", margin: 0 }}>📊 Atur Status Nilai & KKM</h3>
-                <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>Atur ambang batas tiap predikat dan nilai kelulusan.</p>
-              </div>
-              <button onClick={() => { setRangeModalOpen(false); setFabOpen(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
-            </div>
 
-            <div style={{ overflowY: "auto", flex: 1, padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
-                Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
-              </p>
-                
-                {/* Header grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
-                </div>
-                
-                {/* A */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
-                  <input type="number" className="form-input" value={gradeA} min={0} max={100} onChange={e => setGradeA(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* B */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
-                  <input type="number" className="form-input" value={gradeB} min={0} max={100} onChange={e => setGradeB(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* C */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
-                  <input type="number" className="form-input" value={gradeC} min={0} max={100} onChange={e => setGradeC(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* D */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
-                  <input type="number" className="form-input" value={gradeD} min={0} max={100} onChange={e => setGradeD(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
-                  <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* KKM */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
-                  <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
-                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(e.target.value === "" ? "" : Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
-                </div>
-                
-                {/* Actions */}
-                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
-                  <button onClick={() => setRangeModalOpen(false)} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
-                  <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ===== MODAL: Atur Nilai Katrol (Rahasia) ===== */}
       {katrolModalOpen && katrolSiswa && (
