@@ -125,7 +125,10 @@ export async function POST(request) {
             for (const s of siswaList) {
               const { nisn, nama: sNama, tanggalLahir, nilai, catatan } = s;
               if (!nisn || !sNama) {
-                skippedStudents.push(`${sNama || 'Tanpa Nama'} (NISN atau Nama kosong)`);
+                const missing = [];
+                if (!nisn) missing.push("NISN");
+                if (!sNama) missing.push("Nama");
+                skippedStudents.push(`${sNama || 'Tanpa Nama'} (Rombel: ${rombelNama || 'tidak diketahui'}) - Data tidak lengkap: ${missing.join(', ')} kosong`);
                 continue;
               }
 

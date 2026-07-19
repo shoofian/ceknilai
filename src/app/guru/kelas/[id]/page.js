@@ -119,6 +119,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewList, setPreviewList] = useState([]);
   const [importing, setImporting] = useState(false);
+  const [importWarnings, setImportWarnings] = useState([]);
 
   // State loading saat simpan aspek & bobot
   const [isSavingBobot, setIsSavingBobot] = useState(false);
@@ -1910,18 +1911,40 @@ export default function DetailKelas({ params: paramsPromise }) {
           alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: NISN, Nama");
           return;
         }
+
+        // Coba cari kolom Rombel/Rombongan Belajar/Kelas di sheet
+        const rombelIdx = headers.findIndex(h => {
+          const l = h.toLowerCase();
+          return l === "rombel" || l === "rombongan belajar" || l === "kelas" || l.includes("rombel") || l.includes("rombongan belajar") || l.includes("kelas");
+        });
         
         const parsedSiswa = [];
+        const warnings = [];
         
         for (let i = 1; i < rows.length; i++) {
           const cols = rows[i];
-          if (!cols || cols.length === 0 || !cols[nisnIdx]) continue;
+          if (!cols || cols.length === 0) continue;
+
+          // Check if row is entirely empty cells
+          const isRowEmpty = cols.every(cell => String(cell).trim() === "");
+          if (isRowEmpty) continue;
           
-          const nisnVal = String(cols[nisnIdx]).trim();
-          const namaVal = String(cols[namaIdx]).trim();
-          const tglVal = tglIdx !== -1 ? String(cols[tglIdx]).trim() : "";
-          
-          if (!nisnVal || !namaVal) continue;
+          const nisnVal = nisnIdx !== -1 && cols[nisnIdx] !== undefined ? String(cols[nisnIdx]).replace(/[,.\s]/g, "").trim() : "";
+          const namaVal = namaIdx !== -1 && cols[namaIdx] !== undefined ? String(cols[namaIdx]).trim() : "";
+          const tglVal = tglIdx !== -1 && cols[tglIdx] !== undefined ? String(cols[tglIdx]).trim() : "";
+          const rombelVal = rombelIdx !== -1 && cols[rombelIdx] !== undefined ? String(cols[rombelIdx]).trim() : "";
+
+          // Pengecekan data tidak lengkap
+          const missingFields = [];
+          if (!nisnVal) missingFields.push("NISN");
+          if (!namaVal) missingFields.push("Nama");
+
+          if (missingFields.length > 0) {
+            const identifier = namaVal || nisnVal || `Baris ${i + 1}`;
+            const rombelDesc = rombelVal ? `Rombel: ${rombelVal}` : `Kelas saat ini: ${kelas?.nama || 'tidak diketahui'}`;
+            warnings.push(`Siswa "${identifier}" (${rombelDesc}) (Baris ${i + 1}) dilewati karena data tidak lengkap: ${missingFields.join(", ")} tidak ditemukan.`);
+            continue;
+          }
           
           const nilaiObj = {};
           kelas.kolomNilai.forEach(col => {
@@ -1931,7 +1954,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 const headerName = `${col.nama} - ${sub.nama}`;
                 const headerCol = headers.find(h => h === headerName || h.startsWith(`${headerName} (`));
                 const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
-
+ 
                 if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
                   const parsedVal = Number(cols[colIdx]);
                   // Simpan dengan sub.id sebagai key agar API tidak perlu matching nama
@@ -1943,7 +1966,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             } else {
               const headerCol = headers.find(h => h === col.nama || h.startsWith(`${col.nama} (`));
               const colIdx = headerCol ? headers.indexOf(headerCol) : -1;
-
+ 
               if (colIdx !== -1 && cols[colIdx] !== "" && cols[colIdx] !== undefined && cols[colIdx] !== null) {
                 const parsedVal = Number(cols[colIdx]);
                 // Simpan dengan col.id sebagai key agar API tidak perlu matching nama
@@ -1963,10 +1986,16 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
         
         if (parsedSiswa.length === 0) {
-          alert("Tidak ada data siswa yang berhasil di-parse!");
+          let errorMsg = "Tidak ada data siswa yang valid untuk diimpor.";
+          if (warnings.length > 0) {
+            errorMsg += " Semua baris dilewati karena data tidak lengkap.";
+          }
+          alert(errorMsg);
+          setImportWarnings(warnings);
           return;
         }
         
+        setImportWarnings(warnings);
         setPreviewList(parsedSiswa);
         setPreviewModalOpen(true);
         
@@ -4165,6 +4194,29 @@ export default function DetailKelas({ params: paramsPromise }) {
                 Berikut adalah data siswa dan nilai yang berhasil di-parse dari file Excel Anda. Klik <strong>Konfirmasi Impor</strong> untuk menyimpannya ke basis data kelas.
               </p>
             </div>
+
+            {importWarnings.length > 0 && (
+              <div style={{
+                maxHeight: "130px",
+                overflowY: "auto",
+                backgroundColor: "rgba(245, 158, 11, 0.08)",
+                border: "1px solid rgba(245, 158, 11, 0.2)",
+                borderRadius: "var(--radius-sm)",
+                padding: "10px 14px",
+                fontSize: "0.8rem",
+                color: "var(--text-primary)",
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px"
+              }}>
+                <strong style={{ color: "var(--warning)" }}>⚠️ Pemberitahuan: {importWarnings.length} siswa tidak berhasil ditambahkan karena data tidak lengkap:</strong>
+                <ul style={{ paddingLeft: "16px", margin: 0, display: "flex", flexDirection: "column", gap: "2px" }}>
+                  {importWarnings.map((warn, idx) => (
+                    <li key={idx}>{warn}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Table preview scrollable */}
             <div style={{ flex: 1, overflowY: "auto", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)" }}>

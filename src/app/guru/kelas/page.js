@@ -532,7 +532,8 @@ export default function KelolaKelas() {
             // Catat baris bermasalah jika ada setidaknya salah satu data terisi (bukan baris kosong)
             if (nisnVal || namaVal || rombelVal) {
               const identifier = namaVal || nisnVal || `Baris ${i + 1}`;
-              warnings.push(`Siswa "${identifier}" (Baris ${i + 1}) dilewati karena data tidak lengkap: ${missingFields.join(", ")} tidak ditemukan.`);
+              const rombelDesc = rombelVal ? `Rombel: ${rombelVal}` : "Rombel tidak terdefinisi";
+              warnings.push(`Siswa "${identifier}" (${rombelDesc}) (Baris ${i + 1}) dilewati karena data tidak lengkap: ${missingFields.join(", ")} tidak ditemukan.`);
             }
             continue;
           }

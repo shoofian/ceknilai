@@ -123,7 +123,10 @@ export async function POST(request, { params }) {
       
       if (!nisn || !nama) {
         console.warn(`[Import API] Skipped student due to missing fields: nisn=${!!nisn}, nama=${!!nama}`);
-        skipped.push({ name: nama || 'Tanpa Nama', reason: 'NISN atau Nama kosong' });
+        const missing = [];
+        if (!nisn) missing.push("NISN");
+        if (!nama) missing.push("Nama");
+        skipped.push({ name: nama || 'Tanpa Nama', reason: `Data tidak lengkap: ${missing.join(', ')} kosong` });
         continue; // Skip baris tidak lengkap
       }
 
