@@ -110,7 +110,54 @@ export async function getGuru(username = null) {
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
-    return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' };
+  }
+}
+
+export async function getGuruByEmail(email) {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('guru')
+      .select('*, sekolah:sekolah_id(nama, npsn)')
+      .ilike('email', email.trim())
+      .maybeSingle();
+      
+    if (error) {
+      // Fallback if sekolah_id or walikelas columns do not exist
+      const { data: fbData, error: fbError } = await supabase
+        .from('guru')
+        .select('username, password, nama, email, is_locked, lock_message')
+        .ilike('email', email.trim())
+        .maybeSingle();
+      if (fbError) {
+        console.error('Error fetching guru by email (fallback):', fbError);
+        return null;
+      }
+      return fbData ? {
+        ...fbData,
+        is_locked: fbData.is_locked ?? false,
+        lock_message: fbData.lock_message ?? null,
+        sekolah_id: null,
+        walikelas_tingkatan: null,
+        walikelas_rombel_nama: null,
+        tahun_ajaran: '2025/2026',
+        sekolah: null
+      } : null;
+    }
+    
+    return data ? {
+      ...data,
+      is_locked: data.is_locked ?? false,
+      lock_message: data.lock_message ?? null,
+      sekolah_id: data.sekolah_id ?? null,
+      walikelas_tingkatan: data.walikelas_tingkatan ?? null,
+      walikelas_rombel_nama: data.walikelas_rombel_nama ?? null,
+      tahun_ajaran: data.tahun_ajaran ?? '2025/2026',
+      sekolah: data.sekolah ?? null
+    } : null;
+  } catch (err) {
+    console.error('Unexpected error in getGuruByEmail:', err);
+    return null;
   }
 }
 
