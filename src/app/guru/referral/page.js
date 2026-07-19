@@ -79,11 +79,11 @@ export default function ReferralPage() {
         throw new Error(json.error || 'Gagal mengirim konfirmasi pembayaran');
       }
 
-      let successText = `Konfirmasi pembayaran paket ${paket.toUpperCase()} berhasil dikirim!`;
-      if (json.pointsClaimed) {
-        successText += ` Selamat, Anda dan rekan Anda mendapatkan +${json.pointsAwarded} poin referral karena ini adalah pembayaran pertama!`;
-      } else if (referralInput.trim() !== '') {
-        successText += ` Catatan: Poin tidak diklaim. Alasan: ${json.claimError || 'Syarat klaim tidak terpenuhi.'}`;
+      let successText = json.message || `Konfirmasi pembayaran paket ${paket.toUpperCase()} berhasil dikirim!`;
+      if (json.referralQueued) {
+        successText += ` Kode referral Anda sudah direkam dan poin akan dikreditkan otomatis setelah pembayaran diverifikasi admin.`;
+      } else if (referralInput.trim() !== '' && json.referralError) {
+        successText += ` Catatan kode referral: ${json.referralError}`;
       }
 
       setSuccessMsg(successText);

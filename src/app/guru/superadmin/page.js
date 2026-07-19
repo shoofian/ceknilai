@@ -245,17 +245,14 @@ export default function SuperadminPanel() {
   const handleApprovePayment = async (username) => {
     if (confirm(`Setujui konfirmasi pembayaran dan aktifkan akun guru @${username}?`)) {
       try {
+        // Use POST to trigger unlock + auto referral points crediting
         const res = await fetch(`/api/superadmin/guru/${username}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            is_locked: false,
-            lock_message: ""
-          }),
+          method: "POST",
         });
 
         if (res.ok) {
-          alert("Selesai! Akun guru berhasil diaktifkan.");
+          const data = await res.json();
+          alert(data.message || "Selesai! Akun guru berhasil diaktifkan.");
           fetchData();
         } else {
           const data = await res.json();
@@ -663,15 +660,24 @@ export default function SuperadminPanel() {
                 <div className="glass-card" style={{ padding: "24px" }}>
                   <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>💳 Konfirmasi Pembayaran</h4>
                   <div style={{ overflowY: "auto", maxHeight: "350px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {teacherLogs.filter(l => l.aksi === "PAYMENT_CONFIRMATION").length === 0 ? (
+                    {teacherLogs.filter(l => l.aksi === "PAYMENT_PENDING").length === 0 ? (
                       <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
-                        Belum ada konfirmasi pembayaran masuk.
+                        Belum ada konfirmasi pembayaran yang menunggu verifikasi.
                       </div>
                     ) : (
                       teacherLogs
-                        .filter(l => l.aksi === "PAYMENT_CONFIRMATION")
+                        .filter(l => l.aksi === "PAYMENT_PENDING")
                         .map(log => {
                           const isLocked = gurus.find(g => g.username.toLowerCase() === log.username.toLowerCase())?.is_locked;
+                          // Parse structured detail: PAKET:TAHUNAN | BUKTI:... | REFERRAL:username
+                          const detail = log.detail || '';
+                          const paketMatch = detail.match(/PAKET:(BULANAN|TAHUNAN)/);
+                          const buktiMatch = detail.match(/BUKTI:(.+?)(?=\s*\|\s*REFERRAL:|$)/);
+                          const referralMatch = detail.match(/REFERRAL:([a-z0-9_]+)/);
+                          const paket = paketMatch ? paketMatch[1] : '-';
+                          const bukti = buktiMatch ? buktiMatch[1].trim() : detail;
+                          const referralCode = referralMatch ? referralMatch[1] : null;
+
                           return (
                             <div key={log.id} style={{ padding: "14px", border: "1px solid var(--border-color)", borderRadius: "8px", backgroundColor: "var(--bg-secondary)" }}>
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
@@ -680,9 +686,24 @@ export default function SuperadminPanel() {
                                   {new Date(log.timestamp).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
                                 </span>
                               </div>
-                              <p style={{ margin: "8px 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                                {log.detail}
-                              </p>
+
+                              {/* Parsed payment info */}
+                              <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
+                                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "rgba(234,179,8,0.15)" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "#eab308" : "var(--primary)" }}>
+                                    {paket === "TAHUNAN" ? "👑 Paket Tahunan" : "📦 Paket Bulanan"}
+                                  </span>
+                                  {referralCode && (
+                                    <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: "rgba(16,185,129,0.1)", color: "var(--success)" }}>
+                                      🔗 Kode Referral: @{referralCode}
+                                    </span>
+                                  )}
+                                </div>
+                                <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                                  <strong>Bukti:</strong> {bukti}
+                                </p>
+                              </div>
+
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
                                 <span style={{ fontSize: "0.75rem", fontWeight: "600", color: isLocked ? "var(--danger)" : "var(--success)" }}>
                                   {isLocked ? "🔒 Akun Terkunci" : "✅ Akun Aktif"}

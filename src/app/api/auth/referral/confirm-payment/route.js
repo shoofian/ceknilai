@@ -31,23 +31,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Paket dan bukti pembayaran wajib diisi' }, { status: 400 });
     }
 
-    const isYearly = paket === 'tahunan';
-    const pointsToAward = isYearly ? 100 : 10;
+    // Validate referral code if provided (but don't award points yet — deferred to Superadmin approval)
+    let referralError = '';
+    let referralValid = false;
 
-    let pointsClaimed = false;
-    let claimError = '';
-
-    // Log the payment confirmation itself
-    await logAktivitasGuru(username, 'PAYMENT_CONFIRMATION', `Mengajukan konfirmasi pembayaran paket ${paket.toUpperCase()} | Bukti: ${bukti}`);
-
-    // If referral code is provided, try to claim points
     if (referralCode && referralCode.trim() !== '') {
       const cleanCode = referralCode.trim().toLowerCase();
 
       if (cleanCode === username.toLowerCase()) {
-        claimError = 'Anda tidak dapat menggunakan kode referral Anda sendiri.';
+        referralError = 'Anda tidak dapat menggunakan kode referral Anda sendiri.';
       } else {
-        // Check if referee has already claimed a first payment referral points before
+        // Check if already claimed referral points before (first payment only)
         const { data: existingClaims } = await supabase
           .from('log_aktivitas_guru')
           .select('id')
@@ -57,39 +51,35 @@ export async function POST(request) {
           .limit(1);
 
         if (existingClaims && existingClaims.length > 0) {
-          claimError = 'Poin referral hanya berlaku untuk konfirmasi pembayaran pertama kali.';
+          referralError = 'Poin referral hanya berlaku untuk konfirmasi pembayaran pertama kali.';
         } else {
-          // Check if referrer code is valid (exists in guru database)
+          // Verify referrer exists
           const referrer = await getGuru(cleanCode);
           if (!referrer || !referrer.username || referrer.username.toLowerCase() !== cleanCode) {
-            claimError = `Kode referral "${referralCode}" tidak valid atau tidak terdaftar.`;
+            referralError = `Kode referral "${referralCode}" tidak valid atau tidak terdaftar.`;
           } else {
-            // Success! Award points to both teachers
-            // 1. Award to referee (current user)
-            await logAktivitasGuru(
-              username,
-              'REFERRAL_POINTS',
-              `POINTS:+${pointsToAward} | First Payment Referral diklaim menggunakan kode @${referrer.username}`
-            );
-
-            // 2. Award to referrer
-            await logAktivitasGuru(
-              referrer.username,
-              'REFERRAL_POINTS',
-              `POINTS:+${pointsToAward} | Referral klaim oleh @${username} (First Payment)`
-            );
-
-            pointsClaimed = true;
+            referralValid = true;
           }
         }
       }
     }
 
+    // Store payment as PENDING — points will only be credited after Superadmin approves
+    const referralInfo = referralValid
+      ? ` | REFERRAL:${referralCode.trim().toLowerCase()}`
+      : '';
+    
+    await logAktivitasGuru(
+      username,
+      'PAYMENT_PENDING',
+      `PAKET:${paket.toUpperCase()} | BUKTI:${bukti}${referralInfo}`
+    );
+
     return NextResponse.json({
       success: true,
-      pointsClaimed,
-      pointsAwarded: pointsClaimed ? pointsToAward : 0,
-      claimError
+      message: 'Konfirmasi pembayaran berhasil dikirim. Akun Anda akan diaktifkan setelah diverifikasi oleh admin.',
+      referralQueued: referralValid,
+      referralError: referralError || null
     });
   } catch (error) {
     console.error('Error in confirm-payment API:', error);
