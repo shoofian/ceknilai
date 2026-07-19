@@ -1,0 +1,440 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+
+export default function ReferralPage() {
+  const [data, setData] = useState({
+    balance: 0,
+    history: [],
+    isFirstPaymentClaimed: false,
+    referralCode: ''
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  
+  // Form states
+  const [paket, setPaket] = useState('bulanan');
+  const [bukti, setBukti] = useState('');
+  const [referralInput, setReferralInput] = useState('');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [redeemingId, setRedeemingId] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const fetchReferralData = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/auth/referral');
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      } else {
+        const errJson = await res.json();
+        setError(errJson.error || 'Gagal memuat data referral');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Terjadi kesalahan koneksi internet.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReferralData();
+  }, []);
+
+  const handleCopyCode = () => {
+    if (!data.referralCode) return;
+    navigator.clipboard.writeText(data.referralCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleConfirmPayment = async (e) => {
+    e.preventDefault();
+    if (!bukti.trim()) {
+      alert('Silakan masukkan bukti pembayaran (misal: atas nama pengirim atau nomor rekening).');
+      return;
+    }
+
+    setSubmittingPayment(true);
+    setError('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/auth/referral/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paket,
+          bukti: bukti.trim(),
+          referralCode: referralInput.trim()
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Gagal mengirim konfirmasi pembayaran');
+      }
+
+      let successText = `Konfirmasi pembayaran paket ${paket.toUpperCase()} berhasil dikirim!`;
+      if (json.pointsClaimed) {
+        successText += ` Selamat, Anda dan rekan Anda mendapatkan +${json.pointsAwarded} poin referral karena ini adalah pembayaran pertama!`;
+      } else if (referralInput.trim() !== '') {
+        successText += ` Catatan: Poin tidak diklaim. Alasan: ${json.claimError || 'Syarat klaim tidak terpenuhi.'}`;
+      }
+
+      setSuccessMsg(successText);
+      setBukti('');
+      setReferralInput('');
+      fetchReferralData();
+    } catch (err) {
+      setError(err.message || 'Terjadi kesalahan sistem.');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
+  const handleRedeem = async (rewardId, rewardName, price) => {
+    if (data.balance < price) {
+      alert(`Poin Anda tidak mencukupi untuk menukar "${rewardName}".`);
+      return;
+    }
+
+    if (!confirm(`Apakah Anda yakin ingin menukar ${price} poin untuk "${rewardName}"?`)) {
+      return;
+    }
+
+    setRedeemingId(rewardId);
+    setError('');
+    setSuccessMsg('');
+
+    try {
+      const res = await fetch('/api/auth/referral/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rewardId })
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Gagal melakukan penukaran poin');
+      }
+
+      setSuccessMsg(json.message);
+      fetchReferralData();
+    } catch (err) {
+      setError(err.message || 'Gagal menukarkan poin.');
+    } finally {
+      setRedeemingId(null);
+    }
+  };
+
+  const rewardList = [
+    { id: 'free_1m', name: '🎁 Gratis 1 Bulan Premium', price: 20, desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh.' },
+    { id: 'free_3m', name: '🔥 Gratis 3 Bulan Premium', price: 50, desc: 'Dapatkan akses kelas premium selama 3 bulan tanpa biaya tambahan.' },
+    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 150, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' },
+    { id: 'merch_tshirt', name: '👕 Kaos CekNilai Eksklusif', price: 100, desc: 'Merchandise eksklusif kaos premium katun CekNilai (akan dikirim ke alamat sekolah Anda).' }
+  ];
+
+  if (loading && data.referralCode === '') {
+    return (
+      <div style={{ padding: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <span className="spinner" style={{ width: '32px', height: '32px', border: '3px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }}></span>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>Memuat data poin & referral...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      
+      {/* Page Title */}
+      <div>
+        <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-primary)' }}>🎁 Program Referral & Poin</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '4px' }}>
+          Undang rekan guru lain menggunakan CekNilai, kumpulkan poin, dan klaim hadiah premium secara gratis!
+        </p>
+      </div>
+
+      {error && (
+        <div style={{ padding: '12px 16px', borderRadius: '8px', backgroundColor: 'var(--danger-glow)', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--danger)', fontSize: '0.85rem' }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {successMsg && (
+        <div style={{ padding: '12px 16px', borderRadius: '8px', backgroundColor: 'var(--success-glow)', border: '1px solid rgba(16, 185, 129, 0.2)', color: 'var(--success)', fontSize: '0.85rem' }}>
+          ✅ {successMsg}
+        </div>
+      )}
+
+      {/* Main Stats Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        
+        {/* Points Display Card */}
+        <div 
+          style={{ 
+            background: 'linear-gradient(135deg, #6366f1, #a855f7)', 
+            borderRadius: '16px', 
+            padding: '24px', 
+            color: '#ffffff',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 8px 30px rgba(99, 102, 241, 0.25)',
+            minHeight: '160px',
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Background pattern */}
+          <div style={{ position: 'absolute', right: '-20px', bottom: '-20px', fontSize: '6rem', opacity: 0.15, pointerEvents: 'none' }}>🎁</div>
+          <div>
+            <span style={{ fontSize: '0.82rem', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.85, fontWeight: '700' }}>Poin Saya</span>
+            <div style={{ fontSize: '2.5rem', fontWeight: '800', marginTop: '6px', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              {data.balance}
+              <span style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>POIN</span>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.75rem', opacity: 0.85, margin: '12px 0 0 0', lineHeight: 1.4 }}>
+            Klaim poin saat rekan Anda bergabung, tukarkan dengan gratis akses langganan premium bulanan atau tahunan.
+          </p>
+        </div>
+
+        {/* Copy Referral Code Card */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '24px', minHeight: '160px' }}>
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>🔗 Kode Referral Saya</h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.4 }}>
+              Bagikan kode unik Anda kepada rekan guru lain agar mereka dapat menggunakannya saat konfirmasi pembayaran pertama mereka.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+            <div 
+              style={{ 
+                flex: 1, 
+                backgroundColor: 'var(--bg-tertiary)', 
+                border: '1px solid var(--border-color)', 
+                borderRadius: '8px', 
+                padding: '10px 14px', 
+                fontFamily: 'monospace', 
+                fontSize: '1rem', 
+                fontWeight: '800', 
+                display: 'flex', 
+                alignItems: 'center',
+                color: 'var(--text-primary)'
+              }}
+            >
+              {data.referralCode}
+            </div>
+            <button 
+              onClick={handleCopyCode} 
+              className={`btn ${copied ? 'btn-success' : 'btn-primary'}`}
+              style={{ padding: '0 20px', minWidth: '95px', fontSize: '0.85rem' }}
+            >
+              {copied ? 'Tersalin!' : '📋 Salin'}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Referral Rules Information Info Box */}
+      <div 
+        style={{ 
+          backgroundColor: 'rgba(99, 102, 241, 0.06)', 
+          border: '1px dashed rgba(99, 102, 241, 0.3)', 
+          borderRadius: '12px', 
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}
+      >
+        <h5 style={{ margin: 0, color: 'var(--primary)', fontWeight: '800', fontSize: '0.9rem' }}>💡 Ketentuan Program Rekomendasi & Poin:</h5>
+        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px', lineHeight: 1.5 }}>
+          <li>Kedua guru (pengundang & yang diundang) akan **sama-sama mendapatkan poin** setelah pembayaran pertama berhasil diverifikasi.</li>
+          <li>**Paket Langganan Tahunan**: +30 Poin untuk masing-masing guru.</li>
+          <li>**Paket Langganan Bulanan**: +10 Poin untuk masing-masing guru.</li>
+          <li>Setiap guru yang baru mendaftar hanya dapat mengklaim kode rekomendasi **sekali saja** pada saat konfirmasi pembayaran pertama mereka.</li>
+          <li>Poin tidak akan hangus dan dapat diakumulasikan terus-menerus untuk ditukar dengan perpanjangan premium kapan saja.</li>
+        </ul>
+      </div>
+
+      {/* Confirmation Payment Form & Gift Redeem Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px' }}>
+        
+        {/* Payment Confirmation Section */}
+        <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>💳 Konfirmasi Pembayaran & Klaim Referral</h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Masukkan bukti transaksi pembayaran Anda. Jika ini pembayaran pertama Anda, masukkan kode referral rekan Anda untuk klaim bonus poin bersama.
+            </p>
+          </div>
+
+          <form onSubmit={handleConfirmPayment} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Paket Langganan</label>
+              <select 
+                className="form-input" 
+                value={paket} 
+                onChange={(e) => setPaket(e.target.value)}
+                style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              >
+                <option value="bulanan">Langganan Bulanan (Rp 29.000 / Bulan)</option>
+                <option value="tahunan">Langganan Tahunan (Rp 199.000 / Tahun) - Poin Lebih Banyak!</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Bukti Transfer / Detail Pengirim</label>
+              <textarea 
+                className="form-input" 
+                placeholder="Contoh: Transfer via Bank Mandiri a.n. Budi Santoso sebesar Rp 199.000, tanggal 19 Juli 2026 jam 14:00"
+                rows="3"
+                value={bukti}
+                onChange={(e) => setBukti(e.target.value)}
+                required
+                style={{ resize: 'none' }}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Kode Referral Rekomendasi (Opsional)</span>
+                {data.isFirstPaymentClaimed && (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah mengklaim sebelumnya</span>
+                )}
+              </label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Masukkan username/kode referral guru lain"
+                value={referralInput}
+                onChange={(e) => setReferralInput(e.target.value)}
+                disabled={data.isFirstPaymentClaimed}
+              />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                *Hanya berlaku untuk konfirmasi pembayaran pertama kali. Kosongkan jika tidak ada.
+              </span>
+            </div>
+
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ width: '100%', padding: '12px', marginTop: '4px' }}
+              disabled={submittingPayment}
+            >
+              {submittingPayment ? 'Memproses Konfirmasi...' : '✉️ Kirim Konfirmasi Pembayaran'}
+            </button>
+          </form>
+        </div>
+
+        {/* Gift Redeem Section */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>🎁 Tukar Hadiah (Redeem)</h4>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              Pilih paket penukaran hadiah di bawah ini menggunakan poin saldo referral Anda.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {rewardList.map((reward) => (
+              <div 
+                key={reward.id} 
+                className="glass-card" 
+                style={{ 
+                  padding: '14px 18px', 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  gap: '16px',
+                  border: data.balance >= reward.price ? '1px solid rgba(99, 102, 241, 0.2)' : '1px solid var(--border-color)',
+                  opacity: data.balance >= reward.price ? 1 : 0.8
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: '800', fontSize: '0.88rem' }}>{reward.name}</span>
+                    <span 
+                      style={{ 
+                        fontSize: '0.72rem', 
+                        backgroundColor: data.balance >= reward.price ? 'var(--primary-glow)' : 'var(--bg-tertiary)', 
+                        color: data.balance >= reward.price ? 'var(--primary)' : 'var(--text-muted)', 
+                        padding: '2px 8px', 
+                        borderRadius: '12px', 
+                        fontWeight: '700' 
+                      }}
+                    >
+                      {reward.price} Poin
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                    {reward.desc}
+                  </p>
+                </div>
+                <button 
+                  onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
+                  className={`btn ${data.balance >= reward.price ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '8px 16px', fontSize: '0.78rem', minWidth: '75px' }}
+                  disabled={data.balance < reward.price || redeemingId !== null}
+                >
+                  {redeemingId === reward.id ? 'Memproses...' : 'Tukar'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Points History Log Table */}
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: '0 0 16px 0' }}>📋 Riwayat Poin</h4>
+        
+        <div style={{ overflowX: 'auto' }}>
+          {data.history.length === 0 ? (
+            <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              Belum ada riwayat transaksi poin masuk atau keluar.
+            </div>
+          ) : (
+            <table className="premium-table" style={{ margin: 0, width: '100%' }}>
+              <thead>
+                <tr>
+                  <th style={{ width: '20%' }}>Tanggal</th>
+                  <th style={{ width: '15%', textAlign: 'center' }}>Jumlah</th>
+                  <th style={{ width: '65%' }}>Deskripsi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.history.map((log, idx) => (
+                  <tr key={idx}>
+                    <td style={{ fontSize: '0.78rem' }}>
+                      {new Date(log.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      <span style={{ display: 'block', fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {new Date(log.date).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center', fontWeight: '800', color: log.points > 0 ? 'var(--success)' : 'var(--danger)', fontSize: '0.9rem' }}>
+                      {log.points > 0 ? `+${log.points}` : log.points}
+                    </td>
+                    <td style={{ fontSize: '0.82rem', fontWeight: '600' }}>
+                      {log.description}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+    </div>
+  );
+}
