@@ -420,7 +420,8 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
             }`,
             boxShadow: scanStatus === 'success' ? '0 0 20px rgba(16, 185, 129, 0.25)' : 
                        scanStatus === 'error' ? '0 0 20px rgba(239, 68, 68, 0.25)' : 'none',
-            transition: 'all 0.3s ease'
+            transition: 'all 0.3s ease',
+            flexShrink: 0
           }}
         >
           {/* Scanner element */}
