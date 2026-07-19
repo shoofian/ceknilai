@@ -299,15 +299,13 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           padding: '24px',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
           maxHeight: '90vh',
-          overflowY: 'auto'
+          overflowY: 'auto',
+          display: 'block' // Use block layout instead of flex to prevent vertical squishing
         }}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '14px', marginBottom: '16px' }}>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
               📷 Presensi QR Code Siswa
@@ -344,7 +342,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         </div>
 
         {/* Configuration Selectors */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
           {/* Pertemuan selector */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
@@ -408,9 +406,9 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         <div 
           style={{ 
             position: 'relative', 
-            width: '280px', 
-            height: '280px', 
-            margin: '0 auto',
+            width: 'min(100%, 320px)', 
+            height: 'min(calc(100vw - 80px), 320px)', 
+            margin: '0 auto 16px auto',
             aspectRatio: '1/1', 
             borderRadius: '12px', 
             overflow: 'hidden',
@@ -504,7 +502,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         </div>
 
         {/* Scan History Log */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minHeight: '120px', maxHeight: '200px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', height: '180px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
               Riwayat Sesi Ini ({scanHistory.length} siswa)
