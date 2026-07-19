@@ -16,6 +16,12 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
   const html5QrCodeRef = useRef(null);
   const cooldownRef = useRef(false);
   const cooldownTimerRef = useRef(null);
+  const activePertemuanIdRef = useRef('');
+
+  // Keep meeting ID in sync with ref to avoid camera restarts on dropdown changes
+  useEffect(() => {
+    activePertemuanIdRef.current = activePertemuanId;
+  }, [activePertemuanId]);
 
   // Auto-select the latest meeting
   useEffect(() => {
@@ -106,13 +112,13 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
 
   // Main QR scan callback
   const handleScanResult = (decodedText) => {
-    if (cooldownRef.current || !activePertemuanId) return;
+    if (cooldownRef.current || !activePertemuanIdRef.current) return;
 
     const scannedNisn = decodedText.trim();
     const student = kelas?.siswa?.find(s => s.nisn === scannedNisn || s.id === scannedNisn);
 
     if (student) {
-      const isAlreadyPresent = student.nilai[`_presensi_${activePertemuanId}`] === 'H';
+      const isAlreadyPresent = student.nilai[`_presensi_${activePertemuanIdRef.current}`] === 'H';
       
       playBeep(true);
       setLastScannedStudent({
@@ -137,7 +143,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
       });
 
       // Invoke attendance update callback
-      onMarkPresence(student.nisn, activePertemuanId, 'H');
+      onMarkPresence(student.nisn, activePertemuanIdRef.current, 'H');
 
       // Trigger 3s cooldown for success
       startCooldown(3);
@@ -156,113 +162,106 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
     }
   };
 
-  // Camera scanner manager
-  const startCamera = async (cameraId) => {
-    if (!html5QrCodeRef.current) return;
-    
-    if (html5QrCodeRef.current.isScanning) {
-      try {
-        await html5QrCodeRef.current.stop();
-      } catch (e) {
-        console.error("Stop scanning error during restart:", e);
-      }
-    }
-
-    try {
-      setIsScanning(true);
-      setErrorMsg('');
-      await html5QrCodeRef.current.start(
-        cameraId || { facingMode: "environment" },
-        {
-          fps: 15,
-          qrbox: (width, height) => {
-            const size = Math.min(width, height) * 0.65;
-            return { width: size, height: size };
-          }
-        },
-        (decodedText) => {
-          handleScanResult(decodedText);
-        },
-        (errorMessage) => {
-          // Ignore verbose scanner framing logs
-        }
-      );
-    } catch (err) {
-      console.error("Failed to start camera scan:", err);
-      setErrorMsg("Kamera tidak dapat diakses. Pastikan izin kamera telah diberikan.");
-      setIsScanning(false);
-    }
-  };
-
-  // Initialize html5-qrcode instance
+  // Unified useEffect to handle scanner lifecycle
   useEffect(() => {
     let isMounted = true;
+    let html5QrCode = null;
 
-    const initScanner = async () => {
+    const runScanner = async () => {
+      if (!isOpen || !selectedCameraId) return;
+
+      // Give a 300ms delay to let the DOM element 'reader' render and ensure
+      // any previous instances have finished stopping and cleaning up.
+      await new Promise(resolve => setTimeout(resolve, 300));
+      if (!isMounted) return;
+
+      const element = document.getElementById("reader");
+      if (!element) return;
+
       try {
         const { Html5Qrcode } = await import('html5-qrcode');
         if (!isMounted) return;
 
-        const html5QrCode = new Html5Qrcode("reader");
+        // Clear target DOM container to ensure no leftovers from previous runs
+        element.innerHTML = '';
+
+        html5QrCode = new Html5Qrcode("reader");
         html5QrCodeRef.current = html5QrCode;
 
-        // Get list of cameras
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length > 0) {
-          setCameras(devices);
-          // Set default camera: environment/back camera if available
-          const backCam = devices.find(device => 
-            device.label.toLowerCase().includes('back') || 
-            device.label.toLowerCase().includes('rear') || 
-            device.label.toLowerCase().includes('environment')
-          );
-          const defaultCamId = backCam ? backCam.id : devices[0].id;
-          setSelectedCameraId(defaultCamId);
-        } else {
-          // If no cameras found, fallback to environment constraint directly
-          setSelectedCameraId('environment');
+        // Fetch cameras list if we don't have it yet
+        if (cameras.length === 0) {
+          try {
+            const devices = await Html5Qrcode.getCameras();
+            if (devices && devices.length > 0 && isMounted) {
+              setCameras(devices);
+              // Pick default back camera if available
+              const backCam = devices.find(device => 
+                device.label.toLowerCase().includes('back') || 
+                device.label.toLowerCase().includes('rear') || 
+                device.label.toLowerCase().includes('environment')
+              );
+              const defaultCamId = backCam ? backCam.id : devices[0].id;
+              setSelectedCameraId(defaultCamId);
+              return; // Let the next render cycle start with the selected camera ID
+            }
+          } catch (e) {
+            console.warn("Could not load camera list:", e);
+          }
         }
+
+        setIsScanning(true);
+        setErrorMsg('');
+
+        const cameraConfig = selectedCameraId === 'environment' 
+          ? { facingMode: "environment" } 
+          : selectedCameraId;
+
+        await html5QrCode.start(
+          cameraConfig,
+          {
+            fps: 15,
+            qrbox: (width, height) => {
+              const size = Math.min(width, height) * 0.65;
+              return { width: size, height: size };
+            }
+          },
+          (decodedText) => {
+            handleScanResult(decodedText);
+          },
+          (errorMessage) => {
+            // Ignore verbose error messages
+          }
+        );
       } catch (err) {
-        console.error("Error setting up Html5Qrcode:", err);
-        setErrorMsg("Sistem pemindai gagal dimuat.");
+        console.error("Scanner startup error:", err);
+        if (isMounted) {
+          setErrorMsg("Kamera tidak dapat diakses atau sedang digunakan.");
+          setIsScanning(false);
+        }
       }
     };
 
     if (isOpen) {
-      initScanner();
+      runScanner();
       setScanHistory([]);
     }
 
     return () => {
       isMounted = false;
-      if (html5QrCodeRef.current) {
-        const stopScanning = async () => {
-          if (html5QrCodeRef.current.isScanning) {
+      if (html5QrCode) {
+        const stopScanner = async () => {
+          if (html5QrCode.isScanning) {
             try {
-              await html5QrCodeRef.current.stop();
+              await html5QrCode.stop();
             } catch (e) {
-              console.error("Error stopping scanner during unmount:", e);
+              console.error("Error stopping scanner during cleanup:", e);
             }
           }
         };
-        stopScanning();
+        stopScanner();
       }
     };
-  }, [isOpen]);
-
-  // Start scanning when camera, meeting, or scanner instance changes
-  useEffect(() => {
-    if (isOpen && html5QrCodeRef.current && selectedCameraId && activePertemuanId) {
-      startCamera(selectedCameraId === 'environment' ? { facingMode: "environment" } : selectedCameraId);
-    }
-
-    return () => {
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        html5QrCodeRef.current.stop().catch(err => console.error("Error stopping scanner:", err));
-        setIsScanning(false);
-      }
-    };
-  }, [isOpen, selectedCameraId, activePertemuanId]);
+  }, [isOpen, selectedCameraId]);
 
   if (!isOpen) return null;
 
