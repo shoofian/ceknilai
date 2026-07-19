@@ -443,7 +443,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           {/* Visual Overlay: Scanner targeting bracket overlay when active */}
           {isScanning && (
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: '80%', height: '80%', border: '2px solid rgba(255, 255, 255, 0.25)', borderRadius: '12px', position: 'relative' }}>
+              <div style={{ height: '80%', aspectRatio: '1/1', border: '2px solid rgba(255, 255, 255, 0.25)', borderRadius: '12px', position: 'relative' }}>
                 {/* Scanner Laser effect */}
                 <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', backgroundColor: 'rgba(59, 130, 246, 0.8)', boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)', animation: 'scanline 2s ease-in-out infinite' }} />
                 
