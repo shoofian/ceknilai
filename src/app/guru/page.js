@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -88,9 +88,31 @@ export default function GuruDashboard() {
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       
       {/* Welcome banner */}
-      <div className="page-title-section">
-        <h1 className="page-title">Selamat Datang, Guru!</h1>
-        <p className="page-subtitle">Berikut adalah statistik pengajaran dan akses cepat manajemen kelas Anda hari ini.</p>
+      <div className="page-title-section" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+        <div>
+          <h1 className="page-title">Selamat Datang, Guru!</h1>
+          <p className="page-subtitle">Berikut adalah statistik pengajaran dan akses cepat manajemen kelas Anda hari ini.</p>
+        </div>
+        <Link 
+          href="/guru/referral"
+          className="btn animate-pulse"
+          style={{
+            background: "linear-gradient(135deg, #eab308 0%, #ca8a04 100%)",
+            color: "#000000",
+            fontWeight: "800",
+            fontSize: "0.85rem",
+            padding: "10px 18px",
+            borderRadius: "999px",
+            boxShadow: "0 4px 15px rgba(234, 179, 8, 0.25)",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            textDecoration: "none"
+          }}
+        >
+          👑 Cek Masa Aktif / Langganan &rarr;
+        </Link>
       </div>
 
       {/* Stats Cards Grid */}
