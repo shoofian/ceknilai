@@ -14,7 +14,7 @@ const REWARDS = {
   free_1m: { name: 'Gratis 1 Bulan Premium', price: 20 },
   free_3m: { name: 'Gratis 3 Bulan Premium', price: 50 },
   free_12m: { name: 'Gratis 1 Tahun Premium', price: 150 },
-  merch_tshirt: { name: 'Kaos CekNilai Eksklusif', price: 100 }
+  cash_1m: { name: 'Uang Tunai Rp 1.000.000', price: 7000 }
 };
 
 export async function POST(request) {

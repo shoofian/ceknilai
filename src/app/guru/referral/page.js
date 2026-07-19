@@ -135,7 +135,8 @@ export default function ReferralPage() {
   const rewardList = [
     { id: 'free_1m', name: '🎁 Gratis 1 Bulan Premium', price: 20, desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh.' },
     { id: 'free_3m', name: '🔥 Gratis 3 Bulan Premium', price: 50, desc: 'Dapatkan akses kelas premium selama 3 bulan tanpa biaya tambahan.' },
-    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 150, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' }
+    { id: 'free_12m', name: '👑 Gratis 1 Tahun Premium', price: 150, desc: 'Akses penuh premium selama setahun penuh. Hadiah terbaik untuk guru setia.' },
+    { id: 'cash_1m', name: '💵 Uang Tunai Rp 1.000.000', price: 7000, desc: 'Tukarkan poin Anda dengan uang tunai Rp 1.000.000 (ditransfer langsung ke rekening bank Anda setelah divalidasi admin).' }
   ];
 
   if (loading && data.referralCode === '') {
@@ -291,8 +292,8 @@ export default function ReferralPage() {
                 <li>
                   <strong>Poin Berdasarkan Paket</strong>:
                   <ul style={{ paddingLeft: '20px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <li>🚀 <strong>Paket Langganan Tahunan (Rp 159.000)</strong>: Mendapatkan <strong>100 Poin</strong> (setara Rp 15.000) untuk masing-masing guru.</li>
-                    <li>📦 <strong>Paket Langganan Bulanan (Rp 19.000)</strong>: Mendapatkan <strong>10 Poin</strong> (setara Rp 1.500) untuk masing-masing guru.</li>
+                    <li>🚀 <strong>Paket Langganan Tahunan (Rp 159.000)</strong>: Mendapatkan <strong>100 Poin</strong> untuk masing-masing guru.</li>
+                    <li>📦 <strong>Paket Langganan Bulanan (Rp 19.000)</strong>: Mendapatkan <strong>10 Poin</strong> untuk masing-masing guru.</li>
                   </ul>
                 </li>
                 <li>
@@ -430,8 +431,8 @@ export default function ReferralPage() {
                 iconEmoji = '👑';
                 themeColor = '#eab308'; // Gold
                 cardBg = 'linear-gradient(to bottom right, var(--bg-secondary), rgba(234, 179, 8, 0.03))';
-              } else if (reward.id === 'merch_tshirt') {
-                iconEmoji = '👕';
+              } else if (reward.id === 'cash_1m') {
+                iconEmoji = '💵';
                 themeColor = '#8b5cf6'; // Purple
               }
 
