@@ -10,13 +10,13 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
   const [errorMsg, setErrorMsg] = useState('');
   const [scanStatus, setScanStatus] = useState('idle'); // 'idle' | 'success' | 'error'
   const [lastScannedStudent, setLastScannedStudent] = useState(null);
-  const [cooldownTime, setCooldownTime] = useState(0);
   const [scanHistory, setScanHistory] = useState([]);
 
   const html5QrCodeRef = useRef(null);
-  const cooldownRef = useRef(false);
-  const cooldownTimerRef = useRef(null);
   const activePertemuanIdRef = useRef('');
+  const lastScannedNisnRef = useRef('');
+  const lastScannedTimeRef = useRef(0);
+  const toastTimerRef = useRef(null);
 
   // Keep meeting ID in sync with ref to avoid camera restarts on dropdown changes
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
   // Clean up timers on unmount
   useEffect(() => {
     return () => {
-      if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
 
@@ -89,32 +89,18 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
     }
   };
 
-  // Cooldown timer handler
-  const startCooldown = (seconds) => {
-    cooldownRef.current = true;
-    setCooldownTime(seconds);
-
-    if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
-
-    let remaining = seconds;
-    cooldownTimerRef.current = setInterval(() => {
-      remaining -= 1;
-      setCooldownTime(remaining);
-      
-      if (remaining <= 0) {
-        clearInterval(cooldownTimerRef.current);
-        cooldownRef.current = false;
-        setScanStatus('idle');
-        setLastScannedStudent(null);
-      }
-    }, 1000);
-  };
-
   // Main QR scan callback
   const handleScanResult = (decodedText) => {
-    if (cooldownRef.current || !activePertemuanIdRef.current) return;
+    if (!activePertemuanIdRef.current) return;
 
     const scannedNisn = decodedText.trim();
+    const now = Date.now();
+
+    // Ignore duplicate scans of the same student within 3 seconds
+    if (scannedNisn === lastScannedNisnRef.current && (now - lastScannedTimeRef.current) < 3000) {
+      return;
+    }
+
     const student = kelas?.siswa?.find(s => s.nisn === scannedNisn || s.id === scannedNisn);
 
     if (student) {
@@ -129,9 +115,12 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
       });
       setScanStatus('success');
 
+      // Update refs for same-card deduplication
+      lastScannedNisnRef.current = scannedNisn;
+      lastScannedTimeRef.current = now;
+
       // Add to session history
       setScanHistory(prev => {
-        // Prevent duplicate listing in session history
         const exists = prev.some(h => h.nisn === student.nisn);
         if (exists) return prev;
         return [{
@@ -144,9 +133,6 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
 
       // Invoke attendance update callback
       onMarkPresence(student.nisn, activePertemuanIdRef.current, 'H');
-
-      // Trigger 3s cooldown for success
-      startCooldown(3);
     } else {
       playBeep(false);
       setLastScannedStudent({
@@ -157,9 +143,17 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
       });
       setScanStatus('error');
 
-      // Cooldown 1.5 seconds for error to let them scan the next card
-      startCooldown(1.5);
+      // Also deduplicate error scans so it doesn't buzz repeatedly
+      lastScannedNisnRef.current = scannedNisn;
+      lastScannedTimeRef.current = now;
     }
+
+    // Auto-clear the floating toast text after 2.5 seconds
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      setLastScannedStudent(null);
+      setScanStatus('idle');
+    }, 2500);
   };
 
   // Fetch cameras list when modal opens
@@ -193,6 +187,10 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
     if (isOpen) {
       fetchCameras();
       setScanHistory([]);
+      lastScannedNisnRef.current = '';
+      lastScannedTimeRef.current = 0;
+      setLastScannedStudent(null);
+      setScanStatus('idle');
     }
   }, [isOpen]);
 
@@ -232,9 +230,10 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         await html5QrCode.start(
           cameraConfig,
           {
-            fps: 15,
+            fps: 24, // Higher scan rate for faster detection
             qrbox: (width, height) => {
-              const size = Math.min(width, height) * 0.65;
+              // Increase box to 85% of view area to capture codes easily
+              const size = Math.min(width, height) * 0.85;
               return { width: size, height: size };
             }
           },
@@ -442,9 +441,9 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           )}
 
           {/* Visual Overlay: Scanner targeting bracket overlay when active */}
-          {isScanning && scanStatus === 'idle' && (
+          {isScanning && (
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: '60%', height: '60%', border: '2px solid rgba(255, 255, 255, 0.3)', borderRadius: '12px', position: 'relative' }}>
+              <div style={{ width: '80%', height: '80%', border: '2px solid rgba(255, 255, 255, 0.25)', borderRadius: '12px', position: 'relative' }}>
                 {/* Scanner Laser effect */}
                 <div style={{ position: 'absolute', left: 0, right: 0, height: '2px', backgroundColor: 'rgba(59, 130, 246, 0.8)', boxShadow: '0 0 8px rgba(59, 130, 246, 0.8)', animation: 'scanline 2s ease-in-out infinite' }} />
                 
@@ -457,60 +456,45 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
             </div>
           )}
 
-          {/* Cooldown Overlay */}
-          {cooldownTime > 0 && lastScannedStudent && (
+          {/* Floating Toast Status Banner inside the viewfinder */}
+          {lastScannedStudent && (
             <div 
               style={{ 
                 position: 'absolute', 
-                inset: 0, 
-                backgroundColor: 'rgba(15, 23, 42, 0.85)', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                gap: '12px',
+                bottom: '16px', 
+                left: '16px', 
+                right: '16px', 
+                backgroundColor: lastScannedStudent.notFound 
+                  ? 'rgba(239, 68, 68, 0.95)' 
+                  : (lastScannedStudent.alreadyPresent ? 'rgba(245, 158, 11, 0.95)' : 'rgba(16, 185, 129, 0.95)'), 
                 color: '#fff',
-                padding: '24px',
+                padding: '10px 14px',
+                borderRadius: '10px',
                 textAlign: 'center',
-                animation: 'fadeIn 0.2s'
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+                backdropFilter: 'blur(4px)',
+                animation: 'fadeInUp 0.2s ease-out',
+                zIndex: 10,
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px'
               }}
             >
               {lastScannedStudent.notFound ? (
                 <>
-                  <div style={{ fontSize: '3rem', animation: 'shake 0.4s' }}>❌</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--danger)' }}>SISWA TIDAK TERDAFTAR</div>
-                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace' }}>ID: {lastScannedStudent.nisn}</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: '800' }}>❌ SISWA TIDAK TERDAFTAR</div>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace' }}>ID: {lastScannedStudent.nisn}</div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: '3rem', animation: 'bounce 0.5s' }}>🟢</div>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--success)' }}>PRESENSI BERHASIL!</div>
-                  <div style={{ fontSize: '1rem', fontWeight: 700 }}>{lastScannedStudent.nama}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace' }}>NISN: {lastScannedStudent.nisn}</div>
-                  {lastScannedStudent.alreadyPresent && (
-                    <div style={{ fontSize: '0.75rem', backgroundColor: 'rgba(245, 158, 11, 0.2)', color: 'var(--warning)', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                      Sudah Tercatat Hadir Sebelumnya
-                    </div>
-                  )}
+                  <div style={{ fontSize: '0.85rem', fontWeight: '800' }}>
+                    {lastScannedStudent.alreadyPresent ? '⚠️ SUDAH TERCATAT' : '🟢 KEHADIRAN TERCATAT'}
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: '800' }}>{lastScannedStudent.nama}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.8)', fontFamily: 'monospace' }}>NISN: {lastScannedStudent.nisn}</div>
                 </>
               )}
-
-              {/* Progress Cooldown Countdown */}
-              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 'bold' }}>
-                  Siap memindai dalam {cooldownTime} detik...
-                </span>
-                <div style={{ width: '120px', height: '4px', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div 
-                    style={{ 
-                      width: `${(cooldownTime / (lastScannedStudent.notFound ? 1.5 : 3)) * 100}%`, 
-                      height: '100%', 
-                      backgroundColor: lastScannedStudent.notFound ? 'var(--danger)' : 'var(--success)',
-                      transition: 'width 1s linear'
-                    }} 
-                  />
-                </div>
-              </div>
             </div>
           )}
         </div>
@@ -587,7 +571,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           <button
             type="button"
             onClick={() => {
-              if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+              if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
               onClose();
             }}
             className="btn btn-secondary"
@@ -616,6 +600,10 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         @keyframes bounce {
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.2); }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
