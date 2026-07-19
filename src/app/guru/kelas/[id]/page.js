@@ -160,70 +160,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [recentScannedStudents, setRecentScannedStudents] = useState([]);
   const prevPresenceRef = useRef({});
 
-  useEffect(() => {
-    if (!realtimeSyncActive || !kelas?.id || activeTab !== 'presensi') return;
 
-    const meetings = kelas?.skemaPenilaian?.pertemuan || [];
-    if (meetings.length === 0) return;
-    const latestMeeting = meetings[meetings.length - 1];
-    
-    // Initialize previous presence state mapping
-    const initialMap = {};
-    (kelas?.siswa || []).forEach(s => {
-      initialMap[s.nisn] = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
-    });
-    prevPresenceRef.current = initialMap;
-
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/kelas/${kelas.id}`);
-        if (response.ok) {
-          const freshKelas = await response.json();
-          
-          // Find newly present students
-          const newScanned = [];
-          (freshKelas.siswa || []).forEach(s => {
-            const wasPresent = prevPresenceRef.current[s.nisn];
-            const isPresent = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
-            
-            if (!wasPresent && isPresent) {
-              const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              newScanned.push({ nama: s.nama, nisn: s.nisn, time: nowTime });
-            }
-            
-            // Update ref
-            prevPresenceRef.current[s.nisn] = isPresent;
-          });
-
-          if (newScanned.length > 0) {
-            // Play a sweet beep sound on the teacher's laptop to notify them of success!
-            try {
-              const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-              const osc = audioCtx.createOscillator();
-              const gain = audioCtx.createGain();
-              osc.connect(gain);
-              gain.connect(audioCtx.destination);
-              osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
-              gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-              osc.start();
-              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-              osc.stop(audioCtx.currentTime + 0.13);
-            } catch (e) {}
-
-            // Append newly scanned students to the front
-            setRecentScannedStudents(prev => [...newScanned, ...prev]);
-          }
-
-          // Update main state so the attendance table on screen matches the scanned data
-          setKelas(freshKelas);
-        }
-      } catch (err) {
-        console.error("Failed to poll live attendance:", err);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [realtimeSyncActive, kelas?.id, kelas?.skemaPenilaian?.pertemuan, activeTab]);
 
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
@@ -463,6 +400,72 @@ export default function DetailKelas({ params: paramsPromise }) {
       sessionStorage.setItem(`activeTab_${classId}`, activeTab);
     }
   }, [activeTab, classId]);
+
+  // Monitor live attendance in the background (only runs when looking at 'presensi' tab)
+  useEffect(() => {
+    if (!realtimeSyncActive || !kelas?.id || activeTab !== 'presensi') return;
+
+    const meetings = kelas?.skemaPenilaian?.pertemuan || [];
+    if (meetings.length === 0) return;
+    const latestMeeting = meetings[meetings.length - 1];
+    
+    // Initialize previous presence state mapping
+    const initialMap = {};
+    (kelas?.siswa || []).forEach(s => {
+      initialMap[s.nisn] = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
+    });
+    prevPresenceRef.current = initialMap;
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/kelas/${kelas.id}`);
+        if (response.ok) {
+          const freshKelas = await response.json();
+          
+          // Find newly present students
+          const newScanned = [];
+          (freshKelas.siswa || []).forEach(s => {
+            const wasPresent = prevPresenceRef.current[s.nisn];
+            const isPresent = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
+            
+            if (!wasPresent && isPresent) {
+              const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+              newScanned.push({ nama: s.nama, nisn: s.nisn, time: nowTime });
+            }
+            
+            // Update ref
+            prevPresenceRef.current[s.nisn] = isPresent;
+          });
+
+          if (newScanned.length > 0) {
+            // Play a sweet beep sound on the teacher's laptop to notify them of success!
+            try {
+              const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+              const osc = audioCtx.createOscillator();
+              const gain = audioCtx.createGain();
+              osc.connect(gain);
+              gain.connect(audioCtx.destination);
+              osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
+              gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+              osc.start();
+              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+              osc.stop(audioCtx.currentTime + 0.13);
+            } catch (e) {}
+
+            // Append newly scanned students to the front
+            setRecentScannedStudents(prev => [...newScanned, ...prev]);
+          }
+
+          // Update main state so the attendance table on screen matches the scanned data
+          setKelas(freshKelas);
+        }
+      } catch (err) {
+        console.error("Failed to poll live attendance:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [realtimeSyncActive, kelas?.id, kelas?.skemaPenilaian?.pertemuan, activeTab]);
 
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
