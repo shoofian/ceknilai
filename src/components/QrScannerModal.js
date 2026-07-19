@@ -317,7 +317,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
           </div>
           <button
             onClick={() => {
-              if (cooldownTimerRef.current) clearInterval(cooldownTimerRef.current);
+              if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
               onClose();
             }}
             style={{
