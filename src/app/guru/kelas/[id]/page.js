@@ -445,17 +445,21 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== "undefined") {
+  const [activeTab, setActiveTab] = useState('nilai');
+
+  // Load activeTab from sessionStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && classId) {
       const saved = sessionStorage.getItem(`activeTab_${classId}`);
-      return saved || 'nilai';
+      if (saved) {
+        setActiveTab(saved);
+      }
     }
-    return 'nilai';
-  });
+  }, [classId]);
 
   // Persist activeTab on refresh
   useEffect(() => {
-    if (typeof window !== "undefined" && activeTab) {
+    if (typeof window !== "undefined" && activeTab && classId) {
       sessionStorage.setItem(`activeTab_${classId}`, activeTab);
     }
   }, [activeTab, classId]);
