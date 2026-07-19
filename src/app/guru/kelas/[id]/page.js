@@ -157,6 +157,12 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
   const [configModalTab, setConfigModalTab] = useState('aspek'); // 'aspek' | 'status'
 
+  // States untuk Hub Modal Operasi Data
+  const [kelolaSiswaModalOpen, setKelolaSiswaModalOpen] = useState(false);
+  const [kelolaSiswaTab, setKelolaSiswaTab] = useState('tambah'); // 'tambah' | 'ekspor' | 'impor'
+  const [cetakEksporModalOpen, setCetakEksporModalOpen] = useState(false);
+  const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor'
+
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = sessionStorage.getItem("panelKontrolExpanded");
@@ -3260,63 +3266,18 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>🛠️ Operasi Data</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
                   <button 
-                    onClick={handleOpenAddSiswa} 
-                    className="btn btn-secondary" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
-                    disabled={isLocked}
-                  >
-                    👤 Tambah Siswa
-                  </button>
-                  <button 
-                    onClick={() => setQrCardModalOpen(true)}
+                    onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
                     className="btn btn-secondary" 
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
                   >
-                    📇 Cetak Kartu & QR
+                    📊 Kelola Data Siswa
                   </button>
                   <button 
-                    onClick={downloadExcelTemplate} 
+                    onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
                     className="btn btn-secondary" 
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
                   >
-                    📥 Ekspor Data Siswa
-                  </button>
-                  
-                  <label
-                    className={`btn btn-secondary ${isLocked ? "disabled" : ""}`}
-                    style={{
-                      display: "inline-flex", alignItems: "center", gap: "6px",
-                      fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px",
-                      cursor: isLocked ? "not-allowed" : "pointer",
-                      opacity: isLocked ? 0.5 : 1,
-                      margin: 0
-                    }}
-                  >
-                    <span>📤</span> Impor Data Siswa
-                    <input
-                      type="file"
-                      accept=".xlsx, .xls"
-                      style={{ display: "none" }}
-                      onChange={handleExcelUpload}
-                      disabled={isLocked}
-                    />
-                  </label>
-
-                  <button 
-                    onClick={() => setIsPreviewOpen(true)}
-                    className="btn btn-secondary" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
-                  >
-                    🖨️ Cetak Laporan
-                  </button>
-
-                  <button 
-                    onClick={() => setRaporModalOpen(true)} 
-                    disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0} 
-                    className="btn btn-primary" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
-                  >
-                    📋 Ekspor ke E-Rapor
+                    🖨️ Cetak & Ekspor
                   </button>
                 </div>
               </div>
@@ -3796,9 +3757,8 @@ export default function DetailKelas({ params: paramsPromise }) {
             {/* Grup Operasi Data */}
             <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
             {[
-              { icon: "👤", label: "Tambah Siswa Manual", onClick: () => { handleOpenAddSiswa(); setFabOpen(false); }, disabled: kelas.archived || isLocked },
-              { icon: "📥", label: "Ekspor Data Siswa (.xlsx)", onClick: () => { downloadExcelTemplate(); setFabOpen(false); }, disabled: false },
-              { icon: "🔌", label: "Ekspor ke E-Rapor", onClick: () => { setRaporModalOpen(true); setFabOpen(false); }, disabled: kelas.kolomNilai.length === 0 || kelas.siswa.length === 0, accent: true },
+              { icon: "📊", label: "Kelola Data Siswa", onClick: () => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); setFabOpen(false); }, disabled: false },
+              { icon: "🖨️", label: "Cetak & Ekspor", onClick: () => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); setFabOpen(false); }, disabled: false },
             ].map((item) => (
               <button
                 key={item.label}
@@ -4928,6 +4888,252 @@ export default function DetailKelas({ params: paramsPromise }) {
         onClose={() => setQrCardModalOpen(false)}
         kelas={kelas}
       />
+
+      {/* ============= MODAL HUB: KELOLA DATA SISWA ============= */}
+      {kelolaSiswaModalOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: "16px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "520px", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", padding: "20px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.3rem" }}>📊</span>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Kelola Data Siswa</h3>
+              </div>
+              <button onClick={() => setKelolaSiswaModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            {/* Tab Navigation */}
+            <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", margin: "16px 24px 0 24px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+              <button
+                onClick={() => setKelolaSiswaTab('tambah')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: kelolaSiswaTab === 'tambah' ? "var(--primary)" : "transparent",
+                  color: kelolaSiswaTab === 'tambah' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                👤 Tambah
+              </button>
+              <button
+                onClick={() => setKelolaSiswaTab('impor')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: kelolaSiswaTab === 'impor' ? "var(--primary)" : "transparent",
+                  color: kelolaSiswaTab === 'impor' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                📤 Impor
+              </button>
+              <button
+                onClick={() => setKelolaSiswaTab('ekspor')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: kelolaSiswaTab === 'ekspor' ? "var(--primary)" : "transparent",
+                  color: kelolaSiswaTab === 'ekspor' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                📥 Ekspor
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", minHeight: "180px", justifyContent: "space-between" }}>
+              {kelolaSiswaTab === 'tambah' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Tambah biodata siswa satu per satu ke dalam kelas ini secara manual (Nama, NISN, Rombel, Jenis Kelamin).
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={() => {
+                        setKelolaSiswaModalOpen(false);
+                        handleOpenAddSiswa();
+                      }}
+                      className="btn btn-primary"
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
+                      disabled={isLocked}
+                    >
+                      👤 Tambah Siswa Baru
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {kelolaSiswaTab === 'impor' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Unggah daftar nama dan data siswa secara massal menggunakan file format Excel (.xlsx / .xls).
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <label
+                      className={`btn btn-primary ${isLocked ? "disabled" : ""}`}
+                      style={{
+                        display: "inline-flex", alignItems: "center", gap: "8px",
+                        fontSize: "0.85rem", padding: "10px 24px", borderRadius: "8px",
+                        cursor: isLocked ? "not-allowed" : "pointer",
+                        opacity: isLocked ? 0.5 : 1,
+                        margin: 0, fontWeight: "700"
+                      }}
+                    >
+                      <span>📤</span> Unggah Berkas Excel (.xlsx)
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          setKelolaSiswaModalOpen(false);
+                          handleExcelUpload(e);
+                        }}
+                        disabled={isLocked}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {kelolaSiswaTab === 'ekspor' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Unduh seluruh data siswa yang terdaftar di kelas ini dalam bentuk file spreadsheet Excel (.xlsx).
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={() => {
+                        setKelolaSiswaModalOpen(false);
+                        downloadExcelTemplate();
+                      }}
+                      className="btn btn-primary"
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
+                    >
+                      📥 Ekspor File Excel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "12px" }}>
+                <button onClick={() => setKelolaSiswaModalOpen(false)} className="btn btn-secondary" style={{ padding: "6px 16px", fontSize: "0.82rem" }}>Tutup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============= MODAL HUB: CETAK & EKSPOR ============= */}
+      {cetakEksporModalOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: "16px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "520px", display: "flex", flexDirection: "column", padding: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", padding: "20px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "1.3rem" }}>🖨️</span>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Cetak & Ekspor</h3>
+              </div>
+              <button onClick={() => setCetakEksporModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+
+            {/* Tab Navigation */}
+            <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", margin: "16px 24px 0 24px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+              <button
+                onClick={() => setCetakEksporTab('laporan')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: cetakEksporTab === 'laporan' ? "var(--primary)" : "transparent",
+                  color: cetakEksporTab === 'laporan' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                🖨️ Laporan
+              </button>
+              <button
+                onClick={() => setCetakEksporTab('kartu')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: cetakEksporTab === 'kartu' ? "var(--primary)" : "transparent",
+                  color: cetakEksporTab === 'kartu' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                📇 Kartu QR
+              </button>
+              <button
+                onClick={() => setCetakEksporTab('erapor')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: cetakEksporTab === 'erapor' ? "var(--primary)" : "transparent",
+                  color: cetakEksporTab === 'erapor' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                📋 E-Rapor
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", minHeight: "180px", justifyContent: "space-between" }}>
+              {cetakEksporTab === 'laporan' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Cetak lembar nilai siswa secara fisik atau simpan sebagai dokumen PDF dengan layout rapi dan profesional.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={() => {
+                        setCetakEksporModalOpen(false);
+                        setIsPreviewOpen(true);
+                      }}
+                      className="btn btn-primary"
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
+                    >
+                      🖨️ Cetak Lembar Laporan
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {cetakEksporTab === 'kartu' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Buat dan cetak kartu presensi siswa yang berisi nama, NISN, dan QR Code unik untuk sistem pemindaian.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={() => {
+                        setCetakEksporModalOpen(false);
+                        setQrCardModalOpen(true);
+                      }}
+                      className="btn btn-primary"
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
+                    >
+                      📇 Cetak Kartu Presensi & QR
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {cetakEksporTab === 'erapor' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Format dan ekspor nilai kelas langsung ke format data e-Rapor resmi (Kemendikbud).
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={() => {
+                        setCetakEksporModalOpen(false);
+                        setRaporModalOpen(true);
+                      }}
+                      className="btn btn-primary"
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
+                      disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0}
+                    >
+                      📋 Integrasi ke E-Rapor
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "12px" }}>
+                <button onClick={() => setCetakEksporModalOpen(false)} className="btn btn-secondary" style={{ padding: "6px 16px", fontSize: "0.82rem" }}>Tutup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============= MODAL CATATAN GURU ============= */}
       {catatanSiswaTerpilih && (
