@@ -155,7 +155,19 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
   const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
-  const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(true);
+  const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = sessionStorage.getItem("panelKontrolExpanded");
+      if (saved !== null) return saved === "true";
+    }
+    return true; // default terbuka saat pertama kali
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("panelKontrolExpanded", String(panelKontrolExpanded));
+    }
+  }, [panelKontrolExpanded]);
 
 
 
@@ -3196,7 +3208,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 gap: "4px"
               }}
             >
-              {panelKontrolExpanded ? "🔼 Minimize Panel" : "🔽 Tampilkan Panel"}
+              {panelKontrolExpanded ? "🔼 Sembunyikan Panel" : "🔽 Tampilkan Panel"}
             </button>
           </div>
 
