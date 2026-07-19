@@ -155,10 +155,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(true);
 
-  // States untuk Presensi Realtime Monitor
-  const [realtimeSyncActive, setRealtimeSyncActive] = useState(true);
-  const [recentScannedStudents, setRecentScannedStudents] = useState([]);
-  const prevPresenceRef = useRef({});
+
 
 
 
@@ -401,71 +398,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   }, [activeTab, classId]);
 
-  // Monitor live attendance in the background (only runs when looking at 'presensi' tab)
-  useEffect(() => {
-    if (!realtimeSyncActive || !kelas?.id || activeTab !== 'presensi') return;
 
-    const meetings = kelas?.skemaPenilaian?.pertemuan || [];
-    if (meetings.length === 0) return;
-    const latestMeeting = meetings[meetings.length - 1];
-    
-    // Initialize previous presence state mapping
-    const initialMap = {};
-    (kelas?.siswa || []).forEach(s => {
-      initialMap[s.nisn] = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
-    });
-    prevPresenceRef.current = initialMap;
-
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/kelas/${kelas.id}`);
-        if (response.ok) {
-          const freshKelas = await response.json();
-          
-          // Find newly present students
-          const newScanned = [];
-          (freshKelas.siswa || []).forEach(s => {
-            const wasPresent = prevPresenceRef.current[s.nisn];
-            const isPresent = s.nilai[`_presensi_${latestMeeting.id}`] === 'H';
-            
-            if (!wasPresent && isPresent) {
-              const nowTime = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-              newScanned.push({ nama: s.nama, nisn: s.nisn, time: nowTime });
-            }
-            
-            // Update ref
-            prevPresenceRef.current[s.nisn] = isPresent;
-          });
-
-          if (newScanned.length > 0) {
-            // Play a sweet beep sound on the teacher's laptop to notify them of success!
-            try {
-              const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-              const osc = audioCtx.createOscillator();
-              const gain = audioCtx.createGain();
-              osc.connect(gain);
-              gain.connect(audioCtx.destination);
-              osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Pitch A5
-              gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-              osc.start();
-              gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-              osc.stop(audioCtx.currentTime + 0.13);
-            } catch (e) {}
-
-            // Append newly scanned students to the front
-            setRecentScannedStudents(prev => [...newScanned, ...prev]);
-          }
-
-          // Update main state so the attendance table on screen matches the scanned data
-          setKelas(freshKelas);
-        }
-      } catch (err) {
-        console.error("Failed to poll live attendance:", err);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [realtimeSyncActive, kelas?.id, kelas?.skemaPenilaian?.pertemuan, activeTab]);
 
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
@@ -2788,117 +2721,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           {/* Panel Presensi Massal Cepat removed from page, integrated directly inside pertemuan modals */}
 
-          {/* Riwayat Presensi Realtime Monitor */}
-          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
-            <div style={{ padding: "0 24px" }}>
-              <div 
-                style={{ 
-                  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.04) 0%, rgba(99, 102, 241, 0.01) 100%)",
-                  border: "1px dashed var(--border-color)",
-                  borderRadius: "12px",
-                  padding: "16px 20px"
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ 
-                      display: "inline-block", 
-                      width: "8px", 
-                      height: "8px", 
-                      borderRadius: "50%", 
-                      backgroundColor: realtimeSyncActive ? "var(--success)" : "var(--text-muted)",
-                      boxShadow: realtimeSyncActive ? "0 0 10px var(--success)" : "none"
-                    }} />
-                    <h5 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "var(--text-primary)" }}>
-                      🔄 Riwayat Presensi Realtime ({kelas.skemaPenilaian.pertemuan[kelas.skemaPenilaian.pertemuan.length - 1].nama})
-                    </h5>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (!realtimeSyncActive) {
-                        setRecentScannedStudents([]);
-                      }
-                      setRealtimeSyncActive(!realtimeSyncActive);
-                    }}
-                    className="btn"
-                    style={{
-                      fontSize: "0.78rem",
-                      padding: "6px 12px",
-                      backgroundColor: realtimeSyncActive ? "rgba(239, 68, 68, 0.1)" : "rgba(16, 185, 129, 0.1)",
-                      color: realtimeSyncActive ? "var(--danger)" : "var(--success)",
-                      border: `1px solid ${realtimeSyncActive ? "rgba(239,68,68,0.2)" : "rgba(16,185,129,0.2)"}`,
-                      borderRadius: "8px",
-                      fontWeight: "700",
-                      cursor: "pointer"
-                    }}
-                  >
-                    {realtimeSyncActive ? "🛑 Matikan Monitor" : "⚡ Aktifkan Monitor"}
-                  </button>
-                </div>
 
-                {realtimeSyncActive ? (
-                  <div>
-                    {recentScannedStudents.length === 0 ? (
-                      <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", fontStyle: "italic", padding: "4px 0" }}>
-                        ⏳ Menunggu siswa melakukan scan QR... (Tabel presensi di bawah akan terupdate otomatis)
-                      </div>
-                    ) : (
-                      <div>
-                        <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "8px", fontWeight: "600" }}>
-                          Daftar Siswa Terpindai Sesi Ini:
-                        </div>
-                        <div 
-                          style={{ 
-                            backgroundColor: 'var(--bg-secondary)', 
-                            borderRadius: '8px', 
-                            border: '1px solid var(--border-color)',
-                            padding: '8px',
-                            maxHeight: '260px', 
-                            overflowY: 'auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '6px'
-                          }}
-                        >
-                          {recentScannedStudents.map((item, idx) => (
-                            <div 
-                              key={item.nisn + '-' + idx}
-                              className="animate-fade-in"
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: '8px 12px',
-                                borderRadius: '6px',
-                                backgroundColor: idx === 0 ? 'rgba(16, 185, 129, 0.06)' : 'rgba(255,255,255,0.01)',
-                                border: idx === 0 ? '1px dashed rgba(16, 185, 129, 0.3)' : '1px solid transparent',
-                                fontSize: '0.82rem'
-                              }}
-                            >
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{item.nama}</span>
-                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>NISN: {item.nisn}</span>
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                <span style={{ fontSize: '0.7rem', backgroundColor: 'rgba(16,185,129,0.15)', color: 'var(--success)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold' }}>
-                                  Hadir
-                                </span>
-                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{item.time}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-muted)" }}>
-                    Aktifkan monitor ini saat Anda/siswa sedang memindai QR Code via HP. Data presensi dan statistik di layar ini akan langsung terisi secara otomatis tanpa perlu memuat ulang halaman.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Ringkasan Statistik Presensi */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
