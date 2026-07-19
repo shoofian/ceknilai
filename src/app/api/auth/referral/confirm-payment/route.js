@@ -32,7 +32,7 @@ export async function POST(request) {
     }
 
     const isYearly = paket === 'tahunan';
-    const pointsToAward = isYearly ? 30 : 10;
+    const pointsToAward = isYearly ? 100 : 10;
 
     let pointsClaimed = false;
     let claimError = '';

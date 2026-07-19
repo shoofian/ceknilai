@@ -291,8 +291,8 @@ export default function ReferralPage() {
                 <li>
                   <strong>Poin Berdasarkan Paket</strong>:
                   <ul style={{ paddingLeft: '20px', marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <li>🚀 <strong>Paket Langganan Tahunan (Rp 159.000)</strong>: Mendapatkan <strong>30 Poin</strong> untuk masing-masing guru.</li>
-                    <li>📦 <strong>Paket Langganan Bulanan (Rp 19.000)</strong>: Mendapatkan <strong>10 Poin</strong> untuk masing-masing guru.</li>
+                    <li>🚀 <strong>Paket Langganan Tahunan (Rp 159.000)</strong>: Mendapatkan <strong>100 Poin</strong> (setara Rp 15.000) untuk masing-masing guru.</li>
+                    <li>📦 <strong>Paket Langganan Bulanan (Rp 19.000)</strong>: Mendapatkan <strong>10 Poin</strong> (setara Rp 1.500) untuk masing-masing guru.</li>
                   </ul>
                 </li>
                 <li>
