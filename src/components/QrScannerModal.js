@@ -162,6 +162,40 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
     }
   };
 
+  // Fetch cameras list when modal opens
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchCameras = async () => {
+      try {
+        const { Html5Qrcode } = await import('html5-qrcode');
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0 && isMounted) {
+          setCameras(devices);
+          const backCam = devices.find(device => 
+            device.label.toLowerCase().includes('back') || 
+            device.label.toLowerCase().includes('rear') || 
+            device.label.toLowerCase().includes('environment')
+          );
+          const defaultCamId = backCam ? backCam.id : devices[0].id;
+          setSelectedCameraId(defaultCamId);
+        } else if (isMounted) {
+          setSelectedCameraId('environment');
+        }
+      } catch (e) {
+        console.warn("Could not load camera list:", e);
+        if (isMounted) {
+          setSelectedCameraId('environment');
+        }
+      }
+    };
+
+    if (isOpen) {
+      fetchCameras();
+      setScanHistory([]);
+    }
+  }, [isOpen]);
+
   // Unified useEffect to handle scanner lifecycle
   useEffect(() => {
     let isMounted = true;
@@ -187,27 +221,6 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
 
         html5QrCode = new Html5Qrcode("reader");
         html5QrCodeRef.current = html5QrCode;
-
-        // Fetch cameras list if we don't have it yet
-        if (cameras.length === 0) {
-          try {
-            const devices = await Html5Qrcode.getCameras();
-            if (devices && devices.length > 0 && isMounted) {
-              setCameras(devices);
-              // Pick default back camera if available
-              const backCam = devices.find(device => 
-                device.label.toLowerCase().includes('back') || 
-                device.label.toLowerCase().includes('rear') || 
-                device.label.toLowerCase().includes('environment')
-              );
-              const defaultCamId = backCam ? backCam.id : devices[0].id;
-              setSelectedCameraId(defaultCamId);
-              return; // Let the next render cycle start with the selected camera ID
-            }
-          } catch (e) {
-            console.warn("Could not load camera list:", e);
-          }
-        }
 
         setIsScanning(true);
         setErrorMsg('');
@@ -241,10 +254,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
       }
     };
 
-    if (isOpen) {
-      runScanner();
-      setScanHistory([]);
-    }
+    runScanner();
 
     return () => {
       isMounted = false;
