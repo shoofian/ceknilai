@@ -4900,7 +4900,10 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       <QrScannerModal
         isOpen={qrModalOpen}
-        onClose={() => setQrModalOpen(false)}
+        onClose={() => {
+          setQrModalOpen(false);
+          fetchClassDetail();
+        }}
         kelas={kelas}
         onMarkPresence={handleQrMarkPresence}
       />
