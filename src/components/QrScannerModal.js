@@ -236,7 +236,7 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
               const size = Math.min(width, height) * 0.75;
               return { width: size, height: size };
             },
-            aspectRatio: 1.333333 // Request 4:3 aspect ratio from camera to match preview box aspect ratio
+            aspectRatio: 1.0 // Request square 1:1 aspect ratio from camera
           },
           (decodedText) => {
             handleScanResult(decodedText);
@@ -408,8 +408,10 @@ export default function QrScannerModal({ isOpen, onClose, kelas, onMarkPresence 
         <div 
           style={{ 
             position: 'relative', 
-            width: '100%', 
-            aspectRatio: '4/3', 
+            width: '280px', 
+            height: '280px', 
+            margin: '0 auto',
+            aspectRatio: '1/1', 
             borderRadius: '12px', 
             overflow: 'hidden',
             backgroundColor: '#090d16',
