@@ -41,6 +41,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State Print Preview
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const iframeRef = useRef(null);
+  const lastClickRef = useRef({});
   
   // States untuk Siswa
   const [siswaModalOpen, setSiswaModalOpen] = useState(false);
@@ -3096,7 +3097,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                             onClick={() => {
                               const isLocked = !unlockedPertemuanIds.includes(p.id);
                               if (isLocked) {
-                                triggerAlert("Kolom presensi ini masih terkunci. Silakan klik tombol gembok (🔓 Buka) di bagian atas atau bawah kolom terlebih dahulu untuk dapat mengubah data presensi.", null, { title: "🔒 Kolom Terkunci" });
+                                const cellKey = `${siswa.nisn}-${p.id}`;
+                                const now = Date.now();
+                                const lastClick = lastClickRef.current[cellKey] || 0;
+                                lastClickRef.current[cellKey] = now;
+                                if (now - lastClick < 500) {
+                                  triggerAlert("Kolom presensi ini masih terkunci. Silakan klik tombol gembok (🔓 Buka) di bagian atas atau bawah kolom terlebih dahulu untuk dapat mengubah data presensi.", null, { title: "🔒 Kolom Terkunci" });
+                                }
                                 return;
                               }
                               const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
