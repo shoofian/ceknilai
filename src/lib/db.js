@@ -632,6 +632,7 @@ export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa, guruUserna
     const kelas = await getKelasById(kelasId, guruUsername);
     if (!kelas) return null;
     const updates = {};
+    if (updatedSiswa.kelasIdBaru !== undefined) updates.kelas_id = updatedSiswa.kelasIdBaru;
     if (updatedSiswa.nisn !== undefined) updates.nisn = updatedSiswa.nisn;
     if (updatedSiswa.nama !== undefined) updates.nama = updatedSiswa.nama;
     if (updatedSiswa.tanggalLahir !== undefined) {

@@ -44,6 +44,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [nisn, setNisn] = useState("");
   const [namaSiswa, setNamaSiswa] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
+  const [targetClassId, setTargetClassId] = useState("");
   const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
 
@@ -1075,8 +1076,17 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNamaSiswa(siswa.nama);
     setTanggalLahir(siswa.tanggalLahir);
     setNilaiKatrol(siswa.nilai?._katrol !== undefined ? siswa.nilai._katrol : "");
+    setTargetClassId("");
     setSiswaError("");
     setSiswaModalOpen(true);
+
+    // Fetch classes for transfer dropdown
+    fetch("/api/kelas")
+      .then(res => res.json())
+      .then(data => {
+        setAvailableClasses(data.filter(c => c.id !== classId));
+      })
+      .catch(err => console.error("Gagal memuat daftar kelas:", err));
   };
 
   const handleSiswaSubmit = async (e) => {
@@ -1093,7 +1103,8 @@ export default function DetailKelas({ params: paramsPromise }) {
         body: JSON.stringify({
           nisn: nisn.trim(),
           nama: namaSiswa.trim(),
-          tanggalLahir: tanggalLahir || null
+          tanggalLahir: tanggalLahir || null,
+          ...(isEditingSiswa && targetClassId ? { kelasIdBaru: targetClassId } : {})
         }),
       });
 
@@ -4181,6 +4192,25 @@ export default function DetailKelas({ params: paramsPromise }) {
                   required
                 />
               </div>
+
+              {isEditingSiswa && (
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Pindahkan ke Kelas Lain (Opsional)</label>
+                  <select
+                    className="form-input"
+                    value={targetClassId}
+                    onChange={(e) => setTargetClassId(e.target.value)}
+                    style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
+                  >
+                    <option value="">-- Tetap di kelas saat ini --</option>
+                    {availableClasses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nama} - {c.mataPelajaran} ({c.tahunAjaran})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {siswaError && (
                 <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
