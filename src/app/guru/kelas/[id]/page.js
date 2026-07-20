@@ -3634,6 +3634,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       </>
       )}
+      </div>
 
       {/* Bulk Action Bar */}
       {selectedNisns.length > 0 && (
@@ -3653,7 +3654,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             alignItems: "center",
             gap: "24px",
             boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.25)",
-            zIndex: 150,
+            zIndex: 9999,
             color: "#fff",
           }}
         >
@@ -3698,143 +3699,6 @@ export default function DetailKelas({ params: paramsPromise }) {
           </button>
         </div>
       )}
-
-      {/* ===== FAB + Dropdown Menu ===== */}
-      {/* Backdrop klik-luar untuk tutup FAB */}
-      {fabOpen && (
-        <div
-          style={{ position: "fixed", inset: 0, zIndex: 148 }}
-          onClick={() => setFabOpen(false)}
-        />
-      )}
-
-      <div style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 150, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
-
-        {/* Dropdown menu */}
-        {fabOpen && (
-          <div
-            className="animate-fade-in"
-            style={{
-              backgroundColor: "var(--bg-secondary)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "14px",
-              boxShadow: "0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3)",
-              overflow: "hidden",
-              minWidth: "240px",
-              backdropFilter: "blur(12px)",
-            }}
-          >
-            {/* Grup Konfigurasi */}
-            <div style={{ padding: "8px 14px 4px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>⚙️ Konfigurasi</div>
-            {[
-              { icon: "⚙️", label: "Atur Aspek, Bobot & KKM", onClick: () => { setConfigModalTab('aspek'); setKolomModalOpen(true); setFabOpen(false); }, disabled: kelas.archived || isLocked },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                disabled={item.disabled}
-                style={{
-                  display: "flex", alignItems: "center", gap: "10px",
-                  width: "100%", padding: "10px 16px",
-                  background: "none", border: "none",
-                  cursor: item.disabled ? "not-allowed" : "pointer",
-                  color: item.disabled ? "var(--text-muted)" : "var(--text-primary)",
-                  fontSize: "0.88rem", fontWeight: "600",
-                  textAlign: "left", opacity: item.disabled ? 0.5 : 1, transition: "background 0.15s",
-                }}
-                onMouseEnter={e => { if (!item.disabled) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
-              >
-                <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-
-            {/* Divider */}
-            <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "4px 0" }} />
-
-            {/* Grup Operasi Data */}
-            <div style={{ padding: "4px 14px", fontSize: "0.65rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>🛠️ Operasi Data</div>
-            {[
-              { icon: "📊", label: "Kelola Data Siswa", onClick: () => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); setFabOpen(false); }, disabled: false },
-              { icon: "🖨️", label: "Cetak & Ekspor", onClick: () => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); setFabOpen(false); }, disabled: false },
-            ].map((item) => (
-              <button
-                key={item.label}
-                onClick={item.onClick}
-                disabled={item.disabled}
-                style={{
-                  display: "flex", alignItems: "center", gap: "10px",
-                  width: "100%", padding: "10px 16px",
-                  background: "none", border: "none",
-                  cursor: item.disabled ? "not-allowed" : "pointer",
-                  color: item.disabled ? "var(--text-muted)" : item.accent ? "var(--primary)" : "var(--text-primary)",
-                  fontSize: "0.88rem", fontWeight: item.accent ? "700" : "600",
-                  textAlign: "left", opacity: item.disabled ? 0.5 : 1, transition: "background 0.15s",
-                }}
-                onMouseEnter={e => { if (!item.disabled) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
-              >
-                <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
-            {/* Tombol Impor Excel (pakai label karena file input) */}
-            <label
-              style={{
-                display: "flex", alignItems: "center", gap: "10px",
-                width: "100%", padding: "10px 16px",
-                cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer",
-                color: (kelas.archived || isLocked) ? "var(--text-muted)" : "var(--text-primary)",
-                fontSize: "0.88rem", fontWeight: "600",
-                opacity: (kelas.archived || isLocked) ? 0.5 : 1,
-                transition: "background 0.15s",
-                marginBottom: "4px",
-              }}
-              onMouseEnter={e => { if (!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = "transparent"}
-            >
-              <span style={{ fontSize: "1rem", width: "20px", textAlign: "center" }}>📤</span>
-              Impor Nilai dari Excel
-              <input
-                type="file"
-                accept=".xlsx, .xls"
-                style={{ display: "none" }}
-                onChange={(e) => { handleExcelUpload(e); setFabOpen(false); }}
-                disabled={kelas.archived || isLocked}
-              />
-            </label>
-          </div>
-        )}
-
-        {/* Tombol FAB utama */}
-        <button
-          id="fab-konfigurasi"
-          onClick={() => setFabOpen(prev => !prev)}
-          style={{
-            width: "54px", height: "54px",
-            borderRadius: "50%",
-            background: fabOpen
-              ? "linear-gradient(135deg, #ef4444, #dc2626)"
-              : "linear-gradient(135deg, var(--primary), #7c3aed)",
-            border: "none",
-            cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "1.35rem",
-            boxShadow: fabOpen
-              ? "0 4px 20px rgba(239,68,68,0.5), 0 0 0 4px rgba(239,68,68,0.15)"
-              : "0 4px 20px rgba(59,130,246,0.5), 0 0 0 4px rgba(59,130,246,0.15)",
-            transition: "all 0.2s ease",
-            transform: fabOpen ? "rotate(45deg)" : "rotate(0deg)",
-            flexShrink: 0,
-          }}
-          title={fabOpen ? "Tutup menu" : "Konfigurasi & Operasi Data"}
-        >
-          {fabOpen ? "✕" : "⚙️"}
-        </button>
-      </div>
-
-      </div>
 
             {/* Off-Screen Dashboard for Overview Kelas Export (1080x1920 - 16:9 Portrait) */}
       <div id={`export-class-dashboard-${classId}`} style={{
