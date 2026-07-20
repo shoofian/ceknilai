@@ -632,6 +632,7 @@ export async function updateSiswaInKelas(kelasId, nisn, updatedSiswa, guruUserna
     const kelas = await getKelasById(kelasId, guruUsername);
     if (!kelas) return null;
     const updates = {};
+    if (updatedSiswa.nisn !== undefined) updates.nisn = updatedSiswa.nisn;
     if (updatedSiswa.nama !== undefined) updates.nama = updatedSiswa.nama;
     if (updatedSiswa.tanggalLahir !== undefined) {
       updates.tanggal_lahir = (updatedSiswa.tanggalLahir && updatedSiswa.tanggalLahir.toString().trim() !== "") ? updatedSiswa.tanggalLahir : '1900-01-01';

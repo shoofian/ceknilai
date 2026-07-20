@@ -34,6 +34,15 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 });
     }
 
+    // Validasi NISN baru jika diubah
+    const cleanNewNisn = updates.nisn !== undefined ? updates.nisn.toString().trim() : null;
+    if (cleanNewNisn && cleanNewNisn !== nisn) {
+      const exists = kelas.siswa.some(s => s.nisn === cleanNewNisn);
+      if (exists) {
+        return NextResponse.json({ error: 'NISN baru sudah digunakan oleh siswa lain di kelas ini' }, { status: 400 });
+      }
+    }
+
     // Lakukan merge untuk nilai agar tidak menimpa nilai yang lain
     let mergedNilai = { ...siswaLama.nilai };
     if (updates.nilai) {
@@ -44,6 +53,7 @@ export async function PATCH(request, { params }) {
     }
 
     const siswaUpdate = {
+      nisn: cleanNewNisn || nisn,
       nama: updates.nama !== undefined ? updates.nama.trim() : siswaLama.nama,
       tanggalLahir: updates.tanggalLahir !== undefined ? updates.tanggalLahir : siswaLama.tanggalLahir,
       nilai: mergedNilai,
@@ -57,10 +67,13 @@ export async function PATCH(request, { params }) {
 
     // Log teacher activity
     const { logAktivitasGuru } = await import('@/lib/db');
+    const logDetail = cleanNewNisn && cleanNewNisn !== nisn
+      ? `Memperbarui data siswa "${siswaLama.nama}" (NISN lama: ${nisn}, NISN baru: ${cleanNewNisn}) di kelas "${kelas.nama}"`
+      : `Memperbarui data siswa "${siswaLama.nama}" (NISN: ${nisn}) di kelas "${kelas.nama}"`;
     await logAktivitasGuru(
       username,
       'EDIT_SISWA',
-      `Memperbarui data siswa "${siswaLama.nama}" (NISN: ${nisn}) di kelas "${kelas.nama}"`
+      logDetail
     );
 
     return NextResponse.json({ success: true, siswa: updated });

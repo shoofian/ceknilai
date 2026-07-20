@@ -1085,29 +1085,17 @@ export default function DetailKelas({ params: paramsPromise }) {
       setSiswaError("NISN dan Nama Siswa harus diisi.");
       return;
     }
-
+    
     try {
-      let response;
-      if (isEditingSiswa) {
-        response = await fetch(`/api/kelas/${classId}/siswa/${oldNisn}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            nama: namaSiswa.trim(), 
-            tanggalLahir: tanggalLahir || null
-          }),
-        });
-      } else {
-        response = await fetch(`/api/kelas/${classId}/siswa`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            nisn: nisn.trim(), 
-            nama: namaSiswa.trim(), 
-            tanggalLahir: tanggalLahir || null
-          }),
-        });
-      }
+      const response = await fetch(`/api/kelas/${classId}/siswa${isEditingSiswa ? `/${oldNisn}` : ""}`, {
+        method: isEditingSiswa ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nisn: nisn.trim(),
+          nama: namaSiswa.trim(),
+          tanggalLahir: tanggalLahir || null
+        }),
+      });
 
       const data = await response.json();
       if (!response.ok) {
@@ -4166,7 +4154,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                   className="form-input"
                   value={nisn}
                   onChange={(e) => setNisn(e.target.value)}
-                  disabled={isEditingSiswa} // NISN bersifat unique key
                   maxLength={20}
                   required
                 />
