@@ -3089,7 +3089,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <button 
                             onClick={() => {
                               const isLocked = !unlockedPertemuanIds.includes(p.id);
-                              if (isLocked) return;
+                              if (isLocked) {
+                                triggerAlert("Kolom presensi ini masih terkunci. Silakan klik tombol gembok (🔓 Buka) di bagian atas atau bawah kolom terlebih dahulu untuk dapat mengubah data presensi.", null, { title: "🔒 Kolom Terkunci" });
+                                return;
+                              }
                               const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
                               const newSiswa = [...kelas.siswa];
                               newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
