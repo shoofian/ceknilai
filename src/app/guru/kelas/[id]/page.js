@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use, useMemo, Fragment, useRef } from "react";
+import { createPortal } from "react-dom";
 import Modal from '@/components/Modal';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,11 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const studentsWithoutBirthDate = useMemo(() => {
     if (!kelas || !kelas.siswa) return [];
@@ -3697,7 +3703,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       </div>
 
       {/* Bulk Action Bar */}
-      {selectedNisns.length > 0 && (
+      {mounted && selectedNisns.length > 0 && typeof document !== "undefined" && createPortal(
         <div
           className="no-print animate-fade-in"
           style={{
@@ -3794,7 +3800,8 @@ export default function DetailKelas({ params: paramsPromise }) {
               Batal
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
             {/* Off-Screen Dashboard for Overview Kelas Export (1080x1920 - 16:9 Portrait) */}
