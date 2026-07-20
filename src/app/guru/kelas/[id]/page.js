@@ -784,6 +784,14 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (!data.error) setGuruProfile(data);
       })
       .catch(err => console.error("Error fetching guru profile:", err));
+
+    // Fetch classes for transfer dropdown
+    fetch("/api/kelas")
+      .then(res => res.json())
+      .then(data => {
+        setAvailableClasses(data.filter(c => c.id !== classId));
+      })
+      .catch(err => console.error("Gagal memuat daftar kelas:", err));
   }, [classId]);
 
   // Efek untuk memunculkan onboarding modal
@@ -1186,6 +1194,55 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
       },
       { title: "⚠️ Hapus Massal Siswa", confirmText: "Hapus Sekaligus", cancelText: "Batal", isDanger: true }
+    );
+  };
+
+  const handleBulkTransferStudents = (targetClassId) => {
+    if (selectedNisns.length === 0 || !targetClassId) return;
+    const targetClass = availableClasses.find(c => c.id === targetClassId);
+    if (!targetClass) return;
+
+    triggerConfirm(
+      `Apakah Anda yakin ingin memindahkan ${selectedNisns.length} siswa terpilih ke kelas "${targetClass.nama}"?`,
+      async () => {
+        try {
+          let successCount = 0;
+          let failCount = 0;
+          let errorMessage = "";
+
+          const transferPromises = selectedNisns.map(async (studentNisn) => {
+            const res = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                kelasIdBaru: targetClassId
+              })
+            });
+            if (res.ok) {
+              successCount++;
+            } else {
+              failCount++;
+              const errData = await res.json();
+              errorMessage = errData.error || errorMessage;
+            }
+          });
+
+          await Promise.all(transferPromises);
+
+          setSelectedNisns([]);
+          fetchClassDetail();
+
+          if (failCount === 0) {
+            triggerConfirm(`Berhasil memindahkan ${successCount} siswa ke kelas "${targetClass.nama}".`, null, { title: "Sukses", confirmText: "OK", cancelText: "" });
+          } else {
+            triggerConfirm(`Selesai memproses pemindahan. Berhasil: ${successCount}, Gagal: ${failCount}.${errorMessage ? `\n\nCatatan Error: ${errorMessage}` : ""}`, null, { title: "Hasil Pemindahan", confirmText: "OK", cancelText: "" });
+          }
+        } catch (err) {
+          console.error("Bulk transfer failed", err);
+          alert("Gagal melakukan pemindahan massal.");
+        }
+      },
+      { title: "🔄 Pindahkan Siswa Massal", confirmText: "Pindahkan", cancelText: "Batal" }
     );
   };
 
@@ -3661,6 +3718,35 @@ export default function DetailKelas({ params: paramsPromise }) {
           <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>
             📋 {selectedNisns.length} Siswa Terpilih
           </span>
+          <div style={{ width: "1px", height: "24px", backgroundColor: "rgba(255, 255, 255, 0.2)" }} />
+          <select
+            style={{
+              backgroundColor: "rgba(30, 41, 59, 0.9)",
+              color: "#fff",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              borderRadius: "8px",
+              padding: "8px 12px",
+              fontSize: "0.85rem",
+              cursor: isLocked ? "not-allowed" : "pointer",
+              outline: "none"
+            }}
+            disabled={isLocked}
+            defaultValue=""
+            onChange={(e) => {
+              const targetId = e.target.value;
+              if (targetId) {
+                handleBulkTransferStudents(targetId);
+                e.target.value = "";
+              }
+            }}
+          >
+            <option value="" disabled>🔄 Pindahkan ke kelas...</option>
+            {availableClasses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nama} ({c.mataPelajaran})
+              </option>
+            ))}
+          </select>
           <div style={{ width: "1px", height: "24px", backgroundColor: "rgba(255, 255, 255, 0.2)" }} />
           <button
             onClick={handleBulkDeleteStudents}
