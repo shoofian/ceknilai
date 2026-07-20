@@ -3702,90 +3702,98 @@ export default function DetailKelas({ params: paramsPromise }) {
           className="no-print animate-fade-in"
           style={{
             position: "fixed",
-            bottom: "32px",
+            bottom: "24px",
             left: "50%",
             transform: "translateX(-50%)",
-            backgroundColor: "rgba(15, 23, 42, 0.85)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: "16px",
-            padding: "14px 28px",
+            backgroundColor: "rgba(15, 23, 42, 0.9)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            borderRadius: "20px",
+            padding: "12px 24px",
             display: "flex",
+            flexDirection: "row",
+            flexWrap: "wrap",
             alignItems: "center",
-            gap: "24px",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.25)",
+            justifyContent: "center",
+            gap: "16px",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.3)",
             zIndex: 9999,
             color: "#fff",
+            width: "calc(100% - 32px)",
+            maxWidth: "680px",
           }}
         >
-          <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>
+          <span style={{ fontSize: "0.95rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap" }}>
             📋 {selectedNisns.length} Siswa Terpilih
           </span>
-          <div style={{ width: "1px", height: "24px", backgroundColor: "rgba(255, 255, 255, 0.2)" }} />
-          <select
-            style={{
-              backgroundColor: "rgba(30, 41, 59, 0.9)",
-              color: "#fff",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "8px",
-              padding: "8px 12px",
-              fontSize: "0.85rem",
-              cursor: isLocked ? "not-allowed" : "pointer",
-              outline: "none"
-            }}
-            disabled={isLocked}
-            defaultValue=""
-            onChange={(e) => {
-              const targetId = e.target.value;
-              if (targetId) {
-                handleBulkTransferStudents(targetId);
-                e.target.value = "";
-              }
-            }}
-          >
-            <option value="" disabled>🔄 Pindahkan ke kelas...</option>
-            {availableClasses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nama} ({c.mataPelajaran})
-              </option>
-            ))}
-          </select>
-          <div style={{ width: "1px", height: "24px", backgroundColor: "rgba(255, 255, 255, 0.2)" }} />
-          <button
-            onClick={handleBulkDeleteStudents}
-            disabled={isLocked}
-            className="btn btn-primary"
-            style={{
-              backgroundColor: "var(--danger)",
-              borderColor: "transparent",
-              color: "#fff",
-              padding: "8px 16px",
-              fontSize: "0.85rem",
-              fontWeight: "700",
-              borderRadius: "8px",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              cursor: isLocked ? "not-allowed" : "pointer",
-            }}
-          >
-            🗑️ Hapus Massal
-          </button>
-          <button
-            onClick={() => setSelectedNisns([])}
-            className="btn btn-secondary"
-            style={{
-              padding: "8px 16px",
-              fontSize: "0.85rem",
-              fontWeight: "600",
-              borderRadius: "8px",
-              color: "#ccc",
-              borderColor: "rgba(255, 255, 255, 0.2)",
-              backgroundColor: "transparent",
-            }}
-          >
-            Batal
-          </button>
+          
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+            <select
+              style={{
+                backgroundColor: "rgba(30, 41, 59, 0.9)",
+                color: "#fff",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "0.85rem",
+                cursor: isLocked ? "not-allowed" : "pointer",
+                outline: "none",
+                maxWidth: "200px"
+              }}
+              disabled={isLocked}
+              defaultValue=""
+              onChange={(e) => {
+                const targetId = e.target.value;
+                if (targetId) {
+                  handleBulkTransferStudents(targetId);
+                  e.target.value = "";
+                }
+              }}
+            >
+              <option value="" disabled>🔄 Pindahkan ke kelas...</option>
+              {availableClasses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nama} ({c.mataPelajaran})
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleBulkDeleteStudents}
+              disabled={isLocked}
+              className="btn btn-primary"
+              style={{
+                backgroundColor: "var(--danger)",
+                borderColor: "transparent",
+                color: "#fff",
+                padding: "8px 16px",
+                fontSize: "0.85rem",
+                fontWeight: "700",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                cursor: isLocked ? "not-allowed" : "pointer",
+              }}
+            >
+              🗑️ Hapus Massal
+            </button>
+            <button
+              onClick={() => setSelectedNisns([])}
+              className="btn btn-secondary"
+              style={{
+                padding: "8px 16px",
+                fontSize: "0.85rem",
+                fontWeight: "600",
+                borderRadius: "8px",
+                color: "#ccc",
+                borderColor: "rgba(255, 255, 255, 0.2)",
+                backgroundColor: "transparent",
+              }}
+            >
+              Batal
+            </button>
+          </div>
         </div>
       )}
 
