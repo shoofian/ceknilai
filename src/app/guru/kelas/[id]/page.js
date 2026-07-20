@@ -2885,19 +2885,19 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <div style={{ flex: "1 1 200px", fontSize: "0.85rem", alignSelf: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
                           {p.materi ? (
                             <div>
-                              <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>📚 Materi: </span>
+                              <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>Materi: </span>
                               <span style={{ color: "var(--text-primary)" }}>{p.materi}</span>
                             </div>
                           ) : (
-                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📚 Materi belum diisi</div>
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Materi belum diisi</div>
                           )}
                           {currentKegiatan ? (
                             <div>
-                              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>📝 Kegiatan: </span>
+                              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>Kegiatan: </span>
                               <span style={{ color: "var(--text-secondary)" }}>{currentKegiatan}</span>
                             </div>
                           ) : (
-                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>📝 Kegiatan belum diisi</div>
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Kegiatan belum diisi</div>
                           )}
                         </div>
 
@@ -2992,7 +2992,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             marginRight: "auto"
                           }}
                         >
-                          📚 {p.materi}
+                          {p.materi}
                         </div>
                       )}
                       {(p.kegiatan || p.keterangan) && (
@@ -3019,7 +3019,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             marginRight: "auto"
                           }}
                         >
-                          📝 {p.kegiatan || p.keterangan}
+                          {p.kegiatan || p.keterangan}
                         </div>
                       )}
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
