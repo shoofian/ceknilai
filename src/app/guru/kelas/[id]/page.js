@@ -2741,38 +2741,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 Kelola kehadiran siswa. Klik pada sel untuk mengubah status: <strong style={{color:"var(--success)"}}>H</strong> (Hadir), <strong style={{color:"var(--warning)"}}>I</strong> (Izin), <strong style={{color:"#3b82f6"}} >S</strong> (Sakit), <strong style={{color:"#8b5cf6"}}>D</strong> (Dispensasi), <strong style={{color:"var(--danger)"}}>A</strong> (Alpha).
               </p>
             </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
-              <button 
-                onClick={() => {
-                  if (unlockedPertemuanIds.length > 0) {
-                    setUnlockedPertemuanIds([]);
-                  } else {
-                    setUnlockedPertemuanIds((kelas.skemaPenilaian?.pertemuan || []).map(p => p.id));
-                  }
-                }} 
-                className="btn" 
-                style={{ 
-                  fontSize: "0.85rem", 
-                  padding: "8px 16px",
-                  backgroundColor: unlockedPertemuanIds.length > 0 ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.6)",
-                  color: unlockedPertemuanIds.length > 0 ? "#ef4444" : "var(--text-primary)",
-                  border: unlockedPertemuanIds.length > 0 ? "1px solid #ef4444" : "1px solid var(--border-color)",
-                  borderRadius: "var(--radius-md)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  fontWeight: "700",
-                  transition: "all 0.2s"
-                }}
-              >
-                {unlockedPertemuanIds.length > 0 ? "🔒 Kunci Semua Kolom" : "🔓 Buka Semua Kolom"}
-              </button>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
               <button onClick={() => {
                 setPresensiConfigTemp(kelas.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 });
                 setPresensiModalOpen(true);
-              }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
-                ⚙️ Pengaturan Presensi
+              }} className="btn btn-outline" style={{ fontSize: "0.78rem", padding: "6px 12px", opacity: 0.85 }}>
+                ⚙️ Pengaturan
               </button>
               <button 
                 onClick={() => {
@@ -2784,23 +2758,36 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }} 
                 className="btn" 
                 style={{ 
-                  fontSize: "0.85rem", 
-                  padding: "8px 16px",
-                  backgroundColor: "rgba(59, 130, 246, 0.15)",
+                  fontSize: "0.78rem", 
+                  padding: "6px 12px",
+                  backgroundColor: "rgba(59, 130, 246, 0.08)",
                   color: "#3b82f6",
-                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                  borderRadius: "var(--radius-md)",
+                  border: "1px solid rgba(59, 130, 246, 0.2)",
+                  borderRadius: "var(--radius-sm)",
                   cursor: "pointer",
-                  fontWeight: "700",
+                  fontWeight: "600",
                   display: "flex",
                   alignItems: "center",
-                  gap: "6px",
-                  transition: "all 0.2s"
+                  gap: "4px",
+                  transition: "all 0.2s",
+                  opacity: 0.85
                 }}
               >
-                📷 Scan QR Presensi
+                📷 Scan QR
               </button>
-              <button onClick={handleOpenAddPertemuan} className="btn btn-primary" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
+              <button 
+                onClick={handleOpenAddPertemuan} 
+                className="btn btn-primary" 
+                style={{ 
+                  fontSize: "0.9rem", 
+                  padding: "10px 20px", 
+                  fontWeight: "800",
+                  boxShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}
+              >
                 ➕ Tambah Pertemuan
               </button>
             </div>
@@ -3207,33 +3194,6 @@ export default function DetailKelas({ params: paramsPromise }) {
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpha (0)</span>
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (100)</span>
             </div>
-
-            <button 
-              onClick={() => {
-                if (unlockedPertemuanIds.length > 0) {
-                  setUnlockedPertemuanIds([]);
-                } else {
-                  setUnlockedPertemuanIds((kelas.skemaPenilaian?.pertemuan || []).map(p => p.id));
-                }
-              }} 
-              className="btn" 
-              style={{ 
-                fontSize: "0.85rem", 
-                padding: "8px 16px",
-                backgroundColor: unlockedPertemuanIds.length > 0 ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.6)",
-                color: unlockedPertemuanIds.length > 0 ? "#ef4444" : "var(--text-primary)",
-                border: unlockedPertemuanIds.length > 0 ? "1px solid #ef4444" : "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                fontWeight: "700",
-                transition: "all 0.2s"
-              }}
-            >
-              {unlockedPertemuanIds.length > 0 ? "🔒 Kunci Semua Kolom" : "🔓 Buka Semua Kolom"}
-            </button>
           </div>
         </div>
       )}
