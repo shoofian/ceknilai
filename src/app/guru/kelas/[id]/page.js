@@ -259,6 +259,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [katrolSiswa, setKatrolSiswa] = useState(null);
   const [katrolValue, setKatrolValue] = useState("");
   const [isSavingKatrol, setIsSavingKatrol] = useState(false);
+  const [katrolMultiSiswa, setKatrolMultiSiswa] = useState([]); // NISN siswa tambahan yang dipilih
+  const [katrolShowMulti, setKatrolShowMulti] = useState(false); // toggle tampilkan pilihan multi-siswa
 
   // State untuk Navigasi Panel Mobile di Modal Atur Aspek
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
@@ -1011,6 +1013,8 @@ export default function DetailKelas({ params: paramsPromise }) {
         
         if (classRes.ok) {
           setKelas({ ...kelas, siswa: updatedSiswa, skemaPenilaian: updatedSkema });
+          // Otomatis buka kunci pertemuan baru agar guru bisa langsung mengisi
+          setUnlockedPertemuanIds(prev => [...prev, newPertemuanId]);
           setPertemuanModalOpen(false);
         } else {
           alert("Gagal menambahkan pertemuan.");
@@ -3533,6 +3537,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                             if (kelas.isNilaiAkhirGenerated && !kelas.archived && !isLocked) {
                               setKatrolSiswa(student);
                               setKatrolValue(student.nilai?._katrol !== undefined && student.nilai?._katrol !== null ? student.nilai._katrol.toString() : "");
+                              setKatrolMultiSiswa([]);
+                              setKatrolShowMulti(false);
                               setKatrolModalOpen(true);
                             }
                           }}
@@ -6294,16 +6300,16 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* ===== MODAL: Atur Nilai Katrol (Rahasia) ===== */}
       {katrolModalOpen && katrolSiswa && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", padding: 0 }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "480px", display: "flex", flexDirection: "column", padding: 0, maxHeight: "90vh", overflow: "hidden" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "20px 24px" }}>
               <div>
                 <h3 style={{ fontSize: "1.2rem", fontWeight: "800", margin: 0 }}>🔒 Katrol / Penyesuaian Nilai</h3>
                 <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>Set nilai tambahan khusus secara rahasia.</p>
               </div>
-              <button onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+              <button onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); setKatrolMultiSiswa([]); setKatrolShowMulti(false); }} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
-            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
                 <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>{katrolSiswa.nama}</span>
                 <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>NISN: {katrolSiswa.nisn}</span>
@@ -6335,9 +6341,67 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </span>
               </div>
 
+              {/* === Multi-siswa section === */}
+              <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+                <button
+                  onClick={() => setKatrolShowMulti(!katrolShowMulti)}
+                  style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  {katrolShowMulti ? "▾" : "▸"} Terapkan ke siswa lain juga
+                  {katrolMultiSiswa.length > 0 && (
+                    <span style={{ fontSize: "0.7rem", backgroundColor: "var(--primary)", color: "#fff", borderRadius: "10px", padding: "2px 8px", fontWeight: "700" }}>
+                      +{katrolMultiSiswa.length}
+                    </span>
+                  )}
+                </button>
+
+                {katrolShowMulti && kelas?.siswa && (
+                  <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Pilih siswa yang juga akan menerima nilai katrol yang sama:</span>
+                      <button 
+                        onClick={() => {
+                          const otherNisns = kelas.siswa.filter(s => s.nisn !== katrolSiswa.nisn).map(s => s.nisn);
+                          setKatrolMultiSiswa(katrolMultiSiswa.length === otherNisns.length ? [] : otherNisns);
+                        }} 
+                        style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer", padding: 0, whiteSpace: "nowrap" }}
+                      >
+                        {katrolMultiSiswa.length === kelas.siswa.filter(s => s.nisn !== katrolSiswa.nisn).length ? "Batal Semua" : "Pilih Semua"}
+                      </button>
+                    </div>
+                    <div style={{ maxHeight: "180px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "2px", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "6px" }}>
+                      {kelas.siswa
+                        .filter(s => s.nisn !== katrolSiswa.nisn)
+                        .sort((a, b) => (a.nama || "").localeCompare(b.nama || ""))
+                        .map(s => (
+                          <label 
+                            key={s.nisn} 
+                            style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", backgroundColor: katrolMultiSiswa.includes(s.nisn) ? "rgba(59,130,246,0.08)" : "transparent", transition: "background 0.15s" }}
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={katrolMultiSiswa.includes(s.nisn)}
+                              onChange={() => {
+                                setKatrolMultiSiswa(prev => 
+                                  prev.includes(s.nisn) 
+                                    ? prev.filter(n => n !== s.nisn) 
+                                    : [...prev, s.nisn]
+                                );
+                              }}
+                              style={{ accentColor: "var(--primary)", width: "16px", height: "16px" }}
+                            />
+                            <span style={{ fontWeight: katrolMultiSiswa.includes(s.nisn) ? "700" : "500" }}>{s.nama}</span>
+                          </label>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
                 <button 
-                  onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); }} 
+                  onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); setKatrolMultiSiswa([]); setKatrolShowMulti(false); }} 
                   className="btn btn-secondary" 
                   style={{ padding: "6px 14px", fontSize: "0.82rem" }}
                   disabled={isSavingKatrol}
@@ -6349,21 +6413,29 @@ export default function DetailKelas({ params: paramsPromise }) {
                     setIsSavingKatrol(true);
                     try {
                       const _katrol = katrolValue !== "" && katrolValue !== null && katrolValue !== undefined ? Number(katrolValue) : null;
-                      const response = await fetch(`/api/kelas/${classId}/siswa/${katrolSiswa.nisn}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                          nilai: { _katrol }
-                        }),
-                      });
                       
-                      if (!response.ok) {
-                        const data = await response.json();
-                        throw new Error(data.error || "Gagal menyimpan nilai katrol");
+                      // Kumpulkan semua NISN target (siswa utama + siswa tambahan yang dipilih)
+                      const allTargetNisns = [katrolSiswa.nisn, ...katrolMultiSiswa];
+                      
+                      const promises = allTargetNisns.map(nisn => 
+                        fetch(`/api/kelas/${classId}/siswa/${nisn}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ nilai: { _katrol } }),
+                        })
+                      );
+                      
+                      const responses = await Promise.all(promises);
+                      const failedCount = responses.filter(r => !r.ok).length;
+                      
+                      if (failedCount > 0) {
+                        alert(`${failedCount} dari ${allTargetNisns.length} siswa gagal disimpan.`);
                       }
                       
                       setKatrolModalOpen(false);
                       setKatrolSiswa(null);
+                      setKatrolMultiSiswa([]);
+                      setKatrolShowMulti(false);
                       fetchClassDetail();
                     } catch (err) {
                       alert(err.message || "Gagal menyimpan.");
@@ -6381,7 +6453,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                       Menyimpan...
                     </>
                   ) : (
-                    "Simpan"
+                    katrolMultiSiswa.length > 0 
+                      ? `Simpan (${1 + katrolMultiSiswa.length} siswa)` 
+                      : "Simpan"
                   )}
                 </button>
               </div>
