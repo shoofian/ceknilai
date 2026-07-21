@@ -568,21 +568,26 @@ export default function StudentPortal() {
                   
                   res.detailNilai.forEach((col) => {
                     let scoreVal = col.nilaiAsli;
-                    if (scoreVal === null) {
+                    if (scoreVal === null || scoreVal === "-" || scoreVal === "") {
                       if (simulationScores[col.kolomId] !== undefined && simulationScores[col.kolomId] !== "") {
                         scoreVal = Number(simulationScores[col.kolomId]);
                         isSimulated = true;
+                      } else {
+                        scoreVal = null;
                       }
                     }
                     
-                    if (scoreVal !== null && scoreVal !== "") {
-                      simTotalNilai += Number(scoreVal) * (col.bobot / 100);
-                      simTotalBobot += col.bobot;
+                    if (scoreVal !== null && scoreVal !== "" && scoreVal !== "-") {
+                      const valNum = Number(scoreVal);
+                      if (!isNaN(valNum)) {
+                        simTotalNilai += valNum * (col.bobot / 100);
+                        simTotalBobot += col.bobot;
+                      }
                     }
                   });
 
-                  if (simTotalBobot > 0) {
-                    const simFinal = simTotalNilai;
+                  if (isSimulated) {
+                    const simFinal = simTotalNilai + (res.katrol || 0);
                     displayNilaiAkhir = Number(simFinal.toFixed(2));
                     
                     displayPredikat = 'E';
@@ -1085,7 +1090,7 @@ export default function StudentPortal() {
                             </div>
 
                             <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
-                              {res.detailNilai.map((col) => col.nilaiAsli === null ? (
+                              {res.detailNilai.map((col) => (col.nilaiAsli === null || col.nilaiAsli === "-" || col.nilaiAsli === "") ? (
                                 <div key={col.kolomId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", background: "var(--bg-secondary)" }}>
                                   <div>
                                     <h4 style={{ fontSize: "0.9rem", fontWeight: "700", margin: 0 }}>{col.namaKolom || col.namaKomom}</h4>

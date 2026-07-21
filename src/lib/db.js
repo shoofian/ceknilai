@@ -984,6 +984,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         },
         detailNilai,
         nilaiAkhir: finalScoreRounded,
+        katrol: Number(nilaiObj._katrol) || 0,
         predikat,
         statusKelulusan,
         kkm: skema.kkm,
