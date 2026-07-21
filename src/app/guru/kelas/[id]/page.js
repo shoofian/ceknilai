@@ -3107,12 +3107,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </td>
                     {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
                       const val = siswa.nilai[`_presensi_${p.id}`] || "";
+                      const isUnlocked = unlockedPertemuanIds.includes(p.id);
                       return (
                         <td key={p.id} style={{ textAlign: "center", padding: "6px" }}>
                           <button 
                             onClick={() => {
-                              const isLocked = !unlockedPertemuanIds.includes(p.id);
-                              if (isLocked) {
+                              if (!isUnlocked) {
                                 const cellKey = `${siswa.nisn}-${p.id}`;
                                 const now = Date.now();
                                 const lastClick = lastClickRef.current[cellKey] || 0;
@@ -3130,17 +3130,22 @@ export default function DetailKelas({ params: paramsPromise }) {
                               // Trigger auto save reusing handleSaveScore logic
                               handleSaveScore(siswa.nisn, `_presensi_${p.id}`, nextVal);
                             }}
-                            title={!unlockedPertemuanIds.includes(p.id) ? "Kolom terkunci. Klik ikon gembok di atas/bawah kolom untuk mengedit." : "Klik untuk mengubah"}
+                            title={!isUnlocked ? "Kolom terkunci. Klik ikon gembok di atas/bawah kolom untuk mengedit." : "Klik untuk mengubah status kehadiran (H -> I -> S -> A -> D -> kosong)"}
                             style={{
-                              width: "42px", height: "42px", borderRadius: "10px", border: val === "" ? "1px dashed var(--border-color)" : "none", fontWeight: "800", 
-                              cursor: !unlockedPertemuanIds.includes(p.id) ? "not-allowed" : "pointer", 
-                              fontSize: "1.1rem",
-                              backgroundColor: val === 'H' ? "var(--success)" : val === 'I' ? "var(--warning)" : val === 'S' ? "#3b82f6" : val === 'A' ? "var(--danger)" : val === 'D' ? "#8b5cf6" : "transparent",
-                              color: val === "" ? "var(--text-muted)" : "#fff",
-                              transition: "all 0.2s",
-                              opacity: !unlockedPertemuanIds.includes(p.id) && val === "" ? 0.35 : 1
+                              width: "42px", 
+                              height: "42px", 
+                              borderRadius: "10px", 
+                              fontWeight: "800", 
+                              cursor: !isUnlocked ? "not-allowed" : "pointer", 
+                              fontSize: val === "" ? "1.1rem" : "1.05rem",
+                              backgroundColor: val === 'H' ? "#10b981" : val === 'I' ? "#f59e0b" : val === 'S' ? "#3b82f6" : val === 'A' ? "#ef4444" : val === 'D' ? "#8b5cf6" : (isUnlocked ? "rgba(59, 130, 246, 0.08)" : "var(--bg-tertiary)"),
+                              color: val !== "" ? "#ffffff" : (isUnlocked ? "var(--primary)" : "var(--text-muted)"),
+                              border: val !== "" ? "none" : (isUnlocked ? "1.5px dashed var(--primary)" : "1px dashed var(--border-color)"),
+                              boxShadow: val !== "" ? "0 2px 6px rgba(0,0,0,0.18)" : "none",
+                              transition: "all 0.2s ease",
+                              opacity: !isUnlocked && val === "" ? 0.4 : 1
                             }}>
-                            {val || "-"}
+                            {val || (isUnlocked ? "+" : "-")}
                           </button>
                         </td>
                       )
