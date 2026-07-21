@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
+import { ASPEK_PRESETS } from "@/lib/presets";
 
 export default function KelolaKelas() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function KelolaKelas() {
   const [mataPelajaranCustom, setMataPelajaranCustom] = useState("");
   const [tahunAjaran, setTahunAjaran] = useState(`${new Date().getFullYear()}/${new Date().getFullYear() + 1}`);
   const [semester, setSemester] = useState("");
+  const [presetAspek, setPresetAspek] = useState("kurikulum-merdeka-standar");
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -237,6 +239,9 @@ export default function KelolaKelas() {
     setIsSaving(true);
     try {
       let response;
+      const selectedPresetObj = ASPEK_PRESETS.find(p => p.id === presetAspek);
+      const initialKolomNilai = selectedPresetObj ? JSON.parse(JSON.stringify(selectedPresetObj.kolomNilai)) : [];
+
       const payload = {
         nama: combinedNama,
         tingkatan: Number(tingkatan),
@@ -244,7 +249,8 @@ export default function KelolaKelas() {
         namaKustom: namaKustom.trim() || null,
         mataPelajaran: effectiveMapel,
         tahunAjaran: tahunAjaran.trim(),
-        semester: semester.trim()
+        semester: semester.trim(),
+        kolomNilai: isEditing ? undefined : initialKolomNilai
       };
       if (isEditing) {
         response = await fetch(`/api/kelas/${currentId}`, {
@@ -1252,6 +1258,35 @@ export default function KelolaKelas() {
                       <option value="Genap" style={{ backgroundColor: "var(--bg-secondary)" }}>Semester Genap</option>
                     </select>
                   </div>
+
+                  {!isEditing && (
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>✨ Preset Aspek Nilai (Opsional)</span>
+                      </label>
+                      <select
+                        className="form-input"
+                        value={presetAspek}
+                        onChange={(e) => setPresetAspek(e.target.value)}
+                        style={{ 
+                          appearance: "auto", 
+                          backgroundColor: "var(--bg-secondary)", 
+                          color: "var(--text-primary)", 
+                          border: "1px solid var(--border-color)" 
+                        }}
+                      >
+                        <option value="none">Tanpa Preset (Kosong / Atur Nanti)</option>
+                        {ASPEK_PRESETS.map(p => (
+                          <option key={p.id} value={p.id} style={{ backgroundColor: "var(--bg-secondary)" }}>
+                            {p.nama}
+                          </option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
+                        Otomatis membuat struktur aspek &amp; bobot penilaian sesuai standar kurikulum.
+                      </span>
+                    </div>
+                  )}
 
                   {error && (
                     <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>

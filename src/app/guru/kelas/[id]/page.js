@@ -10,6 +10,8 @@ import html2canvas from "html2canvas";
 import RaporIntegrationModal from "@/components/RaporIntegrationModal";
 import dynamic from "next/dynamic";
 
+import { ASPEK_PRESETS } from '@/lib/presets';
+
 const QrScannerModal = dynamic(() => import("@/components/QrScannerModal"), { ssr: false });
 const QrCardGeneratorModal = dynamic(() => import("@/components/QrCardGeneratorModal"), { ssr: false });
 
@@ -539,20 +541,44 @@ export default function DetailKelas({ params: paramsPromise }) {
       };
     });
 
-    if (sortConfig.key) {
-      mapped.sort((a, b) => {
-        let valA = a[sortConfig.key];
-        let valB = b[sortConfig.key];
-        
-        // Handle string comparison nicely
+    // Always use a stable sort with secondary tie-breaker (nama / nisn)
+    const key = sortConfig.key || 'nama';
+    const dir = sortConfig.direction === 'desc' ? -1 : 1;
+
+    mapped.sort((a, b) => {
+      let cmp = 0;
+      if (key === 'nama') {
+        const nameA = a.nama || "";
+        const nameB = b.nama || "";
+        cmp = nameA.localeCompare(nameB, 'id', { numeric: true, sensitivity: 'base' });
+      } else if (key === 'nisn') {
+        const nisnA = a.nisn || "";
+        const nisnB = b.nisn || "";
+        cmp = nisnA.localeCompare(nisnB, 'id', { numeric: true });
+      } else if (key === 'finalScore') {
+        const scoreA = Number(a.finalScore) || 0;
+        const scoreB = Number(b.finalScore) || 0;
+        cmp = scoreA - scoreB;
+      } else {
+        let valA = a[key];
+        let valB = b[key];
         if (typeof valA === 'string') valA = valA.toLowerCase();
         if (typeof valB === 'string') valB = valB.toLowerCase();
+        if (valA < valB) cmp = -1;
+        else if (valA > valB) cmp = 1;
+      }
 
-        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
+      if (cmp !== 0) return cmp * dir;
+
+      // Secondary tie-breaker: Always fall back to alphabetical name (A-Z) so student order is 100% stable
+      const fallbackNameA = a.nama || "";
+      const fallbackNameB = b.nama || "";
+      const nameCmp = fallbackNameA.localeCompare(fallbackNameB, 'id', { numeric: true, sensitivity: 'base' });
+      if (nameCmp !== 0) return nameCmp;
+
+      // Tertiary tie-breaker: nisn
+      return (a.nisn || "").localeCompare(b.nisn || "");
+    });
 
     return mapped;
   }, [kelas?.siswa, kelas?.kolomNilai, temporaryScores, sortConfig]);
@@ -1921,6 +1947,53 @@ export default function DetailKelas({ params: paramsPromise }) {
       console.error("Grade update failed", err);
       setSaveStatus(prev => ({ ...prev, [key]: "failed" }));
     }
+  };
+
+  // === SMART CLIPBOARD PASTE (FROM EXCEL / GOOGLE SHEETS) ===
+  const handleGradePaste = (e, startStudentNisn, colId) => {
+    const pastedText = e.clipboardData ? e.clipboardData.getData("text/plain") : "";
+    if (!pastedText) return;
+
+    const lines = pastedText
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(l => l !== "");
+
+    if (lines.length <= 1) {
+      // Biarkan paste 1 nilai biasa berjalan secara bawaan
+      return;
+    }
+
+    // Jika paste berisi banyak baris dari Excel/Sheets
+    e.preventDefault();
+
+    const startRowIdx = sortedStudents.findIndex(s => s.nisn === startStudentNisn);
+    if (startRowIdx === -1) return;
+
+    let updatedCount = 0;
+    const newTemp = {};
+
+    lines.forEach((lineVal, offset) => {
+      const targetStudent = sortedStudents[startRowIdx + offset];
+      if (targetStudent) {
+        // Konversi koma desimal Indonesia menjadi titik (misal: 85,5 -> 85.5)
+        const normalizedValStr = lineVal.replace(/,/g, ".");
+        const numVal = Number(normalizedValStr);
+
+        if (!isNaN(numVal) && normalizedValStr !== "") {
+          const scoreClamped = Math.min(100, Math.max(0, numVal));
+          const valStr = scoreClamped.toString();
+          const cellKey = `${targetStudent.nisn}-${colId}`;
+
+          newTemp[cellKey] = valStr;
+          handleGradeBlur(targetStudent.nisn, colId, valStr);
+          updatedCount++;
+        }
+      }
+    });
+
+    setTemporaryScores(prev => ({ ...prev, ...newTemp }));
+    triggerAlert(`📋 Berhasil menempelkan (${updatedCount} nilai) dari Excel secara otomatis!`, null, { title: "Salin-Tempel Excel Cepat" });
   };
 
   // === DYNAMIC EXCEL TEMPLATE EXPORTER ===
@@ -3493,6 +3566,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                     onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
                                     onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
                                     onWheel={(e) => e.target.blur()}
+                                    onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
                                     onKeyDown={(e) => {
                                       if (e.key === "Enter") {
                                         e.preventDefault();
@@ -5655,6 +5729,44 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
 
             {configModalTab === 'aspek' ? (<>
+            {/* --- PRESET SELECTOR BAR --- */}
+            <div style={{ padding: "10px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-primary)" }}>✨ Preset Kurikulum:</span>
+                <select
+                  defaultValue=""
+                  className="form-input"
+                  style={{ padding: "4px 10px", fontSize: "0.78rem", maxWidth: "280px" }}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (!selectedId) return;
+                    const preset = ASPEK_PRESETS.find(p => p.id === selectedId);
+                    if (preset) {
+                      if (confirm(`⚠️ Terapkan ${preset.nama}?\n\nStruktur aspek & bobot di modal ini akan digantikan dengan preset terpilih.`)) {
+                        setKelas(prev => ({
+                          ...prev,
+                          kolomNilai: JSON.parse(JSON.stringify(preset.kolomNilai))
+                        }));
+                        setNewAspects([]);
+                        if (preset.kolomNilai.length > 0) {
+                          setActiveAspectId(preset.kolomNilai[0].id);
+                        }
+                      }
+                    }
+                    e.target.value = "";
+                  }}
+                >
+                  <option value="" disabled>-- Pilih Preset Aspek --</option>
+                  {ASPEK_PRESETS.map(p => (
+                    <option key={p.id} value={p.id}>{p.nama}</option>
+                  ))}
+                </select>
+              </div>
+              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic" }}>
+                Pilih preset untuk mengisi aspek &amp; bobot 1-klik otomatis
+              </span>
+            </div>
+
             <div className="aspect-modal-container">
               {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
               <div className={`aspect-sidebar-panel ${mobileActiveView === "list" ? "show-mobile" : "hide-mobile"}`}>
