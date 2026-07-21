@@ -2575,7 +2575,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={() => {
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nGuru Pengampu: ${guruProfile?.nama || "-"}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
-                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`}_` +
+                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${totalBobot !== 100 ? `Belum Lengkap (Bobot < 100%) ⚠️` : (s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`)}_` +
                 (showKehadiran ? `\n_Kehadiran: H:${s.attSummary.H} I:${s.attSummary.I} S:${s.attSummary.S} A:${s.attSummary.A}_` : ``) +
                 `\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
@@ -2607,7 +2607,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                 📸 Unduh Gambar
               </button>
             </div>
-          </div>e="b          {(() => {
+          </div>
+          {(() => {
             const isDark = laporanTheme === "dark";
             const colors = {
               bg: isDark ? "#0f172a" : "#ffffff",
@@ -2660,20 +2661,20 @@ export default function DetailKelas({ params: paramsPromise }) {
                         
                         {/* Status & Detail Kendala Box */}
                         <div style={{
-                          backgroundColor: s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBg : colors.belumTuntasBg,
-                          border: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder}`,
+                          backgroundColor: totalBobot !== 100 ? "rgba(245, 158, 11, 0.03)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBg : colors.belumTuntasBg),
+                          border: `1px solid ${totalBobot !== 100 ? "rgba(245, 158, 11, 0.15)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder)}`,
                           borderRadius: "8px",
                           overflow: "hidden"
                         }}>
                           {/* Final Score Status Header */}
                           <div style={{ 
                             display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", fontSize: "0.85rem", fontWeight: "600",
-                            backgroundColor: s.finalScore >= analyticsData?.kkmVal ? colors.tuntasHeaderBg : colors.belumTuntasHeaderBg,
-                            color: s.finalScore >= analyticsData?.kkmVal ? colors.tuntasText : colors.belumTuntasText,
-                            borderBottom: `1px solid ${s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder}`
+                            backgroundColor: totalBobot !== 100 ? "rgba(245, 158, 11, 0.08)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasHeaderBg : colors.belumTuntasHeaderBg),
+                            color: totalBobot !== 100 ? (isDark ? "#fcd34d" : "#b45309") : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasText : colors.belumTuntasText),
+                            borderBottom: `1px solid ${totalBobot !== 100 ? "rgba(245, 158, 11, 0.15)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder)}`
                           }}>
-                            <span>{s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️"}</span>
-                            <span>Status Nilai Akhir: {s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)"}</span>
+                            <span>{totalBobot !== 100 ? "⚠️" : (s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️")}</span>
+                            <span>Status Nilai Akhir: {totalBobot !== 100 ? "Belum Lengkap (Bobot Aspek Belum 100%)" : (s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)")}</span>
                           </div>
 
                           {/* Rincian Kendala Aspek (Nested inside status box) */}
