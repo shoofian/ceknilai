@@ -203,9 +203,14 @@ export default function GuruDashboard() {
                       Mata Pelajaran: {kelas.mataPelajaran || 'Informatika'} &bull; TA: {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
                     </p>
                   </div>
-                  <button className="btn btn-primary recent-card-btn" style={{ padding: "8px 12px", fontSize: "0.8rem", pointerEvents: "none" }}>
-                    Kelola Nilai
-                  </button>
+                  <div style={{ display: "flex", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
+                    <Link href={`/guru/kelas/${kelas.id}`} className="btn btn-primary recent-card-btn" style={{ padding: "8px 12px", fontSize: "0.75rem", fontWeight: "700", textDecoration: "none" }}>
+                      📊 Kelola
+                    </Link>
+                    <Link href={`/guru/kelas/${kelas.id}?action=quick-attendance`} className="btn" style={{ padding: "8px 12px", fontSize: "0.75rem", backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.25)", fontWeight: "700", display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
+                      ⚡ Presensi
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

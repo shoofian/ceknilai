@@ -26,6 +26,7 @@ export default function KelolaKelas() {
 
   // Filter States
   const [filterTingkatan, setFilterTingkatan] = useState("Semua");
+  const [activeDropdownId, setActiveDropdownId] = useState(null);
 
   // Dropdown Constants
   const TINGKATAN_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -144,6 +145,12 @@ export default function KelolaKelas() {
     };
     fetchSession();
     fetchKelas();
+  }, []);
+
+  useEffect(() => {
+    const handleCloseDropdowns = () => setActiveDropdownId(null);
+    window.addEventListener("click", handleCloseDropdowns);
+    return () => window.removeEventListener("click", handleCloseDropdowns);
   }, []);
 
   const handleOpenAdd = () => {
@@ -750,6 +757,9 @@ export default function KelolaKelas() {
         .clickable-class-card:hover .card-click-indicator {
           color: var(--primary) !important;
         }
+        .btn-dots:hover {
+          background-color: var(--bg-tertiary);
+        }
       `}} />
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
@@ -833,9 +843,29 @@ export default function KelolaKelas() {
                       💻 {k.mataPelajaran}
                     </span>
                   </div>
-                  <span className="card-click-indicator" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
-                    Kelola ➔
-                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span className="card-click-indicator" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
+                      Kelola ➔
+                    </span>
+                    <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        onClick={() => setActiveDropdownId(activeDropdownId === k.id ? null : k.id)} 
+                        className="btn-dots"
+                        style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "1.2rem", cursor: "pointer", padding: "4px 8px", borderRadius: "4px", display: "flex", alignItems: "center", transition: "background 0.2s" }}
+                        title="Menu Kelas"
+                      >
+                        ⋮
+                      </button>
+                      {activeDropdownId === k.id && (
+                        <div style={{ position: "absolute", right: 0, top: "100%", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-lg)", zIndex: 10, display: "flex", flexDirection: "column", minWidth: "120px", overflow: "hidden", marginTop: "4px" }}>
+                          <button onClick={() => { handleOpenEdit(k); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--text-primary)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>✏️ Edit</button>
+                          <button onClick={() => { handleDuplicateOpen(k); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--text-primary)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>📋 Duplikat</button>
+                          <button onClick={() => { handleArchive(k.id, k.nama); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--warning)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>📁 Arsip</button>
+                          <button onClick={() => { handleDelete(k.id, k.nama); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--danger)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>🗑️ Hapus</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <h3 style={{ fontSize: "1.25rem", fontWeight: "800", lineHeight: "1.3" }}>{k.nama}</h3>
@@ -875,47 +905,13 @@ export default function KelolaKelas() {
 
               {/* Action buttons */}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
-                <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "10px", fontSize: "0.9rem" }}>
-                  ⚙️ Kelola Nilai & Siswa
-                </Link>
-                
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: "8px" }}>
-                  <button 
-                    onClick={() => handleOpenEdit(k)} 
-                    className="btn btn-secondary" 
-                    style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
-                    title="Edit Kelas"
-                    disabled={isLocked}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDuplicateOpen(k)} 
-                    className="btn btn-secondary" 
-                    style={{ padding: "8px", fontSize: "0.85rem", width: "100%", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
-                    title="Duplikat Kelas"
-                    disabled={isLocked}
-                  >
-                    📋 Duplikat
-                  </button>
-                  <button 
-                    onClick={() => handleArchive(k.id, k.nama)} 
-                    className="btn btn-secondary" 
-                    style={{ padding: "8px", fontSize: "0.85rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)", width: "100%", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
-                    title="Arsipkan Kelas"
-                    disabled={isLocked}
-                  >
-                    📁 Arsipkan
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(k.id, k.nama)} 
-                    className="btn btn-secondary" 
-                    style={{ padding: "8px 10px", fontSize: "0.85rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)", justifyContent: "center", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }} 
-                    title="Hapus Kelas"
-                    disabled={isLocked}
-                  >
-                    🗑️
-                  </button>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", fontWeight: "700" }}>
+                    📊 Kelola Nilai
+                  </Link>
+                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.25)", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
+                    ⚡ Presensi Cepat
+                  </Link>
                 </div>
               </div>
             </div>

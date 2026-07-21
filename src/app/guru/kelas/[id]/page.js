@@ -4,7 +4,7 @@ import { useState, useEffect, use, useMemo, Fragment, useRef } from "react";
 import { createPortal } from "react-dom";
 import Modal from '@/components/Modal';
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
 import RaporIntegrationModal from "@/components/RaporIntegrationModal";
@@ -18,6 +18,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const params = use(paramsPromise);
   const classId = params.id;
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState(null);
@@ -811,6 +812,17 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
     }
   }, [kelas, classId]);
+
+  useEffect(() => {
+    if (kelas && searchParams && searchParams.get('action') === 'quick-attendance') {
+      setActiveTab('presensi');
+      handleOpenAddPertemuan();
+      
+      // Bersihkan url query param agar tidak looping
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({ ...window.history.state, as: cleanUrl, url: cleanUrl }, '', cleanUrl);
+    }
+  }, [kelas, searchParams]);
 
   // === DYNAMIC WEIGHT COMPUTATIONS ===  // Derived values for validation
   const totalBobot = (kelas ? kelas.kolomNilai.reduce((sum, col) => sum + (Number(col.bobot) || 0), 0) : 0) 
