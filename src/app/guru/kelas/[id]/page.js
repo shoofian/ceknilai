@@ -19,6 +19,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const classId = params.id;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const quickAttendanceTriggered = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState(null);
@@ -814,7 +815,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   }, [kelas, classId]);
 
   useEffect(() => {
-    if (kelas && searchParams && searchParams.get('action') === 'quick-attendance') {
+    if (kelas && searchParams && searchParams.get('action') === 'quick-attendance' && !quickAttendanceTriggered.current) {
+      quickAttendanceTriggered.current = true;
       setActiveTab('presensi');
       handleOpenAddPertemuan();
       

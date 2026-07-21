@@ -909,8 +909,8 @@ export default function KelolaKelas() {
                   <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", fontWeight: "700" }}>
                     📊 Kelola Nilai
                   </Link>
-                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", backgroundColor: "rgba(16, 185, 129, 0.15)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.25)", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
-                    ⚡ Presensi Cepat
+                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", backgroundColor: "#10b981", color: "#ffffff", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
+                    ⚡ Presensi
                   </Link>
                 </div>
               </div>
