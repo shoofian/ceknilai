@@ -826,46 +826,46 @@ export default function KelolaKelas() {
               style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}
             >
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                    {k.tingkatan && (
-                      <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
-                        🎓 Kelas {k.tingkatan}
-                      </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                  <span className="card-click-indicator" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
+                    Kelola ➔
+                  </span>
+                  
+                  <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                    <button 
+                      onClick={() => setActiveDropdownId(activeDropdownId === k.id ? null : k.id)} 
+                      className="btn-dots"
+                      style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "1.2rem", cursor: "pointer", padding: "4px 8px", borderRadius: "4px", display: "flex", alignItems: "center", transition: "background 0.2s" }}
+                      title="Menu Kelas"
+                    >
+                      ⋮
+                    </button>
+                    {activeDropdownId === k.id && (
+                      <div style={{ position: "absolute", right: 0, top: "100%", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-lg)", zIndex: 10, display: "flex", flexDirection: "column", minWidth: "120px", overflow: "hidden", marginTop: "4px" }}>
+                        <button onClick={() => { handleOpenEdit(k); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--text-primary)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>✏️ Edit</button>
+                        <button onClick={() => { handleDuplicateOpen(k); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--text-primary)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>📋 Duplikat</button>
+                        <button onClick={() => { handleArchive(k.id, k.nama); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--warning)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>📁 Arsip</button>
+                        <button onClick={() => { handleDelete(k.id, k.nama); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--danger)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>🗑️ Hapus</button>
+                      </div>
                     )}
-                    <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
-                      📚 {k.tahunAjaran}
-                    </span>
-                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
-                      ⏱️ Semester {k.semester || "Ganjil"}
-                    </span>
-                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                      💻 {k.mataPelajaran}
-                    </span>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span className="card-click-indicator" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
-                      Kelola ➔
+                </div>
+
+                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                  {k.tingkatan && (
+                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                      🎓 Kelas {k.tingkatan}
                     </span>
-                    <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        onClick={() => setActiveDropdownId(activeDropdownId === k.id ? null : k.id)} 
-                        className="btn-dots"
-                        style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "1.2rem", cursor: "pointer", padding: "4px 8px", borderRadius: "4px", display: "flex", alignItems: "center", transition: "background 0.2s" }}
-                        title="Menu Kelas"
-                      >
-                        ⋮
-                      </button>
-                      {activeDropdownId === k.id && (
-                        <div style={{ position: "absolute", right: 0, top: "100%", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", boxShadow: "var(--shadow-lg)", zIndex: 10, display: "flex", flexDirection: "column", minWidth: "120px", overflow: "hidden", marginTop: "4px" }}>
-                          <button onClick={() => { handleOpenEdit(k); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--text-primary)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>✏️ Edit</button>
-                          <button onClick={() => { handleDuplicateOpen(k); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--text-primary)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>📋 Duplikat</button>
-                          <button onClick={() => { handleArchive(k.id, k.nama); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--warning)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>📁 Arsip</button>
-                          <button onClick={() => { handleDelete(k.id, k.nama); setActiveDropdownId(null); }} disabled={isLocked} style={{ padding: "8px 12px", background: "none", border: "none", color: "var(--danger)", textAlign: "left", fontSize: "0.85rem", cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px", width: "100%" }}>🗑️ Hapus</button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  )}
+                  <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
+                    📚 {k.tahunAjaran}
+                  </span>
+                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                    ⏱️ Semester {k.semester || "Ganjil"}
+                  </span>
+                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                    💻 {k.mataPelajaran}
+                  </span>
                 </div>
                 
                 <h3 style={{ fontSize: "1.25rem", fontWeight: "800", lineHeight: "1.3" }}>{k.nama}</h3>
