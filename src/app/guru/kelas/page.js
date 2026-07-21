@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 
 export default function KelolaKelas() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -735,6 +737,20 @@ export default function KelolaKelas() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{__html: `
+        .clickable-class-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+          cursor: pointer;
+        }
+        .clickable-class-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+          border-color: var(--primary) !important;
+        }
+        .clickable-class-card:hover .card-click-indicator {
+          color: var(--primary) !important;
+        }
+      `}} />
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
       {/* Header section with add button */}
@@ -788,22 +804,37 @@ export default function KelolaKelas() {
 
           <div className="grid-cols-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
           {kelas.filter(k => filterTingkatan === "Semua" || String(k.tingkatan) === filterTingkatan).map((k) => (
-            <div key={k.id} className="glass-card animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}>
+            <div 
+              key={k.id} 
+              className="glass-card animate-fade-in clickable-class-card" 
+              onClick={(e) => {
+                if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select') || e.target.closest('input')) {
+                  return;
+                }
+                router.push(`/guru/kelas/${k.id}`);
+              }}
+              style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}
+            >
               <div>
-                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
-                  {k.tingkatan && (
-                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
-                      🎓 Kelas {k.tingkatan}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px", marginBottom: "12px", flexWrap: "wrap" }}>
+                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                    {k.tingkatan && (
+                      <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                        🎓 Kelas {k.tingkatan}
+                      </span>
+                    )}
+                    <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
+                      📚 {k.tahunAjaran}
                     </span>
-                  )}
-                  <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
-                    📚 {k.tahunAjaran}
-                  </span>
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
-                    ⏱️ Semester {k.semester || "Ganjil"}
-                  </span>
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                    💻 {k.mataPelajaran}
+                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                      ⏱️ Semester {k.semester || "Ganjil"}
+                    </span>
+                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                      💻 {k.mataPelajaran}
+                    </span>
+                  </div>
+                  <span className="card-click-indicator" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
+                    Kelola ➔
                   </span>
                 </div>
                 

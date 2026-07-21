@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function GuruDashboard() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     activeClassesCount: 0,
@@ -85,7 +87,23 @@ export default function GuruDashboard() {
   }
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+    <>
+      <style dangerouslySetInnerHTML={{__html: `
+        .clickable-recent-card {
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+          cursor: pointer;
+        }
+        .clickable-recent-card:hover {
+          transform: translateY(-2px);
+          border-color: var(--primary) !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .clickable-recent-card:hover .recent-card-btn {
+          background-color: var(--primary) !important;
+          color: white !important;
+        }
+      `}} />
+      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
       
       {/* Welcome banner */}
       <div className="page-title-section" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
@@ -167,6 +185,8 @@ export default function GuruDashboard() {
               {recentClasses.map((kelas) => (
                 <div
                   key={kelas.id}
+                  className="clickable-recent-card"
+                  onClick={() => router.push(`/guru/kelas/${kelas.id}`)}
                   style={{
                     padding: "16px",
                     borderRadius: "var(--radius-sm)",
@@ -183,9 +203,9 @@ export default function GuruDashboard() {
                       Mata Pelajaran: {kelas.mataPelajaran || 'Informatika'} &bull; TA: {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
                     </p>
                   </div>
-                  <Link href={`/guru/kelas/${kelas.id}`} className="btn btn-primary" style={{ padding: "8px 12px", fontSize: "0.8rem" }}>
+                  <button className="btn btn-primary recent-card-btn" style={{ padding: "8px 12px", fontSize: "0.8rem", pointerEvents: "none" }}>
                     Kelola Nilai
-                  </Link>
+                  </button>
                 </div>
               ))}
             </div>
@@ -254,5 +274,6 @@ export default function GuruDashboard() {
 
       </div>
     </div>
+    </>
   );
 }
