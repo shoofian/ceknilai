@@ -262,6 +262,16 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [katrolMultiSiswa, setKatrolMultiSiswa] = useState([]); // NISN siswa tambahan yang dipilih
   const [katrolShowMulti, setKatrolShowMulti] = useState(false); // toggle tampilkan pilihan multi-siswa
 
+  // States untuk Alat Lanjutan & Normalisasi Nilai
+  const [showAdvancedTools, setShowAdvancedTools] = useState(false);
+  const [normModalOpen, setNormModalOpen] = useState(false);
+  const [normMethod, setNormMethod] = useState("linear"); // "linear" | "minmax" | "scalemax"
+  const [normLinearPoin, setNormLinearPoin] = useState(5);
+  const [normMinTarget, setNormMinTarget] = useState(60);
+  const [normMaxTarget, setNormMaxTarget] = useState(100);
+  const [normMaxOnlyTarget, setNormMaxOnlyTarget] = useState(100);
+  const [isSavingNorm, setIsSavingNorm] = useState(false);
+
   // State untuk Navigasi Panel Mobile di Modal Atur Aspek
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
 
@@ -3682,6 +3692,56 @@ export default function DetailKelas({ params: paramsPromise }) {
         Belum ada siswa dan aspek nilai di kelas ini. Silakan atur aspek nilai atau tambah siswa terlebih dahulu.
       </div>
     )}
+      {/* ===== SECTION: ALAT LANJUTAN ===== */}
+      <div style={{ marginTop: "28px", borderTop: "1px dashed var(--border-color)", paddingTop: "16px" }}>
+        <button
+          onClick={() => setShowAdvancedTools(!showAdvancedTools)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--text-secondary)",
+            fontSize: "0.9rem",
+            fontWeight: "700",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 0"
+          }}
+        >
+          <span style={{ transition: "transform 0.2s", transform: showAdvancedTools ? "rotate(90deg)" : "rotate(0deg)" }}>▸</span>
+          <span>🧪 Alat Lanjutan & Perhitungan Khusus</span>
+          <span style={{ fontSize: "0.7rem", backgroundColor: "var(--bg-tertiary)", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "10px", fontWeight: "600" }}>Opsional</span>
+        </button>
+
+        {showAdvancedTools && (
+          <div className="animate-fade-in" style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
+            {/* Card 1: Normalisasi Nilai */}
+            <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <span style={{ fontSize: "1.4rem" }}>📐</span>
+                <div>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: 0 }}>Normalisasi Nilai Akhir</h4>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0", lineHeight: "1.4" }}>
+                    Sesuaikan rentang/skala nilai kelas secara otomatis (Linear, Min-Max, atau Scale to Max).
+                  </p>
+                </div>
+              </div>
+              <div style={{ marginTop: "auto", paddingTop: "8px", display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => setNormModalOpen(true)}
+                  className="btn btn-primary"
+                  style={{ fontSize: "0.8rem", padding: "8px 14px", fontWeight: "700", flex: 1, justifyContent: "center", display: "flex", alignItems: "center", gap: "6px" }}
+                  disabled={isLocked || kelas?.archived}
+                >
+                  <span>⚙️ Buka Tools Normalisasi</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       </div>
 
 
@@ -6459,6 +6519,304 @@ export default function DetailKelas({ params: paramsPromise }) {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MODAL: Normalisasi Nilai ===== */}
+      {normModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "620px", display: "flex", flexDirection: "column", padding: 0, maxHeight: "90vh", overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", padding: "20px 24px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>📐 Normalisasi Nilai Akhir</span>
+                </h3>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                  Sesuaikan rentang dan distribusi nilai siswa tanpa mengubah nilai komponen fisik.
+                </p>
+              </div>
+              <button onClick={() => setNormModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.2rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
+            </div>
+
+            <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+              {/* Method Selector */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700" }}>Pilih Metode Normalisasi:</label>
+                <select
+                  className="form-input"
+                  value={normMethod}
+                  onChange={(e) => setNormMethod(e.target.value)}
+                  style={{ padding: "8px 12px", fontSize: "0.85rem" }}
+                >
+                  <option value="linear">➕ Geser Linear (Tambah/Kurang Poin Tetap ke Semua Siswa)</option>
+                  <option value="minmax">📊 Skala Min-Max (Seragamkan ke Rentang Target, misal 60–100)</option>
+                  <option value="scalemax">🎯 Skala ke Max (Siswa Tertinggi Menjadi Target, misal 100)</option>
+                </select>
+              </div>
+
+              {/* Method Parameters */}
+              <div style={{ backgroundColor: "var(--bg-secondary)", padding: "14px 16px", borderRadius: "8px", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "10px" }}>
+                {normMethod === "linear" && (
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                      Poin Tambahan (Bisa positif/negatif):
+                    </label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={normLinearPoin}
+                      onChange={(e) => setNormLinearPoin(Number(e.target.value))}
+                      placeholder="Contoh: 5"
+                      style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "160px" }}
+                    />
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
+                      Setiap siswa akan mendapat tambahan {normLinearPoin >= 0 ? `+${normLinearPoin}` : normLinearPoin} poin pada nilai akhirnya.
+                    </span>
+                  </div>
+                )}
+
+                {normMethod === "minmax" && (
+                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: "130px" }}>
+                      <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                        Target Nilai Terendah (Min):
+                      </label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={normMinTarget}
+                        onChange={(e) => setNormMinTarget(Number(e.target.value))}
+                        style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: "130px" }}>
+                      <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                        Target Nilai Tertinggi (Max):
+                      </label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={normMaxTarget}
+                        onChange={(e) => setNormMaxTarget(Number(e.target.value))}
+                        style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {normMethod === "scalemax" && (
+                  <div>
+                    <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                      Target Nilai Tertinggi (Max):
+                    </label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={normMaxOnlyTarget}
+                      onChange={(e) => setNormMaxOnlyTarget(Number(e.target.value))}
+                      placeholder="Contoh: 100"
+                      style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "160px" }}
+                    />
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
+                      Siswa dengan nilai murni tertinggi akan diset menjadi {normMaxOnlyTarget}, dan siswa lainnya disesuaikan secara proporsional.
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Calculation & Live Preview Table */}
+              {(() => {
+                if (!kelas?.siswa || kelas.siswa.length === 0) return null;
+
+                // Hitung nilai murni (tanpa katrol) dan nilai normalisasi baru
+                const previewList = kelas.siswa.map(student => {
+                  let totalMurni = 0;
+                  let filledCount = 0;
+                  kelas.kolomNilai.forEach(col => {
+                    const { score, isFilled, isAllFilled } = getColScore(student, col, null);
+                    if (isFilled) {
+                      totalMurni += score * (col.bobot / 100);
+                      if (isAllFilled) filledCount++;
+                    }
+                  });
+
+                  // Presensi jika ada
+                  const skema = kelas.skemaPenilaian || {};
+                  const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
+                  const pertemuanList = skema.pertemuan || [];
+                  if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
+                    let attSummary = { H: 0, I: 0, S: 0, A: 0, D: 0 };
+                    pertemuanList.forEach(p => {
+                      const val = student.nilai[`_presensi_${p.id}`];
+                      if (val && attSummary[val] !== undefined) attSummary[val]++;
+                    });
+                    let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
+                    let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
+                    const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+                    totalMurni += attAvg * (presensiConfig.bobot / 100);
+                  }
+
+                  totalMurni = parseFloat(totalMurni.toFixed(2));
+                  const katrolLama = Number(student.nilai?._katrol) || 0;
+                  const finalCurrent = parseFloat((totalMurni + katrolLama).toFixed(2));
+
+                  return {
+                    nisn: student.nisn,
+                    nama: student.nama,
+                    totalMurni,
+                    katrolLama,
+                    finalCurrent
+                  };
+                });
+
+                const allMurni = previewList.map(s => s.totalMurni);
+                const minMurni = Math.min(...allMurni);
+                const maxMurni = Math.max(...allMurni);
+
+                const computedPreview = previewList.map(s => {
+                  let rawNormalized = s.totalMurni;
+                  if (normMethod === "linear") {
+                    rawNormalized = s.totalMurni + (Number(normLinearPoin) || 0);
+                  } else if (normMethod === "minmax") {
+                    if (maxMurni === minMurni) {
+                      rawNormalized = normMinTarget;
+                    } else {
+                      rawNormalized = normMinTarget + ((s.totalMurni - minMurni) / (maxMurni - minMurni)) * (normMaxTarget - normMinTarget);
+                    }
+                  } else if (normMethod === "scalemax") {
+                    if (maxMurni === 0) {
+                      rawNormalized = 0;
+                    } else {
+                      rawNormalized = (s.totalMurni / maxMurni) * normMaxOnlyTarget;
+                    }
+                  }
+                  
+                  const clampedNormalized = parseFloat(Math.min(100, Math.max(0, rawNormalized)).toFixed(2));
+                  const newDelta = parseFloat((clampedNormalized - s.totalMurni).toFixed(2));
+
+                  return {
+                    ...s,
+                    normalizedScore: clampedNormalized,
+                    newDelta
+                  };
+                });
+
+                const avgCurrent = (computedPreview.reduce((sum, s) => sum + s.finalCurrent, 0) / computedPreview.length).toFixed(2);
+                const avgNormalized = (computedPreview.reduce((sum, s) => sum + s.normalizedScore, 0) / computedPreview.length).toFixed(2);
+
+                return (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", backgroundColor: "var(--bg-tertiary)", padding: "8px 12px", borderRadius: "6px" }}>
+                      <span>Rata-rata Kelas: <strong>{avgCurrent}</strong> ➔ <strong style={{ color: "var(--primary)" }}>{avgNormalized}</strong></span>
+                      <span>Rentang Murni: <strong>{minMurni} – {maxMurni}</strong></span>
+                    </div>
+
+                    <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid var(--border-color)", borderRadius: "8px" }}>
+                      <table style={{ width: "100%", fontSize: "0.8rem", borderCollapse: "collapse" }}>
+                        <thead>
+                          <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", textAlign: "left" }}>
+                            <th style={{ padding: "8px 12px" }}>Siswa</th>
+                            <th style={{ padding: "8px 12px", textAlign: "center" }}>Murni</th>
+                            <th style={{ padding: "8px 12px", textAlign: "center" }}>Saat Ini</th>
+                            <th style={{ padding: "8px 12px", textAlign: "center" }}>Hasil Normalisasi</th>
+                            <th style={{ padding: "8px 12px", textAlign: "center" }}>Katrol Baru</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {computedPreview
+                            .sort((a, b) => (a.nama || "").localeCompare(b.nama || ""))
+                            .map(s => (
+                              <tr key={s.nisn} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                                <td style={{ padding: "6px 12px", fontWeight: "600" }}>{s.nama}</td>
+                                <td style={{ padding: "6px 12px", textAlign: "center", color: "var(--text-muted)" }}>{s.totalMurni}</td>
+                                <td style={{ padding: "6px 12px", textAlign: "center" }}>{s.finalCurrent}</td>
+                                <td style={{ padding: "6px 12px", textAlign: "center", fontWeight: "800", color: "var(--primary)" }}>{s.normalizedScore}</td>
+                                <td style={{ padding: "6px 12px", textAlign: "center", fontWeight: "700", color: s.newDelta >= 0 ? "#10b981" : "#ef4444" }}>
+                                  {s.newDelta >= 0 ? `+${s.newDelta}` : s.newDelta}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div style={{ display: "flex", gap: "8px", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "6px" }}>
+                      <button
+                        onClick={async () => {
+                          if (confirm("⚠️ Apakah Anda yakin ingin MENGHAPUS / MERESET semua nilai katrol & normalisasi seluruh siswa di kelas ini?")) {
+                            setIsSavingNorm(true);
+                            try {
+                              const promises = kelas.siswa.map(s =>
+                                fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ nilai: { _katrol: null } }),
+                                })
+                              );
+                              await Promise.all(promises);
+                              setNormModalOpen(false);
+                              fetchClassDetail();
+                            } catch (err) {
+                              alert("Gagal mereset normalisasi.");
+                            } finally {
+                              setIsSavingNorm(false);
+                            }
+                          }
+                        }}
+                        className="btn btn-secondary"
+                        style={{ padding: "6px 12px", fontSize: "0.78rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.2)" }}
+                        disabled={isSavingNorm}
+                      >
+                        🗑️ Reset Semua Katrol
+                      </button>
+
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          onClick={() => setNormModalOpen(false)}
+                          className="btn btn-secondary"
+                          style={{ padding: "6px 14px", fontSize: "0.82rem" }}
+                          disabled={isSavingNorm}
+                        >
+                          Batal
+                        </button>
+                        <button
+                          onClick={async () => {
+                            setIsSavingNorm(true);
+                            try {
+                              const promises = computedPreview.map(s =>
+                                fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ nilai: { _katrol: s.newDelta === 0 ? null : s.newDelta } }),
+                                })
+                              );
+                              const responses = await Promise.all(promises);
+                              const failedCount = responses.filter(r => !r.ok).length;
+                              if (failedCount > 0) {
+                                alert(`${failedCount} dari ${computedPreview.length} siswa gagal di-update.`);
+                              }
+                              setNormModalOpen(false);
+                              fetchClassDetail();
+                            } catch (err) {
+                              alert("Gagal menerapkan normalisasi.");
+                            } finally {
+                              setIsSavingNorm(false);
+                            }
+                          }}
+                          className="btn btn-primary"
+                          style={{ padding: "6px 16px", fontSize: "0.82rem", fontWeight: "700" }}
+                          disabled={isSavingNorm}
+                        >
+                          {isSavingNorm ? "Terapkan..." : `Terapkan Normalisasi (${computedPreview.length} Siswa)`}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
