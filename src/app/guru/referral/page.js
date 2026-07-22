@@ -309,9 +309,9 @@ export default function ReferralPage() {
       color: '#475569',
       textColor: '#ffffff',
       bgGradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-      accentLabel: 'Noir Monochrome',
+      accentLabel: 'Noir Obsidian & High Contrast',
       badge: 'PRO NOIR',
-      desc: 'Tema monokrom hitam & putih klasik dengan kontras sangat tinggi dan estetika profesional yang tajam.' 
+      desc: 'Perubahan total ke monokrom obsidian noir dengan background dark contrast, aksen silver, dan atmosfer profesional yang tajam.' 
     },
     { 
       id: 'theme_pastel', 
@@ -319,9 +319,10 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🌸', 
       color: '#8b5cf6',
-      bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(167, 139, 250, 0.1) 100%)',
-      accentLabel: 'Soft Purple Glow',
-      desc: 'Tema ungu lavender pastel yang lembut, tenang, dan estetis untuk tampilan mengajar yang santai.' 
+      textColor: '#ffffff',
+      bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.2) 100%)',
+      accentLabel: 'Velvet Violet & Amethyst Glow',
+      desc: 'Atmosfer ungu lavender pastel dengan background velvet violet tint, pendaran amethyst glow, dan card border serba anggun.' 
     },
     { 
       id: 'theme_pinky', 
@@ -329,10 +330,11 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🎀', 
       color: '#ec4899',
-      bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%)',
-      accentLabel: 'Rose Sakura',
+      textColor: '#ffffff',
+      bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.4) 0%, rgba(190, 24, 93, 0.2) 100%)',
+      accentLabel: 'Rose Sakura & Soft Blush',
       badge: 'POPULER',
-      desc: 'Nuansa warna pink sakura yang ceria, manis, dan memberikan energi positif saat menginput nilai.' 
+      desc: 'Atmosfer sakura rose pink dengan background soft blush tint, pendaran cherry blossom glow, dan aksen ceria.' 
     },
     { 
       id: 'theme_cool', 
@@ -340,9 +342,10 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🌊', 
       color: '#06b6d4',
-      bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(34, 211, 238, 0.1) 100%)',
-      accentLabel: 'Deep Ocean Blue',
-      desc: 'Warna cyan samudera yang dingin, sejuk, dan memberikan kesan modern berteknologi tinggi.' 
+      textColor: '#ffffff',
+      bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.4) 0%, rgba(2, 132, 199, 0.2) 100%)',
+      accentLabel: 'Cyber Ocean & Cyan Glow',
+      desc: 'Atmosfer cyan samudera cybernetic dengan background deep ocean dark tint, pendaran neon cyan, dan gaya futuristik.' 
     },
     { 
       id: 'theme_green', 
@@ -350,9 +353,10 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🌿', 
       color: '#10b981',
-      bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(52, 211, 153, 0.1) 100%)',
-      accentLabel: 'Fresh Sage Mint',
-      desc: 'Nuansa hijau daun mint segar yang alami, membuat mata tidak cepat lelah saat bekerja.' 
+      textColor: '#ffffff',
+      bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(4, 120, 87, 0.2) 100%)',
+      accentLabel: 'Fresh Sage & Emerald Glow',
+      desc: 'Atmosfer hijau mint alami dengan background deep forest tint, pendaran neon sage, dan efek tenang di mata.' 
     },
     { 
       id: 'theme_gold', 
@@ -361,9 +365,10 @@ export default function ReferralPage() {
       icon: '👑', 
       badge: 'EKSKLUSIF',
       color: '#f59e0b',
-      bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(251, 191, 36, 0.1) 100%)',
-      accentLabel: 'Luxury Gold',
-      desc: 'Tema emas mewah eksklusif penanda pendidik berprestasi dan pengguna setia CekNilai.' 
+      textColor: '#ffffff',
+      bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(180, 83, 9, 0.25) 100%)',
+      accentLabel: 'Midnight Gold Shimmer',
+      desc: 'Tema emas kerajaan eksklusif dengan background midnight amber, pendaran gold shimmer glow, dan aksen luxury champagne.' 
     }
   ];
 

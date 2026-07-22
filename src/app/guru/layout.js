@@ -151,7 +151,10 @@ export default function GuruLayout({ children }) {
   }
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ position: "relative", overflow: "hidden" }}>
+      {/* Background Ambient Theme Glow */}
+      <div className="theme-ambient-glow" />
+
       {/* Mobile Top Header */}
       <div className="mobile-header no-print">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -190,11 +193,28 @@ export default function GuruLayout({ children }) {
         </div>
       </div>
 
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="sidebar-overlay no-print"
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            zIndex: 99,
+          }}
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <aside className={`sidebar ${sidebarOpen ? "active" : ""} no-print`}>
         {/* Logo and Brand */}
         <div style={{ height: "var(--header-height)", display: "flex", alignItems: "center", gap: "10px", padding: "0 24px", borderBottom: "1px solid var(--border-color)" }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "linear-gradient(135deg, var(--primary), var(--primary-hover))", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", color: "#ffffff", fontSize: "1.05rem" }}>
+          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--theme-gradient, linear-gradient(135deg, var(--primary), var(--primary-hover)))", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", color: "#ffffff", fontSize: "1.05rem", boxShadow: "0 2px 8px var(--theme-glow, rgba(0,0,0,0.15))" }}>
             N
           </div>
           <div>
@@ -265,9 +285,10 @@ export default function GuruLayout({ children }) {
                   padding: "12px 16px",
                   fontSize: "0.9rem",
                   borderRadius: "var(--radius-sm)",
-                  boxShadow: "none",
-                  backgroundColor: isActive ? "var(--primary-glow)" : "transparent",
+                  boxShadow: isActive ? "0 2px 10px var(--theme-glow, rgba(0,0,0,0.1))" : "none",
+                  backgroundColor: isActive ? "var(--sidebar-active-bg, var(--primary-glow))" : "transparent",
                   color: isActive ? "var(--primary)" : "var(--text-secondary)",
+                  borderLeft: isActive ? "3px solid var(--sidebar-active-border, var(--primary))" : "3px solid transparent",
                   fontWeight: isActive ? "700" : "500",
                   transition: "var(--transition)"
                 }}
