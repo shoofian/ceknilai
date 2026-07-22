@@ -256,6 +256,12 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [initialKolomNilai, setInitialKolomNilai] = useState([]);
   const [deletedKolomIds, setDeletedKolomIds] = useState([]);
 
+  // States untuk Fitur Terapkan Aspek ke Kelas Lain
+  const [applyToOtherModalOpen, setApplyToOtherModalOpen] = useState(false);
+  const [applySelectedClassIds, setApplySelectedClassIds] = useState([]);
+  const [applySearchQuery, setApplySearchQuery] = useState("");
+  const [isApplyingToOther, setIsApplyingToOther] = useState(false);
+
   // States untuk Katrol Nilai Baru
   const [katrolModalOpen, setKatrolModalOpen] = useState(false);
   const [katrolSiswa, setKatrolSiswa] = useState(null);
@@ -1555,6 +1561,133 @@ export default function DetailKelas({ params: paramsPromise }) {
       {
         title: "📋 SALIN ASPEK DARI KELAS LAIN",
         confirmText: "Ya, Salin",
+        cancelText: "Batal"
+      }
+    );
+  };
+
+  const handleOpenApplyToOther = async () => {
+    setFetchingClasses(true);
+    setApplySelectedClassIds([]);
+    setApplySearchQuery("");
+    setApplyToOtherModalOpen(true);
+    try {
+      const res = await fetch("/api/kelas");
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableClasses(data.filter(c => c.id !== classId));
+      } else {
+        alert("Gagal memuat daftar kelas");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setFetchingClasses(false);
+    }
+  };
+
+  const handleApplyToOtherClasses = async () => {
+    if (applySelectedClassIds.length === 0) {
+      alert("Silakan pilih minimal 1 kelas tujuan.");
+      return;
+    }
+
+    if (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) {
+      alert("Kelas ini belum memiliki aspek penilaian untuk diterapkan ke kelas lain.");
+      return;
+    }
+
+    const selectedTargetClasses = availableClasses.filter(c => applySelectedClassIds.includes(c.id));
+    const targetNames = selectedTargetClasses.map(c => c.nama).join(", ");
+
+    triggerConfirm(
+      `Apakah Anda yakin ingin menerapkan aspek & bobot dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\n*Aspek baru yang belum ada di kelas tujuan akan ditambahkan. Aspek yang sudah ada dengan nama yang sama tetap dipertahankan.`,
+      async () => {
+        setIsApplyingToOther(true);
+        let successCount = 0;
+        let failCount = 0;
+
+        try {
+          // Aspek yang akan diterapkan berasal dari kelas.kolomNilai aktif saat ini
+          const currentAspects = kelas.kolomNilai;
+
+          for (const targetClass of selectedTargetClasses) {
+            try {
+              // Ambil data detail kelas target terbaru
+              const resTarget = await fetch(`/api/kelas/${targetClass.id}`);
+              if (!resTarget.ok) throw new Error("Gagal mengambil data kelas target");
+              const fullTargetClass = await resTarget.json();
+
+              const existingNames = new Set(
+                (fullTargetClass.kolomNilai || []).map(col => col.nama.trim().toLowerCase())
+              );
+
+              const aspectsToAdd = [];
+              currentAspects.forEach(col => {
+                const trimmedName = col.nama.trim();
+                if (!existingNames.has(trimmedName.toLowerCase())) {
+                  const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+                  aspectsToAdd.push({
+                    ...col,
+                    id: newColId,
+                    bobot: Number(col.bobot) || 0,
+                    subKolom: col.subKolom ? col.subKolom.map((sub, i) => ({
+                      ...sub,
+                      id: `${newColId}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                      bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+                    })) : []
+                  });
+                }
+              });
+
+              const updatedKolomNilai = [...(fullTargetClass.kolomNilai || []), ...aspectsToAdd];
+              
+              // Kirim update ke API kelas target
+              const resPatch = await fetch(`/api/kelas/${targetClass.id}/kolom`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  kolomNilai: updatedKolomNilai,
+                  skemaPenilaian: {
+                    ...(fullTargetClass.skemaPenilaian || {}),
+                    ...(kelas.skemaPenilaian ? { kkm: kelas.skemaPenilaian.kkm, gradeRanges: kelas.skemaPenilaian.gradeRanges } : {})
+                  }
+                }),
+              });
+
+              if (resPatch.ok) {
+                successCount++;
+              } else {
+                failCount++;
+              }
+            } catch (errTarget) {
+              console.error(`Error applying to class ${targetClass.nama}:`, errTarget);
+              failCount++;
+            }
+          }
+
+          setApplyToOtherModalOpen(false);
+          setApplySelectedClassIds([]);
+
+          setTimeout(() => {
+            triggerAlert(
+              `Berhasil menerapkan aspek & bobot penilaian ke ${successCount} kelas!${failCount > 0 ? ` (${failCount} kelas gagal)` : ''}`,
+              null,
+              { title: "🚀 TERAPKAN ASPEK SELESAI" }
+            );
+          }, 300);
+
+        } catch (err) {
+          console.error("Apply to other classes error:", err);
+          alert("Terjadi kesalahan saat menerapkan aspek ke kelas lain.");
+        } finally {
+          setIsApplyingToOther(false);
+        }
+      },
+      {
+        title: "📤 TERAPKAN ASPEK KE KELAS LAIN",
+        confirmText: "Ya, Terapkan",
         cancelText: "Batal"
       }
     );
@@ -4625,6 +4758,169 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
+      {/* Apply to Other Classes Modal */}
+      {applyToOtherModalOpen && (
+        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "16px" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "520px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflow: "hidden", position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                  📤 Terapkan ke Kelas Lain
+                </h3>
+                <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "4px", margin: 0 }}>
+                  Salin & terapkan konfigurasi aspek dan bobot dari kelas ini ke beberapa kelas sekaligus.
+                </p>
+              </div>
+              <button 
+                onClick={() => setApplyToOtherModalOpen(false)} 
+                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}
+                disabled={isApplyingToOther}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Info Sumber */}
+            <div style={{ backgroundColor: "var(--bg-tertiary)", padding: "12px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Kelas Asal</span>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: "2px 0 0 0", color: "var(--primary)" }}>{kelas?.nama}</h4>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)" }}>{kelas?.kolomNilai?.length || 0} Aspek Penilaian</span>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)", display: "block" }}>Total Bobot: {totalBobot}%</span>
+              </div>
+            </div>
+
+            {/* Search & Toggle All */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  placeholder="🔍 Cari nama kelas..." 
+                  value={applySearchQuery} 
+                  onChange={(e) => setApplySearchQuery(e.target.value)}
+                  style={{ flex: 1, padding: "6px 12px", fontSize: "0.82rem" }}
+                />
+                {!fetchingClasses && availableClasses.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const filtered = availableClasses.filter(c => c.nama.toLowerCase().includes(applySearchQuery.toLowerCase()) || (c.mataPelajaran || "").toLowerCase().includes(applySearchQuery.toLowerCase()));
+                      const filteredIds = filtered.map(c => c.id);
+                      const allSelected = filteredIds.every(id => applySelectedClassIds.includes(id));
+                      if (allSelected) {
+                        setApplySelectedClassIds(applySelectedClassIds.filter(id => !filteredIds.includes(id)));
+                      } else {
+                        setApplySelectedClassIds(Array.from(new Set([...applySelectedClassIds, ...filteredIds])));
+                      }
+                    }}
+                    style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer", padding: "4px 8px", whiteSpace: "nowrap" }}
+                  >
+                    {availableClasses
+                      .filter(c => c.nama.toLowerCase().includes(applySearchQuery.toLowerCase()) || (c.mataPelajaran || "").toLowerCase().includes(applySearchQuery.toLowerCase()))
+                      .every(c => applySelectedClassIds.includes(c.id)) ? "Batal Semua" : "Pilih Semua"}
+                  </button>
+                )}
+              </div>
+
+              {/* Class List Multi-select */}
+              <div style={{ maxHeight: "240px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "8px" }}>
+                {fetchingClasses ? (
+                  <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
+                    <span className="spinner" style={{ width: "24px", height: "24px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+                  </div>
+                ) : availableClasses.length === 0 ? (
+                  <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem", padding: "20px", margin: 0 }}>Belum ada kelas lain yang tersedia.</p>
+                ) : (
+                  availableClasses
+                    .filter(c => c.nama.toLowerCase().includes(applySearchQuery.toLowerCase()) || (c.mataPelajaran || "").toLowerCase().includes(applySearchQuery.toLowerCase()))
+                    .map(c => {
+                      const isChecked = applySelectedClassIds.includes(c.id);
+                      return (
+                        <label
+                          key={c.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            padding: "8px 12px",
+                            borderRadius: "var(--radius-sm)",
+                            cursor: "pointer",
+                            border: `1px solid ${isChecked ? "var(--primary)" : "var(--border-color)"}`,
+                            backgroundColor: isChecked ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                            transition: "all 0.15s ease"
+                          }}
+                        >
+                          <input 
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {
+                              if (isChecked) {
+                                setApplySelectedClassIds(applySelectedClassIds.filter(id => id !== c.id));
+                              } else {
+                                setApplySelectedClassIds([...applySelectedClassIds, c.id]);
+                              }
+                            }}
+                            style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "var(--primary)" }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <h4 style={{ fontSize: "0.88rem", fontWeight: "700", margin: 0 }}>{c.nama}</h4>
+                              <span className="badge" style={{ fontSize: "0.68rem", backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}>
+                                {c.siswa?.length || 0} Siswa
+                              </span>
+                            </div>
+                            <p style={{ fontSize: "0.73rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>
+                              {c.mataPelajaran || "Umum"} &bull; {c.kolomNilai?.length || 0} Aspek Saat Ini
+                            </p>
+                          </div>
+                        </label>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+
+            {/* Note & Footer Buttons */}
+            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.4 }}>
+              *Aspek baru akan ditambahkan tanpa menghapus aspek yang sudah ada di kelas tujuan.
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px" }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: "700", color: applySelectedClassIds.length > 0 ? "var(--primary)" : "var(--text-muted)" }}>
+                {applySelectedClassIds.length > 0 ? `+${applySelectedClassIds.length} Kelas Dipilih` : "Belum ada kelas dipilih"}
+              </span>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button 
+                  onClick={() => setApplyToOtherModalOpen(false)} 
+                  className="btn btn-secondary" 
+                  style={{ padding: "8px 14px", fontSize: "0.82rem" }}
+                  disabled={isApplyingToOther}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleApplyToOtherClasses}
+                  className="btn btn-primary"
+                  style={{ padding: "8px 16px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "6px" }}
+                  disabled={applySelectedClassIds.length === 0 || isApplyingToOther}
+                >
+                  {isApplyingToOther ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Menerapkan...
+                    </>
+                  ) : (
+                    <>🚀 Terapkan ke {applySelectedClassIds.length} Kelas</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Onboarding Modal */}
       {onboardingModalOpen && (
         <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(4px)" }}>
@@ -6344,8 +6640,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
                   Batal & Tutup
                 </button>
-                <button onClick={handleOpenDuplicate} className="btn btn-secondary btn-salin-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot}>
+                <button onClick={handleOpenDuplicate} className="btn btn-secondary btn-salin-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot || isApplyingToOther}>
                   📋 Salin dari Kelas Lain
+                </button>
+                <button onClick={handleOpenApplyToOther} className="btn btn-secondary btn-terapkan-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Terapkan Aspek & Bobot ke Kelas Lain" disabled={isSavingBobot || isApplyingToOther}>
+                  📤 Terapkan ke Kelas Lain
                 </button>
                 <button
                   onClick={saveAllBobot}
