@@ -28,7 +28,7 @@ export default function ReferralPage() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [infoModal, setInfoModal] = useState(null);
   const [activeTheme, setActiveTheme] = useState('default');
-  const [trialTheme, setTrialTheme] = useState(null); // { id, name, price, expiresAt, timeLeft }
+  const [trialTheme, setTrialTheme] = useState(null);
 
   const setTodayDateTime = () => {
     const now = new Date();
@@ -303,11 +303,14 @@ export default function ReferralPage() {
   const themeRewards = [
     { 
       id: 'theme_bw', 
-      name: 'Black & White', 
+      name: 'Black & White Noir', 
       price: 40, 
       icon: '🖤', 
       color: '#475569',
-      desc: 'Tema monokrom hitam putih yang klasik, minimalis, kontras tinggi, dan sangat profesional.' 
+      bgGradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+      accentLabel: 'Noir Monochrome',
+      badge: 'PRO NOIR',
+      desc: 'Tema monokrom hitam & putih klasik dengan kontras sangat tinggi dan estetika profesional yang tajam.' 
     },
     { 
       id: 'theme_pastel', 
@@ -315,7 +318,9 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🌸', 
       color: '#8b5cf6',
-      desc: 'Tema ungu lavender pastel yang lembut, tenang, dan estetis untuk tampilan aplikasi Anda.' 
+      bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(167, 139, 250, 0.1) 100%)',
+      accentLabel: 'Soft Purple Glow',
+      desc: 'Tema ungu lavender pastel yang lembut, tenang, dan estetis untuk tampilan mengajar yang santai.' 
     },
     { 
       id: 'theme_pinky', 
@@ -323,7 +328,10 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🎀', 
       color: '#ec4899',
-      desc: 'Tema nuansa sakura pink yang manis, hangat, dan menambah semangat mengajar.' 
+      bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%)',
+      accentLabel: 'Rose Sakura',
+      badge: 'POPULER',
+      desc: 'Nuansa warna pink sakura yang ceria, manis, dan memberikan energi positif saat menginput nilai.' 
     },
     { 
       id: 'theme_cool', 
@@ -331,7 +339,9 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🌊', 
       color: '#06b6d4',
-      desc: 'Tema warna biru cyan samudera yang sejuk, jernih, dan bernuansa modern pro.' 
+      bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(34, 211, 238, 0.1) 100%)',
+      accentLabel: 'Deep Ocean Blue',
+      desc: 'Warna cyan samudera yang dingin, sejuk, dan memberikan kesan modern berteknologi tinggi.' 
     },
     { 
       id: 'theme_green', 
@@ -339,16 +349,20 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🌿', 
       color: '#10b981',
-      desc: 'Tema hijau mint segar dan alami untuk suasana kerja yang rileks dan alami.' 
+      bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(52, 211, 153, 0.1) 100%)',
+      accentLabel: 'Fresh Sage Mint',
+      desc: 'Nuansa hijau daun mint segar yang alami, membuat mata tidak cepat lelah saat bekerja.' 
     },
     { 
       id: 'theme_gold', 
-      name: 'Royal Gold', 
+      name: 'Royal Amber Gold', 
       price: 50, 
       icon: '👑', 
-      badge: 'Spesial',
+      badge: 'EKSKLUSIF',
       color: '#f59e0b',
-      desc: 'Tema emas mewah eksklusif penanda guru berprestasi dan pengguna setia.' 
+      bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(251, 191, 36, 0.1) 100%)',
+      accentLabel: 'Luxury Gold',
+      desc: 'Tema emas mewah eksklusif penanda pendidik berprestasi dan pengguna setia CekNilai.' 
     }
   ];
 
@@ -925,7 +939,7 @@ export default function ReferralPage() {
               type="button"
               onClick={() => setInfoModal({
                 title: "🎁 Tukar Poin Hadiah",
-                text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai. Anda juga dapat mencoba (preview) tema 5 menit sebelum menukar!"
+                text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Noir B&W, Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai. Anda juga dapat mencoba (preview) tema 5 menit sebelum menukar!"
               })}
               style={{
                 background: 'var(--bg-tertiary)',
@@ -948,12 +962,12 @@ export default function ReferralPage() {
           </div>
 
           {/* Sub-section 1: Tema Tampilan */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               🎨 Tema Tampilan
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
               {themeRewards.map((theme) => {
                 const unlocked = isThemeUnlocked(theme.id);
                 const isActive = (activeTheme === theme.id && !trialTheme);
@@ -964,102 +978,134 @@ export default function ReferralPage() {
                   <div
                     key={theme.id}
                     style={{
-                      padding: '10px',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       border: isTrialActive ? `2px dashed ${theme.color}` : isActive ? `2px solid ${theme.color}` : unlocked ? `1px solid ${theme.color}40` : '1px solid var(--border-color)',
-                      backgroundColor: (isActive || isTrialActive) ? `${theme.color}15` : 'var(--bg-secondary)',
+                      backgroundColor: (isActive || isTrialActive) ? `${theme.color}10` : 'var(--bg-secondary)',
+                      boxShadow: (isActive || isTrialActive) ? `0 4px 16px ${theme.color}20` : 'none',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '6px',
+                      overflow: 'hidden',
+                      transition: 'all 0.2s ease',
                       position: 'relative'
                     }}
                   >
-                    {theme.badge && (
-                      <div style={{ position: 'absolute', top: '6px', right: '6px', backgroundColor: theme.color, color: '#000', fontSize: '0.5rem', fontWeight: '800', padding: '1px 4px', borderRadius: '4px' }}>
-                        {theme.badge}
+                    {/* Mini UI Teaser Banner */}
+                    <div style={{
+                      height: '60px',
+                      background: theme.bgGradient,
+                      padding: '10px 12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      position: 'relative',
+                      borderBottom: `1px solid ${theme.color}25`
+                    }}>
+                      {/* Header Teaser */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: theme.color, boxShadow: `0 0 6px ${theme.color}` }} />
+                          <span style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-primary)', opacity: 0.9 }}>{theme.accentLabel}</span>
+                        </div>
+                        {theme.badge ? (
+                          <span style={{ backgroundColor: theme.color, color: '#000000', fontSize: '0.55rem', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                            {theme.badge}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.color, backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>
+                            {theme.price} POIN
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ fontSize: '1.1rem' }}>{theme.icon}</span>
-                      <span style={{ fontWeight: '800', fontSize: '0.78rem', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{theme.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => setInfoModal({
-                          title: `${theme.icon} ${theme.name}`,
-                          text: theme.desc
-                        })}
-                        style={{
-                          background: 'var(--bg-tertiary)',
-                          border: 'none',
-                          color: 'var(--text-muted)',
-                          fontSize: '0.6rem',
-                          cursor: 'pointer',
-                          width: '14px',
-                          height: '14px',
-                          borderRadius: '50%',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}
-                      >
-                        ?
-                      </button>
+                      {/* Mini Action Mockup */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ backgroundColor: theme.color, color: '#ffffff', fontSize: '0.55rem', fontWeight: '800', padding: '2px 8px', borderRadius: '4px' }}>
+                          Aksen Utama
+                        </div>
+                        <div style={{ width: '35px', height: '10px', borderRadius: '4px', backgroundColor: `${theme.color}40` }} />
+                      </div>
                     </div>
 
-                    <div style={{ fontSize: '0.72rem', fontWeight: '800', color: theme.color }}>
-                      {theme.price} Poin
-                    </div>
+                    {/* Card Body */}
+                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '1.1rem' }}>{theme.icon}</span>
+                            <span style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{theme.name}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setInfoModal({ title: `${theme.icon} ${theme.name}`, text: theme.desc })}
+                            style={{
+                              background: 'var(--bg-tertiary)',
+                              border: 'none',
+                              color: 'var(--text-muted)',
+                              fontSize: '0.65rem',
+                              cursor: 'pointer',
+                              width: '16px',
+                              height: '16px',
+                              borderRadius: '50%',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            ?
+                          </button>
+                        </div>
+                        <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4, height: '2.8em', overflow: 'hidden' }}>
+                          {theme.desc}
+                        </p>
+                      </div>
 
-                    {unlocked ? (
-                      <button
-                        onClick={() => applyTheme(theme.id)}
-                        className={`btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
-                        style={{
-                          padding: '4px 8px',
-                          fontSize: '0.7rem',
-                          fontWeight: '700',
-                          marginTop: '2px',
-                          width: '100%'
-                        }}
-                      >
-                        {isActive ? '✓ Aktif' : 'Gunakan'}
-                      </button>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px' }}>
+                      {/* Action Buttons */}
+                      {unlocked ? (
                         <button
-                          onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
-                          className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                          onClick={() => applyTheme(theme.id)}
+                          className={`btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
                           style={{
-                            padding: '4px 6px',
-                            fontSize: '0.68rem',
+                            padding: '6px',
+                            fontSize: '0.75rem',
                             fontWeight: '700',
                             width: '100%'
                           }}
-                          disabled={!isEligible || redeemingId !== null}
                         >
-                          {redeemingId === theme.id ? '...' : isEligible ? '⚡ Tukar' : `${data.balance}/${theme.price}`}
+                          {isActive ? '✓ Terpasang' : 'Gunakan Tema'}
                         </button>
-                        
-                        <button
-                          onClick={() => startThemeTrial(theme)}
-                          className="btn btn-secondary"
-                          style={{
-                            padding: '3px 6px',
-                            fontSize: '0.65rem',
-                            fontWeight: '700',
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '3px'
-                          }}
-                        >
-                          {isTrialActive ? '👁️ Menguji...' : '👁️ Uji (5 Mnt)'}
-                        </button>
-                      </div>
-                    )}
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                          <button
+                            onClick={() => startThemeTrial(theme)}
+                            className="btn btn-secondary"
+                            style={{
+                              padding: '6px 4px',
+                              fontSize: '0.68rem',
+                              fontWeight: '700',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '3px'
+                            }}
+                          >
+                            {isTrialActive ? '👁️ Testing...' : '👁️ Uji 5m'}
+                          </button>
+                          
+                          <button
+                            onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
+                            className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                            style={{
+                              padding: '6px 4px',
+                              fontSize: '0.68rem',
+                              fontWeight: '800'
+                            }}
+                            disabled={!isEligible || redeemingId !== null}
+                          >
+                            {redeemingId === theme.id ? '...' : isEligible ? `⚡ Tukar` : `${data.balance}/${theme.price}`}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}
