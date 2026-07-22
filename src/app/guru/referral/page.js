@@ -814,14 +814,291 @@ export default function ReferralPage() {
         </div>
       )}
 
-      {/* Main Grid: Activation & Redeem */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-        
-        {/* Payment Activation Section */}
-        <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          
+      {/* Gift Redeem Section — Full Width Primary Section */}
+      <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>🎁 Tukar Poin Hadiah</h4>
+          <button
+            type="button"
+            onClick={() => setInfoModal({
+              title: "🎁 Tukar Poin Hadiah",
+              text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Noir B&W, Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai. Anda juga dapat mencoba (preview) tema 5 menit sebelum menukar!"
+            })}
+            style={{
+              background: 'var(--bg-tertiary)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '0.7rem',
+              fontWeight: '800',
+              width: '18px',
+              height: '18px',
+              borderRadius: '50%',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            title="Penjelasan Penukaran"
+          >
+            ?
+          </button>
+        </div>
+
+        {/* Sub-section 1: Tema Tampilan */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🎨 Tema Tampilan
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+            {themeRewards.map((theme) => {
+              const unlocked = isThemeUnlocked(theme.id);
+              const isActive = (activeTheme === theme.id && !trialTheme);
+              const isTrialActive = (trialTheme && trialTheme.id === theme.id);
+              const isEligible = data.balance >= theme.price;
+
+              return (
+                <div
+                  key={theme.id}
+                  style={{
+                    borderRadius: '12px',
+                    border: isTrialActive ? `2px dashed ${theme.color}` : isActive ? `2px solid ${theme.color}` : unlocked ? `1px solid ${theme.color}40` : '1px solid var(--border-color)',
+                    backgroundColor: (isActive || isTrialActive) ? `${theme.color}10` : 'var(--bg-secondary)',
+                    boxShadow: (isActive || isTrialActive) ? `0 4px 16px ${theme.color}20` : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    transition: 'all 0.2s ease',
+                    position: 'relative'
+                  }}
+                >
+                  {/* Mini UI Teaser Banner */}
+                  <div style={{
+                    height: '60px',
+                    background: theme.bgGradient,
+                    padding: '10px 12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    position: 'relative',
+                    borderBottom: `1px solid ${theme.color}25`
+                  }}>
+                    {/* Header Teaser */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: theme.color, boxShadow: `0 0 6px ${theme.color}` }} />
+                        <span style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-primary)', opacity: 0.9 }}>{theme.accentLabel}</span>
+                      </div>
+                      {theme.badge ? (
+                        <span style={{ backgroundColor: theme.color, color: '#000000', fontSize: '0.55rem', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                          {theme.badge}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.color, backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>
+                          {theme.price} POIN
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Mini Action Mockup */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ backgroundColor: theme.color, color: '#ffffff', fontSize: '0.55rem', fontWeight: '800', padding: '2px 8px', borderRadius: '4px' }}>
+                        Aksen Utama
+                      </div>
+                      <div style={{ width: '35px', height: '10px', borderRadius: '4px', backgroundColor: `${theme.color}40` }} />
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '1.1rem' }}>{theme.icon}</span>
+                          <span style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{theme.name}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setInfoModal({ title: `${theme.icon} ${theme.name}`, text: theme.desc })}
+                          style={{
+                            background: 'var(--bg-tertiary)',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            fontSize: '0.65rem',
+                            cursor: 'pointer',
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          ?
+                        </button>
+                      </div>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4, height: '2.8em', overflow: 'hidden' }}>
+                        {theme.desc}
+                      </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    {unlocked ? (
+                      <button
+                        onClick={() => applyTheme(theme.id)}
+                        className={`btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
+                        style={{
+                          padding: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: '700',
+                          width: '100%'
+                        }}
+                      >
+                        {isActive ? '✓ Terpasang' : 'Gunakan Tema'}
+                      </button>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                        <button
+                          onClick={() => startThemeTrial(theme)}
+                          className="btn btn-secondary"
+                          style={{
+                            padding: '6px 4px',
+                            fontSize: '0.68rem',
+                            fontWeight: '700',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          {isTrialActive ? '👁️ Testing...' : '👁️ Uji 5m'}
+                        </button>
+                        
+                        <button
+                          onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
+                          className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{
+                            padding: '6px 4px',
+                            fontSize: '0.68rem',
+                            fontWeight: '800'
+                          }}
+                          disabled={!isEligible || redeemingId !== null}
+                        >
+                          {redeemingId === theme.id ? '...' : isEligible ? `⚡ Tukar` : `${data.balance}/${theme.price}`}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '6px 0' }} />
+
+        {/* Sub-section 2: Hadiah Utama */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+            👑 Langganan & Cash
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+            {mainRewards.map((reward) => {
+              const progressPercent = Math.min(100, Math.round((data.balance / reward.price) * 100));
+              const isEligible = data.balance >= reward.price;
+
+              return (
+                <div 
+                  key={reward.id} 
+                  style={{ 
+                    padding: '14px', 
+                    borderRadius: '12px',
+                    border: isEligible ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-secondary)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    position: 'relative'
+                  }}
+                >
+                  {reward.badge && (
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#eab308', color: '#000', fontSize: '0.55rem', fontWeight: '800', padding: '1px 6px', borderRadius: '4px' }}>
+                      {reward.badge}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: reward.badge ? '50px' : '0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '1.2rem' }}>{reward.icon}</span>
+                      <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>{reward.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setInfoModal({
+                          title: `${reward.icon} ${reward.name}`,
+                          text: reward.desc
+                        })}
+                        style={{
+                          background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border-color)',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          fontSize: '0.65rem',
+                          fontWeight: '800',
+                          width: '15px',
+                          height: '15px',
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="Penjelasan Hadiah"
+                      >
+                        ?
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--primary)' }}>{reward.price} Poin</span>
+                  </div>
+
+                  {/* Progress & Redeem */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
+                    <div style={{ flex: 1, height: '6px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div 
+                        style={{ 
+                          width: `${progressPercent}%`, 
+                          height: '100%', 
+                          backgroundColor: isEligible ? 'var(--success)' : 'var(--primary)',
+                          borderRadius: '99px'
+                        }} 
+                      />
+                    </div>
+                    <button 
+                      onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
+                      className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ 
+                        padding: '4px 12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: '700',
+                        minWidth: '70px'
+                      }}
+                      disabled={!isEligible || redeemingId !== null}
+                    >
+                      {redeemingId === reward.id ? '...' : isEligible ? 'Tukar' : `${data.balance}/${reward.price}`}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Payment Activation Section — Clean Horizontal Layout */}
+      <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>💳 Aktivasi Paket Premium</h4>
+            <h4 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0 }}>💳 Aktivasi Paket Premium</h4>
             <button
               type="button"
               onClick={() => setInfoModal({
@@ -835,8 +1112,8 @@ export default function ReferralPage() {
                 cursor: 'pointer',
                 fontSize: '0.7rem',
                 fontWeight: '800',
-                width: '16px',
-                height: '16px',
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -847,27 +1124,30 @@ export default function ReferralPage() {
               ?
             </button>
           </div>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>3 Langkah Mudah Aktivasi Lisensi Premium</span>
+        </div>
 
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', alignItems: 'center' }}>
           {/* STEP 1: Pilih Paket */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>1. Pilih Paket</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {/* Bulanan */}
               <div
                 onClick={() => setPaket('bulanan')}
                 style={{
                   border: paket === 'bulanan' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
                   borderRadius: '10px',
-                  padding: '12px',
+                  padding: '10px',
                   cursor: 'pointer',
                   backgroundColor: paket === 'bulanan' ? 'var(--primary-glow)' : 'var(--bg-secondary)',
                   transition: 'all 0.15s ease',
                   position: 'relative'
                 }}
               >
-                {paket === 'bulanan' && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '14px', height: '14px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: '#fff' }}>✓</div>}
-                <div style={{ fontWeight: '800', fontSize: '0.85rem' }}>Bulanan</div>
-                <div style={{ fontSize: '1rem', fontWeight: '800', color: 'var(--primary)', marginTop: '2px' }}>Rp 19.000</div>
+                {paket === 'bulanan' && <div style={{ position: 'absolute', top: '6px', right: '6px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: '#fff' }}>✓</div>}
+                <div style={{ fontWeight: '800', fontSize: '0.82rem' }}>Bulanan</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--primary)', marginTop: '2px' }}>Rp 19.000</div>
               </div>
               {/* Tahunan */}
               <div
@@ -875,36 +1155,36 @@ export default function ReferralPage() {
                 style={{
                   border: paket === 'tahunan' ? '2px solid #eab308' : '1px solid var(--border-color)',
                   borderRadius: '10px',
-                  padding: '12px',
+                  padding: '10px',
                   cursor: 'pointer',
                   backgroundColor: paket === 'tahunan' ? 'rgba(234,179,8,0.08)' : 'var(--bg-secondary)',
                   transition: 'all 0.15s ease',
                   position: 'relative'
                 }}
               >
-                {paket === 'tahunan' && <div style={{ position: 'absolute', top: '8px', right: '8px', width: '14px', height: '14px', borderRadius: '50%', backgroundColor: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: '#000' }}>✓</div>}
-                <div style={{ position: 'absolute', top: '0', left: '0', backgroundColor: '#eab308', color: '#000', fontSize: '0.5rem', fontWeight: '800', padding: '1px 6px', borderRadius: '10px 0 6px 0' }}>HEMAT 30%</div>
-                <div style={{ fontWeight: '800', fontSize: '0.85rem', marginTop: '4px' }}>Tahunan</div>
-                <div style={{ fontSize: '1rem', fontWeight: '800', color: '#eab308', marginTop: '2px' }}>Rp 159.000</div>
+                {paket === 'tahunan' && <div style={{ position: 'absolute', top: '6px', right: '6px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: '#000' }}>✓</div>}
+                <div style={{ position: 'absolute', top: '0', left: '0', backgroundColor: '#eab308', color: '#000', fontSize: '0.45rem', fontWeight: '800', padding: '1px 4px', borderRadius: '10px 0 4px 0' }}>HEMAT 30%</div>
+                <div style={{ fontWeight: '800', fontSize: '0.82rem', marginTop: '2px' }}>Tahunan</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#eab308', marginTop: '2px' }}>Rp 159.000</div>
               </div>
             </div>
           </div>
 
-          {/* STEP 2: Transfer Info */}
+          {/* STEP 2: Rekening Transfer */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>2. Rekening Transfer</div>
             <div style={{ backgroundColor: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
               {[{ label: 'BRI', value: '343601002122509' }, { label: 'BPD Kaltimtara', value: '0068360137' }, { label: 'Bank Jago', value: '105853689778' }].map((bank, i) => (
-                <div key={i} style={{ padding: '8px 12px', borderBottom: i < 2 ? '1px solid var(--border-color)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div key={i} style={{ padding: '6px 10px', borderBottom: i < 2 ? '1px solid var(--border-color)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontWeight: '700', fontSize: '0.78rem' }}>{bank.label}: </span>
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.88rem', fontWeight: '800' }}>{bank.value}</span>
+                    <span style={{ fontWeight: '700', fontSize: '0.75rem' }}>{bank.label}: </span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: '800' }}>{bank.value}</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => { navigator.clipboard.writeText(bank.value); setCopiedBank(bank.value); setTimeout(() => setCopiedBank(''), 2000); }}
                     className={`btn ${copiedBank === bank.value ? 'btn-success' : 'btn-secondary'}`}
-                    style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                    style={{ padding: '2px 6px', fontSize: '0.65rem' }}
                   >
                     {copiedBank === bank.value ? '✓' : 'Salin'}
                   </button>
@@ -913,304 +1193,25 @@ export default function ReferralPage() {
             </div>
           </div>
 
-          {/* STEP 3: Action */}
-          <button
-            onClick={() => setPaymentModalOpen(true)}
-            className="btn btn-primary"
-            style={{
-              width: '100%',
-              padding: '10px',
-              fontWeight: '700',
-              fontSize: '0.85rem',
-              borderRadius: '10px',
-              cursor: 'pointer'
-            }}
-          >
-            ✉️ Konfirmasi Pembayaran ({paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000'})
-          </button>
-
-        </div>
-
-        {/* Gift Redeem Section */}
-        <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>🎁 Tukar Poin Hadiah</h4>
+          {/* STEP 3: Action Button */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>3. Konfirmasi</div>
             <button
-              type="button"
-              onClick={() => setInfoModal({
-                title: "🎁 Tukar Poin Hadiah",
-                text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Noir B&W, Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai. Anda juga dapat mencoba (preview) tema 5 menit sebelum menukar!"
-              })}
+              onClick={() => setPaymentModalOpen(true)}
+              className="btn btn-primary"
               style={{
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontSize: '0.7rem',
+                width: '100%',
+                padding: '12px',
                 fontWeight: '800',
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                fontSize: '0.85rem',
+                borderRadius: '10px',
+                cursor: 'pointer'
               }}
-              title="Penjelasan Penukaran"
             >
-              ?
+              ✉️ Konfirmasi Pembayaran ({paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000'})
             </button>
           </div>
-
-          {/* Sub-section 1: Tema Tampilan */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🎨 Tema Tampilan
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-              {themeRewards.map((theme) => {
-                const unlocked = isThemeUnlocked(theme.id);
-                const isActive = (activeTheme === theme.id && !trialTheme);
-                const isTrialActive = (trialTheme && trialTheme.id === theme.id);
-                const isEligible = data.balance >= theme.price;
-
-                return (
-                  <div
-                    key={theme.id}
-                    style={{
-                      borderRadius: '12px',
-                      border: isTrialActive ? `2px dashed ${theme.color}` : isActive ? `2px solid ${theme.color}` : unlocked ? `1px solid ${theme.color}40` : '1px solid var(--border-color)',
-                      backgroundColor: (isActive || isTrialActive) ? `${theme.color}10` : 'var(--bg-secondary)',
-                      boxShadow: (isActive || isTrialActive) ? `0 4px 16px ${theme.color}20` : 'none',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                      transition: 'all 0.2s ease',
-                      position: 'relative'
-                    }}
-                  >
-                    {/* Mini UI Teaser Banner */}
-                    <div style={{
-                      height: '60px',
-                      background: theme.bgGradient,
-                      padding: '10px 12px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      position: 'relative',
-                      borderBottom: `1px solid ${theme.color}25`
-                    }}>
-                      {/* Header Teaser */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: theme.color, boxShadow: `0 0 6px ${theme.color}` }} />
-                          <span style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-primary)', opacity: 0.9 }}>{theme.accentLabel}</span>
-                        </div>
-                        {theme.badge ? (
-                          <span style={{ backgroundColor: theme.color, color: '#000000', fontSize: '0.55rem', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                            {theme.badge}
-                          </span>
-                        ) : (
-                          <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.color, backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>
-                            {theme.price} POIN
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Mini Action Mockup */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{ backgroundColor: theme.color, color: '#ffffff', fontSize: '0.55rem', fontWeight: '800', padding: '2px 8px', borderRadius: '4px' }}>
-                          Aksen Utama
-                        </div>
-                        <div style={{ width: '35px', height: '10px', borderRadius: '4px', backgroundColor: `${theme.color}40` }} />
-                      </div>
-                    </div>
-
-                    {/* Card Body */}
-                    <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '1.1rem' }}>{theme.icon}</span>
-                            <span style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{theme.name}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setInfoModal({ title: `${theme.icon} ${theme.name}`, text: theme.desc })}
-                            style={{
-                              background: 'var(--bg-tertiary)',
-                              border: 'none',
-                              color: 'var(--text-muted)',
-                              fontSize: '0.65rem',
-                              cursor: 'pointer',
-                              width: '16px',
-                              height: '16px',
-                              borderRadius: '50%',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            ?
-                          </button>
-                        </div>
-                        <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4, height: '2.8em', overflow: 'hidden' }}>
-                          {theme.desc}
-                        </p>
-                      </div>
-
-                      {/* Action Buttons */}
-                      {unlocked ? (
-                        <button
-                          onClick={() => applyTheme(theme.id)}
-                          className={`btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
-                          style={{
-                            padding: '6px',
-                            fontSize: '0.75rem',
-                            fontWeight: '700',
-                            width: '100%'
-                          }}
-                        >
-                          {isActive ? '✓ Terpasang' : 'Gunakan Tema'}
-                        </button>
-                      ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                          <button
-                            onClick={() => startThemeTrial(theme)}
-                            className="btn btn-secondary"
-                            style={{
-                              padding: '6px 4px',
-                              fontSize: '0.68rem',
-                              fontWeight: '700',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              gap: '3px'
-                            }}
-                          >
-                            {isTrialActive ? '👁️ Testing...' : '👁️ Uji 5m'}
-                          </button>
-                          
-                          <button
-                            onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
-                            className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
-                            style={{
-                              padding: '6px 4px',
-                              fontSize: '0.68rem',
-                              fontWeight: '800'
-                            }}
-                            disabled={!isEligible || redeemingId !== null}
-                          >
-                            {redeemingId === theme.id ? '...' : isEligible ? `⚡ Tukar` : `${data.balance}/${theme.price}`}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
-
-          {/* Sub-section 2: Hadiah Utama */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              👑 Langganan & Cash
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {mainRewards.map((reward) => {
-                const progressPercent = Math.min(100, Math.round((data.balance / reward.price) * 100));
-                const isEligible = data.balance >= reward.price;
-
-                return (
-                  <div 
-                    key={reward.id} 
-                    style={{ 
-                      padding: '12px', 
-                      borderRadius: '10px',
-                      border: isEligible ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-                      backgroundColor: 'var(--bg-secondary)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '8px',
-                      position: 'relative'
-                    }}
-                  >
-                    {reward.badge && (
-                      <div style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#eab308', color: '#000', fontSize: '0.55rem', fontWeight: '800', padding: '1px 6px', borderRadius: '4px' }}>
-                        {reward.badge}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: reward.badge ? '50px' : '0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '1.2rem' }}>{reward.icon}</span>
-                        <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>{reward.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => setInfoModal({
-                            title: `${reward.icon} ${reward.name}`,
-                            text: reward.desc
-                          })}
-                          style={{
-                            background: 'var(--bg-tertiary)',
-                            border: '1px solid var(--border-color)',
-                            color: 'var(--text-secondary)',
-                            cursor: 'pointer',
-                            fontSize: '0.65rem',
-                            fontWeight: '800',
-                            width: '15px',
-                            height: '15px',
-                            borderRadius: '50%',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title="Penjelasan Hadiah"
-                        >
-                          ?
-                        </button>
-                      </div>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--primary)' }}>{reward.price} Poin</span>
-                    </div>
-
-                    {/* Progress & Redeem */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
-                      <div style={{ flex: 1, height: '6px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '99px', overflow: 'hidden' }}>
-                        <div 
-                          style={{ 
-                            width: `${progressPercent}%`, 
-                            height: '100%', 
-                            backgroundColor: isEligible ? 'var(--success)' : 'var(--primary)',
-                            borderRadius: '99px'
-                          }} 
-                        />
-                      </div>
-                      <button 
-                        onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
-                        className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
-                        style={{ 
-                          padding: '4px 12px', 
-                          fontSize: '0.75rem', 
-                          fontWeight: '700',
-                          minWidth: '70px'
-                        }}
-                        disabled={!isEligible || redeemingId !== null}
-                      >
-                        {redeemingId === reward.id ? '...' : isEligible ? 'Tukar' : `${data.balance}/${reward.price}`}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
         </div>
-
       </div>
 
       {/* Points History Log Table */}
