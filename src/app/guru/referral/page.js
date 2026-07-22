@@ -26,6 +26,7 @@ export default function ReferralPage() {
   const [copiedBank, setCopiedBank] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [infoModal, setInfoModal] = useState(null); // { title: string, text: string }
 
   const setTodayDateTime = () => {
     const now = new Date();
@@ -155,9 +156,28 @@ export default function ReferralPage() {
   };
 
   const rewardList = [
-    { id: 'free_1m', name: 'Gratis 1 Bulan Premium', price: 130, icon: '⚡' },
-    { id: 'free_12m', name: 'Gratis 1 Tahun Premium', price: 1060, icon: '👑', badge: 'Terbaik' },
-    { id: 'cash_1m', name: 'Uang Tunai Rp 1.000.000', price: 6500, icon: '💵' }
+    { 
+      id: 'free_1m', 
+      name: 'Gratis 1 Bulan Premium', 
+      price: 130, 
+      icon: '⚡',
+      desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh secara gratis.' 
+    },
+    { 
+      id: 'free_12m', 
+      name: 'Gratis 1 Tahun Premium', 
+      price: 1060, 
+      icon: '👑', 
+      badge: 'Terbaik',
+      desc: 'Akses penuh fitur premium CekNilai selama setahun penuh. Hadiah terbaik untuk guru setia.' 
+    },
+    { 
+      id: 'cash_1m', 
+      name: 'Uang Tunai Rp 1.000.000', 
+      price: 6500, 
+      icon: '💵',
+      desc: 'Tukarkan 6.500 poin Anda dengan uang tunai Rp 1.000.000 yang ditransfer langsung ke rekening bank atau e-wallet Anda.' 
+    }
   ];
 
   if (loading && data.referralCode === '') {
@@ -222,7 +242,33 @@ export default function ReferralPage() {
           }}
         >
           <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', fontSize: '4.5rem', opacity: 0.15, pointerEvents: 'none' }}>🎁</div>
-          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: '700' }}>Poin Saya</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: '700' }}>Poin Saya</span>
+            <button
+              type="button"
+              onClick={() => setInfoModal({
+                title: "🎁 Poin Saya",
+                text: "Klaim poin saat rekan Anda mendaftar atau berlangganan. Poin dapat ditukarkan dengan gratis akses langganan premium bulanan/tahunan atau hadiah uang tunai."
+              })}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Penjelasan Poin Saya"
+            >
+              ?
+            </button>
+          </div>
           <div style={{ fontSize: '2.2rem', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '6px' }}>
             {data.balance}
             <span style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>POIN</span>
@@ -231,7 +277,33 @@ export default function ReferralPage() {
 
         {/* Copy Referral Code Card */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '20px', gap: '8px' }}>
-          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>🔗 Kode Referral Saya</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>🔗 Kode Referral Saya</span>
+            <button
+              type="button"
+              onClick={() => setInfoModal({
+                title: "🔗 Kode Referral Saya",
+                text: "Bagikan kode unik Anda kepada rekan guru lain agar mereka dapat menggunakannya saat konfirmasi pembayaran pertama mereka. Anda dan rekan Anda sama-sama mendapat poin bonus."
+              })}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Penjelasan Kode Referral"
+            >
+              ?
+            </button>
+          </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <div 
               style={{ 
@@ -273,7 +345,33 @@ export default function ReferralPage() {
             overflow: 'hidden'
           }}
         >
-          <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>👑 Status Masa Aktif</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>👑 Status Masa Aktif</span>
+            <button
+              type="button"
+              onClick={() => setInfoModal({
+                title: "👑 Status Masa Aktif",
+                text: "Status lisensi premium CekNilai untuk guru aktif. Silakan lakukan aktivasi paket atau perpanjang lisensi melalui form konfirmasi pembayaran."
+              })}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Penjelasan Masa Aktif"
+            >
+              ?
+            </button>
+          </div>
           <div>
             {data.premiumUntil ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
@@ -311,6 +409,47 @@ export default function ReferralPage() {
         </div>
 
       </div>
+
+      {/* Info Pop-up Modal */}
+      {infoModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: '20px', border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h4 style={{ fontSize: "1.05rem", fontWeight: "800", margin: 0, color: 'var(--text-primary)' }}>
+                {infoModal.title}
+              </h4>
+              <button 
+                onClick={() => setInfoModal(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+              {infoModal.text}
+            </p>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+              <button onClick={() => setInfoModal(null)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Rules Modal */}
       {rulesOpen && (
@@ -364,7 +503,33 @@ export default function ReferralPage() {
         {/* Payment Activation Section */}
         <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
-          <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>💳 Aktivasi Paket Premium</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>💳 Aktivasi Paket Premium</h4>
+            <button
+              type="button"
+              onClick={() => setInfoModal({
+                title: "💳 Aktivasi Paket Premium",
+                text: "Ikuti 3 langkah mudah: Pilih paket langganan yang Anda inginkan (Bulanan/Tahunan), lakukan transfer ke salah satu rekening bank tercantum, lalu kirimkan form konfirmasi pembayaran."
+              })}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Penjelasan Aktivasi"
+            >
+              ?
+            </button>
+          </div>
 
           {/* STEP 1: Pilih Paket */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -451,7 +616,33 @@ export default function ReferralPage() {
 
         {/* Gift Redeem Section */}
         <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>🎁 Tukar Poin Hadiah</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: 0 }}>🎁 Tukar Poin Hadiah</h4>
+            <button
+              type="button"
+              onClick={() => setInfoModal({
+                title: "🎁 Tukar Poin Hadiah",
+                text: "Kumpulkan poin dari program referral, lalu pilih dan tukarkan poin Anda dengan perpanjangan lisensi premium atau penarikan uang tunai."
+              })}
+              style={{
+                background: 'var(--bg-tertiary)',
+                border: '1px solid var(--border-color)',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                width: '16px',
+                height: '16px',
+                borderRadius: '50%',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              title="Penjelasan Penukaran"
+            >
+              ?
+            </button>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {rewardList.map((reward) => {
@@ -479,9 +670,33 @@ export default function ReferralPage() {
                   )}
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: reward.badge ? '50px' : '0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '1.2rem' }}>{reward.icon}</span>
                       <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>{reward.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setInfoModal({
+                          title: `${reward.icon} ${reward.name}`,
+                          text: reward.desc
+                        })}
+                        style={{
+                          background: 'var(--bg-tertiary)',
+                          border: '1px solid var(--border-color)',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          fontSize: '0.65rem',
+                          fontWeight: '800',
+                          width: '15px',
+                          height: '15px',
+                          borderRadius: '50%',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="Penjelasan Hadiah"
+                      >
+                        ?
+                      </button>
                     </div>
                     <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--primary)' }}>{reward.price} Poin</span>
                   </div>
