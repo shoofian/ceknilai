@@ -22,6 +22,25 @@ export default function GuruLayout({ children }) {
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
 
+    // Check active 5-minute theme trial preview
+    try {
+      const previewData = sessionStorage.getItem("theme_preview");
+      if (previewData) {
+        const parsed = JSON.parse(previewData);
+        if (parsed && parsed.expiresAt > Date.now()) {
+          const key = parsed.id.replace('theme_', '');
+          document.documentElement.setAttribute("data-theme", key);
+          if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            setIsPopup(params.get("popup") === "true");
+          }
+          return;
+        } else {
+          sessionStorage.removeItem("theme_preview");
+        }
+      }
+    } catch (e) {}
+
     const savedColorTheme = localStorage.getItem("color_theme");
     if (savedColorTheme && savedColorTheme !== 'default') {
       document.documentElement.setAttribute("data-theme", savedColorTheme);

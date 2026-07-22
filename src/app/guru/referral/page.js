@@ -28,6 +28,7 @@ export default function ReferralPage() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [infoModal, setInfoModal] = useState(null);
   const [activeTheme, setActiveTheme] = useState('default');
+  const [trialTheme, setTrialTheme] = useState(null); // { id, name, price, expiresAt, timeLeft }
 
   const setTodayDateTime = () => {
     const now = new Date();
@@ -60,6 +61,21 @@ export default function ReferralPage() {
 
   useEffect(() => {
     fetchReferralData();
+
+    // Check ongoing trial preview
+    try {
+      const previewData = sessionStorage.getItem("theme_preview");
+      if (previewData) {
+        const parsed = JSON.parse(previewData);
+        if (parsed && parsed.expiresAt > Date.now()) {
+          setTrialTheme({
+            ...parsed,
+            timeLeft: Math.max(0, Math.floor((parsed.expiresAt - Date.now()) / 1000))
+          });
+        }
+      }
+    } catch (e) {}
+
     const savedColorTheme = localStorage.getItem("color_theme");
     if (savedColorTheme) {
       setActiveTheme(`theme_${savedColorTheme}`);
@@ -67,6 +83,62 @@ export default function ReferralPage() {
       setActiveTheme('default');
     }
   }, []);
+
+  // Timer tick for trial preview
+  useEffect(() => {
+    if (!trialTheme) return;
+
+    const interval = setInterval(() => {
+      const remaining = Math.floor((trialTheme.expiresAt - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(interval);
+        stopThemeTrial(true);
+      } else {
+        setTrialTheme(prev => prev ? { ...prev, timeLeft: remaining } : null);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [trialTheme]);
+
+  const startThemeTrial = (theme) => {
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const trialData = {
+      id: theme.id,
+      name: theme.name,
+      price: theme.price,
+      expiresAt,
+      timeLeft: 300
+    };
+    sessionStorage.setItem("theme_preview", JSON.stringify(trialData));
+    const key = theme.id.replace('theme_', '');
+    document.documentElement.setAttribute('data-theme', key);
+    setTrialTheme(trialData);
+    setSuccessMsg(`Mode Uji Coba 5 Menit diaktifkan untuk "${theme.name}". Selamat mencoba!`);
+  };
+
+  const stopThemeTrial = (isExpired = false) => {
+    sessionStorage.removeItem("theme_preview");
+    setTrialTheme(null);
+    
+    // Revert theme
+    const savedColorTheme = localStorage.getItem("color_theme");
+    if (savedColorTheme && savedColorTheme !== 'default') {
+      document.documentElement.setAttribute("data-theme", savedColorTheme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+
+    if (isExpired) {
+      alert("Masa uji coba tema selama 5 menit telah berakhir.");
+    }
+  };
+
+  const formatTimer = (seconds) => {
+    const m = Math.floor((seconds || 0) / 60);
+    const s = (seconds || 0) % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
 
   const handleCopyCode = () => {
     if (!data.referralCode) return;
@@ -152,6 +224,9 @@ export default function ReferralPage() {
   };
 
   const applyTheme = (themeId) => {
+    if (trialTheme) {
+      stopThemeTrial(false);
+    }
     if (themeId === 'default') {
       localStorage.removeItem('color_theme');
       document.documentElement.removeAttribute('data-theme');
@@ -195,6 +270,11 @@ export default function ReferralPage() {
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.error || 'Gagal melakukan penukaran poin');
+      }
+
+      // If trial active, stop trial
+      if (trialTheme) {
+        stopThemeTrial(false);
       }
 
       // If theme reward, unlock locally & apply
@@ -302,6 +382,52 @@ export default function ReferralPage() {
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
+      {/* Trial Mode Sticky Banner */}
+      {trialTheme && (
+        <div 
+          style={{ 
+            padding: '12px 18px', 
+            borderRadius: '12px', 
+            background: 'linear-gradient(135deg, var(--primary), #4f46e5)', 
+            color: '#ffffff',
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '12px',
+            boxShadow: '0 8px 24px var(--primary-glow)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '1.4rem' }}>👁️</span>
+            <div>
+              <div style={{ fontWeight: '800', fontSize: '0.9rem' }}>
+                Mode Uji Coba Tema: {trialTheme.name}
+              </div>
+              <div style={{ fontSize: '0.78rem', opacity: 0.9 }}>
+                Sisa waktu uji coba: <strong>{formatTimer(trialTheme.timeLeft)}</strong> (Revert otomatis setelah waktu habis)
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={() => stopThemeTrial(false)}
+              className="btn btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '0.75rem', fontWeight: '700' }}
+            >
+              ✕ Hentikan Uji Coba
+            </button>
+            <button
+              onClick={() => handleRedeem(trialTheme.id, trialTheme.name, trialTheme.price)}
+              className="btn"
+              style={{ padding: '6px 14px', fontSize: '0.75rem', fontWeight: '800', backgroundColor: '#ffffff', color: '#000000', border: 'none' }}
+            >
+              ⚡ Tukar Permanen ({trialTheme.price} Poin)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
@@ -356,7 +482,7 @@ export default function ReferralPage() {
               type="button"
               onClick={() => setInfoModal({
                 title: "🎁 Poin Saya",
-                text: "Klaim poin saat rekan Anda mendaftar atau berlangganan. Poin dapat ditukarkan dengan tema warna kustom (mulai 40 poin), gratis akses langganan premium, atau hadiah uang tunai."
+                text: "Klaim poin saat rekan Anda mendaftar atau berlangganan. Poin dapat ditukarkan dengan tema warna kustom (mulai 40 poin), gratis akses langganan premium bulanan/tahunan atau hadiah uang tunai."
               })}
               style={{
                 background: 'rgba(255,255,255,0.2)',
@@ -539,8 +665,8 @@ export default function ReferralPage() {
               borderRadius: '8px',
               fontSize: '0.75rem',
               fontWeight: '700',
-              border: activeTheme === 'default' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-              backgroundColor: activeTheme === 'default' ? 'var(--primary-glow)' : 'var(--bg-tertiary)',
+              border: (activeTheme === 'default' && !trialTheme) ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+              backgroundColor: (activeTheme === 'default' && !trialTheme) ? 'var(--primary-glow)' : 'var(--bg-tertiary)',
               color: 'var(--text-primary)',
               cursor: 'pointer'
             }}
@@ -551,7 +677,7 @@ export default function ReferralPage() {
           {themeRewards.map((theme) => {
             const unlocked = isThemeUnlocked(theme.id);
             if (!unlocked) return null;
-            const isActive = activeTheme === theme.id;
+            const isActive = (activeTheme === theme.id && !trialTheme);
 
             return (
               <button
@@ -790,7 +916,7 @@ export default function ReferralPage() {
               type="button"
               onClick={() => setInfoModal({
                 title: "🎁 Tukar Poin Hadiah",
-                text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai."
+                text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai. Anda juga dapat mencoba (preview) tema 5 menit sebelum menukar!"
               })}
               style={{
                 background: 'var(--bg-tertiary)',
@@ -821,7 +947,8 @@ export default function ReferralPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
               {themeRewards.map((theme) => {
                 const unlocked = isThemeUnlocked(theme.id);
-                const isActive = activeTheme === theme.id;
+                const isActive = (activeTheme === theme.id && !trialTheme);
+                const isTrialActive = (trialTheme && trialTheme.id === theme.id);
                 const isEligible = data.balance >= theme.price;
 
                 return (
@@ -830,8 +957,8 @@ export default function ReferralPage() {
                     style={{
                       padding: '10px',
                       borderRadius: '10px',
-                      border: isActive ? `2px solid ${theme.color}` : unlocked ? `1px solid ${theme.color}40` : '1px solid var(--border-color)',
-                      backgroundColor: isActive ? `${theme.color}15` : 'var(--bg-secondary)',
+                      border: isTrialActive ? `2px dashed ${theme.color}` : isActive ? `2px solid ${theme.color}` : unlocked ? `1px solid ${theme.color}40` : '1px solid var(--border-color)',
+                      backgroundColor: (isActive || isTrialActive) ? `${theme.color}15` : 'var(--bg-secondary)',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '6px',
@@ -876,20 +1003,54 @@ export default function ReferralPage() {
                       {theme.price} Poin
                     </div>
 
-                    <button
-                      onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
-                      className={`btn ${isActive ? 'btn-success' : unlocked ? 'btn-secondary' : isEligible ? 'btn-primary' : 'btn-secondary'}`}
-                      style={{
-                        padding: '4px 8px',
-                        fontSize: '0.7rem',
-                        fontWeight: '700',
-                        marginTop: '2px',
-                        width: '100%'
-                      }}
-                      disabled={(!unlocked && !isEligible) || redeemingId !== null}
-                    >
-                      {redeemingId === theme.id ? '...' : isActive ? '✓ Aktif' : unlocked ? 'Gunakan' : isEligible ? 'Tukar' : `${data.balance}/${theme.price}`}
-                    </button>
+                    {unlocked ? (
+                      <button
+                        onClick={() => applyTheme(theme.id)}
+                        className={`btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.7rem',
+                          fontWeight: '700',
+                          marginTop: '2px',
+                          width: '100%'
+                        }}
+                      >
+                        {isActive ? '✓ Aktif' : 'Gunakan'}
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '2px' }}>
+                        <button
+                          onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
+                          className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                          style={{
+                            padding: '4px 6px',
+                            fontSize: '0.68rem',
+                            fontWeight: '700',
+                            width: '100%'
+                          }}
+                          disabled={!isEligible || redeemingId !== null}
+                        >
+                          {redeemingId === theme.id ? '...' : isEligible ? '⚡ Tukar' : `${data.balance}/${theme.price}`}
+                        </button>
+                        
+                        <button
+                          onClick={() => startThemeTrial(theme)}
+                          className="btn btn-secondary"
+                          style={{
+                            padding: '3px 6px',
+                            fontSize: '0.65rem',
+                            fontWeight: '700',
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          {isTrialActive ? '👁️ Menguji...' : '👁️ Uji (5 Mnt)'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
