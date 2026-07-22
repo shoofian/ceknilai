@@ -11,6 +11,11 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 const REWARDS = {
+  theme_pastel: { name: 'Tema Warna Pastel Lavender', price: 40 },
+  theme_pinky: { name: 'Tema Warna Sakura Pinky', price: 40 },
+  theme_cool: { name: 'Tema Warna Cool Cyan', price: 40 },
+  theme_green: { name: 'Tema Warna Mint Emerald', price: 40 },
+  theme_gold: { name: 'Tema Warna Royal Gold', price: 50 },
   free_1m: { name: 'Gratis 1 Bulan Premium', price: 130 },
   free_12m: { name: 'Gratis 1 Tahun Premium', price: 1060 },
   cash_1m: { name: 'Uang Tunai Rp 1.000.000', price: 6500 }

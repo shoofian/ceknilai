@@ -26,7 +26,8 @@ export default function ReferralPage() {
   const [copiedBank, setCopiedBank] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [infoModal, setInfoModal] = useState(null); // { title: string, text: string }
+  const [infoModal, setInfoModal] = useState(null);
+  const [activeTheme, setActiveTheme] = useState('default');
 
   const setTodayDateTime = () => {
     const now = new Date();
@@ -59,6 +60,12 @@ export default function ReferralPage() {
 
   useEffect(() => {
     fetchReferralData();
+    const savedColorTheme = localStorage.getItem("color_theme");
+    if (savedColorTheme) {
+      setActiveTheme(`theme_${savedColorTheme}`);
+    } else {
+      setActiveTheme('default');
+    }
   }, []);
 
   const handleCopyCode = () => {
@@ -120,7 +127,51 @@ export default function ReferralPage() {
     }
   };
 
+  const isThemeUnlocked = (themeId) => {
+    if (themeId === 'default') return true;
+    let localUnlocked = [];
+    try {
+      localUnlocked = JSON.parse(localStorage.getItem('unlocked_themes') || '[]');
+    } catch (e) {}
+    if (localUnlocked.includes(themeId)) return true;
+
+    if (data.history && data.history.length > 0) {
+      const foundInLogs = data.history.some(log => 
+        log.description && (
+          log.description.includes(themeId) || 
+          (themeId === 'theme_pastel' && log.description.includes('Pastel')) ||
+          (themeId === 'theme_pinky' && log.description.includes('Pinky')) ||
+          (themeId === 'theme_cool' && log.description.includes('Cool')) ||
+          (themeId === 'theme_green' && log.description.includes('Mint')) ||
+          (themeId === 'theme_gold' && log.description.includes('Royal Gold'))
+        )
+      );
+      if (foundInLogs) return true;
+    }
+    return false;
+  };
+
+  const applyTheme = (themeId) => {
+    if (themeId === 'default') {
+      localStorage.removeItem('color_theme');
+      document.documentElement.removeAttribute('data-theme');
+      setActiveTheme('default');
+    } else {
+      const key = themeId.replace('theme_', '');
+      localStorage.setItem('color_theme', key);
+      document.documentElement.setAttribute('data-theme', key);
+      setActiveTheme(themeId);
+    }
+  };
+
   const handleRedeem = async (rewardId, rewardName, price) => {
+    // If it's an unlocked theme, just apply it
+    if (rewardId.startsWith('theme_') && isThemeUnlocked(rewardId)) {
+      applyTheme(rewardId);
+      setSuccessMsg(`Tema "${rewardName}" berhasil diterapkan!`);
+      return;
+    }
+
     if (data.balance < price) {
       alert(`Poin Anda tidak mencukupi untuk menukar "${rewardName}".`);
       return;
@@ -146,6 +197,19 @@ export default function ReferralPage() {
         throw new Error(json.error || 'Gagal melakukan penukaran poin');
       }
 
+      // If theme reward, unlock locally & apply
+      if (rewardId.startsWith('theme_')) {
+        let localUnlocked = [];
+        try {
+          localUnlocked = JSON.parse(localStorage.getItem('unlocked_themes') || '[]');
+        } catch (e) {}
+        if (!localUnlocked.includes(rewardId)) {
+          localUnlocked.push(rewardId);
+          localStorage.setItem('unlocked_themes', JSON.stringify(localUnlocked));
+        }
+        applyTheme(rewardId);
+      }
+
       setSuccessMsg(json.message);
       fetchReferralData();
     } catch (err) {
@@ -155,7 +219,51 @@ export default function ReferralPage() {
     }
   };
 
-  const rewardList = [
+  const themeRewards = [
+    { 
+      id: 'theme_pastel', 
+      name: 'Pastel Lavender', 
+      price: 40, 
+      icon: '🌸', 
+      color: '#8b5cf6',
+      desc: 'Tema ungu lavender pastel yang lembut, tenang, dan estetis untuk tampilan aplikasi Anda.' 
+    },
+    { 
+      id: 'theme_pinky', 
+      name: 'Sakura Pinky', 
+      price: 40, 
+      icon: '🎀', 
+      color: '#ec4899',
+      desc: 'Tema nuansa sakura pink yang manis, hangat, dan menambah semangat mengajar.' 
+    },
+    { 
+      id: 'theme_cool', 
+      name: 'Cool Ocean Cyan', 
+      price: 40, 
+      icon: '🌊', 
+      color: '#06b6d4',
+      desc: 'Tema warna biru cyan samudera yang sejuk, jernih, dan bernuansa modern pro.' 
+    },
+    { 
+      id: 'theme_green', 
+      name: 'Mint Emerald', 
+      price: 40, 
+      icon: '🌿', 
+      color: '#10b981',
+      desc: 'Tema hijau mint segar dan alami untuk suasana kerja yang rileks dan alami.' 
+    },
+    { 
+      id: 'theme_gold', 
+      name: 'Royal Gold', 
+      price: 50, 
+      icon: '👑', 
+      badge: 'Spesial',
+      color: '#f59e0b',
+      desc: 'Tema emas mewah eksklusif penanda guru berprestasi dan pengguna setia.' 
+    }
+  ];
+
+  const mainRewards = [
     { 
       id: 'free_1m', 
       name: 'Gratis 1 Bulan Premium', 
@@ -199,7 +307,7 @@ export default function ReferralPage() {
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>👑 Masa Aktif & Referral</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '2px', margin: 0 }}>
-            Kelola paket langganan, bagikan kode referral, dan tukarkan poin.
+            Kelola paket langganan, bagikan kode referral, dan tukarkan poin dengan hadiah fisik atau tema kustom.
           </p>
         </div>
         <button 
@@ -229,7 +337,7 @@ export default function ReferralPage() {
         {/* Points Display Card */}
         <div 
           style={{ 
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', 
+            background: 'linear-gradient(135deg, var(--primary), #8b5cf6)', 
             borderRadius: '14px', 
             padding: '20px', 
             color: '#ffffff',
@@ -248,7 +356,7 @@ export default function ReferralPage() {
               type="button"
               onClick={() => setInfoModal({
                 title: "🎁 Poin Saya",
-                text: "Klaim poin saat rekan Anda mendaftar atau berlangganan. Poin dapat ditukarkan dengan gratis akses langganan premium bulanan/tahunan atau hadiah uang tunai."
+                text: "Klaim poin saat rekan Anda mendaftar atau berlangganan. Poin dapat ditukarkan dengan tema warna kustom (mulai 40 poin), gratis akses langganan premium, atau hadiah uang tunai."
               })}
               style={{
                 background: 'rgba(255,255,255,0.2)',
@@ -410,6 +518,66 @@ export default function ReferralPage() {
 
       </div>
 
+      {/* Active Theme Control Bar (If user has unlocked themes) */}
+      <div className="glass-card" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.2rem' }}>🎨</span>
+          <div>
+            <div style={{ fontWeight: '800', fontSize: '0.88rem' }}>Tema Tampilan Aktif</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              Pilih warna aksen aplikasi favorit Anda dari tema yang telah Anda tukar.
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Default theme button */}
+          <button
+            onClick={() => applyTheme('default')}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '8px',
+              fontSize: '0.75rem',
+              fontWeight: '700',
+              border: activeTheme === 'default' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
+              backgroundColor: activeTheme === 'default' ? 'var(--primary-glow)' : 'var(--bg-tertiary)',
+              color: 'var(--text-primary)',
+              cursor: 'pointer'
+            }}
+          >
+            🔵 Standar (Blue)
+          </button>
+          
+          {themeRewards.map((theme) => {
+            const unlocked = isThemeUnlocked(theme.id);
+            if (!unlocked) return null;
+            const isActive = activeTheme === theme.id;
+
+            return (
+              <button
+                key={theme.id}
+                onClick={() => applyTheme(theme.id)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  border: isActive ? `2px solid ${theme.color}` : '1px solid var(--border-color)',
+                  backgroundColor: isActive ? `${theme.color}20` : 'var(--bg-tertiary)',
+                  color: 'var(--text-primary)',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <span>{theme.icon}</span> {theme.name} {isActive && '✓'}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Info Pop-up Modal */}
       {infoModal && (
         <div
@@ -484,7 +652,7 @@ export default function ReferralPage() {
                 <li><strong>Bonus Poin</strong>: Diberikan kepada pemberi & penerima kode setelah pembayaran pertama terverifikasi.</li>
                 <li><strong>Skema Poin</strong>: Paket Tahunan = <strong>100 Poin</strong>, Paket Bulanan = <strong>10 Poin</strong>.</li>
                 <li><strong>Batas Klaim</strong>: Hanya dapat diklaim 1 kali pada pembayaran pertama. Tidak berlaku untuk akun sendiri.</li>
-                <li><strong>Masa Berlaku Poin</strong>: Poin akumulatif dan tidak pernah hangus.</li>
+                <li><strong>Masa Berlaku Poin</strong>: Poin akumulatif dan tidak pernah hangus. Dapat ditukar tema warna (40 poin) atau langganan/cash.</li>
               </ul>
             </div>
 
@@ -622,7 +790,7 @@ export default function ReferralPage() {
               type="button"
               onClick={() => setInfoModal({
                 title: "🎁 Tukar Poin Hadiah",
-                text: "Kumpulkan poin dari program referral, lalu pilih dan tukarkan poin Anda dengan perpanjangan lisensi premium atau penarikan uang tunai."
+                text: "Tukarkan poin Anda mulai dari 40 poin untuk membuka tema warna aplikasi unik (Pastel, Pinky, Cyan, Mint, Gold) atau kumpulkan untuk perpanjangan masa aktif & uang tunai."
               })}
               style={{
                 background: 'var(--bg-tertiary)',
@@ -644,93 +812,187 @@ export default function ReferralPage() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {rewardList.map((reward) => {
-              const progressPercent = Math.min(100, Math.round((data.balance / reward.price) * 100));
-              const isEligible = data.balance >= reward.price;
+          {/* Sub-section 1: Tema Warna Non-Fisik (Poin Rendah) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              🎨 Hadiah Tema Warna (Non-Fisik)
+            </div>
 
-              return (
-                <div 
-                  key={reward.id} 
-                  style={{ 
-                    padding: '14px', 
-                    borderRadius: '10px',
-                    border: isEligible ? '1px solid var(--primary)' : '1px solid var(--border-color)',
-                    backgroundColor: 'var(--bg-secondary)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    position: 'relative'
-                  }}
-                >
-                  {reward.badge && (
-                    <div style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#eab308', color: '#000', fontSize: '0.55rem', fontWeight: '800', padding: '1px 6px', borderRadius: '4px' }}>
-                      {reward.badge}
-                    </div>
-                  )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+              {themeRewards.map((theme) => {
+                const unlocked = isThemeUnlocked(theme.id);
+                const isActive = activeTheme === theme.id;
+                const isEligible = data.balance >= theme.price;
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: reward.badge ? '50px' : '0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '1.2rem' }}>{reward.icon}</span>
-                      <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>{reward.name}</span>
+                return (
+                  <div
+                    key={theme.id}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: isActive ? `2px solid ${theme.color}` : unlocked ? `1px solid ${theme.color}40` : '1px solid var(--border-color)',
+                      backgroundColor: isActive ? `${theme.color}15` : 'var(--bg-secondary)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                      position: 'relative'
+                    }}
+                  >
+                    {theme.badge && (
+                      <div style={{ position: 'absolute', top: '6px', right: '6px', backgroundColor: theme.color, color: '#000', fontSize: '0.5rem', fontWeight: '800', padding: '1px 4px', borderRadius: '4px' }}>
+                        {theme.badge}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontSize: '1.1rem' }}>{theme.icon}</span>
+                      <span style={{ fontWeight: '800', fontSize: '0.78rem', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{theme.name}</span>
                       <button
                         type="button"
                         onClick={() => setInfoModal({
-                          title: `${reward.icon} ${reward.name}`,
-                          text: reward.desc
+                          title: `${theme.icon} ${theme.name}`,
+                          text: theme.desc
                         })}
                         style={{
                           background: 'var(--bg-tertiary)',
-                          border: '1px solid var(--border-color)',
-                          color: 'var(--text-secondary)',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          fontSize: '0.6rem',
                           cursor: 'pointer',
-                          fontSize: '0.65rem',
-                          fontWeight: '800',
-                          width: '15px',
-                          height: '15px',
+                          width: '14px',
+                          height: '14px',
                           borderRadius: '50%',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          flexShrink: 0
                         }}
-                        title="Penjelasan Hadiah"
                       >
                         ?
                       </button>
                     </div>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--primary)' }}>{reward.price} Poin</span>
-                  </div>
 
-                  {/* Progress & Redeem */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
-                    <div style={{ flex: 1, height: '6px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '99px', overflow: 'hidden' }}>
-                      <div 
-                        style={{ 
-                          width: `${progressPercent}%`, 
-                          height: '100%', 
-                          backgroundColor: isEligible ? 'var(--success)' : 'var(--primary)',
-                          borderRadius: '99px'
-                        }} 
-                      />
+                    <div style={{ fontSize: '0.72rem', fontWeight: '800', color: theme.color }}>
+                      {theme.price} Poin
                     </div>
-                    <button 
-                      onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
-                      className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
-                      style={{ 
-                        padding: '4px 12px', 
-                        fontSize: '0.75rem', 
+
+                    <button
+                      onClick={() => handleRedeem(theme.id, theme.name, theme.price)}
+                      className={`btn ${isActive ? 'btn-success' : unlocked ? 'btn-secondary' : isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{
+                        padding: '4px 8px',
+                        fontSize: '0.7rem',
                         fontWeight: '700',
-                        minWidth: '70px'
+                        marginTop: '2px',
+                        width: '100%'
                       }}
-                      disabled={!isEligible || redeemingId !== null}
+                      disabled={(!unlocked && !isEligible) || redeemingId !== null}
                     >
-                      {redeemingId === reward.id ? '...' : isEligible ? 'Tukar' : `${data.balance}/${reward.price}`}
+                      {redeemingId === theme.id ? '...' : isActive ? '✓ Aktif' : unlocked ? 'Gunakan' : isEligible ? 'Tukar' : `${data.balance}/${theme.price}`}
                     </button>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
+
+          {/* Sub-section 2: Hadiah Utama */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              👑 Langganan & Cash
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {mainRewards.map((reward) => {
+                const progressPercent = Math.min(100, Math.round((data.balance / reward.price) * 100));
+                const isEligible = data.balance >= reward.price;
+
+                return (
+                  <div 
+                    key={reward.id} 
+                    style={{ 
+                      padding: '12px', 
+                      borderRadius: '10px',
+                      border: isEligible ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                      backgroundColor: 'var(--bg-secondary)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      position: 'relative'
+                    }}
+                  >
+                    {reward.badge && (
+                      <div style={{ position: 'absolute', top: '8px', right: '8px', backgroundColor: '#eab308', color: '#000', fontSize: '0.55rem', fontWeight: '800', padding: '1px 6px', borderRadius: '4px' }}>
+                        {reward.badge}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: reward.badge ? '50px' : '0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>{reward.icon}</span>
+                        <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>{reward.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setInfoModal({
+                            title: `${reward.icon} ${reward.name}`,
+                            text: reward.desc
+                          })}
+                          style={{
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border-color)',
+                            color: 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            fontSize: '0.65rem',
+                            fontWeight: '800',
+                            width: '15px',
+                            height: '15px',
+                            borderRadius: '50%',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Penjelasan Hadiah"
+                        >
+                          ?
+                        </button>
+                      </div>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: 'var(--primary)' }}>{reward.price} Poin</span>
+                    </div>
+
+                    {/* Progress & Redeem */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '2px' }}>
+                      <div style={{ flex: 1, height: '6px', backgroundColor: 'var(--bg-tertiary)', borderRadius: '99px', overflow: 'hidden' }}>
+                        <div 
+                          style={{ 
+                            width: `${progressPercent}%`, 
+                            height: '100%', 
+                            backgroundColor: isEligible ? 'var(--success)' : 'var(--primary)',
+                            borderRadius: '99px'
+                          }} 
+                        />
+                      </div>
+                      <button 
+                        onClick={() => handleRedeem(reward.id, reward.name, reward.price)}
+                        className={`btn ${isEligible ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ 
+                          padding: '4px 12px', 
+                          fontSize: '0.75rem', 
+                          fontWeight: '700',
+                          minWidth: '70px'
+                        }}
+                        disabled={!isEligible || redeemingId !== null}
+                      >
+                        {redeemingId === reward.id ? '...' : isEligible ? 'Tukar' : `${data.balance}/${reward.price}`}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
         </div>
 
       </div>

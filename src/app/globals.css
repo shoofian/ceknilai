@@ -81,6 +81,43 @@ html.dark {
   --glass-border: rgba(30, 41, 59, 0.7);
 }
 
+/* Custom Color Themes (Dapat Ditukar via Poin Referral) */
+html[data-theme="pastel"] {
+  --primary: #8b5cf6; /* Soft Purple */
+  --primary-hover: #7c3aed;
+  --primary-glow: rgba(139, 92, 246, 0.18);
+  --border-focus: #8b5cf6;
+}
+
+html[data-theme="pinky"] {
+  --primary: #ec4899; /* Sakura Pink */
+  --primary-hover: #db2777;
+  --primary-glow: rgba(236, 72, 153, 0.18);
+  --border-focus: #ec4899;
+}
+
+html[data-theme="cool"] {
+  --primary: #06b6d4; /* Cool Ocean Cyan */
+  --primary-hover: #0891b2;
+  --primary-glow: rgba(6, 182, 212, 0.18);
+  --border-focus: #06b6d4;
+}
+
+html[data-theme="green"] {
+  --primary: #10b981; /* Mint Emerald Green */
+  --primary-hover: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.18);
+  --border-focus: #10b981;
+}
+
+html[data-theme="gold"] {
+  --primary: #f59e0b; /* Royal Gold */
+  --primary-hover: #d97706;
+  --primary-glow: rgba(245, 158, 11, 0.18);
+  --border-focus: #f59e0b;
+}
+
+
 /* Transition semua properti warna saat mode berganti */
 *, *::before, *::after {
   transition-property: background-color, border-color, color, box-shadow;

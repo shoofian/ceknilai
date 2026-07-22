@@ -22,6 +22,13 @@ export default function GuruLayout({ children }) {
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
 
+    const savedColorTheme = localStorage.getItem("color_theme");
+    if (savedColorTheme && savedColorTheme !== 'default') {
+      document.documentElement.setAttribute("data-theme", savedColorTheme);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       setIsPopup(params.get("popup") === "true");
