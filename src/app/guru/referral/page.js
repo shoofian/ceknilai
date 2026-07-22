@@ -102,19 +102,19 @@ export default function ReferralPage() {
   }, [trialTheme]);
 
   const startThemeTrial = (theme) => {
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const expiresAt = Date.now() + 1 * 60 * 1000; // 1 minute trial
     const trialData = {
       id: theme.id,
       name: theme.name,
       price: theme.price,
       expiresAt,
-      timeLeft: 300
+      timeLeft: 60
     };
     sessionStorage.setItem("theme_preview", JSON.stringify(trialData));
     const key = theme.id.replace('theme_', '');
     document.documentElement.setAttribute('data-theme', key);
     setTrialTheme(trialData);
-    setSuccessMsg(`Mode Uji Coba 5 Menit diaktifkan untuk "${theme.name}". Selamat mencoba!`);
+    setSuccessMsg(`Mode Uji Coba 1 Menit diaktifkan untuk "${theme.name}". Selamat mencoba!`);
   };
 
   const stopThemeTrial = (isExpired = false) => {
@@ -130,7 +130,7 @@ export default function ReferralPage() {
     }
 
     if (isExpired) {
-      alert("Masa uji coba tema selama 5 menit telah berakhir.");
+      alert("Masa uji coba tema selama 1 menit telah berakhir.");
     }
   };
 
@@ -307,6 +307,7 @@ export default function ReferralPage() {
       price: 40, 
       icon: '🖤', 
       color: '#475569',
+      textColor: '#ffffff',
       bgGradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
       accentLabel: 'Noir Monochrome',
       badge: 'PRO NOIR',
@@ -887,17 +888,18 @@ export default function ReferralPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: theme.color, boxShadow: `0 0 6px ${theme.color}` }} />
-                        <span style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--text-primary)', opacity: 0.9 }}>{theme.accentLabel}</span>
+                        <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.textColor || 'var(--text-primary)', opacity: 0.95 }}>{theme.accentLabel}</span>
                       </div>
-                      {theme.badge ? (
-                        <span style={{ backgroundColor: theme.color, color: '#000000', fontSize: '0.55rem', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                          {theme.badge}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.color, backgroundColor: 'rgba(255,255,255,0.2)', padding: '2px 6px', borderRadius: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '0.6rem', fontWeight: '800', color: theme.textColor || theme.color, backgroundColor: 'rgba(255,255,255,0.25)', padding: '2px 6px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
                           {theme.price} POIN
                         </span>
-                      )}
+                        {theme.badge && (
+                          <span style={{ backgroundColor: theme.color, color: '#ffffff', fontSize: '0.55rem', fontWeight: '800', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                            {theme.badge}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Mini Action Mockup */}
