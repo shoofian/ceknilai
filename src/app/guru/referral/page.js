@@ -211,6 +211,7 @@ export default function ReferralPage() {
       const foundInLogs = data.history.some(log => 
         log.description && (
           log.description.includes(themeId) || 
+          (themeId === 'theme_bw' && (log.description.includes('Black') || log.description.includes('Hitam'))) ||
           (themeId === 'theme_pastel' && log.description.includes('Pastel')) ||
           (themeId === 'theme_pinky' && log.description.includes('Pinky')) ||
           (themeId === 'theme_cool' && log.description.includes('Cool')) ||
@@ -300,6 +301,14 @@ export default function ReferralPage() {
   };
 
   const themeRewards = [
+    { 
+      id: 'theme_bw', 
+      name: 'Black & White', 
+      price: 40, 
+      icon: '🖤', 
+      color: '#475569',
+      desc: 'Tema monokrom hitam putih yang klasik, minimalis, kontras tinggi, dan sangat profesional.' 
+    },
     { 
       id: 'theme_pastel', 
       name: 'Pastel Lavender', 
@@ -938,10 +947,10 @@ export default function ReferralPage() {
             </button>
           </div>
 
-          {/* Sub-section 1: Tema Warna Non-Fisik (Poin Rendah) */}
+          {/* Sub-section 1: Tema Tampilan */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🎨 Hadiah Tema Warna (Non-Fisik)
+              🎨 Tema Tampilan
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>

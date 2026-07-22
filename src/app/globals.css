@@ -117,6 +117,20 @@ html[data-theme="gold"] {
   --border-focus: #f59e0b;
 }
 
+html[data-theme="bw"] {
+  --primary: #0f172a; /* Obsidian Monochrome Black */
+  --primary-hover: #334155;
+  --primary-glow: rgba(15, 23, 42, 0.2);
+  --border-focus: #334155;
+}
+
+html.dark[data-theme="bw"] {
+  --primary: #e2e8f0; /* Pure Crisp White */
+  --primary-hover: #ffffff;
+  --primary-glow: rgba(255, 255, 255, 0.25);
+  --border-focus: #cbd5e1;
+}
+
 
 /* Transition semua properti warna saat mode berganti */
 *, *::before, *::after {

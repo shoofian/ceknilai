@@ -11,6 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 });
 
 const REWARDS = {
+  theme_bw: { name: 'Tema Black & White', price: 40 },
   theme_pastel: { name: 'Tema Warna Pastel Lavender', price: 40 },
   theme_pinky: { name: 'Tema Warna Sakura Pinky', price: 40 },
   theme_cool: { name: 'Tema Warna Cool Cyan', price: 40 },
