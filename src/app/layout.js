@@ -1,5 +1,4 @@
 import "./globals.css";
-import PromoModal from "@/components/PromoModal";
 
 export const metadata = {
   title: "Cek Nilai - Sistem Penilaian Online Guru & Siswa",
@@ -20,7 +19,6 @@ export default function RootLayout({ children }) {
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           {children}
         </div>
-        <PromoModal />
         <footer className="no-print" style={{ textAlign: "center", padding: "16px", color: "var(--text-secondary)", fontSize: "0.85rem", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)" }}>
           Powered by <strong style={{ color: "var(--primary)" }}>Memofy Studio</strong>
         </footer>

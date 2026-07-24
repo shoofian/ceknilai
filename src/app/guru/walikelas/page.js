@@ -25,6 +25,10 @@ export default function WaliKelasDashboard() {
   const [activeTab, setActiveTab] = useState("mapel");
   const [selectedTingkatan, setSelectedTingkatan] = useState("");
 
+  // Presensi Sub-tab and Filter States
+  const [presensiSubTab, setPresensiSubTab] = useState("guru");
+  const [selectedPresensiMapel, setSelectedPresensiMapel] = useState("");
+
   // Subject Detail Modal States
   const [selectedSubjectDetail, setSelectedSubjectDetail] = useState(null);
   const [loadingSubjectDetail, setLoadingSubjectDetail] = useState(false);
@@ -819,9 +823,12 @@ export default function WaliKelasDashboard() {
                         </div>
                       </div>
 
-                      <div style={{ display: "flex", gap: "12px", fontSize: "0.78rem", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px" }}>
+                      <div style={{ display: "flex", gap: "12px", fontSize: "0.78rem", borderTop: "1px solid var(--border-color)", paddingTop: "8px", marginTop: "8px", flexWrap: "wrap", justifyContent: "space-between" }}>
                         <span>KKM: <strong>{mp.kkm}</strong></span>
                         <span>Semester: <strong>{mp.semester}</strong></span>
+                        <span style={{ color: "var(--primary)", fontWeight: "600" }}>
+                          📅 {mp.totalPertemuan || 0} Pertemuan ({mp.rekapPresensi?.percentHadir || 0}% Hadir)
+                        </span>
                       </div>
                     </div>
                     
@@ -987,61 +994,283 @@ export default function WaliKelasDashboard() {
           )}
         </div>
       ) : activeTab === "kehadiran" ? (
-        <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
-          {siswa.length > 0 ? (
-            <div style={{ overflowX: "auto" }}>
-              <table className="premium-table" style={{ margin: 0, width: "100%" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
-                    <th style={{ width: "60px", textAlign: "center" }}>No</th>
-                    <th style={{ width: "130px" }}>NISN</th>
-                    <th>Nama Siswa</th>
-                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(16, 185, 129, 0.05)" }}>Hadir (H)</th>
-                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.05)" }}>Izin (I)</th>
-                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Sakit (S)</th>
-                    <th style={{ width: "95px", textAlign: "center", backgroundColor: "rgba(139, 92, 246, 0.05)" }}>Dispensasi (D)</th>
-                    <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(239, 68, 68, 0.05)" }}>Alpha (A)</th>
-                    <th style={{ width: "110px", textAlign: "center" }}>Total Pertemuan</th>
-                    <th style={{ width: "110px", textAlign: "center", backgroundColor: "rgba(124, 58, 237, 0.08)" }}>% Kehadiran</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedSiswa.map((s, index) => {
-                    const h = s.kehadiran?.H || 0;
-                    const sakit = s.kehadiran?.S || 0;
-                    const i = s.kehadiran?.I || 0;
-                    const a = s.kehadiran?.A || 0;
-                    const d = s.kehadiran?.D || 0;
-                    const total = h + sakit + i + a + d;
-                    const percent = total > 0 ? ((h + d) / total) * 100 : null;
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          
+          {/* Top Bar Navigation for Presensi: Sub-tabs & Mapel Filter */}
+          <div className="glass-card" style={{ padding: "16px 20px", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
+            
+            {/* Sub-tab Switches */}
+            <div style={{ display: "flex", gap: "6px", backgroundColor: "var(--bg-tertiary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+              <button
+                onClick={() => setPresensiSubTab("guru")}
+                className="btn"
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "0.82rem",
+                  backgroundColor: presensiSubTab === "guru" ? "var(--bg-primary)" : "transparent",
+                  color: presensiSubTab === "guru" ? "var(--primary)" : "var(--text-muted)",
+                  boxShadow: presensiSubTab === "guru" ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+                  fontWeight: presensiSubTab === "guru" ? "700" : "500",
+                  borderRadius: "var(--radius-xs)"
+                }}
+              >
+                👨‍🏫 Rekapan Per Guru / Mapel
+              </button>
+              <button
+                onClick={() => setPresensiSubTab("siswa")}
+                className="btn"
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "0.82rem",
+                  backgroundColor: presensiSubTab === "siswa" ? "var(--bg-primary)" : "transparent",
+                  color: presensiSubTab === "siswa" ? "var(--primary)" : "var(--text-muted)",
+                  boxShadow: presensiSubTab === "siswa" ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+                  fontWeight: presensiSubTab === "siswa" ? "700" : "500",
+                  borderRadius: "var(--radius-xs)"
+                }}
+              >
+                👥 Detail Presensi Siswa {selectedPresensiMapel ? `(${selectedPresensiMapel})` : "(Akumulasi)"}
+              </button>
+            </div>
 
+            {/* Filter Dropdown Mapel */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: "600" }}>Filter Guru/Mapel:</span>
+              <select
+                value={selectedPresensiMapel}
+                onChange={(e) => {
+                  setSelectedPresensiMapel(e.target.value);
+                  if (e.target.value !== "") {
+                    setPresensiSubTab("siswa");
+                  }
+                }}
+                className="input"
+                style={{ fontSize: "0.82rem", padding: "6px 12px", width: "auto", minWidth: "200px" }}
+              >
+                <option value="">-- Semua Guru / Akumulasi --</option>
+                {mataPelajaranList.map((mp) => (
+                  <option key={mp.id} value={mp.mataPelajaran}>
+                    {mp.mataPelajaran} ({mp.guru?.nama || mp.guru_username || "Guru"})
+                  </option>
+                ))}
+              </select>
+              {selectedPresensiMapel && (
+                <button
+                  onClick={() => setSelectedPresensiMapel("")}
+                  className="btn btn-secondary"
+                  style={{ padding: "6px 10px", fontSize: "0.78rem" }}
+                  title="Reset Filter Mapel"
+                >
+                  ✕ Reset
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Sub-tab 1: Rekapan Per Guru / Mapel */}
+          {presensiSubTab === "guru" ? (
+            <div>
+              {mataPelajaranList.length > 0 ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px" }}>
+                  {mataPelajaranList.map((mp) => {
+                    const r = mp.rekapPresensi || { H: 0, I: 0, S: 0, A: 0, D: 0, totalEntries: 0, percentHadir: 0 };
+                    const guruNama = mp.guru?.nama || mp.guru_username || "Guru Pengampu";
+                    
                     return (
-                      <tr key={s.nisn} style={{ borderBottom: "1px solid var(--border-color)" }}>
-                        <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
-                        <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-secondary)" }}>{s.nisn}</td>
-                        <td style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.01)" }}>{h}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.01)" }}>{i}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.01)" }}>{sakit}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.01)" }}>{d}</td>
-                        <td style={{ textAlign: "center", fontWeight: "700", color: a > 0 ? "var(--danger)" : "var(--text-muted)", backgroundColor: "rgba(239, 68, 68, 0.01)" }}>
-                          {a > 0 ? a : "-"}
-                        </td>
-                        <td style={{ textAlign: "center", fontWeight: "600" }}>{total}</td>
-                        <td style={{ textAlign: "center", fontWeight: "900", color: percent && percent < 80 ? "var(--danger)" : "var(--primary)", backgroundColor: "rgba(124, 58, 237, 0.02)" }}>
-                          {percent !== null ? `${percent.toFixed(1)}%` : "-"}
-                        </td>
-                      </tr>
+                      <div
+                        key={mp.id}
+                        className="glass-card"
+                        style={{
+                          padding: "20px",
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "space-between",
+                          border: "1px solid var(--border-color)",
+                          gap: "16px"
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                            <div>
+                              <span style={{ fontSize: "0.7rem", fontWeight: "700", textTransform: "uppercase", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.1)", padding: "2px 8px", borderRadius: "10px" }}>
+                                👨‍🏫 Guru Pengampu
+                              </span>
+                              <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: "6px 0 2px", color: "var(--text-primary)" }}>
+                                {guruNama}
+                              </h4>
+                              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: 0, fontWeight: "600" }}>
+                                📚 {mp.mataPelajaran}
+                              </p>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <span className="badge badge-primary" style={{ fontSize: "0.75rem" }}>
+                                📅 {mp.totalPertemuan || 0} Pertemuan
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Progress Bar Kehadiran Kelas */}
+                          <div style={{ backgroundColor: "var(--bg-secondary)", padding: "12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "12px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "6px" }}>
+                              <span style={{ color: "var(--text-secondary)", fontWeight: "600" }}>Kehadiran Kelas:</span>
+                              <strong style={{ color: r.percentHadir >= 80 ? "var(--success)" : r.percentHadir >= 60 ? "var(--warning)" : "var(--danger)" }}>
+                                {r.percentHadir}%
+                              </strong>
+                            </div>
+                            <div style={{ width: "100%", height: "8px", backgroundColor: "var(--bg-tertiary)", borderRadius: "4px", overflow: "hidden" }}>
+                              <div
+                                style={{
+                                  width: `${r.percentHadir}%`,
+                                  height: "100%",
+                                  backgroundColor: r.percentHadir >= 80 ? "var(--success)" : r.percentHadir >= 60 ? "var(--warning)" : "var(--danger)",
+                                  transition: "width 0.3s ease"
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Grid Stat Presensi (H, I, S, D, A) */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px", marginTop: "14px", textAlign: "center" }}>
+                            <div style={{ backgroundColor: "rgba(16, 185, 129, 0.08)", padding: "8px 4px", borderRadius: "var(--radius-xs)" }}>
+                              <div style={{ fontSize: "0.65rem", color: "var(--success)", fontWeight: "700" }}>HADIR (H)</div>
+                              <div style={{ fontSize: "1rem", fontWeight: "900", color: "var(--success)", marginTop: "2px" }}>{r.H}</div>
+                            </div>
+                            <div style={{ backgroundColor: "rgba(245, 158, 11, 0.08)", padding: "8px 4px", borderRadius: "var(--radius-xs)" }}>
+                              <div style={{ fontSize: "0.65rem", color: "var(--warning)", fontWeight: "700" }}>IZIN (I)</div>
+                              <div style={{ fontSize: "1rem", fontWeight: "900", color: "var(--warning)", marginTop: "2px" }}>{r.I}</div>
+                            </div>
+                            <div style={{ backgroundColor: "rgba(59, 130, 246, 0.08)", padding: "8px 4px", borderRadius: "var(--radius-xs)" }}>
+                              <div style={{ fontSize: "0.65rem", color: "var(--primary)", fontWeight: "700" }}>SAKIT (S)</div>
+                              <div style={{ fontSize: "1rem", fontWeight: "900", color: "var(--primary)", marginTop: "2px" }}>{r.S}</div>
+                            </div>
+                            <div style={{ backgroundColor: "rgba(139, 92, 246, 0.08)", padding: "8px 4px", borderRadius: "var(--radius-xs)" }}>
+                              <div style={{ fontSize: "0.65rem", color: "#8b5cf6", fontWeight: "700" }}>DISP (D)</div>
+                              <div style={{ fontSize: "1rem", fontWeight: "900", color: "#8b5cf6", marginTop: "2px" }}>{r.D}</div>
+                            </div>
+                            <div style={{ backgroundColor: "rgba(239, 68, 68, 0.08)", padding: "8px 4px", borderRadius: "var(--radius-xs)" }}>
+                              <div style={{ fontSize: "0.65rem", color: "var(--danger)", fontWeight: "700" }}>ALPHA (A)</div>
+                              <div style={{ fontSize: "1rem", fontWeight: "900", color: r.A > 0 ? "var(--danger)" : "var(--text-muted)", marginTop: "2px" }}>{r.A}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action Button */}
+                        <button
+                          onClick={() => {
+                            setSelectedPresensiMapel(mp.mataPelajaran);
+                            setPresensiSubTab("siswa");
+                          }}
+                          className="btn btn-secondary"
+                          style={{
+                            width: "100%",
+                            justifyContent: "center",
+                            fontSize: "0.82rem",
+                            padding: "8px 12px",
+                            fontWeight: "700",
+                            marginTop: "12px"
+                          }}
+                        >
+                          🔍 Lihat Presensi Siswa ({mp.mataPelajaran}) ➔
+                        </button>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              ) : (
+                <div className="glass-card" style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+                  <span style={{ fontSize: "2.5rem" }}>📭</span>
+                  <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Guru & Mapel</h4>
+                  <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada kelas atau guru yang terdaftar pada periode terpilih.</p>
+                </div>
+              )}
             </div>
           ) : (
-            <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
-              <span style={{ fontSize: "2.5rem" }}>📭</span>
-              <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Kehadiran</h4>
-              <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada data kehadiran terinput untuk siswa pada periode terpilih.</p>
+            /* Sub-tab 2: Detail Presensi Siswa */
+            <div className="glass-card" style={{ padding: 0, overflow: "hidden" }}>
+              {selectedPresensiMapel && (
+                <div style={{ padding: "12px 20px", backgroundColor: "rgba(59, 130, 246, 0.08)", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: "0.85rem", color: "var(--primary)", fontWeight: "700" }}>
+                    📌 Menampilkan Presensi Siswa khusus Mata Pelajaran: <u>{selectedPresensiMapel}</u>
+                  </div>
+                  <button
+                    onClick={() => setSelectedPresensiMapel("")}
+                    className="btn btn-secondary"
+                    style={{ fontSize: "0.75rem", padding: "4px 8px" }}
+                  >
+                    Tampilkan Akumulasi Semua Mapel
+                  </button>
+                </div>
+              )}
+
+              {siswa.length > 0 ? (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="premium-table" style={{ margin: 0, width: "100%" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                        <th style={{ width: "60px", textAlign: "center" }}>No</th>
+                        <th style={{ width: "130px" }}>NISN</th>
+                        <th>Nama Siswa</th>
+                        <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(16, 185, 129, 0.05)" }}>Hadir (H)</th>
+                        <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.05)" }}>Izin (I)</th>
+                        <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>Sakit (S)</th>
+                        <th style={{ width: "95px", textAlign: "center", backgroundColor: "rgba(139, 92, 246, 0.05)" }}>Dispensasi (D)</th>
+                        <th style={{ width: "90px", textAlign: "center", backgroundColor: "rgba(239, 68, 68, 0.05)" }}>Alpha (A)</th>
+                        <th style={{ width: "110px", textAlign: "center" }}>Total Pertemuan</th>
+                        <th style={{ width: "110px", textAlign: "center", backgroundColor: "rgba(124, 58, 237, 0.08)" }}>% Kehadiran</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedSiswa.map((s, index) => {
+                        let h = 0, sakit = 0, i = 0, a = 0, d = 0, total = 0;
+                        
+                        if (selectedPresensiMapel) {
+                          const attMapel = s.kehadiranMapel?.[selectedPresensiMapel] || { H: 0, S: 0, I: 0, A: 0, D: 0, totalPertemuan: 0 };
+                          h = attMapel.H;
+                          sakit = attMapel.S;
+                          i = attMapel.I;
+                          a = attMapel.A;
+                          d = attMapel.D;
+                          total = h + sakit + i + a + d;
+                        } else {
+                          h = s.kehadiran?.H || 0;
+                          sakit = s.kehadiran?.S || 0;
+                          i = s.kehadiran?.I || 0;
+                          a = s.kehadiran?.A || 0;
+                          d = s.kehadiran?.D || 0;
+                          total = h + sakit + i + a + d;
+                        }
+
+                        const percent = total > 0 ? ((h + d) / total) * 100 : null;
+
+                        return (
+                          <tr key={s.nisn} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                            <td style={{ textAlign: "center", fontWeight: "700" }}>{index + 1}</td>
+                            <td style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--text-secondary)" }}>{s.nisn}</td>
+                            <td style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</td>
+                            <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.01)" }}>{h}</td>
+                            <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.01)" }}>{i}</td>
+                            <td style={{ textAlign: "center", fontWeight: "700", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.01)" }}>{sakit}</td>
+                            <td style={{ textAlign: "center", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.01)" }}>{d}</td>
+                            <td style={{ textAlign: "center", fontWeight: "700", color: a > 0 ? "var(--danger)" : "var(--text-muted)", backgroundColor: "rgba(239, 68, 68, 0.01)" }}>
+                              {a > 0 ? a : "-"}
+                            </td>
+                            <td style={{ textAlign: "center", fontWeight: "600" }}>{total}</td>
+                            <td style={{ textAlign: "center", fontWeight: "900", color: percent !== null && percent < 80 ? "var(--danger)" : "var(--primary)", backgroundColor: "rgba(124, 58, 237, 0.02)" }}>
+                              {percent !== null ? `${percent.toFixed(1)}%` : "-"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ padding: "60px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+                  <span style={{ fontSize: "2.5rem" }}>📭</span>
+                  <h4 style={{ margin: "16px 0 4px", fontWeight: "700", color: "var(--text-secondary)" }}>Belum Ada Data Kehadiran</h4>
+                  <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada data kehadiran terinput untuk siswa pada periode terpilih.</p>
+                </div>
+              )}
             </div>
           )}
         </div>

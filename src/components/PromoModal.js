@@ -1,15 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-export default function PromoModal() {
+export default function PromoModal({ guru }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
+    if (!guru) return;
+
     try {
-      const hasSeen = localStorage.getItem("has_seen_promo_referral_v1");
-      if (!hasSeen) {
+      const guruKey = guru?.username
+        ? `has_seen_promo_referral_v1_${guru.username}`
+        : "has_seen_promo_referral_v1";
+      const hasSeenGuru = localStorage.getItem(guruKey);
+      const hasSeenGlobal = localStorage.getItem("has_seen_promo_referral_v1");
+
+      if (!hasSeenGuru && !hasSeenGlobal) {
         // Tampilkan modal setelah sedikit delay agar animasi smooth saat pertama kali dibuka
         const timer = setTimeout(() => {
           setIsOpen(true);
@@ -19,18 +28,26 @@ export default function PromoModal() {
     } catch (e) {
       console.error("LocalStorage error:", e);
     }
-  }, []);
+  }, [guru]);
 
-  const handleClose = () => {
+  const handleClose = (targetUrl) => {
     setIsClosing(true);
     setTimeout(() => {
       try {
+        const guruKey = guru?.username
+          ? `has_seen_promo_referral_v1_${guru.username}`
+          : "has_seen_promo_referral_v1";
+        localStorage.setItem(guruKey, "true");
         localStorage.setItem("has_seen_promo_referral_v1", "true");
       } catch (e) {
         console.error("LocalStorage save error:", e);
       }
       setIsOpen(false);
       setIsClosing(false);
+
+      if (targetUrl) {
+        router.push(targetUrl);
+      }
     }, 250);
   };
 
@@ -53,7 +70,7 @@ export default function PromoModal() {
         opacity: isClosing ? 0 : 1,
         transition: "opacity 0.25s ease-in-out",
       }}
-      onClick={handleClose}
+      onClick={() => handleClose()}
     >
       <style jsx global>{`
         @keyframes promoPopIn {
@@ -93,7 +110,7 @@ export default function PromoModal() {
       >
         {/* Tombol Tutup (X) */}
         <button
-          onClick={handleClose}
+          onClick={() => handleClose()}
           aria-label="Tutup Promosi"
           style={{
             position: "absolute",
@@ -392,7 +409,7 @@ export default function PromoModal() {
           {/* Action Buttons Footer */}
           <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <button
-              onClick={handleClose}
+              onClick={() => handleClose("/guru/referral")}
               style={{
                 width: "100%",
                 padding: "14px 20px",
@@ -423,7 +440,7 @@ export default function PromoModal() {
             </button>
 
             <button
-              onClick={handleClose}
+              onClick={() => handleClose()}
               style={{
                 width: "100%",
                 padding: "10px 16px",

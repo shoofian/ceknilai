@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import OnboardingGuide from "@/components/OnboardingGuide";
+import PromoModal from "@/components/PromoModal";
 
 export default function GuruLayout({ children }) {
   const [loading, setLoading] = useState(true);
@@ -408,6 +409,7 @@ export default function GuruLayout({ children }) {
           )}
           {children}
           <OnboardingGuide />
+          <PromoModal guru={guru} />
         </div>
       </div>
 

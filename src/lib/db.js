@@ -1308,16 +1308,39 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
     // Map using original mapKelasFromDb helper
     const mappedClasses = schoolClasses.map(mapKelasFromDb);
     
-    // 2. Aggregate unique subject list
-    const mataPelajaranList = mappedClasses.map(k => ({
-      id: k.id,
-      mataPelajaran: k.mataPelajaran,
-      kkm: k.skemaPenilaian?.kkm || 75,
-      isNilaiAkhirGenerated: !!k.isNilaiAkhirGenerated,
-      guru_username: k.guru_username || '',
-      guru: k.guru || null,
-      semester: k.semester || semester
-    }));
+    // 2. Aggregate unique subject list with attendance summaries
+    const mataPelajaranList = mappedClasses.map(k => {
+      const pertemuanList = k.skemaPenilaian?.pertemuan || [];
+      const totalPertemuan = pertemuanList.length;
+
+      let attClass = { H: 0, I: 0, S: 0, A: 0, D: 0 };
+      (k.siswa || []).forEach(s => {
+        pertemuanList.forEach(p => {
+          const val = s.nilai?.[`_presensi_${p.id}`];
+          if (val && attClass[val] !== undefined) {
+            attClass[val]++;
+          }
+        });
+      });
+      const totalEntries = attClass.H + attClass.I + attClass.S + attClass.A + attClass.D;
+      const percentHadir = totalEntries > 0 ? Number((((attClass.H + attClass.D) / totalEntries) * 100).toFixed(1)) : 0;
+
+      return {
+        id: k.id,
+        mataPelajaran: k.mataPelajaran,
+        kkm: k.skemaPenilaian?.kkm || 75,
+        isNilaiAkhirGenerated: !!k.isNilaiAkhirGenerated,
+        guru_username: k.guru_username || '',
+        guru: k.guru || null,
+        semester: k.semester || semester,
+        totalPertemuan,
+        rekapPresensi: {
+          ...attClass,
+          totalEntries,
+          percentHadir
+        }
+      };
+    });
     
     // 3. Aggregate unique students across all subject classes
     const studentsMap = {};
@@ -1332,7 +1355,8 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
             nilaiMapel: {},
             isSelesaiMapel: {},
             catatanMapel: {},
-            kehadiran: { H: 0, S: 0, I: 0, A: 0, D: 0 }
+            kehadiran: { H: 0, S: 0, I: 0, A: 0, D: 0 },
+            kehadiranMapel: {}
           };
         }
         
@@ -1412,14 +1436,20 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
           totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
         }
         
-        // Rekap Kehadiran Siswa
+        // Rekap Kehadiran Siswa Global dan Per Mapel
         const allPertemuan = skema.pertemuan || [];
+        const attPerMapel = { H: 0, S: 0, I: 0, A: 0, D: 0, totalPertemuan: allPertemuan.length };
+        
         allPertemuan.forEach(p => {
           const val = s.nilai?.[`_presensi_${p.id}`];
-          if (val && studentsMap[s.nisn].kehadiran[val] !== undefined) {
-            studentsMap[s.nisn].kehadiran[val]++;
+          if (val && attPerMapel[val] !== undefined) {
+            attPerMapel[val]++;
+            if (studentsMap[s.nisn].kehadiran[val] !== undefined) {
+              studentsMap[s.nisn].kehadiran[val]++;
+            }
           }
         });
+        studentsMap[s.nisn].kehadiranMapel[k.mataPelajaran] = attPerMapel;
         
         const finalScore = totalNilaiTerisi + totalPresensiScore + (Number(s.nilai?._katrol) || 0);
         
