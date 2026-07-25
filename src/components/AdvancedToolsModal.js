@@ -32,9 +32,10 @@ export default function AdvancedToolsModal({
   const currentMaxCap = kelas.skemaPenilaian?.maxCap ?? 100;
   const currentKKM = kelas.skemaPenilaian?.kkm || 75;
 
-  const handleSaveMaxCap = () => {
-    const val = Number(maxCapInput);
+  const handleSaveMaxCap = (valToSave) => {
+    const val = Number(valToSave !== undefined ? valToSave : maxCapInput);
     if (!isNaN(val) && val >= 50 && val <= 100) {
+      setMaxCapInput(val);
       onUpdateSkema({ maxCap: val });
     }
   };
@@ -48,65 +49,53 @@ export default function AdvancedToolsModal({
       >
         {/* Modal Header */}
         <div style={headerStyle}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "1.4rem" }}>🧪</span>
-              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "var(--text-primary)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              backgroundColor: "rgba(124, 58, 237, 0.12)",
+              color: "#7c3aed",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.4rem",
+              fontWeight: "800"
+            }}>
+              🧪
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "var(--text-primary)" }}>
                 Fitur & Pengaturan Lanjutan
               </h3>
+              <p style={{ margin: "3px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                Pengaturan khusus kelas: Normalisasi, Remedial, Poin Bonus, & Batas Nilai (MaxCap)
+              </p>
             </div>
-            <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-              Kelola alat perhitungan khusus, program remedial, bonus keaktifan, dan aturan nilai maksimal (MaxCap).
-            </p>
           </div>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button onClick={onClose} style={closeBtnStyle} title="Tutup Modal">✕</button>
         </div>
 
-        {/* Modal Body Grid */}
+        {/* Modal Body */}
         <div style={bodyStyle}>
-          <div style={gridStyle}>
-            
-            {/* Card 1: Normalisasi Nilai */}
-            <div style={cardStyle}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ fontSize: "1.6rem" }}>📐</span>
-                <div style={{ flex: 1 }}>
-                  <h4 style={cardTitleStyle}>Normalisasi Nilai Akhir</h4>
-                  <p style={cardDescStyle}>
-                    Sesuaikan rentang/skala nilai kelas secara otomatis menggunakan metode Linear, Min-Max, atau Scale to Max.
-                  </p>
-                </div>
-              </div>
-              <div style={{ marginTop: "auto", paddingTop: "12px" }}>
-                <button
-                  onClick={() => {
-                    onClose();
-                    onOpenNormModal();
-                  }}
-                  className="btn btn-primary"
-                  style={btnCardStyle}
-                  disabled={isLocked || kelas?.archived}
-                >
-                  ⚙️ Buka Tools Normalisasi
-                </button>
-              </div>
-            </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-            {/* Card 2: Program Remedial & Pengayaan */}
-            <div style={cardStyle}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ fontSize: "1.6rem" }}>🔴</span>
-                <div style={{ flex: 1 }}>
-                  <h4 style={cardTitleStyle}>Program Remedial & Pengayaan</h4>
-                  <p style={cardDescStyle}>
-                    Kelola siswa di bawah KKM ({currentKKM}), input tes remedial bertahap, dan cetak Berita Acara resmi.
-                  </p>
+            {/* SECTION 1: REMEDIAL & PENGAYAAN */}
+            <div style={sectionCardStyle}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "1.2rem" }}>🔴</span>
+                  <h4 style={sectionTitleStyle}>1. Program Remedial & Pengayaan</h4>
                 </div>
+                <span style={badgeStyle}>Berdasarkan KKM: {currentKKM}</span>
               </div>
-              <div style={{ marginTop: "auto", paddingTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+              <p style={cardDescStyle}>
+                Kelola siswa di bawah KKM ({currentKKM}) untuk tes remedial bertahap serta cetak Berita Acara resmi. Nilai murni awal siswa tetap tersimpan aman.
+              </p>
+              <div style={{ marginTop: "12px", display: "flex", gap: "10px", alignItems: "center" }}>
                 <select
                   className="form-select"
-                  style={selectStyle}
+                  style={{ ...selectStyle, flex: 1 }}
                   onChange={(e) => {
                     const selectedId = e.target.value;
                     if (selectedId) {
@@ -119,88 +108,152 @@ export default function AdvancedToolsModal({
                   }}
                   defaultValue=""
                 >
-                  <option value="" disabled>-- Pilih Kolom Asesmen --</option>
+                  <option value="" disabled>-- Pilih Kolom Asesmen yang Ingin Diremedial --</option>
                   {(kelas?.kolomNilai || []).map((col) => (
                     <option key={col.id} value={col.id}>
-                      {col.nama} ({col.bobot}%)
+                      {col.nama} (Bobot: {col.bobot}%)
                     </option>
                   ))}
                 </select>
               </div>
             </div>
 
-            {/* Card 3: Fitur Poin Bonus Keaktifan (⭐) */}
-            <div style={{ ...cardStyle, border: isBonusActive ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid var(--border-color)" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ fontSize: "1.6rem" }}>⭐</span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-                    <h4 style={cardTitleStyle}>Fitur Poin Bonus Keaktifan</h4>
-                    <span style={{
-                      fontSize: "0.68rem",
-                      fontWeight: "700",
-                      padding: "2px 8px",
-                      borderRadius: "10px",
-                      backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                      color: isBonusActive ? "#10b981" : "var(--text-muted)"
-                    }}>
-                      {isBonusActive ? "🟢 Aktif" : "⚪ Non-Aktif (Default)"}
-                    </span>
-                  </div>
-                  <p style={cardDescStyle}>
-                    Fitur Bonus Keaktifan (⭐) memberikan poin apresiasi langsung untuk siswa yang aktif di kelas. <strong>Setiap 1 Bintang (⭐) bernilai +1 Poin</strong> pada nilai akhir (dibatasi MaxCap: {currentMaxCap}).
-                  </p>
-                  <div style={{ backgroundColor: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "8px", padding: "8px 10px", marginTop: "8px", fontSize: "0.73rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-                    💡 <strong>Bedanya dengan Katrol Nilai (🔒):</strong> Bonus (⭐) adalah <em>apresiasi keaktifan harian siswa di kelas</em>. Jika Anda ingin mendongkrak/menyesuaikan nilai akhir rapor secara administratif di akhir semester, gunakan fitur <strong>Katrol Rahasia (🔒)</strong> pada kolom <strong>N. AKHIR</strong>.
-                  </div>
+            {/* SECTION 2: POIN BONUS KEAKTIFAN */}
+            <div style={{
+              ...sectionCardStyle,
+              border: isBonusActive ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid var(--border-color)",
+              backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.02)" : "var(--bg-secondary)"
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span style={{ fontSize: "1.2rem" }}>⭐</span>
+                  <h4 style={sectionTitleStyle}>2. Fitur Poin Bonus Keaktifan</h4>
                 </div>
+                <span style={{
+                  fontSize: "0.7rem",
+                  fontWeight: "700",
+                  padding: "3px 10px",
+                  borderRadius: "12px",
+                  backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.12)",
+                  color: isBonusActive ? "#10b981" : "var(--text-muted)"
+                }}>
+                  {isBonusActive ? "🟢 FITUR AKTIF" : "⚪ NON-AKTIF (DEFAULT)"}
+                </span>
               </div>
-              <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+              <p style={cardDescStyle}>
+                Fitur opsional untuk memberikan poin apresiasi langsung kepada siswa yang aktif di kelas. <strong>1 Bintang (⭐) = +1 Poin Nilai</strong>.
+              </p>
+              
+              <div style={infoBoxStyle}>
+                💡 <strong>Perbedaan Penting:</strong> Fitur ini digunakan untuk <em>apresiasi keaktifan harian</em>. Jika Anda ingin mendongkrak/menyesuaikan Nilai Akhir Rapor secara administratif di akhir semester, gunakan fitur <strong>Katrol Rahasia (🔒)</strong> pada kolom <strong>N. AKHIR</strong>.
+              </div>
+
+              <div style={{ marginTop: "12px" }}>
                 <button
                   onClick={onToggleBonusStars}
                   type="button"
                   className={`btn ${isBonusActive ? "btn-secondary" : "btn-primary"}`}
                   style={{
-                    ...btnCardStyle,
+                    fontSize: "0.82rem",
+                    padding: "8px 16px",
+                    fontWeight: "700",
+                    width: "100%",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    borderRadius: "8px",
                     borderColor: isBonusActive ? "var(--border-color)" : "transparent",
                     color: isBonusActive ? "var(--text-primary)" : "#ffffff"
                   }}
                   disabled={isLocked || kelas?.archived}
                 >
-                  {isBonusActive ? "⚪ Non-Aktifkan Fitur Bonus" : "🟢 Aktifkan Fitur Bonus (Tampilkan Kolom)"}
+                  {isBonusActive ? "⚪ Non-Aktifkan Fitur Bonus (Sembunyikan Kolom ⭐)" : "🟢 Aktifkan Fitur Bonus (Tampilkan Kolom ⭐)"}
                 </button>
               </div>
             </div>
 
-            {/* Card 4: Batas Nilai Maksimal (MaxCap Rule) */}
-            <div style={cardStyle}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span style={{ fontSize: "1.6rem" }}>🔒</span>
-                <div style={{ flex: 1 }}>
-                  <h4 style={cardTitleStyle}>Batas Nilai Maksimal (MaxCap)</h4>
-                  <p style={cardDescStyle}>
-                    Atur batas nilai tertinggi yang diperbolehkan di kelas ini (misal: 90, 95, atau 100). Normalisasi & Bonus otomatis menyesuaikan MaxCap ini.
-                  </p>
+            {/* SECTION 3: NORMALISASI NILAI & MAXCAP (GRID 2 KOLOM) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: "16px" }}>
+              
+              {/* Card 3A: Normalisasi Nilai */}
+              <div style={sectionCardStyle}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "1.2rem" }}>📐</span>
+                  <h4 style={sectionTitleStyle}>3. Normalisasi Nilai Akhir</h4>
+                </div>
+                <p style={cardDescStyle}>
+                  Sesuaikan skala nilai kelas secara otomatis (Metode Linear, Min-Max 60–100, atau Scale to Max).
+                </p>
+                <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onOpenNormModal();
+                    }}
+                    className="btn btn-primary"
+                    style={{ fontSize: "0.8rem", padding: "8px 14px", fontWeight: "700", width: "100%", justifyContent: "center", display: "flex", alignItems: "center", gap: "6px", borderRadius: "8px" }}
+                    disabled={isLocked || kelas?.archived}
+                  >
+                    ⚙️ Buka Tools Normalisasi
+                  </button>
                 </div>
               </div>
-              <div style={{ marginTop: "auto", paddingTop: "12px", display: "flex", gap: "8px", alignItems: "center" }}>
-                <input
-                  type="number"
-                  min={50}
-                  max={100}
-                  value={maxCapInput}
-                  onChange={(e) => setMaxCapInput(e.target.value)}
-                  style={{ width: "80px", padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border-color)", fontWeight: "700", textAlign: "center", fontSize: "0.85rem" }}
-                />
-                <button
-                  onClick={handleSaveMaxCap}
-                  className="btn btn-secondary"
-                  style={{ fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", fontWeight: "700" }}
-                  disabled={isLocked || kelas?.archived || Number(maxCapInput) === currentMaxCap}
-                >
-                  Simpan MaxCap ({currentMaxCap})
-                </button>
+
+              {/* Card 3B: Batas MaxCap */}
+              <div style={sectionCardStyle}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "1.2rem" }}>🔒</span>
+                  <h4 style={sectionTitleStyle}>4. Batas Nilai Maksimal (MaxCap)</h4>
+                </div>
+                <p style={cardDescStyle}>
+                  Nilai tertinggi yang diperbolehkan di kelas ini. Berlaku otomatis untuk Normalisasi & Bonus.
+                </p>
+
+                {/* Preset Pills */}
+                <div style={{ display: "flex", gap: "6px", marginTop: "10px", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>Pilihan:</span>
+                  {[100, 95, 90, 85].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleSaveMaxCap(preset)}
+                      style={{
+                        padding: "3px 8px",
+                        fontSize: "0.75rem",
+                        borderRadius: "6px",
+                        fontWeight: "700",
+                        border: currentMaxCap === preset ? "1px solid var(--primary)" : "1px solid var(--border-color)",
+                        backgroundColor: currentMaxCap === preset ? "var(--primary)" : "var(--bg-primary)",
+                        color: currentMaxCap === preset ? "#fff" : "var(--text-primary)",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ marginTop: "auto", paddingTop: "10px", display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    type="number"
+                    min={50}
+                    max={100}
+                    value={maxCapInput}
+                    onChange={(e) => setMaxCapInput(e.target.value)}
+                    style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", fontWeight: "700", textAlign: "center", fontSize: "0.85rem" }}
+                  />
+                  <button
+                    onClick={() => handleSaveMaxCap()}
+                    className="btn btn-secondary"
+                    style={{ fontSize: "0.78rem", padding: "6px 12px", borderRadius: "6px", fontWeight: "700", flex: 1 }}
+                    disabled={isLocked || kelas?.archived || Number(maxCapInput) === currentMaxCap}
+                  >
+                    Simpan Custom MaxCap ({currentMaxCap})
+                  </button>
+                </div>
               </div>
+
             </div>
 
           </div>
@@ -222,7 +275,7 @@ export default function AdvancedToolsModal({
 const backdropStyle = {
   position: "fixed",
   inset: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.65)",
+  backgroundColor: "rgba(15, 23, 42, 0.65)",
   backdropFilter: "blur(6px)",
   zIndex: 100000,
   display: "flex",
@@ -234,7 +287,7 @@ const backdropStyle = {
 const containerStyle = {
   width: "100%",
   maxWidth: "760px",
-  maxHeight: "90vh",
+  maxHeight: "88vh",
   display: "flex",
   flexDirection: "column",
   padding: 0,
@@ -246,21 +299,23 @@ const containerStyle = {
 };
 
 const headerStyle = {
-  padding: "18px 24px",
+  padding: "16px 24px",
   borderBottom: "1px solid var(--border-color, #e2e8f0)",
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  backgroundColor: "var(--bg-secondary, #f8fafc)",
+  background: "linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
   flexShrink: 0
 };
 
 const closeBtnStyle = {
   background: "none",
   border: "none",
-  fontSize: "1.4rem",
+  fontSize: "1.3rem",
   cursor: "pointer",
-  color: "var(--text-secondary)"
+  color: "var(--text-secondary)",
+  padding: "4px 8px",
+  borderRadius: "6px"
 };
 
 const bodyStyle = {
@@ -269,23 +324,16 @@ const bodyStyle = {
   padding: "20px 24px"
 };
 
-const gridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
-  gap: "16px"
-};
-
-const cardStyle = {
-  padding: "18px",
+const sectionCardStyle = {
+  padding: "16px 20px",
   borderRadius: "12px",
   backgroundColor: "var(--bg-secondary, #f8fafc)",
   border: "1px solid var(--border-color, #e2e8f0)",
   display: "flex",
-  flexDirection: "column",
-  gap: "10px"
+  flexDirection: "column"
 };
 
-const cardTitleStyle = {
+const sectionTitleStyle = {
   fontSize: "0.95rem",
   fontWeight: "800",
   margin: 0,
@@ -295,25 +343,33 @@ const cardTitleStyle = {
 const cardDescStyle = {
   fontSize: "0.78rem",
   color: "var(--text-muted)",
-  margin: "4px 0 0 0",
+  margin: "2px 0 0 0",
   lineHeight: "1.45"
 };
 
-const btnCardStyle = {
-  fontSize: "0.8rem",
-  padding: "8px 14px",
+const badgeStyle = {
+  fontSize: "0.7rem",
   fontWeight: "700",
-  width: "100%",
-  justifyContent: "center",
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-  borderRadius: "8px"
+  padding: "2px 8px",
+  borderRadius: "10px",
+  backgroundColor: "rgba(239, 68, 68, 0.1)",
+  color: "#ef4444"
+};
+
+const infoBoxStyle = {
+  backgroundColor: "rgba(59, 130, 246, 0.08)",
+  border: "1px solid rgba(59, 130, 246, 0.2)",
+  borderRadius: "8px",
+  padding: "8px 12px",
+  marginTop: "10px",
+  fontSize: "0.74rem",
+  color: "var(--text-secondary)",
+  lineHeight: "1.45"
 };
 
 const selectStyle = {
   fontSize: "0.8rem",
-  padding: "8px 10px",
+  padding: "8px 12px",
   borderRadius: "8px",
   backgroundColor: "var(--bg-primary)",
   color: "var(--text-primary)",
@@ -331,7 +387,7 @@ const footerStyle = {
 };
 
 const btnSecondaryStyle = {
-  padding: "8px 20px",
+  padding: "8px 22px",
   borderRadius: "8px",
   border: "1px solid var(--border-color, #cbd5e1)",
   backgroundColor: "var(--bg-primary, #ffffff)",
