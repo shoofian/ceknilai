@@ -4967,16 +4967,19 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         @media (max-width: 576px) {
           .presensi-stats-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
             padding: 0 16px;
-            gap: 12px;
+            gap: 8px;
           }
           .presensi-accum-card {
-            grid-column: span 1;
+            grid-column: span 2;
           }
           .presensi-stats-card {
-            padding: 12px 16px;
-            gap: 12px;
+            padding: 10px 12px;
+            gap: 8px;
+          }
+          .presensi-stats-card > div:first-child {
+            font-size: 1.4rem !important;
           }
         }
       `}</style>
