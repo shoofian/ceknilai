@@ -227,12 +227,18 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(() => {
     if (typeof window !== "undefined") {
+      if (window.innerWidth < 768) return false; // Selalu paksa tertutup di mobile (< 768px)
       const saved = sessionStorage.getItem("panelKontrolExpanded");
       if (saved !== null) return saved === "true";
-      return window.innerWidth >= 768; // Otomatis tertutup di mobile (< 768px) agar tabel langsung terlihat
     }
     return true;
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setPanelKontrolExpanded(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
