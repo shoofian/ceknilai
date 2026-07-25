@@ -3873,56 +3873,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                           title="Klik untuk melihat nama lengkap"
                           style={{ fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px", width: "100%", overflow: "hidden", justifyContent: "space-between" }}>
-                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", flex: 1, display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-                              {getStudentTotalStars(student) > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuickRemoveStar(student);
-                                  }}
-                                  style={{
-                                    background: "rgba(239, 68, 68, 0.12)",
-                                    border: "1px solid rgba(239, 68, 68, 0.4)",
-                                    borderRadius: "8px",
-                                    padding: "0px 5px",
-                                    cursor: "pointer",
-                                    fontSize: "0.75rem",
-                                    fontWeight: "800",
-                                    color: "#dc2626",
-                                    lineHeight: "1.2"
-                                  }}
-                                  title="Klik untuk mengurangi 1 Bintang (-1 ⭐)"
-                                >
-                                  -
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleQuickAddStar(student);
-                                }}
-                                style={{
-                                  background: "rgba(245, 158, 11, 0.12)",
-                                  border: "1px solid rgba(245, 158, 11, 0.4)",
-                                  borderRadius: "10px",
-                                  padding: "1px 6px",
-                                  cursor: "pointer",
-                                  fontSize: "0.72rem",
-                                  fontWeight: "700",
-                                  color: "#d97706",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "2px"
-                                }}
-                                title="Klik 1-Click untuk beri +1 Bintang Keaktifan ⭐"
-                              >
-                                ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
-                              </button>
-                            </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
+                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
                           </div>
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
@@ -4067,7 +4019,57 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                         {/* Row actions */}
                         <td style={{ textAlign: "center" }}>
-                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
+                            {/* Interactive Star Control (Poin Bintang) */}
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid var(--border-color)", padding: "2px 4px", borderRadius: "8px", backgroundColor: "var(--bg-secondary)" }}>
+                              {getStudentTotalStars(student) > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuickRemoveStar(student);
+                                  }}
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.12)",
+                                    border: "1px solid rgba(239, 68, 68, 0.4)",
+                                    borderRadius: "6px",
+                                    padding: "1px 5px",
+                                    cursor: "pointer",
+                                    fontSize: "0.75rem",
+                                    fontWeight: "800",
+                                    color: "#dc2626",
+                                    lineHeight: "1"
+                                  }}
+                                  title="Kurangi 1 Bintang (-1 ⭐)"
+                                >
+                                  -
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickAddStar(student);
+                                }}
+                                style={{
+                                  background: "rgba(245, 158, 11, 0.12)",
+                                  border: "1px solid rgba(245, 158, 11, 0.4)",
+                                  borderRadius: "6px",
+                                  padding: "2px 6px",
+                                  cursor: "pointer",
+                                  fontSize: "0.72rem",
+                                  fontWeight: "700",
+                                  color: "#d97706",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "2px"
+                                }}
+                                title="Tambah 1 Bintang (+1 ⭐)"
+                              >
+                                ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
+                              </button>
+                            </div>
+
                             <div style={{ position: "relative" }}>
                               <button onClick={() => handleOpenHistory(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) ? 1 : 0.5 }} title="Lihat Riwayat Akses Siswa">
                                 👁️
