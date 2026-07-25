@@ -3743,61 +3743,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
                             <th key={col.id} colSpan={col.subKolom.length} style={{ textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21, borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
-                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
-                                <span>{col.nama} ({col.bobot}%)</span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedRemedialKolom(col);
-                                    setRemedialModalOpen(true);
-                                  }}
-                                  style={{
-                                    padding: "2px 6px",
-                                    fontSize: "0.65rem",
-                                    borderRadius: "4px",
-                                    border: "1px solid var(--border-color)",
-                                    backgroundColor: "var(--bg-primary)",
-                                    color: "var(--primary)",
-                                    cursor: "pointer",
-                                    fontWeight: "600",
-                                    whiteSpace: "nowrap"
-                                  }}
-                                  title="Kelola Remedial, Pengayaan & Bonus"
-                                >
-                                  ✨ Remedial & Bonus
-                                </button>
-                              </div>
+                              {col.nama} ({col.bobot}%)
                             </th>
                           );
                         }
                         return (
-                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "115px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
-                              <span>{col.nama} ({col.bobot}%)</span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedRemedialKolom(col);
-                                  setRemedialModalOpen(true);
-                                }}
-                                style={{
-                                  padding: "2px 6px",
-                                  fontSize: "0.65rem",
-                                  borderRadius: "4px",
-                                  border: "1px solid var(--border-color)",
-                                  backgroundColor: "var(--bg-primary)",
-                                  color: "var(--primary)",
-                                  cursor: "pointer",
-                                  fontWeight: "600",
-                                  whiteSpace: "nowrap"
-                                }}
-                                title="Kelola Remedial, Pengayaan & Bonus"
-                              >
-                                ✨ Remedial & Bonus
-                              </button>
-                            </div>
+                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "100px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                            {col.nama} ({col.bobot}%)
                           </th>
                         );
                       })}
@@ -4211,6 +4163,43 @@ export default function DetailKelas({ params: paramsPromise }) {
                 >
                   <span>⚙️ Buka Tools Normalisasi</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Card 2: Program Remedial & Pengayaan */}
+            <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <span style={{ fontSize: "1.4rem" }}>🔴</span>
+                <div>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: 0 }}>Program Remedial & Pengayaan</h4>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0", lineHeight: "1.4" }}>
+                    Kelola siswa di bawah KKM ({kelas?.skemaPenilaian?.kkm || 75}), input tes remedial, dan cetak Berita Acara resmi.
+                  </p>
+                </div>
+              </div>
+              <div style={{ marginTop: "auto", paddingTop: "8px", display: "flex", gap: "8px" }}>
+                <select
+                  className="form-select"
+                  style={{ fontSize: "0.8rem", padding: "6px 8px", flex: 1, borderRadius: "6px", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    if (selectedId) {
+                      const col = kelas.kolomNilai.find(c => c.id === selectedId);
+                      if (col) {
+                        setSelectedRemedialKolom(col);
+                        setRemedialModalOpen(true);
+                      }
+                    }
+                  }}
+                  defaultValue=""
+                >
+                  <option value="" disabled>-- Pilih Kolom Asesmen --</option>
+                  {(kelas?.kolomNilai || []).map((col) => (
+                    <option key={col.id} value={col.id}>
+                      {col.nama} ({col.bobot}%)
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
