@@ -150,6 +150,9 @@ export default function AdvancedToolsModal({
                   <p style={cardDescStyle}>
                     Fitur Bonus Keaktifan (⭐) memberikan poin apresiasi langsung untuk siswa yang aktif di kelas. <strong>Setiap 1 Bintang (⭐) bernilai +1 Poin</strong> pada nilai akhir (dibatasi MaxCap: {currentMaxCap}).
                   </p>
+                  <div style={{ backgroundColor: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "8px", padding: "8px 10px", marginTop: "8px", fontSize: "0.73rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                    💡 <strong>Bedanya dengan Katrol Nilai (🔒):</strong> Bonus (⭐) adalah <em>apresiasi keaktifan harian siswa di kelas</em>. Jika Anda ingin mendongkrak/menyesuaikan nilai akhir rapor secara administratif di akhir semester, gunakan fitur <strong>Katrol Rahasia (🔒)</strong> pada kolom <strong>N. AKHIR</strong>.
+                  </div>
                 </div>
               </div>
               <div style={{ marginTop: "auto", paddingTop: "12px" }}>
