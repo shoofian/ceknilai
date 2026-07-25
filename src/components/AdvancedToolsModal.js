@@ -54,14 +54,14 @@ export default function AdvancedToolsModal({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              backgroundColor: "rgba(124, 58, 237, 0.14)",
-              color: "#7c3aed",
+              backgroundColor: "var(--bg-secondary)",
+              color: "var(--primary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "1.4rem",
               fontWeight: "800",
-              boxShadow: "0 2px 8px rgba(124, 58, 237, 0.2)"
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)"
             }}>
               🧪
             </div>
@@ -82,7 +82,7 @@ export default function AdvancedToolsModal({
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
             {/* SECTION 1: REMEDIAL & PENGAYAAN */}
-            <div style={{ ...sectionCardStyle, borderLeft: "5px solid #ef4444" }}>
+            <div style={{ ...sectionCardStyle, borderLeft: "5px solid var(--danger, #ef4444)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ fontSize: "1.2rem" }}>🔴</span>
@@ -122,8 +122,8 @@ export default function AdvancedToolsModal({
             {/* SECTION 2: POIN BONUS KEAKTIFAN */}
             <div style={{
               ...sectionCardStyle,
-              borderLeft: isBonusActive ? "5px solid #10b981" : "5px solid #f59e0b",
-              backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.04)" : "var(--bg-primary)"
+              borderLeft: isBonusActive ? "5px solid var(--success, #10b981)" : "5px solid var(--warning, #f59e0b)",
+              backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.05)" : "var(--bg-primary)"
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -135,8 +135,8 @@ export default function AdvancedToolsModal({
                   fontWeight: "800",
                   padding: "3px 10px",
                   borderRadius: "12px",
-                  backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                  color: isBonusActive ? "#059669" : "var(--text-muted)"
+                  backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)",
+                  color: isBonusActive ? "var(--success, #10b981)" : "var(--warning, #f59e0b)"
                 }}>
                   {isBonusActive ? "🟢 FITUR AKTIF" : "⚪ NON-AKTIF (DEFAULT)"}
                 </span>
@@ -178,7 +178,7 @@ export default function AdvancedToolsModal({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: "16px" }}>
               
               {/* Card 3A: Normalisasi Nilai */}
-              <div style={{ ...sectionCardStyle, borderLeft: "5px solid #8b5cf6" }}>
+              <div style={{ ...sectionCardStyle, borderLeft: "5px solid var(--primary, #8b5cf6)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                   <span style={{ fontSize: "1.2rem" }}>📐</span>
                   <h4 style={sectionTitleStyle}>3. Normalisasi Nilai Akhir</h4>
@@ -242,8 +242,8 @@ export default function AdvancedToolsModal({
                     min={50}
                     max={100}
                     value={maxCapInput}
-                    onChange={(e) => setMaxCapInput(e.target.value)}
-                    style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", fontWeight: "700", textAlign: "center", fontSize: "0.85rem", backgroundColor: "var(--bg-secondary)" }}
+                    onChange={(e) => setMaxCapInput(e.target.value === '' ? '' : Number(e.target.value))}
+                    style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", fontWeight: "700", textAlign: "center", fontSize: "0.85rem", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
                   />
                   <button
                     onClick={() => handleSaveMaxCap()}

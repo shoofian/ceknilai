@@ -603,7 +603,16 @@ export default function DetailKelas({ params: paramsPromise }) {
           }
         }
       });
-      const finalScore = totalNilaiTerisi + (Number(student.nilai?._katrol) || 0);
+      let totalPoinBonus = 0;
+      if (kelas.skemaPenilaian?.enableBonusStars) {
+        Object.keys(student.nilai || {}).forEach(k => {
+          if (k.endsWith("_bonus")) totalPoinBonus += (Number(student.nilai[k]?.poin) || 0);
+        });
+      }
+      const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
+      const rawFinalScore = totalNilaiTerisi + (Number(student.nilai?._katrol) || 0) + totalPoinBonus;
+      const finalScore = Math.min(maxCap, rawFinalScore);
+
       return {
         ...student,
         finalScore: finalScore,
@@ -700,8 +709,17 @@ export default function DetailKelas({ params: paramsPromise }) {
         // (atau bisa juga mewajibkan semua presensi terisi, tapi ini lebih fleksibel)
       }
       
-      // Tambahkan Nilai Katrol jika ada
-      total += (Number(student.nilai?._katrol) || 0);
+      // Tambahkan Nilai Katrol & Bonus jika ada
+      let totalPoinBonus = 0;
+      if (skema.enableBonusStars) {
+        Object.keys(student.nilai || {}).forEach(k => {
+          if (k.endsWith("_bonus")) totalPoinBonus += (Number(student.nilai[k]?.poin) || 0);
+        });
+      }
+      total += (Number(student.nilai?._katrol) || 0) + totalPoinBonus;
+      
+      const maxCap = Number(skema.maxCap) || 100;
+      total = Math.min(maxCap, total);
 
       let predikat = "-";
       if (complete) {
@@ -7290,7 +7308,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       type="number"
                       className="form-input"
                       value={normLinearPoin}
-                      onChange={(e) => setNormLinearPoin(Number(e.target.value))}
+                      onChange={(e) => setNormLinearPoin(e.target.value === '' ? '' : Number(e.target.value))}
                       placeholder="Contoh: 5"
                       style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "160px" }}
                     />
@@ -7310,7 +7328,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         type="number"
                         className="form-input"
                         value={normMinTarget}
-                        onChange={(e) => setNormMinTarget(Number(e.target.value))}
+                        onChange={(e) => setNormMinTarget(e.target.value === '' ? '' : Number(e.target.value))}
                         style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
                       />
                     </div>
@@ -7322,7 +7340,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         type="number"
                         className="form-input"
                         value={normMaxTarget}
-                        onChange={(e) => setNormMaxTarget(Number(e.target.value))}
+                        onChange={(e) => setNormMaxTarget(e.target.value === '' ? '' : Number(e.target.value))}
                         style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
                       />
                     </div>
@@ -7338,7 +7356,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       type="number"
                       className="form-input"
                       value={normMaxOnlyTarget}
-                      onChange={(e) => setNormMaxOnlyTarget(Number(e.target.value))}
+                      onChange={(e) => setNormMaxOnlyTarget(e.target.value === '' ? '' : Number(e.target.value))}
                       placeholder="Contoh: 100"
                       style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "160px" }}
                     />
@@ -7381,9 +7399,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                     totalMurni += attAvg * (presensiConfig.bobot / 100);
                   }
 
+                  let totalPoinBonus = 0;
+                  if (skema.enableBonusStars) {
+                    Object.keys(student.nilai || {}).forEach(k => {
+                      if (k.endsWith("_bonus")) totalPoinBonus += (Number(student.nilai[k]?.poin) || 0);
+                    });
+                  }
+
                   totalMurni = parseFloat(totalMurni.toFixed(2));
                   const katrolLama = Number(student.nilai?._katrol) || 0;
-                  const finalCurrent = parseFloat((totalMurni + katrolLama).toFixed(2));
+                  const maxCap = Number(skema.maxCap) || 100;
+                  const finalCurrent = parseFloat(Math.min(maxCap, totalMurni + katrolLama + totalPoinBonus).toFixed(2));
 
                   return {
                     nisn: student.nisn,
@@ -7416,7 +7442,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                     }
                   }
                   
-                  const clampedNormalized = parseFloat(Math.min(100, Math.max(0, rawNormalized)).toFixed(2));
+                  const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
+                  const clampedNormalized = parseFloat(Math.min(maxCap, Math.max(0, rawNormalized)).toFixed(2));
                   const newDelta = parseFloat((clampedNormalized - s.totalMurni).toFixed(2));
 
                   return {
