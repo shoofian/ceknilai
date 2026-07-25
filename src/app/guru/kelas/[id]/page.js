@@ -10,6 +10,7 @@ import html2canvas from "html2canvas";
 import RaporIntegrationModal from "@/components/RaporIntegrationModal";
 import RemedialModal from "@/components/RemedialModal";
 import RemedialReportModal from "@/components/RemedialReportModal";
+import AdvancedToolsModal from "@/components/AdvancedToolsModal";
 import dynamic from "next/dynamic";
 
 import { ASPEK_PRESETS } from '@/lib/presets';
@@ -66,6 +67,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [selectedRemedialKolom, setSelectedRemedialKolom] = useState(null);
   const [remedialReportOpen, setRemedialReportOpen] = useState(false);
   const [remedialReportConfig, setRemedialReportConfig] = useState({});
+  const [advancedToolsModalOpen, setAdvancedToolsModalOpen] = useState(false);
 
   const handleSaveRemedial = async (updatedSiswaList, newSkemaConfig) => {
     try {
@@ -3734,6 +3736,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                   >
                     🖨️ Cetak & Ekspor
                   </button>
+                  <button 
+                    onClick={() => setAdvancedToolsModalOpen(true)}
+                    className="btn btn-secondary" 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", backgroundColor: "rgba(139, 92, 246, 0.12)", color: "#7c3aed", borderColor: "rgba(139, 92, 246, 0.3)", fontWeight: "600" }}
+                  >
+                    🧪 Fitur & Pengaturan Lanjutan
+                  </button>
                 </div>
               </div>
             </>
@@ -4152,139 +4161,31 @@ export default function DetailKelas({ params: paramsPromise }) {
         Belum ada siswa dan aspek nilai di kelas ini. Silakan atur aspek nilai atau tambah siswa terlebih dahulu.
       </div>
     )}
-      {/* ===== SECTION: ALAT LANJUTAN ===== */}
-      <div style={{ marginTop: "28px", borderTop: "1px dashed var(--border-color)", paddingTop: "16px" }}>
-        <button
-          onClick={() => setShowAdvancedTools(!showAdvancedTools)}
-          style={{
-            background: "none",
-            border: "none",
-            color: "var(--text-secondary)",
-            fontSize: "0.9rem",
-            fontWeight: "700",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px 0"
-          }}
-        >
-          <span style={{ transition: "transform 0.2s", transform: showAdvancedTools ? "rotate(90deg)" : "rotate(0deg)" }}>▸</span>
-          <span>🧪 Alat Lanjutan & Perhitungan Khusus</span>
-          <span style={{ fontSize: "0.7rem", backgroundColor: "var(--bg-tertiary)", color: "var(--text-muted)", padding: "2px 8px", borderRadius: "10px", fontWeight: "600" }}>Opsional</span>
-        </button>
-
-        {showAdvancedTools && (
-          <div className="animate-fade-in" style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
-            {/* Card 1: Normalisasi Nilai */}
-            <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <span style={{ fontSize: "1.4rem" }}>📐</span>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: 0 }}>Normalisasi Nilai Akhir</h4>
-                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0", lineHeight: "1.4" }}>
-                    Sesuaikan rentang/skala nilai kelas secara otomatis (Linear, Min-Max, atau Scale to Max).
-                  </p>
-                </div>
-              </div>
-              <div style={{ marginTop: "auto", paddingTop: "8px", display: "flex", gap: "8px" }}>
-                <button
-                  onClick={() => setNormModalOpen(true)}
-                  className="btn btn-primary"
-                  style={{ fontSize: "0.8rem", padding: "8px 14px", fontWeight: "700", flex: 1, justifyContent: "center", display: "flex", alignItems: "center", gap: "6px" }}
-                  disabled={isLocked || kelas?.archived}
-                >
-                  <span>⚙️ Buka Tools Normalisasi</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Card 2: Program Remedial & Pengayaan */}
-            <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <span style={{ fontSize: "1.4rem" }}>🔴</span>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: 0 }}>Program Remedial & Pengayaan</h4>
-                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0", lineHeight: "1.4" }}>
-                    Kelola siswa di bawah KKM ({kelas?.skemaPenilaian?.kkm || 75}), input tes remedial, dan cetak Berita Acara resmi.
-                  </p>
-                </div>
-              </div>
-              <div style={{ marginTop: "auto", paddingTop: "8px", display: "flex", gap: "8px" }}>
-                <select
-                  className="form-select"
-                  style={{ fontSize: "0.8rem", padding: "6px 8px", flex: 1, borderRadius: "6px", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    if (selectedId) {
-                      const col = kelas.kolomNilai.find(c => c.id === selectedId);
-                      if (col) {
-                        setSelectedRemedialKolom(col);
-                        setRemedialModalOpen(true);
-                      }
-                    }
-                  }}
-                  defaultValue=""
-                >
-                  <option value="" disabled>-- Pilih Kolom Asesmen --</option>
-                  {(kelas?.kolomNilai || []).map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.nama} ({col.bobot}%)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Card 3: Fitur Poin Bonus Keaktifan (⭐) */}
-            <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <span style={{ fontSize: "1.4rem" }}>⭐</span>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: 0 }}>Fitur Poin Bonus Keaktifan</h4>
-                    <span style={{
-                      fontSize: "0.68rem",
-                      fontWeight: "700",
-                      padding: "2px 8px",
-                      borderRadius: "10px",
-                      backgroundColor: kelas.skemaPenilaian?.enableBonusStars ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
-                      color: kelas.skemaPenilaian?.enableBonusStars ? "#10b981" : "var(--text-muted)"
-                    }}>
-                      {kelas.skemaPenilaian?.enableBonusStars ? "🟢 Aktif" : "⚪ Non-Aktif (Default)"}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "6px 0 0 0", lineHeight: "1.4" }}>
-                    Memberikan poin apresiasi langsung untuk siswa yang aktif di kelas. <strong>Setiap 1 Bintang (⭐) bernilai +1 Poin</strong> pada nilai akhir (dibatasi MaxCap).
-                  </p>
-                </div>
-              </div>
-              <div style={{ marginTop: "auto", paddingTop: "8px" }}>
-                <button
-                  onClick={handleToggleEnableBonusStars}
-                  type="button"
-                  className={`btn ${kelas.skemaPenilaian?.enableBonusStars ? "btn-secondary" : "btn-primary"}`}
-                  style={{
-                    fontSize: "0.8rem",
-                    padding: "8px 14px",
-                    fontWeight: "700",
-                    width: "100%",
-                    justifyContent: "center",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    borderColor: kelas.skemaPenilaian?.enableBonusStars ? "var(--border-color)" : "transparent",
-                    color: kelas.skemaPenilaian?.enableBonusStars ? "var(--text-primary)" : "#ffffff"
-                  }}
-                  disabled={isLocked || kelas?.archived}
-                >
-                  {kelas.skemaPenilaian?.enableBonusStars ? "⚪ Non-Aktifkan Fitur Bonus" : "🟢 Aktifkan Fitur Bonus (Tampilkan Kolom)"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Advanced Tools & Settings Modal */}
+      <AdvancedToolsModal
+        isOpen={advancedToolsModalOpen}
+        onClose={() => setAdvancedToolsModalOpen(false)}
+        kelas={kelas}
+        isLocked={isLocked}
+        onOpenNormModal={() => setNormModalOpen(true)}
+        onOpenRemedialModal={(col) => {
+          setSelectedRemedialKolom(col);
+          setRemedialModalOpen(true);
+        }}
+        onToggleBonusStars={handleToggleEnableBonusStars}
+        onUpdateSkema={(newSkema) => {
+          const updatedSkema = {
+            ...(kelas.skemaPenilaian || {}),
+            ...newSkema
+          };
+          setKelas(prev => ({ ...prev, skemaPenilaian: updatedSkema }));
+          fetch(`/api/kelas/${classId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ skemaPenilaian: updatedSkema })
+          });
+        }}
+      />
 
       </div>
 
