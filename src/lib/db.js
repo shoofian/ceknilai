@@ -39,7 +39,13 @@ function mapKelasFromDb(k) {
     tingkatan: k.tingkatan || null,
     archived: !!k.archived,
     isNilaiAkhirGenerated: !!k.is_nilai_akhir_generated,
-    skemaPenilaian: k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "", statusA: "A", statusB: "B", statusC: "C", statusD: "D" },
+    skemaPenilaian: {
+      A: 85, B: 75, C: 65, D: 50, kkm: "", statusA: "A", statusB: "B", statusC: "C", statusD: "D",
+      remedialPolicy: "max_kkm",
+      maxCap: 100,
+      cappingScope: "bonus_only",
+      ...(k.skema_penilaian || {})
+    },
     kolomNilai: (k.kolom_nilai || []).map(col => {
       const groupConfig = k.skema_penilaian?.kolomAspekGroup?.[col.id];
       return {

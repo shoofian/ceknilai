@@ -8,6 +8,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
 import RaporIntegrationModal from "@/components/RaporIntegrationModal";
+import RemedialModal from "@/components/RemedialModal";
+import RemedialReportModal from "@/components/RemedialReportModal";
 import dynamic from "next/dynamic";
 
 import { ASPEK_PRESETS } from '@/lib/presets';
@@ -58,6 +60,52 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [targetClassId, setTargetClassId] = useState("");
   const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
+
+  // States & Handlers untuk Remedial, Pengayaan & Bonus
+  const [remedialModalOpen, setRemedialModalOpen] = useState(false);
+  const [selectedRemedialKolom, setSelectedRemedialKolom] = useState(null);
+  const [remedialReportOpen, setRemedialReportOpen] = useState(false);
+  const [remedialReportConfig, setRemedialReportConfig] = useState({});
+
+  const handleSaveRemedial = async (updatedSiswaList, newSkemaConfig) => {
+    try {
+      const updatedSkema = {
+        ...(kelas.skemaPenilaian || {}),
+        ...newSkemaConfig
+      };
+
+      setKelas((prev) => ({
+        ...prev,
+        siswa: updatedSiswaList,
+        skemaPenilaian: updatedSkema
+      }));
+
+      setRemedialModalOpen(false);
+
+      await fetch(`/api/kelas/${classId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skemaPenilaian: updatedSkema })
+      });
+
+      await Promise.all(
+        updatedSiswaList.map((s) =>
+          fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nilai: s.nilai })
+          })
+        )
+      );
+    } catch (err) {
+      console.error("Gagal menyimpan data remedial:", err);
+    }
+  };
+
+  const handleOpenRemedialReport = (kolom, config) => {
+    setRemedialReportConfig(config);
+    setRemedialReportOpen(true);
+  };
 
   // States untuk Kolom Nilai
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
@@ -3589,13 +3637,61 @@ export default function DetailKelas({ params: paramsPromise }) {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
                             <th key={col.id} colSpan={col.subKolom.length} style={{ textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21, borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
-                              {col.nama} ({col.bobot}%)
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                                <span>{col.nama} ({col.bobot}%)</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedRemedialKolom(col);
+                                    setRemedialModalOpen(true);
+                                  }}
+                                  style={{
+                                    padding: "2px 6px",
+                                    fontSize: "0.65rem",
+                                    borderRadius: "4px",
+                                    border: "1px solid var(--border-color)",
+                                    backgroundColor: "var(--bg-primary)",
+                                    color: "var(--primary)",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    whiteSpace: "nowrap"
+                                  }}
+                                  title="Kelola Remedial, Pengayaan & Bonus"
+                                >
+                                  ✨ Remedial & Bonus
+                                </button>
+                              </div>
                             </th>
                           );
                         }
                         return (
-                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "100px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
-                            {col.nama} ({col.bobot}%)
+                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "115px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "3px" }}>
+                              <span>{col.nama} ({col.bobot}%)</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRemedialKolom(col);
+                                  setRemedialModalOpen(true);
+                                }}
+                                style={{
+                                  padding: "2px 6px",
+                                  fontSize: "0.65rem",
+                                  borderRadius: "4px",
+                                  border: "1px solid var(--border-color)",
+                                  backgroundColor: "var(--bg-primary)",
+                                  color: "var(--primary)",
+                                  cursor: "pointer",
+                                  fontWeight: "600",
+                                  whiteSpace: "nowrap"
+                                }}
+                                title="Kelola Remedial, Pengayaan & Bonus"
+                              >
+                                ✨ Remedial & Bonus
+                              </button>
+                            </div>
                           </th>
                         );
                       })}
@@ -7643,6 +7739,26 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         </div>
       )}
+
+      {/* ============= MODAL REMEDIAL, PENGAYAAN & BONUS ============= */}
+      <RemedialModal
+        isOpen={remedialModalOpen}
+        onClose={() => setRemedialModalOpen(false)}
+        kolom={selectedRemedialKolom}
+        siswaList={kelas?.siswa || []}
+        skemaPenilaian={kelas?.skemaPenilaian || {}}
+        onSave={handleSaveRemedial}
+        onOpenReport={handleOpenRemedialReport}
+      />
+
+      <RemedialReportModal
+        isOpen={remedialReportOpen}
+        onClose={() => setRemedialReportOpen(false)}
+        kelas={kelas || {}}
+        kolom={selectedRemedialKolom}
+        siswaList={kelas?.siswa || []}
+        config={remedialReportConfig}
+      />
 
     </>
   );
