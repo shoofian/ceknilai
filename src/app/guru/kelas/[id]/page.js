@@ -2747,29 +2747,25 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* Tab Navigation with Scroll Affordance */}
+      {/* Tab Navigation - Single Line Grid (No Scroll) */}
       <div style={{
-        display: "flex",
-        gap: "6px",
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: "4px",
         backgroundColor: "var(--bg-secondary)",
-        padding: "4px 8px 4px 4px",
+        padding: "4px",
         borderRadius: "var(--radius-md)",
         border: "1px solid var(--border-color)",
-        width: "100%",
-        maxWidth: "100%",
-        overflowX: "auto",
-        flexWrap: "nowrap",
-        WebkitMaskImage: "linear-gradient(to right, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)",
-        maskImage: "linear-gradient(to right, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)"
+        width: "100%"
       }}>
-        {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik & Peringkat" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }].map(tab => (
+        {[{ id: "nilai", label: "📊 Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik" }, { id: "tindak-lanjut", label: "📢 Lanjutan" }].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className="btn"
             style={{
-              padding: "8px 16px",
-              fontSize: "0.82rem",
+              padding: "6px 2px",
+              fontSize: "0.76rem",
               fontWeight: "700",
               borderRadius: "var(--radius-sm)",
               border: "none",
@@ -2779,7 +2775,9 @@ export default function DetailKelas({ params: paramsPromise }) {
               color: activeTab === tab.id ? "#ffffff" : "var(--text-secondary)",
               boxShadow: activeTab === tab.id ? "0 2px 8px rgba(59,130,246,0.35)" : "none",
               whiteSpace: "nowrap",
-              flexShrink: 0
+              justifyContent: "center",
+              display: "flex",
+              alignItems: "center"
             }}
           >
             {tab.label}
@@ -3710,42 +3708,40 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           {!panelKontrolExpanded && (
             <div style={{
-              display: "flex",
-              gap: "8px",
-              flexWrap: "nowrap",
-              overflowX: "auto",
+              display: "grid",
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gap: "4px",
               paddingTop: "8px",
               borderTop: "1px dashed var(--border-color)",
-              WebkitMaskImage: "linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
-              maskImage: "linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)"
+              width: "100%"
             }}>
               <button 
                 onClick={() => { setConfigModalTab('aspek'); setKolomModalOpen(true); }} 
                 className="btn btn-outline" 
-                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", whiteSpace: "nowrap" }}
+                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
               >
-                ⚙️ Aspek & KKM
+                ⚙️ Aspek
               </button>
               <button 
                 onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
                 className="btn btn-secondary" 
-                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", whiteSpace: "nowrap" }}
+                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
               >
-                📊 Kelola Siswa
+                📊 Siswa
               </button>
               <button 
                 onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
                 className="btn btn-secondary" 
-                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", whiteSpace: "nowrap" }}
+                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
               >
-                🖨️ Cetak & Ekspor
+                🖨️ Cetak
               </button>
               <button 
                 onClick={() => setAdvancedToolsModalOpen(true)}
                 className="btn btn-secondary" 
-                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", backgroundColor: "rgba(139, 92, 246, 0.12)", color: "#7c3aed", borderColor: "rgba(139, 92, 246, 0.3)", fontWeight: "600", whiteSpace: "nowrap" }}
+                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", backgroundColor: "rgba(139, 92, 246, 0.12)", color: "#7c3aed", borderColor: "rgba(139, 92, 246, 0.3)", fontWeight: "700", whiteSpace: "nowrap", justifyContent: "center" }}
               >
-                🧪 Pengaturan Lanjutan
+                🧪 Lanjutan
               </button>
             </div>
           )}
