@@ -2212,17 +2212,10 @@ export default function DetailKelas({ params: paramsPromise }) {
     const currentPoin = Number(currentBonusObj.poin) || 0;
     const newPoin = currentPoin + 1; // +1 Point per star
 
-    const currentVal = Number(student.nilai?.[targetCol.id]) || 0;
-    const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
-    const newNilaiVal = Math.min(currentVal + 1, maxCap);
-
     const updatedNilai = {
       ...(student.nilai || {}),
-      [targetCol.id]: newNilaiVal,
       [keyBonus]: {
         poin: newPoin,
-        nilaiAwal: currentVal,
-        nilaiAkhir: newNilaiVal,
         catatan: "Apresiasi Bonus Keaktifan Kelas ⭐",
         tanggal: new Date().toISOString().split("T")[0]
       }
@@ -2259,16 +2252,11 @@ export default function DetailKelas({ params: paramsPromise }) {
     if (currentPoin <= 0) return;
 
     const newPoin = Math.max(0, currentPoin - 1); // -1 Point per star
-    const currentVal = Number(student.nilai?.[targetCol.id]) || 0;
-    const newNilaiVal = Math.max(0, currentVal - 1);
 
     const updatedNilai = {
       ...(student.nilai || {}),
-      [targetCol.id]: newNilaiVal,
       [keyBonus]: {
         poin: newPoin,
-        nilaiAwal: currentVal,
-        nilaiAkhir: newNilaiVal,
         catatan: "Penyesuaian Bonus Keaktifan Kelas ⭐",
         tanggal: new Date().toISOString().split("T")[0]
       }
