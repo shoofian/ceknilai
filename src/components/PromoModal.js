@@ -13,16 +13,16 @@ export default function PromoModal({ guru }) {
 
     try {
       const guruKey = guru?.username
-        ? `has_seen_promo_referral_v1_${guru.username}`
-        : "has_seen_promo_referral_v1";
+        ? `has_seen_promo_advanced_features_v2_${guru.username}`
+        : "has_seen_promo_advanced_features_v2";
       const hasSeenGuru = localStorage.getItem(guruKey);
-      const hasSeenGlobal = localStorage.getItem("has_seen_promo_referral_v1");
+      const hasSeenGlobal = localStorage.getItem("has_seen_promo_advanced_features_v2");
 
       if (!hasSeenGuru && !hasSeenGlobal) {
-        // Tampilkan modal setelah sedikit delay agar animasi smooth saat pertama kali dibuka
+        // Tampilkan modal setelah delay halus saat halaman pertama dimuat
         const timer = setTimeout(() => {
           setIsOpen(true);
-        }, 500);
+        }, 600);
         return () => clearTimeout(timer);
       }
     } catch (e) {
@@ -35,10 +35,10 @@ export default function PromoModal({ guru }) {
     setTimeout(() => {
       try {
         const guruKey = guru?.username
-          ? `has_seen_promo_referral_v1_${guru.username}`
-          : "has_seen_promo_referral_v1";
+          ? `has_seen_promo_advanced_features_v2_${guru.username}`
+          : "has_seen_promo_advanced_features_v2";
         localStorage.setItem(guruKey, "true");
-        localStorage.setItem("has_seen_promo_referral_v1", "true");
+        localStorage.setItem("has_seen_promo_advanced_features_v2", "true");
       } catch (e) {
         console.error("LocalStorage save error:", e);
       }
@@ -65,7 +65,7 @@ export default function PromoModal({ guru }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 9999,
+        zIndex: 99999,
         padding: "16px",
         opacity: isClosing ? 0 : 1,
         transition: "opacity 0.25s ease-in-out",
@@ -93,7 +93,7 @@ export default function PromoModal({ guru }) {
         className="promo-modal-card"
         style={{
           width: "100%",
-          maxWidth: "560px",
+          maxWidth: "600px",
           maxHeight: "90vh",
           overflowY: "auto",
           background: "var(--bg-secondary, #ffffff)",
@@ -111,7 +111,7 @@ export default function PromoModal({ guru }) {
         {/* Tombol Tutup (X) */}
         <button
           onClick={() => handleClose()}
-          aria-label="Tutup Promosi"
+          aria-label="Tutup Pengumuman"
           style={{
             position: "absolute",
             top: "16px",
@@ -147,15 +147,15 @@ export default function PromoModal({ guru }) {
         {/* Header Visual Banner */}
         <div
           style={{
-            background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 35%, #312e81 70%, #4338ca 100%)",
-            padding: "32px 24px 28px 24px",
+            background: "linear-gradient(135deg, #2e1065 0%, #4c1d95 40%, #6d28d9 75%, #7c3aed 100%)",
+            padding: "32px 24px 26px 24px",
             textAlign: "center",
             position: "relative",
             overflow: "hidden",
             color: "#ffffff",
           }}
         >
-          {/* Background Decorative Pattern Elements */}
+          {/* Decorative Pattern Circles */}
           <div
             style={{
               position: "absolute",
@@ -164,7 +164,7 @@ export default function PromoModal({ guru }) {
               width: "160px",
               height: "160px",
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(234, 179, 8, 0.25) 0%, rgba(0,0,0,0) 70%)",
+              background: "radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(0,0,0,0) 70%)",
               pointerEvents: "none",
             }}
           />
@@ -176,12 +176,12 @@ export default function PromoModal({ guru }) {
               width: "140px",
               height: "140px",
               borderRadius: "50%",
-              background: "radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(0,0,0,0) 70%)",
+              background: "radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, rgba(0,0,0,0) 70%)",
               pointerEvents: "none",
             }}
           />
 
-          {/* Exclusive Badge */}
+          {/* New Feature Badge */}
           <div
             style={{
               display: "inline-flex",
@@ -201,7 +201,7 @@ export default function PromoModal({ guru }) {
               boxShadow: "0 4px 14px rgba(245, 158, 11, 0.4)",
             }}
           >
-            🔥 FITUR & KESEMPATAN SPESIAL
+            🚀 PEMBARUAN DITAMBAHKAN
           </div>
 
           {/* Main Headline */}
@@ -212,256 +212,188 @@ export default function PromoModal({ guru }) {
               fontWeight: 800,
               lineHeight: 1.25,
               fontFamily: "var(--font-heading)",
-              background: "linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
+              color: "#ffffff"
             }}
           >
-            Raih Uang Tunai Hingga <span style={{ color: "#facc15", WebkitTextFillColor: "#facc15" }}>Jutaan Rupiah!</span> 💸
+            Fitur & Pengaturan Lanjutan Kini <span style={{ color: "#facc15" }}>Lebih Lengkap!</span> ✨
           </h2>
 
           <p
             style={{
               margin: 0,
-              fontSize: "0.92rem",
-              color: "#e2e8f0",
+              fontSize: "0.88rem",
+              color: "#e9d5ff",
               lineHeight: 1.5,
               opacity: 0.95,
-              maxWidth: "460px",
+              maxWidth: "480px",
               marginLeft: "auto",
               marginRight: "auto",
             }}
           >
-            Ajak rekan guru & teman menggunakan <strong>CekNilai</strong>. Kumpulkan poin referral dan tukarkan dengan berbagai keuntungan melimpah!
+            Akses seluruh alat kalkulasi khusus, program remedial, bonus keaktifan, dan aturan MaxCap kelas dengan jauh lebih praktis di menu <strong>🛠️ Operasi Data</strong>!
           </p>
         </div>
 
-        {/* Body Content / Marketing Highlights */}
-        <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+        {/* Body Content / Feature Highlights */}
+        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px" }}>
           
-          {/* Highlight 1: Uang Tunai Jutaan Rupiah */}
+          {/* Highlight 1: Remedial & Pengayaan */}
           <div
             style={{
               display: "flex",
               alignItems: "flex-start",
               gap: "14px",
-              padding: "14px 16px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, rgba(234, 179, 8, 0.08) 0%, rgba(245, 158, 11, 0.03) 100%)",
-              border: "1px solid rgba(245, 158, 11, 0.25)",
+              padding: "12px 14px",
+              borderRadius: "14px",
+              background: "var(--bg-primary, #f8fafc)",
+              border: "1px solid var(--border-color, #e2e8f0)",
             }}
           >
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(239, 68, 68, 0.12)",
+                color: "#ef4444",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "22px",
+                fontSize: "20px",
                 flexShrink: 0,
-                boxShadow: "0 4px 12px rgba(245, 158, 11, 0.3)",
+                fontWeight: "700"
               }}
             >
-              💵
+              🔴
             </div>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                <h4 style={{ margin: 0, fontSize: "0.98rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                  Tukar Poin Jadi Uang Tunai
-                </h4>
-                <span
-                  style={{
-                    backgroundColor: "#ef4444",
-                    color: "#ffffff",
-                    fontSize: "0.68rem",
-                    fontWeight: 800,
-                    padding: "2px 8px",
-                    borderRadius: "20px",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  s.d. Jutaan Rp
-                </span>
-              </div>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
-                Tukarkan akumulasi poin referral kamu langsung menjadi <strong>saldo uang tunai (E-Wallet / Transfer Bank)</strong> tanpa batasan maksimal penukaran!
-              </p>
-            </div>
-          </div>
-
-          {/* Highlight 2: Masa Aktif Gratis */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "14px",
-              padding: "14px 16px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%)",
-              border: "1px solid rgba(16, 185, 129, 0.25)",
-            }}
-          >
-            <div
-              style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "22px",
-                flexShrink: 0,
-                boxShadow: "0 4px 12px rgba(16, 185, 129, 0.3)",
-              }}
-            >
-              🎁
-            </div>
-            <div>
-              <h4 style={{ margin: 0, fontSize: "0.98rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                Perpanjangan Masa Aktif Gratis
+              <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                Program Remedial & Pengayaan Bertahap
               </h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
-                Dapatkan bonus perpanjangan masa aktif akun & fitur premium secara <strong>100% GRATIS</strong> setiap ada pengguna baru yang mendaftar via link milikmu.
+              <p style={{ margin: "3px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                Simpan nilai murni awal siswa, masukkan nilai tes remedial kapan saja secara individu bertahap, dan cetak Berita Acara resmi.
               </p>
             </div>
           </div>
 
-          {/* Highlight 3: Program Referral Simpel */}
+          {/* Highlight 2: Fitur Bonus Keaktifan */}
           <div
             style={{
               display: "flex",
               alignItems: "flex-start",
               gap: "14px",
-              padding: "14px 16px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(37, 99, 235, 0.03) 100%)",
-              border: "1px solid rgba(59, 130, 246, 0.25)",
+              padding: "12px 14px",
+              borderRadius: "14px",
+              background: "var(--bg-primary, #f8fafc)",
+              border: "1px solid var(--border-color, #e2e8f0)",
             }}
           >
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(245, 158, 11, 0.12)",
+                color: "#d97706",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "22px",
+                fontSize: "20px",
                 flexShrink: 0,
-                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                fontWeight: "700"
               }}
             >
-              🤝
+              ⭐
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: "0.98rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                Program Referral Mudah & Instan
+              <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                Fitur Poin Bonus Keaktifan (1 ⭐ = +1 Poin)
               </h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
-                Bagikan kode unik atau tautan khusus ke rekan guru/teman. Poin bonus akan otomatis terkumpul langsung di akun kamu secara otomatis.
+              <p style={{ margin: "3px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                Berikan apresiasi poin keaktifan bagi siswa yang proaktif di kelas. Fitur ini opsional dan secara default non-aktif.
               </p>
             </div>
           </div>
 
-          {/* Highlight 4: Kejutan Hadiah Lainnya */}
+          {/* Highlight 3: Normalisasi & MaxCap */}
           <div
             style={{
               display: "flex",
               alignItems: "flex-start",
               gap: "14px",
-              padding: "14px 16px",
-              borderRadius: "16px",
-              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(124, 58, 237, 0.03) 100%)",
-              border: "1px solid rgba(139, 92, 246, 0.25)",
+              padding: "12px 14px",
+              borderRadius: "14px",
+              background: "var(--bg-primary, #f8fafc)",
+              border: "1px solid var(--border-color, #e2e8f0)",
             }}
           >
             <div
               style={{
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                backgroundColor: "rgba(124, 58, 237, 0.12)",
+                color: "#7c3aed",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "22px",
+                fontSize: "20px",
                 flexShrink: 0,
-                boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
+                fontWeight: "700"
               }}
             >
-              🚀
+              📐
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: "0.98rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                Bonus & Surprise Rewards Mendatang
+              <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                Normalisasi Nilai & Aturan MaxCap Kelas
               </h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "var(--text-secondary)", lineHeight: 1.45 }}>
-                Nantikan berbagai kejutan menarik seperti <strong>Voucher Belanja, Gadget, dan Mystery Box</strong> yang siap dibagikan untuk member aktif!
+              <p style={{ margin: "3px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                Sesuaikan skala nilai kelas secara otomatis (Linear, Min-Max 60–100, Scale to Max) serta tentukan batas nilai tertinggi (MaxCap).
               </p>
             </div>
           </div>
 
-          {/* Action Buttons Footer */}
-          <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Action Buttons */}
+          <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
             <button
-              onClick={() => handleClose("/guru/referral")}
+              onClick={() => handleClose("/guru/kelas")}
               style={{
                 width: "100%",
-                padding: "14px 20px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%)",
+                padding: "12px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                 color: "#ffffff",
-                fontSize: "1rem",
-                fontWeight: 700,
+                fontSize: "0.92rem",
+                fontWeight: 800,
                 border: "none",
                 cursor: "pointer",
+                boxShadow: "0 6px 18px rgba(124, 58, 237, 0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "8px",
-                boxShadow: "0 8px 20px rgba(37, 99, 235, 0.35)",
                 transition: "all 0.2s ease",
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 12px 25px rgba(37, 99, 235, 0.45)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 8px 20px rgba(37, 99, 235, 0.35)";
-              }}
             >
-              <span>💰</span> Saya Mengerti & Mulai Sekarang
+              <span>🧪 Coba Fitur Baru Di Kelasku Now!</span>
             </button>
 
             <button
               onClick={() => handleClose()}
               style={{
                 width: "100%",
-                padding: "10px 16px",
-                borderRadius: "12px",
+                padding: "8px",
                 background: "transparent",
-                color: "var(--text-secondary)",
-                fontSize: "0.85rem",
+                color: "var(--text-muted, #64748b)",
+                fontSize: "0.8rem",
                 fontWeight: 600,
                 border: "none",
                 cursor: "pointer",
                 textAlign: "center",
-                transition: "color 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = "var(--text-primary)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = "var(--text-secondary)";
               }}
             >
-              Nanti Saja
+              Mengerti, Tutup Pengumuman Ini
             </button>
           </div>
 
