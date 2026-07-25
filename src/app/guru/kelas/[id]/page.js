@@ -2130,6 +2130,66 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
+  // === 1-CLICK QUICK STAR ⭐ FOR ACTIVE STUDENTS ===
+  const [starToast, setStarToast] = useState(null);
+
+  const getStudentTotalStars = (student) => {
+    if (!student || !student.nilai) return 0;
+    let totalPoinBonus = 0;
+    Object.keys(student.nilai).forEach((k) => {
+      if (k.endsWith("_bonus")) {
+        totalPoinBonus += Number(student.nilai[k]?.poin) || 0;
+      }
+    });
+    return Math.floor(totalPoinBonus / 2);
+  };
+
+  const handleQuickAddStar = async (student) => {
+    if (!kelas || !kelas.kolomNilai || kelas.kolomNilai.length === 0) return;
+    const targetCol = kelas.kolomNilai[0];
+    const keyBonus = `${targetCol.id}_bonus`;
+
+    const currentBonusObj = student.nilai?.[keyBonus] || {};
+    const currentPoin = Number(currentBonusObj.poin) || 0;
+    const newPoin = currentPoin + 2;
+
+    const currentVal = Number(student.nilai?.[targetCol.id]) || 0;
+    const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
+    const newNilaiVal = Math.min(currentVal + 2, maxCap);
+
+    const updatedNilai = {
+      ...(student.nilai || {}),
+      [targetCol.id]: newNilaiVal,
+      [keyBonus]: {
+        poin: newPoin,
+        nilaiAwal: currentVal,
+        nilaiAkhir: newNilaiVal,
+        catatan: "Apresiasi Bintang Keaktifan Kelas ⭐",
+        tanggal: new Date().toISOString().split("T")[0]
+      }
+    };
+
+    setKelas((prev) => ({
+      ...prev,
+      siswa: prev.siswa.map((s) => (s.nisn === student.nisn ? { ...s, nilai: updatedNilai } : s))
+    }));
+
+    const newStarCount = Math.floor(newPoin / 2);
+    const shortName = (student.nama || "Siswa").split(" ")[0];
+    setStarToast(`⭐ +1 Bintang untuk ${shortName}! (Total: ${newStarCount} ⭐)`);
+    setTimeout(() => setStarToast(null), 2500);
+
+    try {
+      await fetch(`/api/kelas/${classId}/siswa/${student.nisn}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nilai: updatedNilai })
+      });
+    } catch (e) {
+      console.error("Gagal simpan bintang:", e);
+    }
+  };
+
   // === SMART CLIPBOARD PASTE (FROM EXCEL / GOOGLE SHEETS) ===
   const handleGradePaste = (e, startStudentNisn, colId) => {
     const pastedText = e.clipboardData ? e.clipboardData.getData("text/plain") : "";
@@ -3767,8 +3827,32 @@ export default function DetailKelas({ params: paramsPromise }) {
                           title="Klik untuk melihat nama lengkap"
                           style={{ fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
-                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%", overflow: "hidden", justifyContent: "space-between" }}>
+                            <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", flex: 1, display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickAddStar(student);
+                              }}
+                              style={{
+                                background: "rgba(245, 158, 11, 0.12)",
+                                border: "1px solid rgba(245, 158, 11, 0.4)",
+                                borderRadius: "12px",
+                                padding: "1px 6px",
+                                cursor: "pointer",
+                                fontSize: "0.72rem",
+                                fontWeight: "700",
+                                color: "#d97706",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "2px",
+                                flexShrink: 0
+                              }}
+                              title="Klik 1-Click untuk beri +1 Bintang Keaktifan ⭐"
+                            >
+                              ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
+                            </button>
                           </div>
                         </td>
                         <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
@@ -7759,6 +7843,29 @@ export default function DetailKelas({ params: paramsPromise }) {
         siswaList={kelas?.siswa || []}
         config={remedialReportConfig}
       />
+
+      {/* Floating 1-Click Star Notification Toast */}
+      {starToast && (
+        <div style={{
+          position: "fixed",
+          bottom: "28px",
+          right: "28px",
+          backgroundColor: "#0f172a",
+          color: "#f59e0b",
+          padding: "12px 20px",
+          borderRadius: "12px",
+          boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)",
+          border: "1px solid #f59e0b",
+          fontWeight: "700",
+          fontSize: "0.9rem",
+          zIndex: 99999,
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          ✨ {starToast}
+        </div>
+      )}
 
     </>
   );
