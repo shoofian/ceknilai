@@ -51,6 +51,15 @@ export default function RemedialModal({
 
   if (!isOpen || !kolom) return null;
 
+  // Helper function to extract original pre-remedial grade
+  const getOriginalGrade = (s) => {
+    const keyRemedial = `${kolom.id}_remedial`;
+    if (s.nilai?.[keyRemedial]?.nilaiAwal !== undefined && s.nilai?.[keyRemedial]?.nilaiAwal !== null) {
+      return Number(s.nilai[keyRemedial].nilaiAwal);
+    }
+    return Number(s.nilai?.[kolom.id]) || 0;
+  };
+
   // Helper calculation functions
   const computeRemedialFinal = (nilaiAwal, tesInput) => {
     if (tesInput === "" || tesInput === null || isNaN(Number(tesInput))) {
@@ -81,16 +90,9 @@ export default function RemedialModal({
     return Math.min(total, maxCap);
   };
 
-  // Group students
-  const siswaRemedial = siswaList.filter((s) => {
-    const val = Number(s.nilai?.[kolom.id]) || 0;
-    return val < kkm;
-  });
-
-  const siswaPengayaan = siswaList.filter((s) => {
-    const val = Number(s.nilai?.[kolom.id]) || 0;
-    return val >= kkm;
-  });
+  // Group students: candidates based on original pre-remedial grade
+  const siswaRemedial = siswaList.filter((s) => getOriginalGrade(s) < kkm);
+  const siswaPengayaan = siswaList.filter((s) => getOriginalGrade(s) >= kkm);
 
   const handleInputChange = (nisn, field, val) => {
     setRemedialData((prev) => ({
@@ -103,10 +105,9 @@ export default function RemedialModal({
   };
 
   const handleSaveAll = () => {
-    // Return formatted payload to parent
     const updatedSiswa = siswaList.map((s) => {
       const data = remedialData[s.nisn] || {};
-      const awal = Number(s.nilai?.[kolom.id]) || 0;
+      const awal = getOriginalGrade(s);
       const newNilai = { ...(s.nilai || {}) };
 
       const keyRemedial = `${kolom.id}_remedial`;
@@ -121,7 +122,7 @@ export default function RemedialModal({
           nilaiAkhir: finalRem,
           status: finalRem >= kkm ? "LULUS" : "BELUM LULUS",
           catatan: data.catatan || "Telah mengikuti tes remedial",
-          tanggal: new Date().toISOString().split("T")[0]
+          tanggal: s.nilai?.[keyRemedial]?.tanggal || new Date().toISOString().split("T")[0]
         };
       }
 
@@ -134,7 +135,7 @@ export default function RemedialModal({
           nilaiAwal: currentVal,
           nilaiAkhir: finalWithBonus,
           catatan: data.catatan || "Bonus keaktifan kelas",
-          tanggal: new Date().toISOString().split("T")[0]
+          tanggal: s.nilai?.[keyBonus]?.tanggal || new Date().toISOString().split("T")[0]
         };
       }
 
@@ -211,7 +212,7 @@ export default function RemedialModal({
             onClick={() => setActiveTab("remedial")}
             style={tabButtonStyle(activeTab === "remedial", "#ef4444")}
           >
-            🔴 Program Remedial ({siswaRemedial.length} Siswa &lt; KKM)
+            🔴 Program Remedial ({siswaRemedial.length} Peserta &lt; KKM)
           </button>
           <button
             onClick={() => setActiveTab("pengayaan")}
@@ -225,9 +226,12 @@ export default function RemedialModal({
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
           {activeTab === "remedial" && (
             <div>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
+                💡 <strong>Remedial Fleksibel / Bertahap:</strong> Nilai awal siswa tetap tersimpan. Anda dapat memasukkan nilai tes remedial kapan saja secara individu per siswa.
+              </p>
               {siswaRemedial.length === 0 ? (
                 <div style={emptyStateStyle}>
-                  🎉 <strong>Selamat!</strong> Tidak ada siswa yang berada di bawah KKM ({kkm}) pada kolom ini.
+                  🎉 <strong>Selamat!</strong> Tidak ada siswa yang nilai awalknya berada di bawah KKM ({kkm}) pada kolom ini.
                 </div>
               ) : (
                 <table style={tableStyle}>
@@ -237,16 +241,20 @@ export default function RemedialModal({
                       <th style={thStyle}>Nama Siswa</th>
                       <th style={{ ...thStyle, textAlign: "center" }}>Nilai Awal</th>
                       <th style={{ ...thStyle, textAlign: "center" }}>Nilai Tes Remedial</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Pratinjau Nilai Akhir</th>
-                      <th style={thStyle}>Status</th>
-                      <th style={thStyle}>Catatan / Materi</th>
+                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Akhir Hasil</th>
+                      <th style={thStyle}>Status Remedial</th>
+                      <th style={thStyle}>Catatan / Tanggal</th>
                     </tr>
                   </thead>
                   <tbody>
                     {siswaRemedial.map((s, idx) => {
-                      const awal = Number(s.nilai?.[kolom.id]) || 0;
+                      const awal = getOriginalGrade(s);
+                      const keyRemedial = `${kolom.id}_remedial`;
+                      const existingRem = s.nilai?.[keyRemedial];
                       const inputTes = remedialData[s.nisn]?.remedialTes;
-                      const finalVal = computeRemedialFinal(awal, inputTes);
+                      
+                      const hasRemedial = inputTes !== "" && inputTes !== null && !isNaN(Number(inputTes));
+                      const finalVal = hasRemedial ? computeRemedialFinal(awal, inputTes) : (existingRem?.nilaiAkhir !== undefined ? existingRem.nilaiAkhir : awal);
                       const isLulus = finalVal >= kkm;
 
                       return (
@@ -264,7 +272,7 @@ export default function RemedialModal({
                               type="number"
                               min={0}
                               max={100}
-                              placeholder="Input Nilai"
+                              placeholder="Tes Remedial"
                               value={inputTes ?? ""}
                               onChange={(e) => handleInputChange(s.nisn, "remedialTes", e.target.value)}
                               style={tableInputStyle}
@@ -274,13 +282,13 @@ export default function RemedialModal({
                             <span style={{
                               fontWeight: "800",
                               fontSize: "1rem",
-                              color: isLulus ? "#10b981" : "#f59e0b"
+                              color: isLulus ? "#10b981" : "#ef4444"
                             }}>
                               {finalVal}
                             </span>
                             {maxCap < 100 && finalVal === maxCap && (
                               <span style={{ fontSize: "0.65rem", display: "block", color: "var(--text-secondary)" }}>
-                                (Locked @ {maxCap})
+                                (Capped @ {maxCap})
                               </span>
                             )}
                           </td>
@@ -291,16 +299,16 @@ export default function RemedialModal({
                               borderRadius: "12px",
                               fontSize: "0.75rem",
                               fontWeight: "700",
-                              backgroundColor: isLulus ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)",
-                              color: isLulus ? "#10b981" : "#ef4444"
+                              backgroundColor: hasRemedial || existingRem ? (isLulus ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)") : "rgba(239, 68, 68, 0.15)",
+                              color: hasRemedial || existingRem ? (isLulus ? "#10b981" : "#d97706") : "#ef4444"
                             }}>
-                              {isLulus ? "LULUS" : "BELUM LULUS"}
+                              {hasRemedial || existingRem ? (isLulus ? "🟢 LULUS REMEDIAL" : "⚠️ BELUM TUNTAS") : "🔴 BELUM REMEDIAL"}
                             </span>
                           </td>
                           <td style={tdStyle}>
                             <input
                               type="text"
-                              placeholder="Catatan remedial"
+                              placeholder="Materi / Catatan"
                               value={remedialData[s.nisn]?.catatan || ""}
                               onChange={(e) => handleInputChange(s.nisn, "catatan", e.target.value)}
                               style={tableTextInputsStyle}
@@ -338,7 +346,7 @@ export default function RemedialModal({
                   </thead>
                   <tbody>
                     {siswaPengayaan.map((s, idx) => {
-                      const awal = Number(s.nilai?.[kolom.id]) || 0;
+                      const awal = getOriginalGrade(s);
                       const bonusInput = remedialData[s.nisn]?.bonusPoin;
                       const finalVal = computeBonusFinal(awal, bonusInput);
 
