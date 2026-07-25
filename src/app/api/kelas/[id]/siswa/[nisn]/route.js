@@ -143,3 +143,5 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });
   }
 }
+
+export const PUT = PATCH;

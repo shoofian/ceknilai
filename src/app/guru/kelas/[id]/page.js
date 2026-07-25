@@ -91,7 +91,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       await Promise.all(
         updatedSiswaList.map((s) =>
           fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
-            method: "PUT",
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nilai: s.nilai })
           })
@@ -2181,7 +2181,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     try {
       await fetch(`/api/kelas/${classId}/siswa/${student.nisn}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nilai: updatedNilai })
       });
@@ -2227,7 +2227,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     try {
       await fetch(`/api/kelas/${classId}/siswa/${student.nisn}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nilai: updatedNilai })
       });
