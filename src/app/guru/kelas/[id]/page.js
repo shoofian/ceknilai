@@ -2748,15 +2748,15 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
       {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "100%", maxWidth: "100%", overflowX: "auto", flexWrap: "nowrap", scrollbarWidth: "none" }}>
         {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik & Peringkat" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className="btn"
             style={{
-              padding: "8px 18px",
-              fontSize: "0.85rem",
+              padding: "8px 16px",
+              fontSize: "0.82rem",
               fontWeight: "700",
               borderRadius: "var(--radius-sm)",
               border: "none",
@@ -2765,6 +2765,8 @@ export default function DetailKelas({ params: paramsPromise }) {
               backgroundColor: activeTab === tab.id ? "var(--primary)" : "transparent",
               color: activeTab === tab.id ? "#ffffff" : "var(--text-secondary)",
               boxShadow: activeTab === tab.id ? "0 2px 8px rgba(59,130,246,0.35)" : "none",
+              whiteSpace: "nowrap",
+              flexShrink: 0
             }}
           >
             {tab.label}
