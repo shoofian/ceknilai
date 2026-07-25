@@ -54,13 +54,14 @@ export default function AdvancedToolsModal({
               width: "42px",
               height: "42px",
               borderRadius: "12px",
-              backgroundColor: "rgba(124, 58, 237, 0.12)",
+              backgroundColor: "rgba(124, 58, 237, 0.14)",
               color: "#7c3aed",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "1.4rem",
-              fontWeight: "800"
+              fontWeight: "800",
+              boxShadow: "0 2px 8px rgba(124, 58, 237, 0.2)"
             }}>
               🧪
             </div>
@@ -81,7 +82,7 @@ export default function AdvancedToolsModal({
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
             {/* SECTION 1: REMEDIAL & PENGAYAAN */}
-            <div style={sectionCardStyle}>
+            <div style={{ ...sectionCardStyle, borderLeft: "5px solid #ef4444" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ fontSize: "1.2rem" }}>🔴</span>
@@ -121,8 +122,8 @@ export default function AdvancedToolsModal({
             {/* SECTION 2: POIN BONUS KEAKTIFAN */}
             <div style={{
               ...sectionCardStyle,
-              border: isBonusActive ? "1px solid rgba(16, 185, 129, 0.4)" : "1px solid var(--border-color)",
-              backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.02)" : "var(--bg-secondary)"
+              borderLeft: isBonusActive ? "5px solid #10b981" : "5px solid #f59e0b",
+              backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.04)" : "var(--bg-primary)"
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -131,11 +132,11 @@ export default function AdvancedToolsModal({
                 </div>
                 <span style={{
                   fontSize: "0.7rem",
-                  fontWeight: "700",
+                  fontWeight: "800",
                   padding: "3px 10px",
                   borderRadius: "12px",
-                  backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.12)",
-                  color: isBonusActive ? "#10b981" : "var(--text-muted)"
+                  backgroundColor: isBonusActive ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
+                  color: isBonusActive ? "#059669" : "var(--text-muted)"
                 }}>
                   {isBonusActive ? "🟢 FITUR AKTIF" : "⚪ NON-AKTIF (DEFAULT)"}
                 </span>
@@ -177,7 +178,7 @@ export default function AdvancedToolsModal({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(310px, 1fr))", gap: "16px" }}>
               
               {/* Card 3A: Normalisasi Nilai */}
-              <div style={sectionCardStyle}>
+              <div style={{ ...sectionCardStyle, borderLeft: "5px solid #8b5cf6" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                   <span style={{ fontSize: "1.2rem" }}>📐</span>
                   <h4 style={sectionTitleStyle}>3. Normalisasi Nilai Akhir</h4>
@@ -201,7 +202,7 @@ export default function AdvancedToolsModal({
               </div>
 
               {/* Card 3B: Batas MaxCap */}
-              <div style={sectionCardStyle}>
+              <div style={{ ...sectionCardStyle, borderLeft: "5px solid #3b82f6" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                   <span style={{ fontSize: "1.2rem" }}>🔒</span>
                   <h4 style={sectionTitleStyle}>4. Batas Nilai Maksimal (MaxCap)</h4>
@@ -219,14 +220,15 @@ export default function AdvancedToolsModal({
                       type="button"
                       onClick={() => handleSaveMaxCap(preset)}
                       style={{
-                        padding: "3px 8px",
+                        padding: "4px 9px",
                         fontSize: "0.75rem",
                         borderRadius: "6px",
                         fontWeight: "700",
                         border: currentMaxCap === preset ? "1px solid var(--primary)" : "1px solid var(--border-color)",
-                        backgroundColor: currentMaxCap === preset ? "var(--primary)" : "var(--bg-primary)",
+                        backgroundColor: currentMaxCap === preset ? "var(--primary)" : "var(--bg-secondary)",
                         color: currentMaxCap === preset ? "#fff" : "var(--text-primary)",
-                        cursor: "pointer"
+                        cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
                       }}
                     >
                       {preset}
@@ -241,7 +243,7 @@ export default function AdvancedToolsModal({
                     max={100}
                     value={maxCapInput}
                     onChange={(e) => setMaxCapInput(e.target.value)}
-                    style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", fontWeight: "700", textAlign: "center", fontSize: "0.85rem" }}
+                    style={{ width: "70px", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border-color)", fontWeight: "700", textAlign: "center", fontSize: "0.85rem", backgroundColor: "var(--bg-secondary)" }}
                   />
                   <button
                     onClick={() => handleSaveMaxCap()}
@@ -293,9 +295,9 @@ const containerStyle = {
   padding: 0,
   overflow: "hidden",
   borderRadius: "16px",
-  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
   backgroundColor: "var(--bg-primary, #ffffff)",
-  border: "1px solid var(--border-color, #e2e8f0)"
+  border: "1px solid var(--border-color, #cbd5e1)"
 };
 
 const headerStyle = {
@@ -304,7 +306,7 @@ const headerStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  background: "linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%)",
+  background: "linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)",
   flexShrink: 0
 };
 
@@ -321,14 +323,16 @@ const closeBtnStyle = {
 const bodyStyle = {
   flex: 1,
   overflowY: "auto",
-  padding: "20px 24px"
+  padding: "20px 24px",
+  backgroundColor: "var(--bg-secondary, #f8fafc)"
 };
 
 const sectionCardStyle = {
-  padding: "16px 20px",
-  borderRadius: "12px",
-  backgroundColor: "var(--bg-secondary, #f8fafc)",
-  border: "1px solid var(--border-color, #e2e8f0)",
+  padding: "18px 20px",
+  borderRadius: "14px",
+  backgroundColor: "var(--bg-primary, #ffffff)",
+  border: "1px solid var(--border-color, #cbd5e1)",
+  boxShadow: "0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03)",
   display: "flex",
   flexDirection: "column"
 };
@@ -349,18 +353,18 @@ const cardDescStyle = {
 
 const badgeStyle = {
   fontSize: "0.7rem",
-  fontWeight: "700",
-  padding: "2px 8px",
-  borderRadius: "10px",
-  backgroundColor: "rgba(239, 68, 68, 0.1)",
-  color: "#ef4444"
+  fontWeight: "800",
+  padding: "3px 10px",
+  borderRadius: "12px",
+  backgroundColor: "rgba(239, 68, 68, 0.12)",
+  color: "#dc2626"
 };
 
 const infoBoxStyle = {
   backgroundColor: "rgba(59, 130, 246, 0.08)",
   border: "1px solid rgba(59, 130, 246, 0.2)",
-  borderRadius: "8px",
-  padding: "8px 12px",
+  borderRadius: "10px",
+  padding: "9px 13px",
   marginTop: "10px",
   fontSize: "0.74rem",
   color: "var(--text-secondary)",
@@ -371,9 +375,9 @@ const selectStyle = {
   fontSize: "0.8rem",
   padding: "8px 12px",
   borderRadius: "8px",
-  backgroundColor: "var(--bg-primary)",
+  backgroundColor: "var(--bg-secondary, #f8fafc)",
   color: "var(--text-primary)",
-  border: "1px solid var(--border-color)",
+  border: "1px solid var(--border-color, #cbd5e1)",
   width: "100%"
 };
 
@@ -382,7 +386,7 @@ const footerStyle = {
   borderTop: "1px solid var(--border-color, #e2e8f0)",
   display: "flex",
   justifyContent: "flex-end",
-  backgroundColor: "var(--bg-secondary, #f8fafc)",
+  backgroundColor: "var(--bg-primary, #ffffff)",
   flexShrink: 0
 };
 
@@ -390,7 +394,7 @@ const btnSecondaryStyle = {
   padding: "8px 22px",
   borderRadius: "8px",
   border: "1px solid var(--border-color, #cbd5e1)",
-  backgroundColor: "var(--bg-primary, #ffffff)",
+  backgroundColor: "var(--bg-secondary, #f8fafc)",
   color: "var(--text-primary)",
   fontSize: "0.85rem",
   fontWeight: "600",
