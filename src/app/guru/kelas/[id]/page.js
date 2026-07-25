@@ -229,8 +229,9 @@ export default function DetailKelas({ params: paramsPromise }) {
     if (typeof window !== "undefined") {
       const saved = sessionStorage.getItem("panelKontrolExpanded");
       if (saved !== null) return saved === "true";
+      return window.innerWidth >= 768; // Otomatis tertutup di mobile (< 768px) agar tabel langsung terlihat
     }
-    return true; // default terbuka saat pertama kali
+    return true;
   });
 
   useEffect(() => {
@@ -3685,6 +3686,39 @@ export default function DetailKelas({ params: paramsPromise }) {
               <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>{panelKontrolExpanded ? "▲" : "▼"}</span>
             </button>
           </div>
+
+          {!panelKontrolExpanded && (
+            <div style={{ display: "flex", gap: "8px", flexWrap: "nowrap", overflowX: "auto", paddingTop: "8px", borderTop: "1px dashed var(--border-color)" }}>
+              <button 
+                onClick={() => { setConfigModalTab('aspek'); setKolomModalOpen(true); }} 
+                className="btn btn-outline" 
+                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", whiteSpace: "nowrap" }}
+              >
+                ⚙️ Aspek & KKM
+              </button>
+              <button 
+                onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
+                className="btn btn-secondary" 
+                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", whiteSpace: "nowrap" }}
+              >
+                📊 Kelola Siswa
+              </button>
+              <button 
+                onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
+                className="btn btn-secondary" 
+                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", whiteSpace: "nowrap" }}
+              >
+                🖨️ Cetak & Ekspor
+              </button>
+              <button 
+                onClick={() => setAdvancedToolsModalOpen(true)}
+                className="btn btn-secondary" 
+                style={{ fontSize: "0.75rem", padding: "4px 10px", borderRadius: "6px", backgroundColor: "rgba(139, 92, 246, 0.12)", color: "#7c3aed", borderColor: "rgba(139, 92, 246, 0.3)", fontWeight: "600", whiteSpace: "nowrap" }}
+              >
+                🧪 Pengaturan Lanjutan
+              </button>
+            </div>
+          )}
 
           {panelKontrolExpanded && (
             <>
