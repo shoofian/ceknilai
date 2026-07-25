@@ -3800,12 +3800,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                         );
                       })}
 
-                      {/* Optional Dedicated Column for Star Bonus (Bonus Keaktifan) */}
+                      {/* Optional Dedicated Column for Star Bonus */}
                       {kelas.skemaPenilaian?.enableBonusStars && (
-                        <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "105px", minWidth: "105px", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 21 }}>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                        <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "95px", minWidth: "95px", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 21 }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                             <span style={{ fontWeight: "700", color: "#d97706" }}>⭐ Bonus</span>
-                            <span style={{ fontSize: "0.65rem", color: "var(--text-secondary)", fontWeight: "500" }}>Keaktifan</span>
                           </div>
                         </th>
                       )}
