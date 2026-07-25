@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function AdvancedToolsModal({
   isOpen,
@@ -12,7 +13,12 @@ export default function AdvancedToolsModal({
   onToggleBonusStars,
   onUpdateSkema
 }) {
+  const [mounted, setMounted] = useState(false);
   const [maxCapInput, setMaxCapInput] = useState(kelas.skemaPenilaian?.maxCap ?? 100);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (kelas && kelas.skemaPenilaian) {
@@ -20,7 +26,7 @@ export default function AdvancedToolsModal({
     }
   }, [kelas, isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const isBonusActive = !!kelas.skemaPenilaian?.enableBonusStars;
   const currentMaxCap = kelas.skemaPenilaian?.maxCap ?? 100;
@@ -33,10 +39,10 @@ export default function AdvancedToolsModal({
     }
   };
 
-  return (
-    <div className="modal-backdrop no-print" onClick={onClose} style={backdropStyle}>
+  const modalContent = (
+    <div className="no-print" onClick={onClose} style={backdropStyle}>
       <div
-        className="modal-content animate-fade-in"
+        className="glass-card animate-fade-in"
         onClick={(e) => e.stopPropagation()}
         style={containerStyle}
       >
@@ -206,36 +212,34 @@ export default function AdvancedToolsModal({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(modalContent, document.body) : null;
 }
 
 const backdropStyle = {
   position: "fixed",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
+  inset: 0,
   backgroundColor: "rgba(0, 0, 0, 0.65)",
   backdropFilter: "blur(6px)",
-  zIndex: 10000,
+  zIndex: 100000,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "16px",
-  overflowY: "auto"
+  padding: "16px"
 };
 
 const containerStyle = {
-  backgroundColor: "var(--bg-primary, #ffffff)",
-  borderRadius: "16px",
-  width: "95%",
-  maxWidth: "820px",
-  maxHeight: "85vh",
+  width: "100%",
+  maxWidth: "760px",
+  maxHeight: "90vh",
   display: "flex",
   flexDirection: "column",
-  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
-  border: "1px solid var(--border-color, #e2e8f0)",
+  padding: 0,
   overflow: "hidden",
-  position: "relative"
+  borderRadius: "16px",
+  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)",
+  backgroundColor: "var(--bg-primary, #ffffff)",
+  border: "1px solid var(--border-color, #e2e8f0)"
 };
 
 const headerStyle = {
@@ -264,7 +268,7 @@ const bodyStyle = {
 
 const gridStyle = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(290px, 1fr))",
   gap: "16px"
 };
 

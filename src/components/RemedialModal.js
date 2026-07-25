@@ -18,7 +18,7 @@ export default function RemedialModal({
   const [kkm, setKkm] = useState(75);
 
   // Local state for edits
-  // Object keyed by student NISN: { remedialTes: number|string, bonusPoin: number|string, catatan: string }
+  // Object keyed by student NISN: { remedialTes: number|string, catatan: string }
   const [remedialData, setRemedialData] = useState({});
 
   useEffect(() => {
@@ -35,14 +35,11 @@ export default function RemedialModal({
       const initialData = {};
       siswaList.forEach((s) => {
         const keyRemedial = `${kolom.id}_remedial`;
-        const keyBonus = `${kolom.id}_bonus`;
         const remObj = s.nilai?.[keyRemedial] || {};
-        const bonusObj = s.nilai?.[keyBonus] || {};
 
         initialData[s.nisn] = {
           remedialTes: remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
-          bonusPoin: bonusObj.poin !== undefined ? bonusObj.poin : "",
-          catatan: remObj.catatan || bonusObj.catatan || ""
+          catatan: remObj.catatan || ""
         };
       });
       setRemedialData(initialData);
@@ -83,13 +80,6 @@ export default function RemedialModal({
     return Math.min(finalVal, maxCap);
   };
 
-  const computeBonusFinal = (nilaiAwal, bonusInput) => {
-    const awal = Number(nilaiAwal) || 0;
-    const bonus = Number(bonusInput) || 0;
-    const total = awal + bonus;
-    return Math.min(total, maxCap);
-  };
-
   // Group students: candidates based on original pre-remedial grade
   const siswaRemedial = siswaList.filter((s) => getOriginalGrade(s) < kkm);
   const siswaPengayaan = siswaList.filter((s) => getOriginalGrade(s) >= kkm);
@@ -111,7 +101,6 @@ export default function RemedialModal({
       const newNilai = { ...(s.nilai || {}) };
 
       const keyRemedial = `${kolom.id}_remedial`;
-      const keyBonus = `${kolom.id}_bonus`;
 
       if (awal < kkm && data.remedialTes !== "" && data.remedialTes !== null) {
         const finalRem = computeRemedialFinal(awal, data.remedialTes);
@@ -124,18 +113,14 @@ export default function RemedialModal({
           catatan: data.catatan || "Telah mengikuti tes remedial",
           tanggal: s.nilai?.[keyRemedial]?.tanggal || new Date().toISOString().split("T")[0]
         };
-      }
-
-      if (data.bonusPoin !== "" && Number(data.bonusPoin) > 0) {
-        const currentVal = newNilai[kolom.id] !== undefined ? Number(newNilai[kolom.id]) : awal;
-        const finalWithBonus = computeBonusFinal(currentVal, data.bonusPoin);
-        newNilai[kolom.id] = finalWithBonus;
-        newNilai[keyBonus] = {
-          poin: Number(data.bonusPoin),
-          nilaiAwal: currentVal,
-          nilaiAkhir: finalWithBonus,
-          catatan: data.catatan || "Bonus keaktifan kelas",
-          tanggal: s.nilai?.[keyBonus]?.tanggal || new Date().toISOString().split("T")[0]
+      } else if (awal >= kkm && data.catatan) {
+        newNilai[keyRemedial] = {
+          nilaiAwal: awal,
+          nilaiTes: awal,
+          nilaiAkhir: awal,
+          status: "PENGAYAAN",
+          catatan: data.catatan || "Mengikuti Program Pengayaan",
+          tanggal: new Date().toISOString().split("T")[0]
         };
       }
 
@@ -166,7 +151,7 @@ export default function RemedialModal({
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <span style={{ fontSize: "1.3rem" }}>✨</span>
               <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700", color: "var(--text-primary)" }}>
-                Program Remedial, Pengayaan & Bonus
+                Program Remedial & Pengayaan
               </h3>
             </div>
             <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
@@ -218,7 +203,7 @@ export default function RemedialModal({
             onClick={() => setActiveTab("pengayaan")}
             style={tabButtonStyle(activeTab === "pengayaan", "#10b981")}
           >
-            🟢 Pengayaan & Bonus Keaktifan ({siswaPengayaan.length} Siswa ≥ KKM)
+            🟢 Program Pengayaan ({siswaPengayaan.length} Siswa ≥ KKM)
           </button>
         </div>
 
@@ -243,7 +228,7 @@ export default function RemedialModal({
                       <th style={{ ...thStyle, textAlign: "center" }}>Nilai Tes Remedial</th>
                       <th style={{ ...thStyle, textAlign: "center" }}>Nilai Akhir Hasil</th>
                       <th style={thStyle}>Status Remedial</th>
-                      <th style={thStyle}>Catatan / Tanggal</th>
+                      <th style={thStyle}>Catatan / Materi</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -326,7 +311,7 @@ export default function RemedialModal({
           {activeTab === "pengayaan" && (
             <div>
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
-                Berikan <strong>Poin Bonus Keaktifan (+ Poin)</strong> untuk siswa aktif. Hasil akhir akan dikunci otomatis pada <strong>MaxCap ({maxCap})</strong>.
+                Program Pengayaan diperuntukkan bagi siswa yang telah mencapai KKM ({kkm}). Rekam aktivitas pendalaman materi dan tugas khusus di bawah ini.
               </p>
               {siswaPengayaan.length === 0 ? (
                 <div style={emptyStateStyle}>
@@ -338,17 +323,14 @@ export default function RemedialModal({
                     <tr>
                       <th style={thStyle}>No</th>
                       <th style={thStyle}>Nama Siswa</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Awal</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Poin Bonus (+Poin)</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Pratinjau Nilai Akhir</th>
-                      <th style={thStyle}>Apresiasi / Catatan Keaktifan</th>
+                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Murni</th>
+                      <th style={thStyle}>Materi / Bentuk Pengayaan</th>
+                      <th style={thStyle}>Catatan Guru</th>
                     </tr>
                   </thead>
                   <tbody>
                     {siswaPengayaan.map((s, idx) => {
                       const awal = getOriginalGrade(s);
-                      const bonusInput = remedialData[s.nisn]?.bonusPoin;
-                      const finalVal = computeBonusFinal(awal, bonusInput);
 
                       return (
                         <tr key={s.nisn} style={trStyle}>
@@ -357,71 +339,30 @@ export default function RemedialModal({
                             <strong>{s.nama}</strong>
                             <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>NISN: {s.nisn}</div>
                           </td>
-                          <td style={{ ...tdStyle, textAlign: "center", fontWeight: "600" }}>
+                          <td style={{ ...tdStyle, textAlign: "center", fontWeight: "700", color: "#10b981" }}>
                             {awal}
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: "center" }}>
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-                              <input
-                                type="number"
-                                min={0}
-                                max={50}
-                                placeholder="+0 Poin"
-                                value={bonusInput ?? ""}
-                                onChange={(e) => handleInputChange(s.nisn, "bonusPoin", e.target.value)}
-                                style={{ ...tableInputStyle, borderColor: "#10b981", width: "90px" }}
-                              />
-                              {/* Quick Star Buttons */}
-                              <div style={{ display: "flex", gap: "2px" }}>
-                                {[1, 2, 3, 5].map((starCount) => (
-                                  <button
-                                    key={starCount}
-                                    type="button"
-                                    onClick={() => {
-                                      const current = Number(bonusInput) || 0;
-                                      handleInputChange(s.nisn, "bonusPoin", current + starCount * 2);
-                                    }}
-                                    style={{
-                                      padding: "1px 4px",
-                                      fontSize: "0.7rem",
-                                      borderRadius: "4px",
-                                      border: "1px solid #10b981",
-                                      backgroundColor: "rgba(16, 185, 129, 0.1)",
-                                      color: "#065f46",
-                                      cursor: "pointer",
-                                      fontWeight: "600"
-                                    }}
-                                    title={`Tambah ${starCount} Bintang (+${starCount * 2} Poin)`}
-                                  >
-                                    +{starCount}⭐
-                                  </button>
-                                ))}
-                              </div>
-                              {Number(bonusInput) > 0 && (
-                                <div style={{ fontSize: "0.75rem", color: "#f59e0b" }}>
-                                  {"⭐".repeat(Math.min(5, Math.max(1, Math.floor(Number(bonusInput) / 2))))}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: "center" }}>
-                            <span style={{ fontWeight: "800", fontSize: "1rem", color: "#10b981" }}>
-                              {finalVal}
-                            </span>
-                            {finalVal === maxCap && Number(bonusInput) > 0 && (
-                              <span style={{ fontSize: "0.65rem", display: "block", color: "var(--primary)" }}>
-                                (Capped @ {maxCap})
-                              </span>
-                            )}
                           </td>
                           <td style={tdStyle}>
                             <input
                               type="text"
-                              placeholder="Aktif menjawab, presentasi dll."
+                              placeholder="Pendalaman Materi / Project Mandiri"
                               value={remedialData[s.nisn]?.catatan || ""}
                               onChange={(e) => handleInputChange(s.nisn, "catatan", e.target.value)}
                               style={tableTextInputsStyle}
                             />
+                          </td>
+                          <td style={tdStyle}>
+                            <span style={{
+                              display: "inline-block",
+                              padding: "2px 8px",
+                              borderRadius: "12px",
+                              fontSize: "0.75rem",
+                              fontWeight: "700",
+                              backgroundColor: "rgba(16, 185, 129, 0.15)",
+                              color: "#10b981"
+                            }}>
+                              🟢 PENGAYAAN
+                            </span>
                           </td>
                         </tr>
                       );
