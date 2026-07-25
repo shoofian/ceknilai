@@ -2747,8 +2747,21 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "100%", maxWidth: "100%", overflowX: "auto", flexWrap: "nowrap", scrollbarWidth: "none" }}>
+      {/* Tab Navigation with Scroll Affordance */}
+      <div style={{
+        display: "flex",
+        gap: "6px",
+        backgroundColor: "var(--bg-secondary)",
+        padding: "4px 8px 4px 4px",
+        borderRadius: "var(--radius-md)",
+        border: "1px solid var(--border-color)",
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "auto",
+        flexWrap: "nowrap",
+        WebkitMaskImage: "linear-gradient(to right, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)",
+        maskImage: "linear-gradient(to right, rgba(0,0,0,1) 88%, rgba(0,0,0,0) 100%)"
+      }}>
         {[{ id: "nilai", label: "📊 Buku Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik & Peringkat" }, { id: "tindak-lanjut", label: "📢 Tindak Lanjut" }].map(tab => (
           <button
             key={tab.id}
@@ -3696,7 +3709,16 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
 
           {!panelKontrolExpanded && (
-            <div style={{ display: "flex", gap: "8px", flexWrap: "nowrap", overflowX: "auto", paddingTop: "8px", borderTop: "1px dashed var(--border-color)" }}>
+            <div style={{
+              display: "flex",
+              gap: "8px",
+              flexWrap: "nowrap",
+              overflowX: "auto",
+              paddingTop: "8px",
+              borderTop: "1px dashed var(--border-color)",
+              WebkitMaskImage: "linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)",
+              maskImage: "linear-gradient(to right, rgba(0,0,0,1) 85%, rgba(0,0,0,0) 100%)"
+            }}>
               <button 
                 onClick={() => { setConfigModalTab('aspek'); setKolomModalOpen(true); }} 
                 className="btn btn-outline" 
