@@ -3183,12 +3183,18 @@ export default function DetailKelas({ params: paramsPromise }) {
                 Kelola kehadiran siswa. Klik pada sel untuk mengubah status: <strong style={{color:"var(--success)"}}>H</strong> (Hadir), <strong style={{color:"var(--warning)"}}>I</strong> (Izin), <strong style={{color:"#3b82f6"}} >S</strong> (Sakit), <strong style={{color:"#8b5cf6"}}>D</strong> (Dispensasi), <strong style={{color:"var(--danger)"}}>A</strong> (Alpha).
               </p>
             </div>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "4px",
+              width: "100%",
+              marginTop: "4px"
+            }}>
               <button onClick={() => {
                 setPresensiConfigTemp(kelas.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 });
                 setPresensiModalOpen(true);
-              }} className="btn btn-outline" style={{ fontSize: "0.78rem", padding: "6px 12px", opacity: 0.85 }}>
-                ⚙️ Pengaturan
+              }} className="btn btn-outline" style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}>
+                ⚙️ Atur
               </button>
               <button 
                 onClick={() => {
@@ -3200,37 +3206,38 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }} 
                 className="btn" 
                 style={{ 
-                  fontSize: "0.78rem", 
-                  padding: "6px 12px",
+                  fontSize: "0.74rem", 
+                  padding: "6px 2px",
                   backgroundColor: "rgba(59, 130, 246, 0.08)",
                   color: "#3b82f6",
                   border: "1px solid rgba(59, 130, 246, 0.2)",
-                  borderRadius: "var(--radius-sm)",
+                  borderRadius: "6px",
                   cursor: "pointer",
-                  fontWeight: "600",
+                  fontWeight: "700",
                   display: "flex",
                   alignItems: "center",
-                  gap: "4px",
-                  transition: "all 0.2s",
-                  opacity: 0.85
+                  justifyContent: "center",
+                  whiteSpace: "nowrap",
+                  transition: "all 0.2s"
                 }}
               >
-                📷 Scan QR
+                📷 Scan
               </button>
               <button 
                 onClick={handleOpenAddPertemuan} 
                 className="btn btn-primary" 
                 style={{ 
-                  fontSize: "0.9rem", 
-                  padding: "10px 20px", 
-                  fontWeight: "800",
-                  boxShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
+                  fontSize: "0.74rem", 
+                  padding: "6px 2px", 
+                  fontWeight: "700",
+                  borderRadius: "6px",
                   display: "flex",
                   alignItems: "center",
-                  gap: "6px"
+                  justifyContent: "center",
+                  whiteSpace: "nowrap"
                 }}
               >
-                ➕ Tambah Pertemuan
+                ➕ Tambah
               </button>
             </div>
           </div>
