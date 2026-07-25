@@ -857,10 +857,19 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         });
       });
 
-      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual) + Nilai Katrol (jika ada)
-      const finalScore = totalNilaiTerisi + (Number(nilaiObj._katrol) || 0);
-      const finalScoreRounded = Number(finalScore.toFixed(2));
+      // Hitung Poin Bonus Keaktifan
+      let totalPoinBonus = 0;
+      if (skema.enableBonusStars) {
+        Object.keys(nilaiObj).forEach(k => {
+          if (k.endsWith("_bonus")) totalPoinBonus += (Number(nilaiObj[k]?.poin) || 0);
+        });
+      }
 
+      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual) + Nilai Katrol (jika ada) + Poin Bonus
+      const maxCap = Number(skema.maxCap) || 100;
+      const rawFinalScore = totalNilaiTerisi + (Number(nilaiObj._katrol) || 0) + totalPoinBonus;
+      const finalScore = Math.min(maxCap, rawFinalScore);
+      const finalScoreRounded = Number(finalScore.toFixed(2));
 
       // Tentukan Predikat berdasarkan Nilai Akhir sesuai Skema Penilaian
       let predikat = 'E';
@@ -992,6 +1001,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         detailNilai,
         nilaiAkhir: finalScoreRounded,
         katrol: Number(nilaiObj._katrol) || 0,
+        bonusStars: totalPoinBonus,
         predikat,
         statusKelulusan,
         kkm: skema.kkm,

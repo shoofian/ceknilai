@@ -664,6 +664,17 @@ export default function StudentPortal() {
                         </div>
                       )}
 
+                      {/* Info Bonus Keaktifan */}
+                      {res.skema?.enableBonusStars && res.bonusStars > 0 && (
+                        <div style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "var(--radius-sm)", padding: "12px 16px", marginBottom: "24px", display: "flex", alignItems: "center", gap: "12px", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.05)" }}>
+                          <span style={{ fontSize: "1.8rem" }}>⭐</span>
+                          <div>
+                            <h5 style={{ margin: "0 0 4px 0", fontSize: "0.95rem", fontWeight: "800", color: "var(--success)" }}>Apresiasi Keaktifan: +{res.bonusStars} Poin Bonus!</h5>
+                            <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>Selamat! Anda mendapatkan bintang keaktifan kelas. Tambahan {res.bonusStars} poin ini <strong>sudah otomatis ditambahkan</strong> ke dalam akumulasi Nilai Akhir Anda.</p>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Button Container for Actions */}
                       <div className="no-print" data-html2canvas-ignore="true" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", marginBottom: "30px", marginTop: "10px" }}>
                         {(!res.isLengkap || res.jumlahAspekTerisi < res.totalAspekCount) && (
