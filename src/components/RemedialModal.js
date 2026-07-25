@@ -353,15 +353,48 @@ export default function RemedialModal({
                             {awal}
                           </td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
-                            <input
-                              type="number"
-                              min={0}
-                              max={50}
-                              placeholder="+0"
-                              value={bonusInput ?? ""}
-                              onChange={(e) => handleInputChange(s.nisn, "bonusPoin", e.target.value)}
-                              style={{ ...tableInputStyle, borderColor: "#10b981" }}
-                            />
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                              <input
+                                type="number"
+                                min={0}
+                                max={50}
+                                placeholder="+0 Poin"
+                                value={bonusInput ?? ""}
+                                onChange={(e) => handleInputChange(s.nisn, "bonusPoin", e.target.value)}
+                                style={{ ...tableInputStyle, borderColor: "#10b981", width: "90px" }}
+                              />
+                              {/* Quick Star Buttons */}
+                              <div style={{ display: "flex", gap: "2px" }}>
+                                {[1, 2, 3, 5].map((starCount) => (
+                                  <button
+                                    key={starCount}
+                                    type="button"
+                                    onClick={() => {
+                                      const current = Number(bonusInput) || 0;
+                                      handleInputChange(s.nisn, "bonusPoin", current + starCount * 2);
+                                    }}
+                                    style={{
+                                      padding: "1px 4px",
+                                      fontSize: "0.7rem",
+                                      borderRadius: "4px",
+                                      border: "1px solid #10b981",
+                                      backgroundColor: "rgba(16, 185, 129, 0.1)",
+                                      color: "#065f46",
+                                      cursor: "pointer",
+                                      fontWeight: "600"
+                                    }}
+                                    title={`Tambah ${starCount} Bintang (+${starCount * 2} Poin)`}
+                                  >
+                                    +{starCount}⭐
+                                  </button>
+                                ))}
+                              </div>
+                              {Number(bonusInput) > 0 && (
+                                <div style={{ fontSize: "0.75rem", color: "#f59e0b" }}>
+                                  {"⭐".repeat(Math.min(5, Math.max(1, Math.floor(Number(bonusInput) / 2))))}
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
                             <span style={{ fontWeight: "800", fontSize: "1rem", color: "#10b981" }}>
