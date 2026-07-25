@@ -44,6 +44,7 @@ function mapKelasFromDb(k) {
       remedialPolicy: "max_kkm",
       maxCap: 100,
       cappingScope: "bonus_only",
+      enableBonusStars: false,
       ...(k.skema_penilaian || {})
     },
     kolomNilai: (k.kolom_nilai || []).map(col => {

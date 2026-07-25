@@ -2130,7 +2130,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  // === 1-CLICK QUICK STAR ⭐ FOR ACTIVE STUDENTS ===
+  // === 1-CLICK QUICK STAR ⭐ FOR ACTIVE STUDENTS (1 STAR = +1 POINT) ===
   const [starToast, setStarToast] = useState(null);
 
   const getStudentTotalStars = (student) => {
@@ -2141,7 +2141,31 @@ export default function DetailKelas({ params: paramsPromise }) {
         totalPoinBonus += Number(student.nilai[k]?.poin) || 0;
       }
     });
-    return Math.floor(totalPoinBonus / 2);
+    return Math.max(0, Math.floor(totalPoinBonus)); // 1 Star = 1 Point
+  };
+
+  const handleToggleEnableBonusStars = async () => {
+    const currentSkema = kelas.skemaPenilaian || {};
+    const newStatus = !currentSkema.enableBonusStars;
+    const updatedSkema = {
+      ...currentSkema,
+      enableBonusStars: newStatus
+    };
+
+    setKelas((prev) => ({
+      ...prev,
+      skemaPenilaian: updatedSkema
+    }));
+
+    try {
+      await fetch(`/api/kelas/${classId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skemaPenilaian: updatedSkema })
+      });
+    } catch (e) {
+      console.error("Gagal memperbarui status fitur bonus:", e);
+    }
   };
 
   const handleQuickAddStar = async (student) => {
@@ -2151,11 +2175,11 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     const currentBonusObj = student.nilai?.[keyBonus] || {};
     const currentPoin = Number(currentBonusObj.poin) || 0;
-    const newPoin = currentPoin + 2;
+    const newPoin = currentPoin + 1; // +1 Point per star
 
     const currentVal = Number(student.nilai?.[targetCol.id]) || 0;
     const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
-    const newNilaiVal = Math.min(currentVal + 2, maxCap);
+    const newNilaiVal = Math.min(currentVal + 1, maxCap);
 
     const updatedNilai = {
       ...(student.nilai || {}),
@@ -2164,7 +2188,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         poin: newPoin,
         nilaiAwal: currentVal,
         nilaiAkhir: newNilaiVal,
-        catatan: "Apresiasi Bintang Keaktifan Kelas ⭐",
+        catatan: "Apresiasi Bonus Keaktifan Kelas ⭐",
         tanggal: new Date().toISOString().split("T")[0]
       }
     };
@@ -2174,9 +2198,9 @@ export default function DetailKelas({ params: paramsPromise }) {
       siswa: prev.siswa.map((s) => (s.nisn === student.nisn ? { ...s, nilai: updatedNilai } : s))
     }));
 
-    const newStarCount = Math.floor(newPoin / 2);
+    const newStarCount = newPoin;
     const shortName = (student.nama || "Siswa").split(" ")[0];
-    setStarToast(`⭐ +1 Bintang untuk ${shortName}! (Total: ${newStarCount} ⭐)`);
+    setStarToast(`⭐ +1 Bonus (+1 Poin) untuk ${shortName}! (Total: ${newStarCount} ⭐)`);
     setTimeout(() => setStarToast(null), 2500);
 
     try {
@@ -2186,7 +2210,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         body: JSON.stringify({ nilai: updatedNilai })
       });
     } catch (e) {
-      console.error("Gagal simpan bintang:", e);
+      console.error("Gagal simpan bonus:", e);
     }
   };
 
@@ -2199,9 +2223,9 @@ export default function DetailKelas({ params: paramsPromise }) {
     const currentPoin = Number(currentBonusObj.poin) || 0;
     if (currentPoin <= 0) return;
 
-    const newPoin = Math.max(0, currentPoin - 2);
+    const newPoin = Math.max(0, currentPoin - 1); // -1 Point per star
     const currentVal = Number(student.nilai?.[targetCol.id]) || 0;
-    const newNilaiVal = Math.max(0, currentVal - 2);
+    const newNilaiVal = Math.max(0, currentVal - 1);
 
     const updatedNilai = {
       ...(student.nilai || {}),
@@ -2210,7 +2234,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         poin: newPoin,
         nilaiAwal: currentVal,
         nilaiAkhir: newNilaiVal,
-        catatan: "Penyesuaian Bintang Keaktifan Kelas ⭐",
+        catatan: "Penyesuaian Bonus Keaktifan Kelas ⭐",
         tanggal: new Date().toISOString().split("T")[0]
       }
     };
@@ -2220,9 +2244,9 @@ export default function DetailKelas({ params: paramsPromise }) {
       siswa: prev.siswa.map((s) => (s.nisn === student.nisn ? { ...s, nilai: updatedNilai } : s))
     }));
 
-    const newStarCount = Math.floor(newPoin / 2);
+    const newStarCount = newPoin;
     const shortName = (student.nama || "Siswa").split(" ")[0];
-    setStarToast(`⭐ Bintang ${shortName} diperbarui (Total: ${newStarCount} ⭐)`);
+    setStarToast(`⭐ Bonus ${shortName} diperbarui (Total: ${newStarCount} ⭐)`);
     setTimeout(() => setStarToast(null), 2500);
 
     try {
@@ -2232,7 +2256,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         body: JSON.stringify({ nilai: updatedNilai })
       });
     } catch (e) {
-      console.error("Gagal simpan bintang:", e);
+      console.error("Gagal simpan bonus:", e);
     }
   };
 
@@ -3629,21 +3653,26 @@ export default function DetailKelas({ params: paramsPromise }) {
             </span>
             <button
               onClick={() => setPanelKontrolExpanded(!panelKontrolExpanded)}
-              className="btn btn-outline"
               type="button"
               style={{
-                fontSize: "0.75rem",
-                padding: "4px 10px",
-                borderRadius: "6px",
-                borderColor: "var(--border-color)",
+                fontSize: "0.78rem",
+                padding: "6px 14px",
+                borderRadius: "20px",
+                border: "1px solid var(--primary)",
+                backgroundColor: panelKontrolExpanded ? "rgba(59, 130, 246, 0.1)" : "var(--primary)",
+                color: panelKontrolExpanded ? "var(--primary)" : "#ffffff",
                 cursor: "pointer",
                 fontWeight: "700",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "4px"
+                gap: "6px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                transition: "all 0.2s ease"
               }}
+              title={panelKontrolExpanded ? "Sembunyikan Panel Konfigurasi & Operasi" : "Buka Panel Konfigurasi & Operasi"}
             >
-              {panelKontrolExpanded ? "🔼 Sembunyikan Panel" : "🔽 Tampilkan Panel"}
+              <span>{panelKontrolExpanded ? "👁️ Sembunyikan Panel" : "👁️ Buka Panel Konfigurasi"}</span>
+              <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>{panelKontrolExpanded ? "▲" : "▼"}</span>
             </button>
           </div>
 
@@ -3754,13 +3783,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                         );
                       })}
 
-                      {/* Dedicated Column for Star Bonus (Bintang Keaktifan) */}
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "105px", minWidth: "105px", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 21 }}>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                          <span style={{ fontWeight: "700", color: "#d97706" }}>⭐ Bintang</span>
-                          <span style={{ fontSize: "0.65rem", color: "var(--text-secondary)", fontWeight: "500" }}>Keaktifan</span>
-                        </div>
-                      </th>
+                      {/* Optional Dedicated Column for Star Bonus (Bonus Keaktifan) */}
+                      {kelas.skemaPenilaian?.enableBonusStars && (
+                        <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "105px", minWidth: "105px", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 21 }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                            <span style={{ fontWeight: "700", color: "#d97706" }}>⭐ Bonus</span>
+                            <span style={{ fontSize: "0.65rem", color: "var(--text-secondary)", fontWeight: "500" }}>Keaktifan</span>
+                          </div>
+                        </th>
+                      )}
 
                       <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 21 }} onClick={() => handleSort('finalScore')}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
@@ -3915,57 +3946,59 @@ export default function DetailKelas({ params: paramsPromise }) {
                           });
                         })}
 
-                        {/* Dedicated Cell for Star Bonus (Bintang Keaktifan) */}
-                        <td style={{ textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.03)", padding: "6px 8px" }}>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", justifyContent: "center" }}>
-                            {getStudentTotalStars(student) > 0 && (
+                        {/* Optional Dedicated Cell for Star Bonus (Bonus Keaktifan) */}
+                        {kelas.skemaPenilaian?.enableBonusStars && (
+                          <td style={{ textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.03)", padding: "6px 8px" }}>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", justifyContent: "center" }}>
+                              {getStudentTotalStars(student) > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuickRemoveStar(student);
+                                  }}
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.12)",
+                                    border: "1px solid rgba(239, 68, 68, 0.4)",
+                                    borderRadius: "6px",
+                                    padding: "1px 5px",
+                                    cursor: "pointer",
+                                    fontSize: "0.75rem",
+                                    fontWeight: "800",
+                                    color: "#dc2626",
+                                    lineHeight: "1"
+                                  }}
+                                  title="Kurangi 1 Bonus (-1 ⭐)"
+                                >
+                                  -
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleQuickRemoveStar(student);
+                                  handleQuickAddStar(student);
                                 }}
                                 style={{
-                                  background: "rgba(239, 68, 68, 0.12)",
-                                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                                  background: "rgba(245, 158, 11, 0.15)",
+                                  border: "1px solid rgba(245, 158, 11, 0.4)",
                                   borderRadius: "6px",
-                                  padding: "1px 5px",
+                                  padding: "2px 8px",
                                   cursor: "pointer",
                                   fontSize: "0.75rem",
-                                  fontWeight: "800",
-                                  color: "#dc2626",
-                                  lineHeight: "1"
+                                  fontWeight: "700",
+                                  color: "#d97706",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "3px"
                                 }}
-                                title="Kurangi 1 Bintang (-1 ⭐)"
+                                title="Tambah 1 Bonus (+1 ⭐ = +1 Poin)"
                               >
-                                -
+                                ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
                               </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleQuickAddStar(student);
-                              }}
-                              style={{
-                                background: "rgba(245, 158, 11, 0.15)",
-                                border: "1px solid rgba(245, 158, 11, 0.4)",
-                                borderRadius: "6px",
-                                padding: "2px 8px",
-                                cursor: "pointer",
-                                fontSize: "0.75rem",
-                                fontWeight: "700",
-                                color: "#d97706",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "3px"
-                              }}
-                              title="Tambah 1 Bintang (+1 ⭐)"
-                            >
-                              ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
-                            </button>
-                          </div>
-                        </td>
+                            </div>
+                          </td>
+                        )}
 
                         {/* Weighted Final Score */}
                         <td 
@@ -4200,6 +4233,53 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Card 3: Fitur Poin Bonus Keaktifan (⭐) */}
+            <div className="glass-card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <span style={{ fontSize: "1.4rem" }}>⭐</span>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: 0 }}>Fitur Poin Bonus Keaktifan</h4>
+                    <span style={{
+                      fontSize: "0.68rem",
+                      fontWeight: "700",
+                      padding: "2px 8px",
+                      borderRadius: "10px",
+                      backgroundColor: kelas.skemaPenilaian?.enableBonusStars ? "rgba(16, 185, 129, 0.15)" : "rgba(100, 116, 139, 0.15)",
+                      color: kelas.skemaPenilaian?.enableBonusStars ? "#10b981" : "var(--text-muted)"
+                    }}>
+                      {kelas.skemaPenilaian?.enableBonusStars ? "🟢 Aktif" : "⚪ Non-Aktif (Default)"}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "6px 0 0 0", lineHeight: "1.4" }}>
+                    Memberikan poin apresiasi langsung untuk siswa yang aktif di kelas. <strong>Setiap 1 Bintang (⭐) bernilai +1 Poin</strong> pada nilai akhir (dibatasi MaxCap).
+                  </p>
+                </div>
+              </div>
+              <div style={{ marginTop: "auto", paddingTop: "8px" }}>
+                <button
+                  onClick={handleToggleEnableBonusStars}
+                  type="button"
+                  className={`btn ${kelas.skemaPenilaian?.enableBonusStars ? "btn-secondary" : "btn-primary"}`}
+                  style={{
+                    fontSize: "0.8rem",
+                    padding: "8px 14px",
+                    fontWeight: "700",
+                    width: "100%",
+                    justifyContent: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    borderColor: kelas.skemaPenilaian?.enableBonusStars ? "var(--border-color)" : "transparent",
+                    color: kelas.skemaPenilaian?.enableBonusStars ? "var(--text-primary)" : "#ffffff"
+                  }}
+                  disabled={isLocked || kelas?.archived}
+                >
+                  {kelas.skemaPenilaian?.enableBonusStars ? "⚪ Non-Aktifkan Fitur Bonus" : "🟢 Aktifkan Fitur Bonus (Tampilkan Kolom)"}
+                </button>
               </div>
             </div>
           </div>
