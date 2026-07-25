@@ -3802,6 +3802,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                         );
                       })}
 
+                      {/* Dedicated Column for Star Bonus (Bintang Keaktifan) */}
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "105px", minWidth: "105px", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 21 }}>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                          <span style={{ fontWeight: "700", color: "#d97706" }}>⭐ Bintang</span>
+                          <span style={{ fontSize: "0.65rem", color: "var(--text-secondary)", fontWeight: "500" }}>Keaktifan</span>
+                        </div>
+                      </th>
+
                       <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 21 }} onClick={() => handleSort('finalScore')}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
                           <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
@@ -3955,6 +3963,58 @@ export default function DetailKelas({ params: paramsPromise }) {
                           });
                         })}
 
+                        {/* Dedicated Cell for Star Bonus (Bintang Keaktifan) */}
+                        <td style={{ textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.03)", padding: "6px 8px" }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", justifyContent: "center" }}>
+                            {getStudentTotalStars(student) > 0 && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickRemoveStar(student);
+                                }}
+                                style={{
+                                  background: "rgba(239, 68, 68, 0.12)",
+                                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                                  borderRadius: "6px",
+                                  padding: "1px 5px",
+                                  cursor: "pointer",
+                                  fontSize: "0.75rem",
+                                  fontWeight: "800",
+                                  color: "#dc2626",
+                                  lineHeight: "1"
+                                }}
+                                title="Kurangi 1 Bintang (-1 ⭐)"
+                              >
+                                -
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickAddStar(student);
+                              }}
+                              style={{
+                                background: "rgba(245, 158, 11, 0.15)",
+                                border: "1px solid rgba(245, 158, 11, 0.4)",
+                                borderRadius: "6px",
+                                padding: "2px 8px",
+                                cursor: "pointer",
+                                fontSize: "0.75rem",
+                                fontWeight: "700",
+                                color: "#d97706",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px"
+                              }}
+                              title="Tambah 1 Bintang (+1 ⭐)"
+                            >
+                              ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
+                            </button>
+                          </div>
+                        </td>
+
                         {/* Weighted Final Score */}
                         <td 
                           onClick={() => {
@@ -4019,56 +4079,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                         {/* Row actions */}
                         <td style={{ textAlign: "center" }}>
-                          <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center" }}>
-                            {/* Interactive Star Control (Poin Bintang) */}
-                            <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid var(--border-color)", padding: "2px 4px", borderRadius: "8px", backgroundColor: "var(--bg-secondary)" }}>
-                              {getStudentTotalStars(student) > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuickRemoveStar(student);
-                                  }}
-                                  style={{
-                                    background: "rgba(239, 68, 68, 0.12)",
-                                    border: "1px solid rgba(239, 68, 68, 0.4)",
-                                    borderRadius: "6px",
-                                    padding: "1px 5px",
-                                    cursor: "pointer",
-                                    fontSize: "0.75rem",
-                                    fontWeight: "800",
-                                    color: "#dc2626",
-                                    lineHeight: "1"
-                                  }}
-                                  title="Kurangi 1 Bintang (-1 ⭐)"
-                                >
-                                  -
-                                </button>
-                              )}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleQuickAddStar(student);
-                                }}
-                                style={{
-                                  background: "rgba(245, 158, 11, 0.12)",
-                                  border: "1px solid rgba(245, 158, 11, 0.4)",
-                                  borderRadius: "6px",
-                                  padding: "2px 6px",
-                                  cursor: "pointer",
-                                  fontSize: "0.72rem",
-                                  fontWeight: "700",
-                                  color: "#d97706",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "2px"
-                                }}
-                                title="Tambah 1 Bintang (+1 ⭐)"
-                              >
-                                ⭐ {getStudentTotalStars(student) > 0 ? getStudentTotalStars(student) : "+"}
-                              </button>
-                            </div>
+                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
 
                             <div style={{ position: "relative" }}>
                               <button onClick={() => handleOpenHistory(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) ? 1 : 0.5 }} title="Lihat Riwayat Akses Siswa">
