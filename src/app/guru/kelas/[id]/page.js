@@ -330,6 +330,14 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [normMaxOnlyTarget, setNormMaxOnlyTarget] = useState(100);
   const [isSavingNorm, setIsSavingNorm] = useState(false);
 
+  useEffect(() => {
+    if (normModalOpen && kelas) {
+      const currentMaxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
+      setNormMaxTarget(currentMaxCap);
+      setNormMaxOnlyTarget(currentMaxCap);
+    }
+  }, [normModalOpen, kelas]);
+
   // State untuk Navigasi Panel Mobile di Modal Atur Aspek
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
 

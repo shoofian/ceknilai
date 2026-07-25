@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AdvancedToolsModal({
   isOpen,
@@ -13,6 +13,12 @@ export default function AdvancedToolsModal({
   onUpdateSkema
 }) {
   const [maxCapInput, setMaxCapInput] = useState(kelas.skemaPenilaian?.maxCap ?? 100);
+
+  useEffect(() => {
+    if (kelas && kelas.skemaPenilaian) {
+      setMaxCapInput(kelas.skemaPenilaian.maxCap ?? 100);
+    }
+  }, [kelas, isOpen]);
 
   if (!isOpen) return null;
 
@@ -136,7 +142,7 @@ export default function AdvancedToolsModal({
                     </span>
                   </div>
                   <p style={cardDescStyle}>
-                    Fitur Bonus Keaktifan (⭐) memberikan poin apresiasi langsung untuk siswa yang aktif di kelas. <strong>Setiap 1 Bintang (⭐) bernilai +1 Poin</strong> pada nilai akhir (dibatasi MaxCap).
+                    Fitur Bonus Keaktifan (⭐) memberikan poin apresiasi langsung untuk siswa yang aktif di kelas. <strong>Setiap 1 Bintang (⭐) bernilai +1 Poin</strong> pada nilai akhir (dibatasi MaxCap: {currentMaxCap}).
                   </p>
                 </div>
               </div>
@@ -164,7 +170,7 @@ export default function AdvancedToolsModal({
                 <div style={{ flex: 1 }}>
                   <h4 style={cardTitleStyle}>Batas Nilai Maksimal (MaxCap)</h4>
                   <p style={cardDescStyle}>
-                    Atur batas batas nilai tertinggi yang diperbolehkan di kelas (misal: 90, 95, atau 100).
+                    Atur batas nilai tertinggi yang diperbolehkan di kelas ini (misal: 90, 95, atau 100). Normalisasi & Bonus otomatis menyesuaikan MaxCap ini.
                   </p>
                 </div>
               </div>
@@ -208,26 +214,28 @@ const backdropStyle = {
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.6)",
+  backgroundColor: "rgba(0, 0, 0, 0.65)",
   backdropFilter: "blur(6px)",
-  zIndex: 9999,
+  zIndex: 10000,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  padding: "16px"
+  padding: "16px",
+  overflowY: "auto"
 };
 
 const containerStyle = {
   backgroundColor: "var(--bg-primary, #ffffff)",
   borderRadius: "16px",
-  width: "100%",
-  maxWidth: "780px",
-  maxHeight: "88vh",
+  width: "95%",
+  maxWidth: "820px",
+  maxHeight: "85vh",
   display: "flex",
   flexDirection: "column",
-  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.3)",
+  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
   border: "1px solid var(--border-color, #e2e8f0)",
-  overflow: "hidden"
+  overflow: "hidden",
+  position: "relative"
 };
 
 const headerStyle = {
@@ -236,7 +244,8 @@ const headerStyle = {
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
-  backgroundColor: "var(--bg-secondary, #f8fafc)"
+  backgroundColor: "var(--bg-secondary, #f8fafc)",
+  flexShrink: 0
 };
 
 const closeBtnStyle = {
@@ -255,7 +264,7 @@ const bodyStyle = {
 
 const gridStyle = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
   gap: "16px"
 };
 
@@ -310,7 +319,8 @@ const footerStyle = {
   borderTop: "1px solid var(--border-color, #e2e8f0)",
   display: "flex",
   justifyContent: "flex-end",
-  backgroundColor: "var(--bg-secondary, #f8fafc)"
+  backgroundColor: "var(--bg-secondary, #f8fafc)",
+  flexShrink: 0
 };
 
 const btnSecondaryStyle = {
