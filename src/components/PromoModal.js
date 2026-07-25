@@ -12,16 +12,30 @@ export default function PromoModal({ guru }) {
     if (!guru) return;
 
     try {
-      const guruKey = guru?.username
-        ? `has_seen_promo_advanced_features_v2_${guru.username}`
-        : "has_seen_promo_advanced_features_v2";
-      const hasSeenGuru = localStorage.getItem(guruKey);
-      const hasSeenGlobal = localStorage.getItem("has_seen_promo_advanced_features_v2");
+      const username = guru?.username || guru?.id || "guru_user";
+      const guruKey = `has_seen_promo_advanced_features_v2_${username}`;
+      const globalKey = "has_seen_promo_advanced_features_v2";
 
-      if (!hasSeenGuru && !hasSeenGlobal) {
-        // Tampilkan modal setelah delay halus saat halaman pertama dimuat
+      const hasSeenGuru = localStorage.getItem(guruKey);
+      const hasSeenGlobal = localStorage.getItem(globalKey);
+      const hasCookie = typeof document !== "undefined" && document.cookie.includes(`${guruKey}=true`);
+
+      // Hanya tampilkan jika belum pernah dilihat sama sekali
+      if (!hasSeenGuru && !hasSeenGlobal && !hasCookie) {
         const timer = setTimeout(() => {
           setIsOpen(true);
+          
+          // LANGSUNG KUNCI STATUS PERNAH DILIHAT (Seketika saat modal tampil)
+          try {
+            localStorage.setItem(guruKey, "true");
+            localStorage.setItem(globalKey, "true");
+            if (typeof document !== "undefined") {
+              document.cookie = `${guruKey}=true; max-age=31536000; path=/`;
+            }
+          } catch (err) {
+            console.error("Storage lock error:", err);
+          }
+
         }, 600);
         return () => clearTimeout(timer);
       }
@@ -34,11 +48,15 @@ export default function PromoModal({ guru }) {
     setIsClosing(true);
     setTimeout(() => {
       try {
-        const guruKey = guru?.username
-          ? `has_seen_promo_advanced_features_v2_${guru.username}`
-          : "has_seen_promo_advanced_features_v2";
+        const username = guru?.username || guru?.id || "guru_user";
+        const guruKey = `has_seen_promo_advanced_features_v2_${username}`;
+        const globalKey = "has_seen_promo_advanced_features_v2";
+
         localStorage.setItem(guruKey, "true");
-        localStorage.setItem("has_seen_promo_advanced_features_v2", "true");
+        localStorage.setItem(globalKey, "true");
+        if (typeof document !== "undefined") {
+          document.cookie = `${guruKey}=true; max-age=31536000; path=/`;
+        }
       } catch (e) {
         console.error("LocalStorage save error:", e);
       }
