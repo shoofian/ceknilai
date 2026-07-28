@@ -1027,22 +1027,18 @@ input[type="date"].form-input {
     color: #000000 !important;
   }
 
-  body.print-portrait-mode * {
-    visibility: hidden;
-  }
-  
-  body.print-portrait-mode #printable-khs-area,
-  body.print-portrait-mode #printable-khs-area * {
-    visibility: visible;
-  }
-  
-  body.print-portrait-mode #printable-khs-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 0;
+  body.print-portrait-mode .sidebar,
+  body.print-portrait-mode .sidebar-container,
+  body.print-portrait-mode .header,
+  body.print-portrait-mode .btn,
+  body.print-portrait-mode .mobile-header,
+  body.print-portrait-mode .no-print,
+  body.print-portrait-mode #printable-area,
+  body.print-portrait-mode nav,
+  body.print-portrait-mode .page-title-section,
+  body.print-portrait-mode footer,
+  body.print-portrait-mode div[style*="position: fixed"] {
+    display: none !important;
   }
 
   body.print-portrait-mode #printable-khs-area {

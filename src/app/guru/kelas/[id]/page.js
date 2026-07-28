@@ -2447,9 +2447,18 @@ export default function DetailKelas({ params: paramsPromise }) {
         
         // Parse header
         const headers = rows[0].map(h => String(h).trim());
-        const nisnIdx = headers.indexOf("NISN");
-        const namaIdx = headers.indexOf("Nama");
-        const tglIdx = headers.indexOf("Tanggal Lahir (YYYY-MM-DD)");
+        const nisnIdx = headers.findIndex(h => {
+          const l = h.toLowerCase().trim();
+          return l === "nisn" || l === "no induk siswa nasional" || l === "nomor induk siswa nasional";
+        });
+        const namaIdx = headers.findIndex(h => {
+          const l = h.toLowerCase().trim();
+          return l === "nama" || l === "nama siswa" || l === "nama lengkap" || l === "nama peserta didik";
+        });
+        const tglIdx = headers.findIndex(h => {
+          const l = h.toLowerCase().trim();
+          return l.includes("tanggal lahir") || l.includes("tgl lahir");
+        });
         
         if (nisnIdx === -1 || namaIdx === -1) {
           alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: NISN, Nama");

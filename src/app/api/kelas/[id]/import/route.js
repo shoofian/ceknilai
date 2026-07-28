@@ -182,7 +182,7 @@ export async function POST(request, { params }) {
         currentStudents[existingIndex] = {
           ...currentStudents[existingIndex],
           nama: cleanNama,
-          tanggalLahir: cleanTanggal,
+          tanggalLahir: cleanTanggal || currentStudents[existingIndex].tanggalLahir,
           // Merge nilai: pertahankan nilai lama jika kolom baru tidak ada di Excel
           nilai: {
             ...currentStudents[existingIndex].nilai,
