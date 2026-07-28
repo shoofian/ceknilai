@@ -2471,6 +2471,57 @@ export default function DetailKelas({ params: paramsPromise }) {
           return l === "rombel" || l === "rombongan belajar" || l === "kelas" || l.includes("rombel") || l.includes("rombongan belajar") || l.includes("kelas");
         });
         
+        // === Helper: normalize all known Dapodik/Excel date formats to YYYY-MM-DD ===
+        const BULAN_ID_CLIENT = {
+          januari: "01", februari: "02", maret: "03", april: "04",
+          mei: "05", juni: "06", juli: "07", agustus: "08",
+          september: "09", oktober: "10", november: "11", desember: "12",
+        };
+
+        const normalizeTanggal = (raw) => {
+          if (!raw && raw !== 0) return "";
+          const s = String(raw).trim();
+          if (!s || s === "-") return "";
+
+          // Already YYYY-MM-DD
+          if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+          // DD/MM/YYYY or DD-MM-YYYY
+          const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+          if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,"0")}-${dmy[1].padStart(2,"0")}`;
+
+          // YYYY/MM/DD
+          const ymd = s.match(/^(\d{4})[\/](\d{1,2})[\/](\d{1,2})$/);
+          if (ymd) return `${ymd[1]}-${ymd[2].padStart(2,"0")}-${ymd[3].padStart(2,"0")}`;
+
+          // Excel serial number (pure integer, e.g. 40200)
+          if (/^\d+$/.test(s)) {
+            const serial = parseInt(s, 10);
+            if (serial > 1 && serial < 80000) {
+              const epoch = new Date(Date.UTC(1899, 11, 30));
+              const d = new Date(epoch.getTime() + serial * 86400000);
+              if (!isNaN(d.getTime())) {
+                return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
+              }
+            }
+          }
+
+          // Indonesian long format: "15 Januari 2009"
+          const idLong = s.match(/^(\d{1,2})\s+([a-zA-Z]+)\s+(\d{4})$/);
+          if (idLong) {
+            const m = BULAN_ID_CLIENT[idLong[2].toLowerCase()];
+            if (m) return `${idLong[3]}-${m}-${idLong[1].padStart(2,"0")}`;
+          }
+
+          // Fallback
+          const parsed = new Date(s);
+          if (!isNaN(parsed.getTime())) {
+            return `${parsed.getFullYear()}-${String(parsed.getMonth()+1).padStart(2,"0")}-${String(parsed.getDate()).padStart(2,"0")}`;
+          }
+
+          return s; // return as-is, server will re-attempt parsing
+        };
+
         const parsedSiswa = [];
         const warnings = [];
         
@@ -2484,7 +2535,8 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           const nisnVal = nisnIdx !== -1 && cols[nisnIdx] !== undefined ? String(cols[nisnIdx]).replace(/[,.\s]/g, "").trim() : "";
           const namaVal = namaIdx !== -1 && cols[namaIdx] !== undefined ? String(cols[namaIdx]).trim() : "";
-          const tglVal = tglIdx !== -1 && cols[tglIdx] !== undefined ? String(cols[tglIdx]).trim() : "";
+          const tglRaw = tglIdx !== -1 && cols[tglIdx] !== undefined ? cols[tglIdx] : "";
+          const tglVal = normalizeTanggal(tglRaw);
           const rombelVal = rombelIdx !== -1 && cols[rombelIdx] !== undefined ? String(cols[rombelIdx]).trim() : "";
 
           // Pengecekan data tidak lengkap
