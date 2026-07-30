@@ -37,7 +37,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Nama kelompok harus diisi' }, { status: 400 });
     }
     if (!Array.isArray(colIds) || colIds.length < 2) {
-      return NextResponse.json({ error: 'Pilih minimal 2 aspek untuk digabung' }, { status: 400 });
+      return NextResponse.json({ error: 'Pilih minimal 2 komponen untuk digabung' }, { status: 400 });
     }
 
     const kelas = await getKelasById(id, username);
@@ -64,7 +64,7 @@ export async function POST(request, { params }) {
     // Hitung total bobot dari kolom-kolom terpilih
     const totalBobot = selectedCols.reduce((sum, col) => sum + (Number(col.bobot) || 0), 0);
 
-    // Normalisasi bobot sub-aspek: proporsional terhadap total bobot kelompok
+    // Normalisasi bobot sub-komponen: proporsional terhadap total bobot kelompok
     // Misalnya KD3.1 = 20%, KD3.2 = 30% → dalam grup: 40%, 60%
     const subKolom = selectedCols.map(col => {
       const bobotAsli = Number(col.bobot) || 0;

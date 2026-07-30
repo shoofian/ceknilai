@@ -504,10 +504,10 @@ export default function StudentPortal() {
                               <div style={{ width: `${Math.min(res.nilaiAkhir, 100)}%`, height: "100%", backgroundColor: res.nilaiAkhir >= res.kkm ? "var(--success)" : "var(--danger)", borderRadius: "99px" }}></div>
                             </div>
 
-                            {/* Progress Aspek Terisi */}
+                            {/* Progress Komponen Terisi */}
                             {res.totalAspekCount > 0 && (
                               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                                <span>Progres Aspek Terisi:</span>
+                                <span>Progres Komponen Terisi:</span>
                                 <span style={{ fontWeight: "700", color: res.jumlahAspekTerisi === res.totalAspekCount ? "var(--success)" : "var(--text-secondary)" }}>
                                   {res.jumlahAspekTerisi} / {res.totalAspekCount} ({res.totalBobotTerisi}% Bobot)
                                 </span>
@@ -562,7 +562,7 @@ export default function StudentPortal() {
                   let displayPredikat = res.predikat;
                   let isSimulated = false;
                   
-                  // Hanya jalankan simulasi jika ada aspek kosong atau nilai akhir belum dipublish
+                  // Hanya jalankan simulasi jika ada komponen kosong atau nilai akhir belum dipublish
                   let simTotalNilai = 0;
                   let simTotalBobot = 0;
                   
@@ -800,7 +800,7 @@ export default function StudentPortal() {
                           <tbody>
                             {res.detailNilai.map((col) => (
                               <>
-                                {/* Baris aspek utama / grup */}
+                                {/* Baris komponen utama / grup */}
                                 <tr key={col.kolomId} style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: "none" } : {}}>
                                   <td style={{ fontWeight: col.isGroup ? "800" : "600" }}>
                                     {col.isGroup && <span style={{ fontSize: "0.7rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid var(--primary)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>GRUP</span>}
@@ -824,7 +824,7 @@ export default function StudentPortal() {
                                   </td>
                                 </tr>
 
-                                {/* Baris sub-aspek (indent, hanya jika isGroup) */}
+                                {/* Baris sub-komponen (indent, hanya jika isGroup) */}
                                 {col.isGroup && col.subDetail?.map((sub) => (
                                   <tr key={sub.subId} style={{ backgroundColor: "var(--bg-secondary)", opacity: 0.9 }}>
                                     <td style={{ paddingLeft: "2.5rem", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", borderLeft: "3px solid var(--primary)" }}>
@@ -935,7 +935,7 @@ export default function StudentPortal() {
                                     
                                   return (
                                     <Fragment key={col.kolomId}>
-                                      {/* Baris Aspek Utama */}
+                                      {/* Baris Komponen Utama */}
                                       <tr style={col.isGroup ? { fontWeight: "bold" } : {}}>
                                         <td style={{ textAlign: "center" }}>{idx + 1}</td>
                                         <td style={{ textAlign: "left" }}>
@@ -956,7 +956,7 @@ export default function StudentPortal() {
                                         </td>
                                       </tr>
 
-                                      {/* Baris Sub-aspek jika merupakan Grup */}
+                                      {/* Baris sub-komponen jika merupakan Grup */}
                                       {col.isGroup && col.subDetail?.map((sub) => {
                                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= res.kkm;
                                         const subKet = sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas";
@@ -1305,7 +1305,7 @@ export default function StudentPortal() {
                                 col.subDetail.forEach(sub => {
                                   if (sub.nilaiAsli !== null && typeof sub.nilaiAsli === 'number') {
                                     chartItems.push({
-                                      nama: `${aspectName} - ${sub.nama || "Sub-Aspek"}`,
+                                      nama: `${aspectName} - ${sub.nama || "sub-komponen"}`,
                                       nilaiAsli: sub.nilaiAsli,
                                       bobot: sub.bobot,
                                       isSub: true
@@ -1332,7 +1332,7 @@ export default function StudentPortal() {
                                       <div>
                                         <h4 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#e2e8f0" }}>{col.nama}</h4>
                                         <p style={{ margin: "6px 0 0 0", fontSize: "1rem", color: "#64748b", fontWeight: "600" }}>
-                                          {col.isSub ? `Sub-Aspek (Bobot ${col.bobot}%)` : `Bobot {col.bobot}%`}
+                                          {col.isSub ? `sub-komponen (Bobot ${col.bobot}%)` : `Bobot {col.bobot}%`}
                                         </p>
                                       </div>
                                       <div style={{ 
@@ -1448,7 +1448,7 @@ export default function StudentPortal() {
                                         <div>
                                           <p style={{ margin: 0, fontSize: "1rem", color: "#cbd5e1", fontWeight: "600" }}>{col.nama}</p>
                                           <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", fontWeight: "500" }}>
-                                            {col.isSub ? `Sub-Aspek (Bobot ${col.bobot}%)` : `Bobot ${col.bobot}%`}
+                                            {col.isSub ? `sub-komponen (Bobot ${col.bobot}%)` : `Bobot ${col.bobot}%`}
                                           </p>
                                         </div>
                                       </div>

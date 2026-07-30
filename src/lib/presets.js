@@ -103,7 +103,7 @@ export const ASPEK_PRESETS = [
   },
   {
     id: "equal-weight",
-    nama: "⚖️ Bobot Rata (3 Aspek Seimbang)",
+    nama: "⚖️ Bobot Rata (3 Komponen Seimbang)",
     deskripsi: "33% Tugas & Harian + 33% UTS + 34% UAS",
     kolomNilai: [
       {

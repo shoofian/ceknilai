@@ -13,7 +13,7 @@ export default function ArsipKelas() {
   const [selectedSemester, setSelectedSemester] = useState("Semua");
   const [selectedMataPelajaran, setSelectedMataPelajaran] = useState("Semua");
   const [selectedTingkatan, setSelectedTingkatan] = useState("Semua");
-  const TINGKATAN_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+  const TINGKATAN_OPTIONS = [...Array.from({ length: 12 }, (_, i) => i + 1), "Ekskul"];
  
   const fetchArchivedKelas = async () => {
     try {
@@ -185,7 +185,7 @@ export default function ArsipKelas() {
                     </div>
                     <h3 style={{ fontSize: "1.4rem", fontWeight: "700" }}>{k.nama}</h3>
                     <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", marginTop: "6px" }}>
-                      👨‍🎓 <strong>{k.siswa?.length || 0}</strong> siswa terdaftar &bull; 🏷️ <strong>{k.kolomNilai?.length || 0}</strong> aspek penilaian
+                      👨‍🎓 <strong>{k.siswa?.length || 0}</strong> siswa terdaftar &bull; 🏷️ <strong>{k.kolomNilai?.length || 0}</strong> komponen nilai
                     </p>
                   </div>
  

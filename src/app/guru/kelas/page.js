@@ -31,7 +31,7 @@ export default function KelolaKelas() {
   const [activeDropdownId, setActiveDropdownId] = useState(null);
 
   // Dropdown Constants
-  const TINGKATAN_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+  const TINGKATAN_OPTIONS = [...Array.from({ length: 12 }, (_, i) => i + 1), "Ekskul"];
   const MATA_PELAJARAN_OPTIONS = [
     "Informatika", "Koding & AI", "Matematika", "Matematika Tingkat Lanjut",
     "Bahasa Indonesia", "Bahasa Indonesia Tingkat Lanjut", "Bahasa Inggris", "Bahasa Inggris Tingkat Lanjut",
@@ -42,7 +42,7 @@ export default function KelolaKelas() {
     "Pendidikan Agama Hindu", "Pendidikan Agama Buddha", "Pendidikan Agama Konghucu",
     "Seni Budaya", "Seni Musik", "Seni Rupa", "Seni Tari", "Seni Teater",
     "PJOK", "Prakarya", "Prakarya dan Kewirausahaan",
-    "Teknologi Informasi dan Komunikasi", "Bimbingan Konseling",
+    "Teknologi Informasi dan Komunikasi", "Bimbingan Konseling", "Ekstrakurikuler",
     "Muatan Lokal", "Lainnya"
   ];
   const currentYear = new Date().getFullYear();
@@ -273,6 +273,16 @@ export default function KelolaKelas() {
 
       setModalOpen(false);
       fetchKelas();
+
+      if (!isEditing && data.kelas && data.kelas.id) {
+        triggerConfirm(
+          `Kelas "${payload.nama}" berhasil dibuat!\n\nLangkah selanjutnya yang sangat disarankan:\n1. Atur Komponen Nilai\n2. Tambah/Impor Siswa\n\nApakah Anda ingin langsung mengelola kelas ini sekarang?`,
+          () => {
+            router.push(`/guru/kelas/${data.kelas.id}?onboarding=true`);
+          },
+          { title: "🎉 Kelas Berhasil Dibuat!", confirmText: "🚀 Ya, Kelola Kelas", cancelText: "Nanti Saja" }
+        );
+      }
     } catch (err) {
       setError(err.message || "Terjadi kesalahan.");
     } finally {
@@ -903,7 +913,7 @@ export default function KelolaKelas() {
                     <span style={{ fontSize: "1.1rem" }}>🏷️</span>
                     <div>
                       <div style={{ fontSize: "0.9rem", fontWeight: "700" }}>{k.kolomNilai.length}</div>
-                      <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Aspek</div>
+                      <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Komponen</div>
                     </div>
                   </div>
                 </div>
@@ -1262,7 +1272,7 @@ export default function KelolaKelas() {
                   {!isEditing && (
                     <div className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span>✨ Preset Aspek Nilai (Opsional)</span>
+                        <span>✨ Preset Komponen Nilai (Opsional)</span>
                       </label>
                       <select
                         className="form-input"
@@ -1283,7 +1293,7 @@ export default function KelolaKelas() {
                         ))}
                       </select>
                       <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
-                        Otomatis membuat struktur aspek &amp; bobot penilaian sesuai standar kurikulum.
+                        Otomatis membuat struktur komponen &amp; bobot penilaian sesuai standar kurikulum.
                       </span>
                     </div>
                   )}

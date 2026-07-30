@@ -807,8 +807,8 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         if (isFilled) {
           totalNilaiTerisi += kontribusi;
           totalBobotTerisi += col.bobot;
-          // Untuk kolom grup, hitung setiap sub-aspek yang terisi secara individual
-          // agar progres "X/Y aspek terisi" mencerminkan jumlah sub-aspek yang sudah diisi
+          // Untuk kolom grup, hitung setiap sub-komponen yang terisi secara individual
+          // agar progres "X/Y komponen terisi" mencerminkan jumlah sub-komponen yang sudah diisi
           if (isGroup && subKolom.length > 0) {
             // subFilledCount sudah dihitung di blok isGroup di atas, ambil ulang
             jumlahAspekTerisi += subKolom.filter(sub => {
@@ -832,7 +832,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
           displayScore = "-";
         }
 
-        // Bangun subDetail agar UI bisa menampilkan nilai tiap sub-aspek secara individual
+        // Bangun subDetail agar UI bisa menampilkan nilai tiap sub-komponen secara individual
         const subDetail = (isGroup && subKolom.length > 0) ? subKolom.map(sub => {
           const sc = nilaiObj[sub.id];
           const isSFilled = sc !== undefined && sc !== null && sc !== "";
@@ -895,7 +895,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
             let studentScore = 0;
             let filled = false;
             kolomNilai.forEach(col => {
-              // Tangani kolom grup: hitung rata-rata dari sub-aspek
+              // Tangani kolom grup: hitung rata-rata dari sub-komponen
               const colGroupConfig = skema.kolomAspekGroup?.[col.id];
               const colIsGroup = colGroupConfig ? !!colGroupConfig.isGroup : false;
               const colHitungMetode = colGroupConfig ? (colGroupConfig.hitungMetode || "rata-rata") : "rata-rata";
@@ -1009,7 +1009,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         rataRataKelas,
         isLengkap: totalBobot === 100,
         jumlahAspekTerisi,
-        // Hitung total daun aspek: sub-aspek dihitung satu per satu untuk kolom grup
+        // Hitung total daun komponen: sub-komponen dihitung satu per satu untuk kolom grup
         totalAspekCount: kolomNilai.reduce((sum, col) => {
           const gc = skema.kolomAspekGroup?.[col.id];
           const isG = gc ? !!gc.isGroup : false;

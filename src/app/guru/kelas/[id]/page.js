@@ -184,7 +184,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [importing, setImporting] = useState(false);
   const [importWarnings, setImportWarnings] = useState([]);
 
-  // State loading saat simpan aspek & bobot
+  // State loading saat simpan komponen & bobot
   const [isSavingBobot, setIsSavingBobot] = useState(false);
 
   // States untuk Presensi
@@ -216,8 +216,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [defaultBulkStatus, setDefaultBulkStatus] = useState(""); // empty/blank by default
 
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
-  const [panduanActiveTab, setPanduanActiveTab] = useState("aspek"); // aspek, kkm, siswa, ekspor, erapor, katrol
-  const [configModalTab, setConfigModalTab] = useState('aspek'); // 'aspek' | 'status'
+  const [panduanActiveTab, setPanduanActiveTab] = useState("komponen"); // komponen, kkm, siswa, ekspor, erapor, katrol
+
 
   // States untuk Hub Modal Operasi Data
   const [kelolaSiswaModalOpen, setKelolaSiswaModalOpen] = useState(false);
@@ -313,7 +313,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [initialKolomNilai, setInitialKolomNilai] = useState([]);
   const [deletedKolomIds, setDeletedKolomIds] = useState([]);
 
-  // States untuk Fitur Terapkan Aspek ke Kelas Lain
+  // States untuk Fitur Terapkan Komponen ke Kelas Lain
   const [applyToOtherModalOpen, setApplyToOtherModalOpen] = useState(false);
   const [applySelectedClassIds, setApplySelectedClassIds] = useState([]);
   const [applySearchQuery, setApplySearchQuery] = useState("");
@@ -345,7 +345,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   }, [normModalOpen, kelas]);
 
-  // State untuk Navigasi Panel Mobile di Modal Atur Aspek
+  // State untuk Navigasi Panel Mobile di Modal Atur Komponen
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
 
   useEffect(() => {
@@ -353,7 +353,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
       setInitialHiddenAspek(JSON.parse(JSON.stringify(kelas.skemaPenilaian?.hiddenAspek || [])));
       setDeletedKolomIds([]);
-      setMobileActiveView("list"); // Reset ke daftar aspek di mobile
+      setMobileActiveView("list"); // Reset ke daftar komponen di mobile
       if (kelas.kolomNilai && kelas.kolomNilai.length > 0) {
         setActiveAspectId(kelas.kolomNilai[0].id);
         setNewAspects([]);
@@ -361,7 +361,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         const newId = `new-aspect-${Date.now()}`;
         setNewAspects([{ id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] }]);
         setActiveAspectId(newId);
-        setMobileActiveView("detail"); // Tampilkan form jika belum ada aspek sama sekali
+        setMobileActiveView("detail"); // Tampilkan form jika belum ada komponen sama sekali
       }
     }
   }, [kolomModalOpen]);
@@ -451,7 +451,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State untuk Integrasi E-Rapor
   const [raporModalOpen, setRaporModalOpen] = useState(false);
 
-  // States untuk Gabung Aspek ke Kelompok
+  // States untuk Gabung Komponen ke Kelompok
   const [selectedForGroup, setSelectedForGroup] = useState(new Set());
   const [mergeModalOpen, setMergeModalOpen] = useState(false);
   const [mergeGroupName, setMergeGroupName] = useState("");
@@ -468,7 +468,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       return;
     }
     if (selectedForGroup.size < 2) {
-      alert("Pilih minimal 2 aspek untuk digabung!");
+      alert("Pilih minimal 2 komponen untuk digabung!");
       return;
     }
     setIsMerging(true);
@@ -780,23 +780,23 @@ export default function DetailKelas({ params: paramsPromise }) {
       const issues = [];
       kelas.kolomNilai.forEach(col => {
         if (col.isGroup && col.subKolom?.length > 0) {
-          // Untuk kolom grup: periksa tiap sub-aspek secara individual
+          // Untuk kolom grup: periksa tiap sub-komponen secara individual
           col.subKolom.forEach(sub => {
             const sc = s.nilai[sub.id];
             const isSFilled = sc !== undefined && sc !== null && sc !== "";
             const aspekLabel = `${col.nama} › ${sub.nama}`;
             if (!isSFilled) {
-              issues.push({ aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
+              issues.push({ komponen: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
             } else if (kkmVal !== null && Number(sc) < kkmVal) {
-              issues.push({ aspek: aspekLabel, status: "Di bawah KKM" });
+              issues.push({ komponen: aspekLabel, status: "Di bawah KKM" });
             }
           });
         } else {
           const { score, isFilled } = getColScore(s, col, null);
           if (!isFilled) {
-            issues.push({ aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
+            issues.push({ komponen: col.nama, status: "Kosong (Belum Mengerjakan)" });
           } else if (kkmVal !== null && Number(score) < kkmVal) {
-            issues.push({ aspek: col.nama, status: "Di bawah KKM" });
+            issues.push({ komponen: col.nama, status: "Di bawah KKM" });
           }
         }
       });
@@ -1478,10 +1478,10 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const handleToggleGroupType = (col, nextIsGroup) => {
-    // Jika centang dihilangkan dan ada sub-aspek di dalamnya
+    // Jika centang dihilangkan dan ada sub-komponen di dalamnya
     if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
       triggerConfirm(
-        `Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-aspek di dalamnya akan otomatis dinaikkan menjadi aspek mandiri tingkat teratas agar nilai siswa tidak hilang.`,
+        `Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-komponen di dalamnya akan otomatis dinaikkan menjadi komponen mandiri tingkat teratas agar nilai siswa tidak hilang.`,
         () => {
           // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
           const B = Number(col.bobot) || 0;
@@ -1509,8 +1509,8 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           const promotedCols = col.subKolom.map((sub, idx) => {
             return {
-              id: sub.id, // Pertahankan ID sub-aspek asli agar nilainya langsung terpeta otomatis
-              nama: `${col.nama} - ${sub.nama || "Sub-Aspek"}`,
+              id: sub.id, // Pertahankan ID sub-komponen asli agar nilainya langsung terpeta otomatis
+              nama: `${col.nama} - ${sub.nama || "sub-komponen"}`,
               bobot: distributedBobots[idx],
               isGroup: false,
               subKolom: [],
@@ -1535,7 +1535,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             setActiveAspectId(promotedCols[0].id);
           }
 
-          alert(`💡 Berhasil membongkar kelompok!\nSub-aspek berikut kini menjadi aspek mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
+          alert(`💡 Berhasil membongkar kelompok!\nsub-komponen berikut kini menjadi komponen mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
         },
         {
           title: "Bongkar Kelompok",
@@ -1581,7 +1581,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const handleDuplicateFromClass = (sourceClass) => {
     triggerConfirm(
-      `Apakah Anda yakin ingin menyalin aspek dari kelas "${sourceClass.nama}"?\n\nAspek penilaian baru yang belum ada di kelas ini akan ditambahkan ke daftar aspek aktif Anda.`,
+      `Apakah Anda yakin ingin menyalin komponen dari kelas "${sourceClass.nama}"?\n\nKomponen nilai baru yang belum ada di kelas ini akan ditambahkan ke daftar komponen aktif Anda.`,
       () => {
         const existingNames = new Set(
           kelas.kolomNilai.map(col => col.nama.trim().toLowerCase())
@@ -1609,7 +1609,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (aspectsToAdd.length > 0) {
           const updatedCols = [...kelas.kolomNilai, ...aspectsToAdd];
           
-          // Urutkan aspek berdasarkan urutan di kelas asal agar susunannya sama
+          // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
           const sourceOrderMap = new Map();
           sourceClass.kolomNilai.forEach((col, idx) => {
             sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
@@ -1624,17 +1624,17 @@ export default function DetailKelas({ params: paramsPromise }) {
           });
 
           setKelas({ ...kelas, kolomNilai: updatedCols });
-          setNewAspects([]); // Bersihkan newAspects jika ada aspek yang disalin
-          setActiveAspectId(aspectsToAdd[0].id); // Pilih aspek pertama yang baru disalin
+          setNewAspects([]); // Bersihkan newAspects jika ada komponen yang disalin
+          setActiveAspectId(aspectsToAdd[0].id); // Pilih komponen pertama yang baru disalin
         }
 
         setDuplicateModalOpen(false);
 
         if (skippedNames.length > 0) {
-          // Tampilkan informasi aspek yang tidak disalin menggunakan modal kustom
+          // Tampilkan informasi komponen yang tidak disalin menggunakan modal kustom
           setTimeout(() => {
             triggerAlert(
-              `Beberapa aspek berikut tidak disalin karena sudah ada aspek dengan nama yang sama di kelas ini (nilai & konfigurasi aspek yang sudah ada tetap dipertahankan):\n\n- ${skippedNames.join("\n- ")}`,
+              `Beberapa komponen berikut tidak disalin karena sudah ada komponen dengan nama yang sama di kelas ini (nilai & konfigurasi komponen yang sudah ada tetap dipertahankan):\n\n- ${skippedNames.join("\n- ")}`,
               null,
               { title: "📋 INFORMASI PENYALINAN" }
             );
@@ -1677,7 +1677,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
 
     if (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) {
-      alert("Kelas ini belum memiliki aspek penilaian untuk diterapkan ke kelas lain.");
+      alert("Kelas ini belum memiliki komponen nilai untuk diterapkan ke kelas lain.");
       return;
     }
 
@@ -1685,14 +1685,14 @@ export default function DetailKelas({ params: paramsPromise }) {
     const targetNames = selectedTargetClasses.map(c => c.nama).join(", ");
 
     triggerConfirm(
-      `Apakah Anda yakin ingin menerapkan aspek & bobot dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\n*Aspek baru yang belum ada di kelas tujuan akan ditambahkan. Aspek yang sudah ada dengan nama yang sama tetap dipertahankan.`,
+      `Apakah Anda yakin ingin menerapkan komponen & bobot dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\n*Komponen baru yang belum ada di kelas tujuan akan ditambahkan. Komponen yang sudah ada dengan nama yang sama tetap dipertahankan.`,
       async () => {
         setIsApplyingToOther(true);
         let successCount = 0;
         let failCount = 0;
 
         try {
-          // Aspek yang akan diterapkan berasal dari kelas.kolomNilai aktif saat ini
+          // Komponen yang akan diterapkan berasal dari kelas.kolomNilai aktif saat ini
           const currentAspects = kelas.kolomNilai;
 
           for (const targetClass of selectedTargetClasses) {
@@ -1755,7 +1755,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           setTimeout(() => {
             triggerAlert(
-              `Berhasil menerapkan aspek & bobot penilaian ke ${successCount} kelas!${failCount > 0 ? ` (${failCount} kelas gagal)` : ''}`,
+              `Berhasil menerapkan komponen & bobot penilaian ke ${successCount} kelas!${failCount > 0 ? ` (${failCount} kelas gagal)` : ''}`,
               null,
               { title: "🚀 TERAPKAN ASPEK SELESAI" }
             );
@@ -1763,7 +1763,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         } catch (err) {
           console.error("Apply to other classes error:", err);
-          alert("Terjadi kesalahan saat menerapkan aspek ke kelas lain.");
+          alert("Terjadi kesalahan saat menerapkan komponen ke kelas lain.");
         } finally {
           setIsApplyingToOther(false);
         }
@@ -1807,7 +1807,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     if (hasData) {
       triggerConfirm(
-        `Aspek "${colName}" sudah memiliki data nilai siswa!\n\nJika dihapus, nilai siswa di aspek ini akan dihapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda yakin ingin menghapus secara visual dari daftar?`,
+        `Komponen "${colName}" sudah memiliki data nilai siswa!\n\nJika dihapus, nilai siswa di komponen ini akan dihapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda yakin ingin menghapus secara visual dari daftar?`,
         executeDelete,
         {
           title: "⚠️ PERINGATAN!",
@@ -1817,7 +1817,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       );
     } else {
       triggerConfirm(
-        `Apakah Anda yakin ingin menghapus aspek "${colName}"?`,
+        `Apakah Anda yakin ingin menghapus komponen "${colName}"?`,
         executeDelete,
         {
           title: "Hapus Aspek",
@@ -1909,17 +1909,17 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const saveAllBobot = async () => {
-    // Validasi bobot kelompok sub-aspek kustom
+    // Validasi bobot kelompok sub-komponen kustom
     for (const col of kelas.kolomNilai) {
       if (col.isGroup && col.hitungMetode === "persentase") {
         const sum = (col.subKolom || []).reduce((s, sub) => s + (Number(sub.bobot) || 0), 0);
         if (sum !== 100) {
-          alert(`⚠️ Gagal menyimpan: Aspek kelompok "${col.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-aspeknya saat ini adalah ${sum}% (harus pas 100%).`);
+          alert(`⚠️ Gagal menyimpan: Komponen kelompok "${col.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-komponennya saat ini adalah ${sum}% (harus pas 100%).`);
           return;
         }
-        // Pastikan tidak ada nama sub-aspek yang kosong
+        // Pastikan tidak ada nama sub-komponen yang kosong
         if ((col.subKolom || []).some(sub => sub.nama.trim() === "")) {
-          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-aspek yang kosong pada kelompok "${col.nama}".`);
+          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-komponen yang kosong pada kelompok "${col.nama}".`);
           return;
         }
       }
@@ -1930,11 +1930,11 @@ export default function DetailKelas({ params: paramsPromise }) {
       if (aspect.isGroup && aspect.hitungMetode === "persentase") {
         const sum = (aspect.subKolom || []).reduce((s, sub) => s + (Number(sub.bobot) || 0), 0);
         if (sum !== 100) {
-          alert(`⚠️ Gagal menyimpan: Aspek kelompok baru "${aspect.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-aspeknya saat ini adalah ${sum}% (harus pas 100%).`);
+          alert(`⚠️ Gagal menyimpan: Komponen kelompok baru "${aspect.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-komponennya saat ini adalah ${sum}% (harus pas 100%).`);
           return;
         }
         if ((aspect.subKolom || []).some(sub => sub.nama.trim() === "")) {
-          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-aspek yang kosong pada kelompok baru "${aspect.nama}".`);
+          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-komponen yang kosong pada kelompok baru "${aspect.nama}".`);
           return;
         }
       }
@@ -1986,7 +1986,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             if (!stillExists) {
               const hasData = kelas.siswa.some(s => s.nilai && s.nilai[initialSub.id] !== undefined && s.nilai[initialSub.id] !== null && s.nilai[initialSub.id] !== "");
               if (hasData) {
-                deletedSubAspects.push(`Sub-aspek "${initialSub.nama}" di kelompok "${col.nama}"`);
+                deletedSubAspects.push(`sub-komponen "${initialSub.nama}" di kelompok "${col.nama}"`);
               }
             }
           }
@@ -1996,26 +1996,26 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     if (changedToGroup.length > 0 || changedToSingle.length > 0 || deletedSubAspects.length > 0 || deletedColumnsWithValues.length > 0) {
       let warningMessage = "⚠️ PERINGATAN KESELAMATAN DATA NILAI!\n\n" +
-        "Sistem mendeteksi adanya perubahan struktur aspek yang berpotensi menghilangkan nilai siswa yang sudah diisi:\n\n";
+        "Sistem mendeteksi adanya perubahan struktur komponen yang berpotensi menghilangkan nilai siswa yang sudah diisi:\n\n";
 
       if (deletedColumnsWithValues.length > 0) {
-        warningMessage += `• Aspek berikut telah dihapus secara permanen: \n  - ${deletedColumnsWithValues.join("\n  - ")}\n` +
-          "  (Seluruh nilai siswa di aspek ini akan dihapus secara permanen!)\n\n";
+        warningMessage += `• Komponen berikut telah dihapus secara permanen: \n  - ${deletedColumnsWithValues.join("\n  - ")}\n` +
+          "  (Seluruh nilai siswa di komponen ini akan dihapus secara permanen!)\n\n";
       }
 
       if (changedToGroup.length > 0) {
-        warningMessage += `• Aspek tunggal berikut diubah menjadi kelompok: ${changedToGroup.join(", ")}\n` +
-          "  (Nilai mandiri saat ini tidak akan terbaca karena nilai harus diisi ulang pada sub-aspek yang baru)\n\n";
+        warningMessage += `• Komponen tunggal berikut diubah menjadi kelompok: ${changedToGroup.join(", ")}\n` +
+          "  (Nilai mandiri saat ini tidak akan terbaca karena nilai harus diisi ulang pada sub-komponen yang baru)\n\n";
       }
 
       if (changedToSingle.length > 0) {
-        warningMessage += `• Aspek kelompok berikut diubah menjadi tunggal: ${changedToSingle.join(", ")}\n` +
-          "  (Seluruh sub-aspek beserta nilainya di dalamnya akan dihapus secara permanen!)\n\n";
+        warningMessage += `• Komponen kelompok berikut diubah menjadi tunggal: ${changedToSingle.join(", ")}\n` +
+          "  (Seluruh sub-komponen beserta nilainya di dalamnya akan dihapus secara permanen!)\n\n";
       }
 
       if (deletedSubAspects.length > 0) {
-        warningMessage += `• Sub-aspek berikut telah dihapus: \n  - ${deletedSubAspects.join("\n  - ")}\n` +
-          "  (Seluruh nilai siswa di sub-aspek tersebut akan dihapus secara permanen!)\n\n";
+        warningMessage += `• sub-komponen berikut telah dihapus: \n  - ${deletedSubAspects.join("\n  - ")}\n` +
+          "  (Seluruh nilai siswa di sub-komponen tersebut akan dihapus secara permanen!)\n\n";
       }
 
       warningMessage += "Apakah Anda yakin ingin melanjutkan dan menyimpan perubahan ini?";
@@ -2034,7 +2034,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         });
         if (!resDelete.ok) {
           const deleteData = await resDelete.json();
-          throw new Error(deleteData.error || `Gagal menghapus aspek ${colId}`);
+          throw new Error(deleteData.error || `Gagal menghapus komponen ${colId}`);
         }
       }
 
@@ -2051,11 +2051,11 @@ export default function DetailKelas({ params: paramsPromise }) {
         });
         if (!res.ok) {
            const data = await res.json();
-           throw new Error(data.error || "Gagal membuat aspek baru");
+           throw new Error(data.error || "Gagal membuat komponen baru");
         }
         const data = await res.json();
         const permanentId = data.kolom.id;
-        updatedKolomNilai.push(data.kolom); // Masukkan aspek yang baru dibuat ke daftar sinkronisasi
+        updatedKolomNilai.push(data.kolom); // Masukkan komponen yang baru dibuat ke daftar sinkronisasi
         if (aspect.tp) {
           updatedTpConfig[permanentId] = aspect.tp;
         }
@@ -2063,6 +2063,12 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       // Perbarui seluruh konfigurasi secara massal — konversi bobot ke Number sebelum dikirim
       const kolomToSave = updatedKolomNilai.map(col => ({ ...col, bobot: Number(col.bobot) || 0 }));
+      // Validasi urutan KKM sebelum menyimpan
+      if (gradeA < gradeB || gradeB < gradeC || gradeC < gradeD) {
+        alert('Gagal menyimpan: Pastikan urutan nilai KKM adalah A ≥ B ≥ C ≥ D.');
+        return;
+      }
+
       const response = await fetch(`/api/kelas/${classId}/kolom`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -2070,6 +2076,15 @@ export default function DetailKelas({ params: paramsPromise }) {
           kolomNilai: kolomToSave,
           skemaPenilaian: {
             ...(kelas.skemaPenilaian || {}),
+            A: gradeA,
+            B: gradeB,
+            C: gradeC,
+            D: gradeD,
+            kkm: kkm,
+            statusA: statusA.trim() || 'A',
+            statusB: statusB.trim() || 'B',
+            statusC: statusC.trim() || 'C',
+            statusD: statusD.trim() || 'D',
             tpConfig: updatedTpConfig
           }
         }),
@@ -2754,7 +2769,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       </div>
 
-      {/* Alert Aspek Penilaian Belum Diatur */}
+      {/* Alert Komponen Nilai Belum Diatur */}
       {kelas.kolomNilai.length === 0 && (
         <div style={{
           padding: "24px",
@@ -2770,10 +2785,10 @@ export default function DetailKelas({ params: paramsPromise }) {
             <span style={{ fontSize: "1.6rem", display: "flex", alignItems: "center" }}>⚠️</span>
             <div>
               <h4 style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--warning)" }}>
-                Aspek Penilaian Belum Dikonfigurasi
+                Komponen Nilai Belum Dikonfigurasi
               </h4>
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                Kelas ini belum memiliki aspek atau kolom nilai (seperti UTS, UAS, Tugas) sehingga penilaian belum dapat diisi.
+                Kelas ini belum memiliki komponen atau kolom nilai (seperti UTS, UAS, Tugas) sehingga penilaian belum dapat diisi.
               </p>
             </div>
           </div>
@@ -2782,11 +2797,11 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
             <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "500" }}>
-              💡 <strong>Langkah cepat:</strong> Klik tombol "Mulai Atur Aspek Sekarang" di sebelah kanan untuk menambahkan aspek/kolom baru.
+              💡 <strong>Langkah cepat:</strong> Klik tombol "Mulai Atur Komponen Sekarang" di sebelah kanan untuk menambahkan aspek/kolom baru.
             </span>
             <button
               onClick={() => {
-                setConfigModalTab('aspek');
+
                 setKolomModalOpen(true);
                 const configCard = document.getElementById("konfigurasi-kelas");
                 if (configCard) {
@@ -2808,7 +2823,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 boxShadow: isLocked ? "none" : "0 4px 10px rgba(245, 158, 11, 0.2)"
               }}
             >
-              ⚙️ Mulai Atur Aspek Sekarang
+              ⚙️ Mulai Atur Komponen Sekarang
             </button>
           </div>
         </div>
@@ -2857,7 +2872,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           {!analyticsData ? (
             <div className="glass-card" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-              Tambah siswa dan aspek nilai terlebih dahulu untuk melihat analitik dan peringkat.
+              Tambah siswa dan komponen nilai terlebih dahulu untuk melihat analitik dan peringkat.
             </div>
           ) : (
             <>
@@ -2959,7 +2974,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </div>
                       );
                     })}
-                    {analyticsData.aspectAvg.length === 0 && <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Belum ada aspek nilai.</p>}
+                    {analyticsData.aspectAvg.length === 0 && <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Belum ada komponen nilai.</p>}
                   </div>
                 </div>
               </div>
@@ -2969,7 +2984,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <div style={{ padding: "20px 24px 16px 24px" }}>
                   <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>🏆 Peringkat Siswa</h4>
                   <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-                    Urutan berdasarkan nilai akhir tertinggi. Hanya siswa dengan semua aspek terisi yang diperingkatkan.
+                    Urutan berdasarkan nilai akhir tertinggi. Hanya siswa dengan semua komponen terisi yang diperingkatkan.
                   </p>
                 </div>
                 <div className="table-container" style={{ margin: 0, borderRadius: 0, borderLeft: "none", borderRight: "none" }}>
@@ -3183,13 +3198,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                             borderBottom: `1px solid ${totalBobot !== 100 ? "rgba(245, 158, 11, 0.15)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder)}`
                           }}>
                             <span>{totalBobot !== 100 ? "⚠️" : (s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️")}</span>
-                            <span>Status Nilai Akhir: {totalBobot !== 100 ? "Belum Lengkap (Bobot Aspek Belum 100%)" : (s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)")}</span>
+                            <span>Status Nilai Akhir: {totalBobot !== 100 ? "Belum Lengkap (Bobot Komponen Belum 100%)" : (s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)")}</span>
                           </div>
 
-                          {/* Rincian Kendala Aspek (Nested inside status box) */}
+                          {/* Rincian Kendala Komponen (Nested inside status box) */}
                           <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                             <div style={{ fontSize: "0.75rem", color: colors.textSecondary, fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
-                              <span>↳</span> Rincian Detail Kendala Aspek:
+                              <span>↳</span> Rincian Detail Kendala Komponen:
                             </div>
                             
                             <div style={{ paddingLeft: "12px", borderLeft: `2px solid ${colors.listBorder}`, display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -3790,7 +3805,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               width: "100%"
             }}>
               <button 
-                onClick={() => { setConfigModalTab('aspek'); setKolomModalOpen(true); }} 
+                onClick={() => { setKolomModalOpen(true); }} 
                 className="btn btn-outline" 
                 style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
               >
@@ -3830,7 +3845,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>💡 Bantuan</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <button 
-                    onClick={() => { setPanduanActiveTab("aspek"); setPanduanModalOpen(true); }} 
+                    onClick={() => { setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }} 
                     className="btn btn-secondary"
                     style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border-color)" }}
                   >
@@ -3847,12 +3862,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <button 
-                    onClick={() => { setConfigModalTab('aspek'); setKolomModalOpen(true); }} 
+                    onClick={() => { setKolomModalOpen(true); }} 
                     className="btn btn-outline" 
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
                     disabled={isLocked}
                   >
-                    ⚙️ Atur Aspek, Bobot & KKM
+                    ⚙️ Atur Komponen, Bobot & KKM
                   </button>
                 </div>
               </div>
@@ -4299,7 +4314,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     </div>
     ) : (
       <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
-        Belum ada siswa dan aspek nilai di kelas ini. Silakan atur aspek nilai atau tambah siswa terlebih dahulu.
+        Belum ada siswa dan komponen nilai di kelas ini. Silakan atur komponen nilai atau tambah siswa terlebih dahulu.
       </div>
     )}
       {/* Advanced Tools & Settings Modal */}
@@ -4561,7 +4576,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         {/* SECTION 3: Radar Chart & Predikat */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", flex: 1 }}>
            
-           {/* Radar Chart: Rata-rata per Aspek */}
+           {/* Radar Chart: Rata-rata per Komponen */}
            <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "24px", border: "1px solid #334155", display: "flex", flexDirection: "column", alignItems: "center" }}>
              <p style={{ color: "#38bdf8", fontSize: "1.2rem", margin: "0 0 20px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase", alignSelf: "flex-start", paddingLeft: "10px" }}>Rata-Rata per Aspek</p>
              {(() => {
@@ -5103,7 +5118,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={() => setDuplicateModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
             </div>
 
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Pilih kelas sumber untuk menyalin konfigurasi aspek dan bobotnya. Tindakan ini akan <b style={{color: "var(--danger)"}}>meniban dan menghapus</b> aspek yang ada di tabel saat ini.</p>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Pilih kelas sumber untuk menyalin konfigurasi komponen dan bobotnya. Tindakan ini akan <b style={{color: "var(--danger)"}}>meniban dan menghapus</b> komponen yang ada di tabel saat ini.</p>
 
             <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
               {fetchingClasses ? (
@@ -5145,7 +5160,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   📤 Terapkan ke Kelas Lain
                 </h3>
                 <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "4px", margin: 0 }}>
-                  Salin & terapkan konfigurasi aspek dan bobot dari kelas ini ke beberapa kelas sekaligus.
+                  Salin & terapkan konfigurasi komponen dan bobot dari kelas ini ke beberapa kelas sekaligus.
                 </p>
               </div>
               <button 
@@ -5164,7 +5179,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: "2px 0 0 0", color: "var(--primary)" }}>{kelas?.nama}</h4>
               </div>
               <div style={{ textAlign: "right" }}>
-                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)" }}>{kelas?.kolomNilai?.length || 0} Aspek Penilaian</span>
+                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)" }}>{kelas?.kolomNilai?.length || 0} Komponen Nilai</span>
                 <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)", display: "block" }}>Total Bobot: {totalBobot}%</span>
               </div>
             </div>
@@ -5249,7 +5264,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                               </span>
                             </div>
                             <p style={{ fontSize: "0.73rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>
-                              {c.mataPelajaran || "Umum"} &bull; {c.kolomNilai?.length || 0} Aspek Saat Ini
+                              {c.mataPelajaran || "Umum"} &bull; {c.kolomNilai?.length || 0} Komponen Saat Ini
                             </p>
                           </div>
                         </label>
@@ -5261,7 +5276,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
             {/* Note & Footer Buttons */}
             <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.4 }}>
-              *Aspek baru akan ditambahkan tanpa menghapus aspek yang sudah ada di kelas tujuan.
+              *Komponen baru akan ditambahkan tanpa menghapus komponen yang sudah ada di kelas tujuan.
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px" }}>
@@ -5321,9 +5336,9 @@ export default function DetailKelas({ params: paramsPromise }) {
               <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "16px", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
                 <div style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "var(--primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", flexShrink: 0, boxShadow: "0 2px 8px var(--primary-glow)" }}>1</div>
                 <div>
-                  <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "4px", color: "var(--text-primary)" }}>Atur Aspek Penilaian</h4>
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "4px", color: "var(--text-primary)" }}>Atur Komponen Nilai</h4>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Scroll ke bagian bawah dan klik <strong>"⚙️ Atur Aspek & Bobot Nilai"</strong>. Tentukan kolom penilaian (misal: UTS, UAS, Tugas) beserta persentase bobotnya hingga total 100%.
+                    Scroll ke bagian bawah dan klik <strong>"⚙️ Atur Komponen & Bobot Nilai"</strong>. Tentukan kolom penilaian (misal: UTS, UAS, Tugas) beserta persentase bobotnya hingga total 100%.
                   </p>
                 </div>
               </div>
@@ -5345,7 +5360,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <div>
                   <h4 style={{ fontSize: "1.05rem", fontWeight: "700", marginBottom: "4px", color: "var(--text-primary)" }}>Mulai Mengisi Nilai</h4>
                   <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Setelah aspek dan siswa siap, Anda bisa langsung mengetikkan nilai di tabel buku nilai. Semua perubahan akan tersimpan secara otomatis.
+                    Setelah komponen dan siswa siap, Anda bisa langsung mengetikkan nilai di tabel buku nilai. Semua perubahan akan tersimpan secara otomatis.
                   </p>
                 </div>
               </div>
@@ -5386,7 +5401,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   style={{ width: "20px", height: "20px", marginTop: "2px", accentColor: "var(--primary)" }}
                 />
                 <div>
-                  <label htmlFor="gunakanPresensi" style={{ fontWeight: "700", fontSize: "1rem", cursor: "pointer", color: "var(--text-primary)" }}>Gunakan Presensi sebagai Aspek Nilai Akhir</label>
+                  <label htmlFor="gunakanPresensi" style={{ fontWeight: "700", fontSize: "1rem", cursor: "pointer", color: "var(--text-primary)" }}>Gunakan Presensi sebagai Komponen Nilai Akhir</label>
                   <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
                     Jika diaktifkan, rata-rata poin kehadiran akan menyumbang persentase pada Nilai Akhir siswa.
                   </p>
@@ -5405,7 +5420,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     className="input-field"
                     placeholder="Contoh: 10"
                   />
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Saran: Jika bobot presensi 10%, pastikan sisa 90% dibagi ke aspek akademik lainnya agar total pas 100%.</span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Saran: Jika bobot presensi 10%, pastikan sisa 90% dibagi ke komponen akademik lainnya agar total pas 100%.</span>
                 </div>
               )}
             </div>
@@ -5724,8 +5739,11 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", minHeight: "180px", justifyContent: "space-between" }}>
               {kelolaSiswaTab === 'tambah' && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: "600", lineHeight: "1.5" }}>
+                    Input Manual (Satu per Satu)
+                  </p>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Tambah biodata siswa satu per satu ke dalam kelas ini secara manual (Nama, NISN, Rombel, Jenis Kelamin).
+                    Cocok jika Anda hanya ingin menambahkan 1 atau 2 siswa susulan. Jika Anda ingin memasukkan 1 kelas penuh (misal 30+ siswa), sangat disarankan beralih ke tab <strong>Impor</strong>.
                   </p>
                   <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
                     <button
@@ -5746,8 +5764,19 @@ export default function DetailKelas({ params: paramsPromise }) {
               {kelolaSiswaTab === 'impor' && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Unggah daftar nama dan data siswa secara massal menggunakan file format Excel (.xlsx / .xls).
+                    Unggah daftar nama siswa secara massal. Anda bisa langsung mengunggah file <strong>Dapodik</strong> yang Anda miliki, atau format <strong>Excel / CSV</strong> buatan sendiri dengan minimal kolom berikut:
                   </p>
+                  <div style={{ backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-primary)" }}>
+                    <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <li><strong>NISN</strong> (Nomor Induk Siswa Nasional) - <em>Wajib</em></li>
+                      <li><strong>Nama</strong> (Nama Lengkap Siswa) - <em>Wajib</em></li>
+                      <li><strong>Tanggal Lahir</strong> (Format Bebas) - <em>Opsional</em></li>
+                    </ul>
+                    <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "1.2rem" }}>💡</span>
+                      <span style={{ color: "var(--text-secondary)" }}>Bingung dengan formatnya? <button onClick={downloadExcelTemplate} style={{ background: "none", border: "none", color: "var(--primary)", fontWeight: "700", cursor: "pointer", padding: 0, textDecoration: "underline" }}>Unduh Template Kosong</button></span>
+                    </div>
+                  </div>
                   <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
                     <label
                       className={`btn btn-primary ${isLocked ? "disabled" : ""}`}
@@ -5759,10 +5788,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                         margin: 0, fontWeight: "700"
                       }}
                     >
-                      <span>📤</span> Unggah Berkas Excel (.xlsx)
+                      <span>📤</span> Unggah Berkas Dapodik / Excel
                       <input
                         type="file"
-                        accept=".xlsx, .xls"
+                        accept=".xlsx, .xls, .csv"
                         style={{ display: "none" }}
                         onChange={(e) => {
                           setKelolaSiswaModalOpen(false);
@@ -6037,7 +6066,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               {/* Sidebar Navigation */}
               <div className="panduan-sidebar" style={{ width: "200px", borderRight: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", padding: "16px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px" }}>
                 {[
-                  { id: "aspek", label: "⚖️ Aspek & Bobot" },
+                  { id: "komponen", label: "⚖️ Komponen & Bobot" },
                   { id: "kkm", label: "📊 Status & KKM" },
                   { id: "siswa", label: "👤 Tambah Siswa" },
                   { id: "ekspor", label: "📤 Ekspor & Impor" },
@@ -6064,10 +6093,10 @@ export default function DetailKelas({ params: paramsPromise }) {
 
               {/* Guide Contents */}
               <div className="panduan-body" style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px" }}>
-                {panduanActiveTab === "aspek" && (
+                {panduanActiveTab === "komponen" && (
                   <>
                     <div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#60a5fa" }}>⚖️ Fitur: Atur Aspek & Bobot Nilai</h4>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "800", marginBottom: "8px", color: "#60a5fa" }}>⚖️ Fitur: Atur Komponen & Bobot Nilai</h4>
                       <p style={{ fontSize: "0.85rem", lineHeight: "1.5", color: "var(--text-secondary)" }}>
                         Fitur ini digunakan untuk mengonfigurasi komponen penilaian mata pelajaran Anda (seperti Tugas, UTS, UAS, atau Kehadiran) lengkap dengan porsi bobot masing-masing komponen. Total keseluruhan bobot wajib berjumlah <strong>100%</strong> agar penilaian dapat dikalkulasi secara valid.
                       </p>
@@ -6077,21 +6106,21 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📋 Tahapan Penggunaan:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
-                          <li>Klik tombol <strong>⚖️ Atur Aspek & Bobot</strong> pada Panel Kontrol.</li>
+                          <li>Klik tombol <strong>⚖️ Atur Komponen & Bobot</strong> pada Panel Kontrol.</li>
                           <li>Tentukan nama komponen (misal: "Tugas Mandiri") dan isi bobotnya (misal: "20").</li>
-                          <li>Jika aspek tersebut merupakan kelompok/grup (misal: grup "Tugas" yang memiliki sub-komponen "Tugas 1, Tugas 2"), nyalakan opsi <strong>Grup Aspek</strong> lalu tambahkan sub-aspek di bawahnya.</li>
-                          <li>Tentukan metode perhitungan grup aspek: <strong>Rata-rata Otomatis</strong> (mengkalkulasi rata-rata sub-aspek) atau <strong>Persentase</strong> (setiap sub-aspek memiliki bobot tersendiri dalam grup tersebut).</li>
-                          <li>Pastikan total bobot dari seluruh aspek utama bernilai 100%, lalu klik <strong>Simpan Perubahan</strong>.</li>
+                          <li>Jika komponen tersebut merupakan kelompok/grup (misal: grup "Tugas" yang memiliki sub-komponen "Tugas 1, Tugas 2"), nyalakan opsi <strong>Grup Aspek</strong> lalu tambahkan sub-komponen di bawahnya.</li>
+                          <li>Tentukan metode perhitungan grup komponen: <strong>Rata-rata Otomatis</strong> (mengkalkulasi rata-rata sub-komponen) atau <strong>Persentase</strong> (setiap sub-komponen memiliki bobot tersendiri dalam grup tersebut).</li>
+                          <li>Pastikan total bobot dari seluruh komponen utama bernilai 100%, lalu klik <strong>Simpan Perubahan</strong>.</li>
                         </ol>
                       </div>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Contoh Penggunaan:</h5>
                         <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
-                          Mata pelajaran Informatika diatur memiliki 3 aspek utama:<br />
-                          1. <strong>Tugas (Grup - Rata-rata)</strong>: Bobot 30% (Sub-aspek: Tugas 1, Tugas 2).<br />
+                          Mata pelajaran Informatika diatur memiliki 3 komponen utama:<br />
+                          1. <strong>Tugas (Grup - Rata-rata)</strong>: Bobot 30% (sub-komponen: Tugas 1, Tugas 2).<br />
                           2. <strong>UTS (Tunggal)</strong>: Bobot 30%.<br />
                           3. <strong>UAS (Tunggal)</strong>: Bobot 40%.<br />
-                          Total bobot aspek utama: 30% + 30% + 40% = 100%.
+                          Total bobot komponen utama: 30% + 30% + 40% = 100%.
                         </p>
                       </div>
                     </div>
@@ -6177,7 +6206,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>📥 Cara Ekspor Data:</h5>
                         <ol style={{ fontSize: "0.8rem", color: "var(--text-secondary)", paddingLeft: "16px", lineHeight: "1.6", margin: 0 }}>
                           <li>Klik tombol <strong>📥 Ekspor Data Siswa</strong> pada Panel Kontrol.</li>
-                          <li>Sistem otomatis mendownload file spreadsheet yang memuat NISN, Nama, dan kolom aspek penilaian yang telah Anda buat sebelumnya.</li>
+                          <li>Sistem otomatis mendownload file spreadsheet yang memuat NISN, Nama, dan kolom komponen nilai yang telah Anda buat sebelumnya.</li>
                           <li>Buka file tersebut di Excel dan Anda dapat mengisi nilai siswa secara luring (offline) dengan lebih nyaman.</li>
                         </ol>
                       </div>
@@ -6214,14 +6243,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <li>Unduh template file Excel e-Rapor kosongan dari aplikasi e-Rapor resmi sekolah Anda.</li>
                           <li>Klik tombol <strong>📋 Ekspor ke E-Rapor</strong> pada Panel Kontrol CekNilai.</li>
                           <li>Unggah file template e-Rapor yang telah Anda unduh tadi ke area upload yang tersedia.</li>
-                          <li>Petakan setiap kolom TP di e-Rapor dengan kolom aspek di CekNilai (misal: TP 1 diambil dari aspek UTS, TP 2 diambil dari Tugas).</li>
+                          <li>Petakan setiap kolom TP di e-Rapor dengan kolom komponen di CekNilai (misal: TP 1 diambil dari komponen UTS, TP 2 diambil dari Tugas).</li>
                           <li>Klik <strong>Isi & Unduh Rapor Excel</strong>. Nilai dan capaian kompetensi terisi otomatis di file e-Rapor Anda.</li>
                         </ol>
                       </div>
                       <div>
                         <h5 style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", marginBottom: "6px" }}>💡 Keunggulan Integrasi:</h5>
                         <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.5", margin: 0 }}>
-                          Sistem mendeteksi secara otomatis NISN siswa dan memetakan nilai rapor dengan aman. Jika ada nilai rapor siswa di bawah 100 namun semua aspek KKM tercapai, sistem secara cerdas akan memberikan status ketercapaian optimal secara otomatis agar template valid diunggah kembali ke sistem sekolah.
+                          Sistem mendeteksi secara otomatis NISN siswa dan memetakan nilai rapor dengan aman. Jika ada nilai rapor siswa di bawah 100 namun semua komponen KKM tercapai, sistem secara cerdas akan memberikan status ketercapaian optimal secara otomatis agar template valid diunggah kembali ke sistem sekolah.
                         </p>
                       </div>
                     </div>
@@ -6290,7 +6319,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* Modal Gabung Aspek ke Kelompok */}
+      {/* Modal Gabung Komponen ke Kelompok */}
       {mergeModalOpen && (() => {
         const selectedCols = kelas.kolomNilai.filter(c => selectedForGroup.has(c.id));
         const totalBobot = selectedCols.reduce((sum, c) => sum + (Number(c.bobot) || 0), 0);
@@ -6298,17 +6327,17 @@ export default function DetailKelas({ params: paramsPromise }) {
           <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "16px" }}>
             <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "500px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflowY: "auto" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>🔗 Gabung Aspek ke Kelompok</h3>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>🔗 Gabung Komponen ke Kelompok</h3>
                 <button onClick={() => setMergeModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.4rem", cursor: "pointer", color: "var(--text-muted)", lineHeight: 1 }}>×</button>
               </div>
 
               <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", backgroundColor: "rgba(59,130,246,0.06)", padding: "10px 12px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                <strong>💡 Cara Kerja:</strong> Aspek-aspek yang dipilih akan menjadi sub-aspek dalam kelompok baru. Semua data nilai siswa yang sudah ada <strong>tetap terjaga</strong> — tidak ada data yang hilang.
+                <strong>💡 Cara Kerja:</strong> Aspek-aspek yang dipilih akan menjadi sub-komponen dalam kelompok baru. Semua data nilai siswa yang sudah ada <strong>tetap terjaga</strong> — tidak ada data yang hilang.
               </div>
 
-              {/* Daftar aspek yang akan digabung */}
+              {/* Daftar komponen yang akan digabung */}
               <div>
-                <p style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>Aspek yang akan digabung:</p>
+                <p style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginBottom: "8px" }}>Komponen yang akan digabung:</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   {selectedCols.map(c => {
                     const bobotNorm = totalBobot > 0 ? Math.round((c.bobot / totalBobot) * 10000) / 100 : 0;
@@ -6368,40 +6397,16 @@ export default function DetailKelas({ params: paramsPromise }) {
         );
       })()}
 
-      {/* ===== MODAL: Atur Aspek & Bobot ===== */}
+      {/* ===== MODAL: Atur Komponen, Bobot & KKM ===== */}
       {kolomModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
           <div className="glass-card aspect-modal-card animate-fade-in">
             <div className="aspect-modal-header">
               <div style={{ flex: 1 }}>
-                <h3>⚙️ Pengaturan Kelas</h3>
-                <div style={{ display: "flex", gap: "4px", marginTop: "10px", backgroundColor: "var(--bg-secondary)", padding: "3px", borderRadius: "8px", border: "1px solid var(--border-color)", width: "fit-content" }}>
-                  <button
-                    onClick={() => setConfigModalTab('aspek')}
-                    style={{
-                      padding: "6px 14px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                      backgroundColor: configModalTab === 'aspek' ? "var(--primary)" : "transparent",
-                      color: configModalTab === 'aspek' ? "#fff" : "var(--text-secondary)"
-                    }}
-                  >
-                    ⚖️ Aspek & Bobot
-                  </button>
-                  <button
-                    onClick={() => setConfigModalTab('status')}
-                    style={{
-                      padding: "6px 14px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                      backgroundColor: configModalTab === 'status' ? "var(--primary)" : "transparent",
-                      color: configModalTab === 'status' ? "#fff" : "var(--text-secondary)"
-                    }}
-                  >
-                    📊 Status & KKM
-                  </button>
-                </div>
+                <h3>⚙️ Pengaturan Komponen & KKM</h3>
               </div>
               <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
-
-            {configModalTab === 'aspek' ? (<>
             {/* --- PRESET SELECTOR BAR --- */}
             <div style={{ padding: "10px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -6415,7 +6420,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     if (!selectedId) return;
                     const preset = ASPEK_PRESETS.find(p => p.id === selectedId);
                     if (preset) {
-                      if (confirm(`⚠️ Terapkan ${preset.nama}?\n\nStruktur aspek & bobot di modal ini akan digantikan dengan preset terpilih.`)) {
+                      if (confirm(`⚠️ Terapkan ${preset.nama}?\n\nStruktur komponen & bobot di modal ini akan digantikan dengan preset terpilih.`)) {
                         setKelas(prev => ({
                           ...prev,
                           kolomNilai: JSON.parse(JSON.stringify(preset.kolomNilai))
@@ -6429,14 +6434,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                     e.target.value = "";
                   }}
                 >
-                  <option value="" disabled>-- Pilih Preset Aspek --</option>
+                  <option value="" disabled>-- Pilih Preset Komponen --</option>
                   {ASPEK_PRESETS.map(p => (
                     <option key={p.id} value={p.id}>{p.nama}</option>
                   ))}
                 </select>
               </div>
               <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-                Pilih preset untuk mengisi aspek &amp; bobot 1-klik otomatis
+                Pilih preset untuk mengisi komponen &amp; bobot 1-klik otomatis
               </span>
             </div>
 
@@ -6444,10 +6449,10 @@ export default function DetailKelas({ params: paramsPromise }) {
               {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
               <div className={`aspect-sidebar-panel ${mobileActiveView === "list" ? "show-mobile" : "hide-mobile"}`}>
                 <div className="aspect-sidebar-header">
-                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Daftar Aspek ({kelas.kolomNilai.length + newAspects.filter(a => a.nama.trim() !== "").length})</span>
+                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase" }}>Daftar Komponen ({kelas.kolomNilai.length + newAspects.filter(a => a.nama.trim() !== "").length})</span>
                   <input
                     type="checkbox"
-                    title="Pilih semua aspek mandiri"
+                    title="Pilih semua komponen mandiri"
                     style={{ accentColor: "var(--primary)", width: "14px", height: "14px", cursor: "pointer" }}
                     checked={kelas.kolomNilai.filter(c => !c.isGroup).length > 0 && kelas.kolomNilai.filter(c => !c.isGroup).every(c => selectedForGroup.has(c.id))}
                     onChange={(e) => {
@@ -6569,7 +6574,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <div className="aspect-item-card-header">
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
                             <span className="badge badge-success" style={{ fontSize: "0.6rem", padding: "1px 4px", flexShrink: 0 }}>BARU</span>
-                            <span className="aspect-item-card-title">{aspect.nama || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>+ Aspek Baru</span>}</span>
+                            <span className="aspect-item-card-title">{aspect.nama || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>+ Komponen Baru</span>}</span>
                           </div>
                           
                           <div style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto", flexShrink: 0 }}>
@@ -6603,7 +6608,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                   handleRemoveNewAspect(aspect.id);
                               }}
                               style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
-                              title="Hapus aspek baru"
+                              title="Hapus komponen baru"
                             >
                               ✖
                             </button>
@@ -6637,11 +6642,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                     className="btn btn-secondary"
                     style={{ borderStyle: "dashed", borderColor: "var(--primary)", color: "var(--primary)", padding: "10px", fontSize: "0.82rem", fontWeight: "700", width: "100%", marginTop: "10px" }}
                   >
-                    ➕ Tambah Aspek Baru
+                    ➕ Tambah Komponen Baru
                   </button>
                 </div>
 
-                {/* Merge Toolbar — muncul jika 2+ aspek mandiri dipilih */}
+                {/* Merge Toolbar — muncul jika 2+ komponen mandiri dipilih */}
                 {selectedForGroup.size >= 2 && (
                   <div className="animate-fade-in" style={{ padding: "12px", backgroundColor: "rgba(59,130,246,0.08)", borderTop: "1px solid rgba(59,130,246,0.2)", display: "flex", flexDirection: "column", gap: "8px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -6680,7 +6685,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     width: "fit-content"
                   }}
                 >
-                  ← Kembali ke Daftar Aspek
+                  ← Kembali ke Daftar Komponen
                 </button>
                 {(() => {
                   const activeAspect = kelas.kolomNilai.find(c => c.id === activeAspectId) || newAspects.find(a => a.id === activeAspectId);
@@ -6689,8 +6694,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                     return (
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyItems: "center", justifyContent: "center", flex: 1, color: "var(--text-muted)", padding: "40px", textAlign: "center" }}>
                         <span style={{ fontSize: "3rem", marginBottom: "16px" }}>⚖️</span>
-                        <h4 style={{ fontWeight: "700", color: "var(--text-primary)", marginBottom: "8px" }}>Belum Ada Aspek Terpilih</h4>
-                        <p style={{ fontSize: "0.82rem", maxWidth: "300px" }}>Pilih salah satu aspek penilaian di sebelah kiri untuk dikonfigurasi, atau buat aspek baru.</p>
+                        <h4 style={{ fontWeight: "700", color: "var(--text-primary)", marginBottom: "8px" }}>Belum Ada Komponen Terpilih</h4>
+                        <p style={{ fontSize: "0.82rem", maxWidth: "300px" }}>Pilih salah satu komponen nilai di sebelah kiri untuk dikonfigurasi, atau buat komponen baru.</p>
                       </div>
                     );
                   }
@@ -6702,7 +6707,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       {/* Name & Weight Row */}
                       <div className="aspect-form-row" style={{ display: "grid", gridTemplateColumns: "3fr 1fr", gap: "12px" }}>
                         <div className="form-group" style={{ margin: 0 }}>
-                          <label className="form-label">Nama Aspek Penilaian</label>
+                          <label className="form-label">Nama Komponen Nilai</label>
                           <input
                             type="text"
                             className="form-input"
@@ -6766,7 +6771,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         />
                       </div>
 
-                      {/* Tipe Aspek Selector (Single vs Group) */}
+                      {/* Tipe Komponen Selector (Single vs Group) */}
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                         <label className="form-label">Tipe Struktur Aspek</label>
                         <div className="selection-card-grid">
@@ -6785,7 +6790,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           >
                             <span className="selection-card-icon">🎯</span>
                             <div className="selection-card-content">
-                              <span className="selection-card-title">Aspek Tunggal</span>
+                              <span className="selection-card-title">Komponen Tunggal</span>
                               <span className="selection-card-desc">Satu nilai tunggal di spreadsheet. Bagus untuk: UTS, UAS, Keaktifan.</span>
                             </div>
                           </div>
@@ -6806,7 +6811,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <span className="selection-card-icon">📂</span>
                             <div className="selection-card-content">
                               <span className="selection-card-title">Kelompok Nilai (Grup)</span>
-                              <span className="selection-card-desc">Wadah untuk beberapa sub-aspek. Bagus untuk: Kumpulan Tugas Harian, KD 1 - KD 4.</span>
+                              <span className="selection-card-desc">Wadah untuk beberapa sub-komponen. Bagus untuk: Kumpulan Tugas Harian, KD 1 - KD 4.</span>
                             </div>
                           </div>
                         </div>
@@ -6817,7 +6822,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                           <span style={{ fontSize: "0.85rem", fontWeight: "700" }}>Visibilitas Nilai</span>
                           <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-                            {isNew ? "Aspek baru akan otomatis ditampilkan setelah disimpan." : "Tentukan apakah siswa dapat melihat nilai aspek ini di portal mereka."}
+                            {isNew ? "Komponen baru akan otomatis ditampilkan setelah disimpan." : "Tentukan apakah siswa dapat melihat nilai komponen ini di portal mereka."}
                           </span>
                         </div>
                         {isNew ? (
@@ -6845,7 +6850,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
                           {/* Calculation Method Selection */}
                           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                            <label className="form-label">Metode Perhitungan Sub-Aspek</label>
+                            <label className="form-label">Metode Perhitungan sub-komponen</label>
                             <div className="selection-card-grid sub-method-grid">
                               <div
                                 className={`selection-card sub-method-card ${activeAspect.hitungMetode !== "persentase" ? "active" : ""}`}
@@ -6861,7 +6866,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 <span className="selection-card-icon">🧮</span>
                                 <div className="selection-card-content">
                                   <span className="selection-card-title">Rata-rata Otomatis</span>
-                                  <span className="selection-card-desc">Nilai grup = rata-rata dari sub-aspek yang terisi.</span>
+                                  <span className="selection-card-desc">Nilai grup = rata-rata dari sub-komponen yang terisi.</span>
                                 </div>
                               </div>
 
@@ -6879,7 +6884,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 <span className="selection-card-icon">⚖️</span>
                                 <div className="selection-card-content">
                                   <span className="selection-card-title">Bobot Kustom (%)</span>
-                                  <span className="selection-card-desc">Setiap sub-aspek memiliki porsi bobot berbeda (harus 100%).</span>
+                                  <span className="selection-card-desc">Setiap sub-komponen memiliki porsi bobot berbeda (harus 100%).</span>
                                 </div>
                               </div>
                             </div>
@@ -6888,7 +6893,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {/* Sub-Aspects List Manager */}
                           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                              <label className="form-label" style={{ margin: 0 }}>Daftar Sub-Aspek Penilaian</label>
+                              <label className="form-label" style={{ margin: 0 }}>Daftar Sub-Komponen Nilai</label>
                               {activeAspect.hitungMetode === "persentase" && (
                                 <span
                                   className="badge"
@@ -6959,18 +6964,18 @@ export default function DetailKelas({ params: paramsPromise }) {
                                       } else {
                                         const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
                                         if (hasData) {
-                                          if (!confirm(`⚠️ PERINGATAN!\nSub-aspek "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-aspek ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
+                                          if (!confirm(`⚠️ PERINGATAN!\nsub-komponen "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-komponen ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
                                             return;
                                           }
                                         } else {
-                                          if (!confirm(`Hapus sub-aspek ${sub.nama}?`)) return;
+                                          if (!confirm(`Hapus sub-komponen ${sub.nama}?`)) return;
                                         }
                                         const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
                                         setKelas({ ...kelas, kolomNilai: newCols });
                                       }
                                     }}
                                     style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1rem", padding: "4px" }}
-                                    title="Hapus sub-aspek"
+                                    title="Hapus sub-komponen"
                                   >
                                     ✖
                                   </button>
@@ -6992,7 +6997,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                               className="btn btn-secondary"
                               style={{ fontSize: "0.78rem", padding: "6px 12px", color: "var(--primary)", width: "max-content", marginTop: "8px" }}
                             >
-                              ➕ Tambah Sub-Aspek
+                              ➕ Tambah sub-komponen
                             </button>
                           </div>
                         </div>
@@ -7003,29 +7008,6 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="aspect-modal-footer">
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "0.88rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
-                  Total Bobot: {totalBobot}%
-                </span>
-                <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
-                  {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
-                </span>
-              </div>
-              <div className="aspect-modal-footer-buttons">
-                <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
-                  Batal & Tutup
-                </button>
-                <button onClick={handleOpenDuplicate} className="btn btn-secondary btn-salin-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Aspek & Bobot dari Kelas Lain" disabled={isSavingBobot || isApplyingToOther}>
-                  📋 Salin dari Kelas Lain
-                </button>
-                <button onClick={handleOpenApplyToOther} className="btn btn-secondary btn-terapkan-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Terapkan Aspek & Bobot ke Kelas Lain" disabled={isSavingBobot || isApplyingToOther}>
-                  📤 Terapkan ke Kelas Lain
-                </button>
-                <button
-                  onClick={saveAllBobot}
-                  className="btn btn-primary btn-simpan-aspek"
                   style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
                   disabled={isSavingBobot}
                 >
@@ -7040,9 +7022,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </button>
               </div>
             </div>
-            </>) : (
-            /* ===== TAB: Status & KKM ===== */
-            <div style={{ overflowY: "auto", flex: 1, padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            {/* ===== BAGIAN: Status & KKM ===== */}
+            <div style={{ padding: "0 24px", display: "flex", flexDirection: "column", gap: "16px", borderTop: "2px dashed var(--border-color)", paddingTop: "20px", marginTop: "10px" }}>
+              <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>📊 Status & KKM</h4>
               <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
                 Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
               </p>
@@ -7057,44 +7039,55 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {/* A */}
                 <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
                   <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
-                  <input type="number" className="form-input" value={gradeA} min={0} max={100} onChange={e => setGradeA(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeA}</div>
                   <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
                 </div>
                 
                 {/* B */}
                 <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
                   <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
-                  <input type="number" className="form-input" value={gradeB} min={0} max={100} onChange={e => setGradeB(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeB}</div>
                   <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
                 </div>
                 
                 {/* C */}
                 <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
                   <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
-                  <input type="number" className="form-input" value={gradeC} min={0} max={100} onChange={e => setGradeC(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeC}</div>
                   <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
                 </div>
                 
                 {/* D */}
                 <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
                   <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
-                  <input type="number" className="form-input" value={gradeD} min={0} max={100} onChange={e => setGradeD(Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", textAlign: "center" }} />
+                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>&lt; {gradeC}</div>
                   <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
                 </div>
                 
                 {/* KKM */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap", marginBottom: "8px" }}>
                   <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
-                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => setKkm(e.target.value === "" ? "" : Number(e.target.value))} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
+                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => {
+                    const kkmValue = e.target.value === "" ? "" : Number(e.target.value);
+                    setKkm(kkmValue);
+                    if (typeof kkmValue === "number" && kkmValue > 0) {
+                      const interval = Math.round((100 - kkmValue) / 3);
+                      setGradeC(kkmValue);
+                      setGradeB(kkmValue + interval);
+                      setGradeA(kkmValue + (interval * 2));
+                      setGradeD(0);
+                    }
+                  }} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
                 </div>
                 
-                {/* Actions */}
-                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
-                  <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>Batal</button>
-                  <button onClick={handleSaveRange} className="btn btn-primary" style={{ padding: "5px 12px", fontSize: "0.82rem" }}>💾 Simpan</button>
+                {/* Actions Gabungan KKM & Komponen */}
+                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "16px" }}>
+                  <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>Batal</button>
+                  <button onClick={saveAllBobot} className="btn btn-primary" style={{ padding: "8px 24px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }} disabled={isSavingBobot}>
+                    {isSavingBobot ? <><span className="btn-spinner" /> Menyimpan...</> : <>💾 Simpan Semua Pengaturan</>}
+                  </button>
                 </div>
             </div>
-            )}
           </div>
         </div>
       )}
@@ -7107,12 +7100,12 @@ export default function DetailKelas({ params: paramsPromise }) {
               <span style={{ fontSize: "2rem" }}>⚠️</span>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                 <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>Perubahan Belum Disimpan</h4>
-                <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Anda telah membuat perubahan pada konfigurasi aspek nilai.</span>
+                <span style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Anda telah membuat perubahan pada konfigurasi komponen nilai.</span>
               </div>
             </div>
             
             <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-              Apakah Anda ingin menyimpan perubahan tersebut sebelum menutup pengaturan aspek?
+              Apakah Anda ingin menyimpan perubahan tersebut sebelum menutup pengaturan komponen?
             </p>
             
             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
@@ -7717,7 +7710,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         });
         const hasPresensi = (skema.pertemuan || []).length > 0;
 
-        // Hitung nilai aspek detail
+        // Hitung nilai komponen detail
         const detailNilai = (kelas.kolomNilai || []).map(col => {
           const groupConfig = skema.kolomAspekGroup?.[col.id];
           const isGroup = groupConfig ? !!groupConfig.isGroup : false;
@@ -7846,7 +7839,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     
                   return (
                     <Fragment key={col.kolomId}>
-                      {/* Baris Aspek Utama */}
+                      {/* Baris Komponen Utama */}
                       <tr style={col.isGroup ? { fontWeight: "bold" } : {}}>
                         <td style={{ textAlign: "center" }}>{idx + 1}</td>
                         <td style={{ textAlign: "left" }}>
@@ -7867,7 +7860,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </td>
                       </tr>
 
-                      {/* Baris Sub-aspek jika merupakan Grup */}
+                      {/* Baris sub-komponen jika merupakan Grup */}
                       {col.isGroup && col.subDetail?.map((sub) => {
                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= skema.kkm;
                         const subKet = sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas";

@@ -204,7 +204,7 @@ export async function PATCH(request, { params }) {
     await logAktivitasGuru(
       username,
       'EDIT_KOLOM',
-      `Memperbarui bobot/aspek penilaian di kelas "${kelas.nama}"`
+      `Memperbarui bobot/komponen nilai di kelas "${kelas.nama}"`
     );
 
     return NextResponse.json({ success: true, kolomNilai: cleanedKolom });

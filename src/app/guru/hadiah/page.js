@@ -2,43 +2,22 @@
 
 import { useState, useEffect } from 'react';
 
-export default function ReferralPage() {
+export default function HadiahReferralPage() {
   const [data, setData] = useState({
     balance: 0,
     history: [],
-    isFirstPaymentClaimed: false,
     referralCode: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   
-  // Form states
-  const [paket, setPaket] = useState('bulanan');
-  const [namaGuru, setNamaGuru] = useState('');
-  const [namaBank, setNamaBank] = useState('');
-  const [nomorRekening, setNomorRekening] = useState('');
-  const [tanggalTransfer, setTanggalTransfer] = useState('');
-  const [referralInput, setReferralInput] = useState('');
-  const [submittingPayment, setSubmittingPayment] = useState(false);
   const [redeemingId, setRedeemingId] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [copiedBank, setCopiedBank] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [infoModal, setInfoModal] = useState(null);
   const [activeTheme, setActiveTheme] = useState('default');
   const [trialTheme, setTrialTheme] = useState(null);
-
-  const setTodayDateTime = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    setTanggalTransfer(`${year}-${month}-${day}T${hours}:${minutes}`);
-  };
 
   const fetchReferralData = async () => {
     try {
@@ -147,58 +126,6 @@ export default function ReferralPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleConfirmPayment = async (e) => {
-    e.preventDefault();
-    if (!namaGuru.trim() || !namaBank.trim() || !nomorRekening.trim() || !tanggalTransfer) {
-      alert('Mohon lengkapi semua kolom yang wajib diisi.');
-      return;
-    }
-
-    setSubmittingPayment(true);
-    setError('');
-    setSuccessMsg('');
-
-    const harga = paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000';
-    const buktiTerstruktur = `Nama: ${namaGuru.trim()} | Bank: ${namaBank.trim()} | No. HP: ${nomorRekening.trim()} | Paket: ${paket.toUpperCase()} (${harga}) | Tanggal: ${tanggalTransfer}`;
-
-    try {
-      const res = await fetch('/api/auth/referral/confirm-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paket,
-          bukti: buktiTerstruktur,
-          referralCode: referralInput.trim()
-        })
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || 'Gagal mengirim konfirmasi pembayaran');
-      }
-
-      let successText = json.message || `Konfirmasi pembayaran paket ${paket.toUpperCase()} berhasil dikirim!`;
-      if (json.referralQueued) {
-        successText += ` Kode referral Anda sudah direkam dan poin akan dikreditkan otomatis setelah pembayaran diverifikasi admin.`;
-      } else if (referralInput.trim() !== '' && json.referralError) {
-        successText += ` Catatan kode referral: ${json.referralError}`;
-      }
-
-      setSuccessMsg(successText);
-      setNamaGuru('');
-      setNamaBank('');
-      setNomorRekening('');
-      setTanggalTransfer('');
-      setReferralInput('');
-      setPaymentModalOpen(false);
-      fetchReferralData();
-    } catch (err) {
-      setError(err.message || 'Terjadi kesalahan sistem.');
-    } finally {
-      setSubmittingPayment(false);
-    }
-  };
-
   const isThemeUnlocked = (themeId) => {
     if (themeId === 'default') return true;
     let localUnlocked = [];
@@ -241,7 +168,6 @@ export default function ReferralPage() {
   };
 
   const handleRedeem = async (rewardId, rewardName, price) => {
-    // If it's an unlocked theme, just apply it
     if (rewardId.startsWith('theme_') && isThemeUnlocked(rewardId)) {
       applyTheme(rewardId);
       setSuccessMsg(`Tema "${rewardName}" berhasil diterapkan!`);
@@ -273,12 +199,10 @@ export default function ReferralPage() {
         throw new Error(json.error || 'Gagal melakukan penukaran poin');
       }
 
-      // If trial active, stop trial
       if (trialTheme) {
         stopThemeTrial(false);
       }
 
-      // If theme reward, unlock locally & apply
       if (rewardId.startsWith('theme_')) {
         let localUnlocked = [];
         try {
@@ -301,100 +225,18 @@ export default function ReferralPage() {
   };
 
   const themeRewards = [
-    { 
-      id: 'theme_bw', 
-      name: 'Black & White Noir', 
-      price: 40, 
-      icon: '🖤', 
-      color: '#475569',
-      textColor: '#ffffff',
-      bgGradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-      accentLabel: 'Noir Obsidian & High Contrast',
-      badge: 'PRO NOIR',
-      desc: 'Perubahan total ke monokrom obsidian noir dengan background dark contrast, aksen silver, dan atmosfer profesional yang tajam.' 
-    },
-    { 
-      id: 'theme_pastel', 
-      name: 'Pastel Lavender', 
-      price: 40, 
-      icon: '🌸', 
-      color: '#8b5cf6',
-      textColor: '#ffffff',
-      bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.2) 100%)',
-      accentLabel: 'Velvet Violet & Amethyst Glow',
-      desc: 'Atmosfer ungu lavender pastel dengan background velvet violet tint, pendaran amethyst glow, dan card border serba anggun.' 
-    },
-    { 
-      id: 'theme_pinky', 
-      name: 'Sakura Pinky', 
-      price: 40, 
-      icon: '🎀', 
-      color: '#ec4899',
-      textColor: '#ffffff',
-      bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.4) 0%, rgba(190, 24, 93, 0.2) 100%)',
-      accentLabel: 'Rose Sakura & Soft Blush',
-      badge: 'POPULER',
-      desc: 'Atmosfer sakura rose pink dengan background soft blush tint, pendaran cherry blossom glow, dan aksen ceria.' 
-    },
-    { 
-      id: 'theme_cool', 
-      name: 'Cool Ocean Cyan', 
-      price: 40, 
-      icon: '🌊', 
-      color: '#06b6d4',
-      textColor: '#ffffff',
-      bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.4) 0%, rgba(2, 132, 199, 0.2) 100%)',
-      accentLabel: 'Cyber Ocean & Cyan Glow',
-      desc: 'Atmosfer cyan samudera cybernetic dengan background deep ocean dark tint, pendaran neon cyan, dan gaya futuristik.' 
-    },
-    { 
-      id: 'theme_green', 
-      name: 'Mint Emerald', 
-      price: 40, 
-      icon: '🌿', 
-      color: '#10b981',
-      textColor: '#ffffff',
-      bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(4, 120, 87, 0.2) 100%)',
-      accentLabel: 'Fresh Sage & Emerald Glow',
-      desc: 'Atmosfer hijau mint alami dengan background deep forest tint, pendaran neon sage, dan efek tenang di mata.' 
-    },
-    { 
-      id: 'theme_gold', 
-      name: 'Royal Amber Gold', 
-      price: 50, 
-      icon: '👑', 
-      badge: 'EKSKLUSIF',
-      color: '#f59e0b',
-      textColor: '#ffffff',
-      bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(180, 83, 9, 0.25) 100%)',
-      accentLabel: 'Midnight Gold Shimmer',
-      desc: 'Tema emas kerajaan eksklusif dengan background midnight amber, pendaran gold shimmer glow, dan aksen luxury champagne.' 
-    }
+    { id: 'theme_bw', name: 'Black & White Noir', price: 40, icon: '🖤', color: '#475569', textColor: '#ffffff', bgGradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', accentLabel: 'Noir Obsidian & High Contrast', badge: 'PRO NOIR', desc: 'Perubahan total ke monokrom obsidian noir dengan background dark contrast, aksen silver, dan atmosfer profesional yang tajam.' },
+    { id: 'theme_pastel', name: 'Pastel Lavender', price: 40, icon: '🌸', color: '#8b5cf6', textColor: '#ffffff', bgGradient: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4) 0%, rgba(109, 40, 217, 0.2) 100%)', accentLabel: 'Velvet Violet & Amethyst Glow', desc: 'Atmosfer ungu lavender pastel dengan background velvet violet tint, pendaran amethyst glow, dan card border serba anggun.' },
+    { id: 'theme_pinky', name: 'Sakura Pinky', price: 40, icon: '🎀', color: '#ec4899', textColor: '#ffffff', bgGradient: 'linear-gradient(135deg, rgba(236, 72, 153, 0.4) 0%, rgba(190, 24, 93, 0.2) 100%)', accentLabel: 'Rose Sakura & Soft Blush', badge: 'POPULER', desc: 'Atmosfer sakura rose pink dengan background soft blush tint, pendaran cherry blossom glow, dan aksen ceria.' },
+    { id: 'theme_cool', name: 'Cool Ocean Cyan', price: 40, icon: '🌊', color: '#06b6d4', textColor: '#ffffff', bgGradient: 'linear-gradient(135deg, rgba(6, 182, 212, 0.4) 0%, rgba(2, 132, 199, 0.2) 100%)', accentLabel: 'Cyber Ocean & Cyan Glow', desc: 'Atmosfer cyan samudera cybernetic dengan background deep ocean dark tint, pendaran neon cyan, dan gaya futuristik.' },
+    { id: 'theme_green', name: 'Mint Emerald', price: 40, icon: '🌿', color: '#10b981', textColor: '#ffffff', bgGradient: 'linear-gradient(135deg, rgba(16, 185, 129, 0.4) 0%, rgba(4, 120, 87, 0.2) 100%)', accentLabel: 'Fresh Sage & Emerald Glow', desc: 'Atmosfer hijau mint alami dengan background deep forest tint, pendaran neon sage, dan efek tenang di mata.' },
+    { id: 'theme_gold', name: 'Royal Amber Gold', price: 50, icon: '👑', badge: 'EKSKLUSIF', color: '#f59e0b', textColor: '#ffffff', bgGradient: 'linear-gradient(135deg, rgba(245, 158, 11, 0.45) 0%, rgba(180, 83, 9, 0.25) 100%)', accentLabel: 'Midnight Gold Shimmer', desc: 'Tema emas kerajaan eksklusif dengan background midnight amber, pendaran gold shimmer glow, dan aksen luxury champagne.' }
   ];
 
   const mainRewards = [
-    { 
-      id: 'free_1m', 
-      name: 'Gratis 1 Bulan Premium', 
-      price: 130, 
-      icon: '⚡',
-      desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh secara gratis.' 
-    },
-    { 
-      id: 'free_12m', 
-      name: 'Gratis 1 Tahun Premium', 
-      price: 1060, 
-      icon: '👑', 
-      badge: 'Terbaik',
-      desc: 'Akses penuh fitur premium CekNilai selama setahun penuh. Hadiah terbaik untuk guru setia.' 
-    },
-    { 
-      id: 'cash_1m', 
-      name: 'Uang Tunai Rp 1.000.000', 
-      price: 6500, 
-      icon: '💵',
-      desc: 'Tukarkan 6.500 poin Anda dengan uang tunai Rp 1.000.000 yang ditransfer langsung ke rekening bank atau e-wallet Anda.' 
-    }
+    { id: 'free_1m', name: 'Gratis 1 Bulan Premium', price: 130, icon: '⚡', desc: 'Perpanjang masa aktif akun premium CekNilai selama 1 bulan penuh secara gratis.' },
+    { id: 'free_12m', name: 'Gratis 1 Tahun Premium', price: 1060, icon: '👑', badge: 'Terbaik', desc: 'Akses penuh fitur premium CekNilai selama setahun penuh. Hadiah terbaik untuk guru setia.' },
+    { id: 'cash_1m', name: 'Uang Tunai Rp 1.000.000', price: 6500, icon: '💵', desc: 'Tukarkan 6.500 poin Anda dengan uang tunai Rp 1.000.000 yang ditransfer langsung ke rekening bank atau e-wallet Anda.' }
   ];
 
   if (loading && data.referralCode === '') {
@@ -460,9 +302,9 @@ export default function ReferralPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>👑 Masa Aktif & Referral</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>🎁 Hadiah & Referral</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '2px', margin: 0 }}>
-            Kelola paket langganan, bagikan kode referral, dan tukarkan poin dengan hadiah fisik atau tema kustom.
+            Bagikan kode referral dan tukarkan poin dengan hadiah fisik atau tema kustom.
           </p>
         </div>
         <button 
@@ -487,14 +329,14 @@ export default function ReferralPage() {
       )}
 
       {/* Main Stats Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
         
         {/* Points Display Card */}
         <div 
           style={{ 
             background: 'linear-gradient(135deg, var(--primary), #8b5cf6)', 
             borderRadius: '14px', 
-            padding: '20px', 
+            padding: '24px', 
             color: '#ffffff',
             display: 'flex',
             flexDirection: 'column',
@@ -506,7 +348,7 @@ export default function ReferralPage() {
         >
           <div style={{ position: 'absolute', right: '-10px', bottom: '-10px', fontSize: '4.5rem', opacity: 0.15, pointerEvents: 'none' }}>🎁</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: '700' }}>Poin Saya</span>
+            <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.8px', opacity: 0.85, fontWeight: '700' }}>Poin Saya</span>
             <button
               type="button"
               onClick={() => setInfoModal({
@@ -520,8 +362,8 @@ export default function ReferralPage() {
                 cursor: 'pointer',
                 fontSize: '0.7rem',
                 fontWeight: '800',
-                width: '16px',
-                height: '16px',
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -532,16 +374,16 @@ export default function ReferralPage() {
               ?
             </button>
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+          <div style={{ fontSize: '2.5rem', fontWeight: '800', marginTop: '6px', display: 'flex', alignItems: 'baseline', gap: '8px' }}>
             {data.balance}
-            <span style={{ fontSize: '0.9rem', fontWeight: '600', opacity: 0.9 }}>POIN</span>
+            <span style={{ fontSize: '1rem', fontWeight: '600', opacity: 0.9 }}>POIN</span>
           </div>
         </div>
 
         {/* Copy Referral Code Card */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '20px', gap: '8px' }}>
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '24px', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>🔗 Kode Referral Saya</span>
+            <span style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>🔗 Kode Referral Saya</span>
             <button
               type="button"
               onClick={() => setInfoModal({
@@ -555,8 +397,8 @@ export default function ReferralPage() {
                 cursor: 'pointer',
                 fontSize: '0.7rem',
                 fontWeight: '800',
-                width: '16px',
-                height: '16px',
+                width: '18px',
+                height: '18px',
                 borderRadius: '50%',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -567,16 +409,16 @@ export default function ReferralPage() {
               ?
             </button>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
             <div 
               style={{ 
                 flex: 1, 
                 backgroundColor: 'var(--bg-tertiary)', 
                 border: '1px solid var(--border-color)', 
                 borderRadius: '8px', 
-                padding: '8px 12px', 
+                padding: '10px 14px', 
                 fontFamily: 'monospace', 
-                fontSize: '1rem', 
+                fontSize: '1.2rem', 
                 fontWeight: '800', 
                 display: 'flex', 
                 alignItems: 'center',
@@ -588,86 +430,10 @@ export default function ReferralPage() {
             <button 
               onClick={handleCopyCode} 
               className={`btn ${copied ? 'btn-success' : 'btn-primary'}`}
-              style={{ padding: '0 16px', fontSize: '0.8rem', fontWeight: '700' }}
+              style={{ padding: '0 20px', fontSize: '0.9rem', fontWeight: '700' }}
             >
               {copied ? 'Tersalin!' : '📋 Salin'}
             </button>
-          </div>
-        </div>
-
-        {/* Masa Aktif Premium Card */}
-        <div 
-          className="glass-card" 
-          style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'center', 
-            padding: '20px', 
-            gap: '8px',
-            position: 'relative',
-            overflow: 'hidden'
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.8px', color: 'var(--text-secondary)', fontWeight: '700' }}>👑 Status Masa Aktif</span>
-            <button
-              type="button"
-              onClick={() => setInfoModal({
-                title: "👑 Status Masa Aktif",
-                text: "Status lisensi premium CekNilai untuk guru aktif. Silakan lakukan aktivasi paket atau perpanjang lisensi melalui form konfirmasi pembayaran."
-              })}
-              style={{
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontSize: '0.7rem',
-                fontWeight: '800',
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title="Penjelasan Masa Aktif"
-            >
-              ?
-            </button>
-          </div>
-          <div>
-            {data.premiumUntil ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                <span style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  fontSize: '0.75rem', 
-                  fontWeight: '800', 
-                  color: new Date(data.premiumUntil) > new Date() ? 'var(--success)' : 'var(--danger)',
-                  backgroundColor: new Date(data.premiumUntil) > new Date() ? 'var(--success-glow)' : 'var(--danger-glow)',
-                  padding: '4px 10px',
-                  borderRadius: '20px'
-                }}>
-                  {new Date(data.premiumUntil) > new Date() ? '● PREMIUM AKTIF' : '● EXPIRED'}
-                </span>
-                <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                  s/d {new Date(data.premiumUntil).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
-                </span>
-              </div>
-            ) : (
-              <span style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                fontSize: '0.75rem', 
-                fontWeight: '800', 
-                color: 'var(--text-muted)',
-                backgroundColor: 'var(--bg-tertiary)',
-                padding: '4px 10px',
-                borderRadius: '20px'
-              }}>
-                ● BELUM AKTIF
-              </span>
-            )}
           </div>
         </div>
 
@@ -732,93 +498,6 @@ export default function ReferralPage() {
           })}
         </div>
       </div>
-
-      {/* Info Pop-up Modal */}
-      {infoModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(6px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
-          }}
-        >
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: '20px', border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: "1.05rem", fontWeight: "800", margin: 0, color: 'var(--text-primary)' }}>
-                {infoModal.title}
-              </h4>
-              <button 
-                onClick={() => setInfoModal(null)}
-                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
-              {infoModal.text}
-            </p>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <button onClick={() => setInfoModal(null)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rules Modal */}
-      {rulesOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(6px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
-          }}
-        >
-          <div className="glass-card modal-content-scroll" style={{ width: "100%", maxWidth: "480px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>
-                💡 Ketentuan Program
-              </h3>
-              <button 
-                onClick={() => setRulesOpen(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <li><strong>Bonus Poin</strong>: Diberikan kepada pemberi & penerima kode setelah pembayaran pertama terverifikasi.</li>
-                <li><strong>Skema Poin</strong>: Paket Tahunan = <strong>100 Poin</strong>, Paket Bulanan = <strong>10 Poin</strong>.</li>
-                <li><strong>Batas Klaim</strong>: Hanya dapat diklaim 1 kali pada pembayaran pertama. Tidak berlaku untuk akun sendiri.</li>
-                <li><strong>Masa Berlaku Poin</strong>: Poin akumulatif dan tidak pernah hangus. Dapat ditukar tema warna (40 poin) atau langganan/cash.</li>
-              </ul>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
-              <button onClick={() => setRulesOpen(false)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
-                Mengerti
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Gift Redeem Section — Full Width Primary Section */}
       <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1101,129 +780,9 @@ export default function ReferralPage() {
 
       </div>
 
-      {/* Payment Activation Section — Clean Horizontal Layout */}
-      <div className="glass-card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h4 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0 }}>💳 Aktivasi Paket Premium</h4>
-            <button
-              type="button"
-              onClick={() => setInfoModal({
-                title: "💳 Aktivasi Paket Premium",
-                text: "Ikuti 3 langkah mudah: Pilih paket langganan yang Anda inginkan (Bulanan/Tahunan), lakukan transfer ke salah satu rekening bank tercantum, lalu kirimkan form konfirmasi pembayaran."
-              })}
-              style={{
-                background: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontSize: '0.7rem',
-                fontWeight: '800',
-                width: '18px',
-                height: '18px',
-                borderRadius: '50%',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title="Penjelasan Aktivasi"
-            >
-              ?
-            </button>
-          </div>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>3 Langkah Mudah Aktivasi Lisensi Premium</span>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', alignItems: 'center' }}>
-          {/* STEP 1: Pilih Paket */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>1. Pilih Paket</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {/* Bulanan */}
-              <div
-                onClick={() => setPaket('bulanan')}
-                style={{
-                  border: paket === 'bulanan' ? '2px solid var(--primary)' : '1px solid var(--border-color)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  cursor: 'pointer',
-                  backgroundColor: paket === 'bulanan' ? 'var(--primary-glow)' : 'var(--bg-secondary)',
-                  transition: 'all 0.15s ease',
-                  position: 'relative'
-                }}
-              >
-                {paket === 'bulanan' && <div style={{ position: 'absolute', top: '6px', right: '6px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: '#fff' }}>✓</div>}
-                <div style={{ fontWeight: '800', fontSize: '0.82rem' }}>Bulanan</div>
-                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--primary)', marginTop: '2px' }}>Rp 19.000</div>
-              </div>
-              {/* Tahunan */}
-              <div
-                onClick={() => setPaket('tahunan')}
-                style={{
-                  border: paket === 'tahunan' ? '2px solid #eab308' : '1px solid var(--border-color)',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  cursor: 'pointer',
-                  backgroundColor: paket === 'tahunan' ? 'rgba(234,179,8,0.08)' : 'var(--bg-secondary)',
-                  transition: 'all 0.15s ease',
-                  position: 'relative'
-                }}
-              >
-                {paket === 'tahunan' && <div style={{ position: 'absolute', top: '6px', right: '6px', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#eab308', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: '#000' }}>✓</div>}
-                <div style={{ position: 'absolute', top: '0', left: '0', backgroundColor: '#eab308', color: '#000', fontSize: '0.45rem', fontWeight: '800', padding: '1px 4px', borderRadius: '10px 0 4px 0' }}>HEMAT 30%</div>
-                <div style={{ fontWeight: '800', fontSize: '0.82rem', marginTop: '2px' }}>Tahunan</div>
-                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#eab308', marginTop: '2px' }}>Rp 159.000</div>
-              </div>
-            </div>
-          </div>
-
-          {/* STEP 2: Rekening Transfer */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>2. Rekening Transfer</div>
-            <div style={{ backgroundColor: 'var(--bg-tertiary)', borderRadius: '10px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-              {[{ label: 'BRI', value: '343601002122509' }, { label: 'BPD Kaltimtara', value: '0068360137' }, { label: 'Bank Jago', value: '105853689778' }].map((bank, i) => (
-                <div key={i} style={{ padding: '6px 10px', borderBottom: i < 2 ? '1px solid var(--border-color)' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontWeight: '700', fontSize: '0.75rem' }}>{bank.label}: </span>
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: '800' }}>{bank.value}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { navigator.clipboard.writeText(bank.value); setCopiedBank(bank.value); setTimeout(() => setCopiedBank(''), 2000); }}
-                    className={`btn ${copiedBank === bank.value ? 'btn-success' : 'btn-secondary'}`}
-                    style={{ padding: '2px 6px', fontSize: '0.65rem' }}
-                  >
-                    {copiedBank === bank.value ? '✓' : 'Salin'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* STEP 3: Action Button */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)' }}>3. Konfirmasi</div>
-            <button
-              onClick={() => setPaymentModalOpen(true)}
-              className="btn btn-primary"
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontWeight: '800',
-                fontSize: '0.85rem',
-                borderRadius: '10px',
-                cursor: 'pointer'
-              }}
-            >
-              ✉️ Konfirmasi Pembayaran ({paket === 'tahunan' ? 'Rp 159.000' : 'Rp 19.000'})
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Points History Log Table */}
-      <div className="glass-card" style={{ padding: '20px' }}>
-        <h4 style={{ fontSize: '1rem', fontWeight: '800', margin: '0 0 12px 0' }}>📋 Riwayat Poin</h4>
+      <div className="glass-card" style={{ padding: '24px' }}>
+        <h4 style={{ fontSize: '1.05rem', fontWeight: '800', margin: '0 0 16px 0' }}>📋 Riwayat Poin</h4>
         
         <div style={{ overflowX: 'auto' }}>
           {data.history.length === 0 ? (
@@ -1259,176 +818,89 @@ export default function ReferralPage() {
         </div>
       </div>
 
-      {/* Pop-up Modal Konfirmasi Pembayaran */}
-      {paymentModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.75)',
-          backdropFilter: 'blur(8px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '16px'
-        }}>
-          <div className="glass-card animate-fade-in" style={{
-            padding: '24px',
-            maxWidth: '500px',
-            width: '100%',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            position: 'relative',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
-                ✉️ Form Konfirmasi Pembayaran
+      {/* Info Pop-up Modal */}
+      {infoModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: '20px', border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h4 style={{ fontSize: "1.05rem", fontWeight: "800", margin: 0, color: 'var(--text-primary)' }}>
+                {infoModal.title}
               </h4>
-              <button
-                onClick={() => setPaymentModalOpen(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  fontSize: '1.3rem',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  lineHeight: '1'
-                }}
+              <button 
+                onClick={() => setInfoModal(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
               >
-                &times;
+                ✕
               </button>
             </div>
 
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Paket terpilih: <strong style={{ color: paket === 'tahunan' ? '#eab308' : 'var(--primary)' }}>{paket === 'tahunan' ? 'Paket Tahunan (Rp 159.000)' : 'Paket Bulanan (Rp 19.000)'}</strong>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+              {infoModal.text}
             </p>
 
-            {/* Modal Form */}
-            <form onSubmit={handleConfirmPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontSize: '0.78rem' }}>Nama Pengirim <span style={{ color: 'var(--danger)' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Contoh: Budi Santoso"
-                  value={namaGuru}
-                  onChange={(e) => setNamaGuru(e.target.value)}
-                  required
-                />
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+              <button onClick={() => setInfoModal(null)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.78rem' }}>Bank Asal <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <select
-                    className="form-input"
-                    value={namaBank}
-                    onChange={(e) => setNamaBank(e.target.value)}
-                    required
-                    style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-                  >
-                    <option value="">Pilih bank...</option>
-                    <option>BCA</option>
-                    <option>Mandiri</option>
-                    <option>BNI</option>
-                    <option>BRI</option>
-                    <option>BSI</option>
-                    <option>DANA</option>
-                    <option>OVO</option>
-                    <option>GoPay</option>
-                    <option>ShopeePay</option>
-                    <option>Lainnya</option>
-                  </select>
-                </div>
-                
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.78rem' }}>No. HP Pengirim <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="081234567890"
-                    value={nomorRekening}
-                    onChange={(e) => setNomorRekening(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+      {/* Rules Modal */}
+      {rulesOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card modal-content-scroll" style={{ width: "100%", maxWidth: "480px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0 }}>
+                💡 Ketentuan Program
+              </h3>
+              <button 
+                onClick={() => setRulesOpen(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}>
-                  <span>Waktu Transfer <span style={{ color: 'var(--danger)' }}>*</span></span>
-                  <span 
-                    onClick={setTodayDateTime} 
-                    style={{ 
-                      color: 'var(--primary)', 
-                      cursor: 'pointer', 
-                      fontSize: '0.7rem', 
-                      fontWeight: '700',
-                      backgroundColor: 'var(--primary-glow)', 
-                      padding: '2px 6px', 
-                      borderRadius: '4px'
-                    }}
-                  >
-                    ⚡ Hari Ini
-                  </span>
-                </label>
-                <input
-                  type="datetime-local"
-                  className="form-input"
-                  value={tanggalTransfer}
-                  onChange={(e) => setTanggalTransfer(e.target.value)}
-                  required
-                  style={{ colorScheme: 'dark' }}
-                />
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li><strong>Bonus Poin</strong>: Diberikan kepada pemberi & penerima kode setelah pembayaran pertama terverifikasi.</li>
+                <li><strong>Skema Poin</strong>: Paket Tahunan = <strong>100 Poin</strong>, Paket Bulanan = <strong>10 Poin</strong>.</li>
+                <li><strong>Batas Klaim</strong>: Hanya dapat diklaim 1 kali pada pembayaran pertama. Tidak berlaku untuk akun sendiri.</li>
+                <li><strong>Masa Berlaku Poin</strong>: Poin akumulatif dan tidak pernah hangus. Dapat ditukar tema warna (40 poin) atau langganan/cash.</li>
+              </ul>
+            </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}>
-                  <span>Kode Referral Guru <span style={{ color: 'var(--text-muted)' }}>(Opsional)</span></span>
-                  {data.isFirstPaymentClaimed && (
-                    <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah diklaim</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Username guru perekomendasi (misal: budi_guru)"
-                  value={referralInput}
-                  onChange={(e) => setReferralInput(e.target.value)}
-                  disabled={data.isFirstPaymentClaimed}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => setPaymentModalOpen(false)}
-                  className="btn btn-secondary"
-                  style={{ flex: 1, padding: '10px', fontSize: '0.8rem' }}
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ flex: 2, padding: '10px', fontWeight: '700', fontSize: '0.8rem' }}
-                  disabled={submittingPayment}
-                >
-                  {submittingPayment ? 'Memproses...' : '✉️ Kirim Konfirmasi'}
-                </button>
-              </div>
-
-            </form>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
+              <button onClick={() => setRulesOpen(false)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
+                Mengerti
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -313,7 +313,7 @@ export default function CetakLaporan() {
       const statusKelulusan = finalScoreRounded >= classKkm ? "LULUS" : "TIDAK LULUS";
       if (finalScoreRounded >= classKkm) passCount++;
 
-      // Simpan nilai aspek yang dihitung (misal rata-rata untuk kolom aspek grup)
+      // Simpan nilai komponen yang dihitung (misal rata-rata untuk kolom komponen grup)
       const calculatedGrades = {};
       selectedClass.kolomNilai.forEach(col => {
         const { score, isFilled } = getColScore(siswa, col);
@@ -724,7 +724,7 @@ export default function CetakLaporan() {
 
             {/* KKM Footnote */}
             <p className="report-footnote" style={{ fontSize: "0.8rem", color: "#6b7280", fontStyle: "italic", borderTop: "1px solid #e5e7eb", paddingTop: "8px", marginTop: "4px" }}>
-              * Kriteria Ketuntasan Minimal (KKM) mata pelajaran ini adalah <strong>{selectedClass.skemaPenilaian?.kkm || 75}</strong>. Nilai akhir dihitung secara otomatis berdasarkan persentase bobot setiap aspek penilaian yang telah ditetapkan.
+              * Kriteria Ketuntasan Minimal (KKM) mata pelajaran ini adalah <strong>{selectedClass.skemaPenilaian?.kkm || 75}</strong>. Nilai akhir dihitung secara otomatis berdasarkan persentase bobot setiap komponen nilai yang telah ditetapkan.
             </p>
 
             {/* OFFICIAL SIGNATURE SECTION */}

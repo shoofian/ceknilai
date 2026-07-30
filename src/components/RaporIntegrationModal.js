@@ -28,7 +28,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
           const info = await analyzeRaporTemplate(buffer);
           setExcelInfo(info);
           
-          // Inisialisasi default mapping (petakan kolom TP secara berurutan ke aspek kolom CekNilai)
+          // Inisialisasi default mapping (petakan kolom TP secara berurutan ke komponen kolom CekNilai)
           const defaultMapping = {};
           info.tpCols.forEach((tpCol, idx) => {
             const matchedAspect = kelas.kolomNilai[idx];
@@ -162,7 +162,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
             <div>
               <h4 style={{ fontSize: "0.9rem", fontWeight: "700", marginBottom: "8px" }}>Petakan Indikator Tujuan Pembelajaran (TP)</h4>
               <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
-                Hubungkan setiap kolom Tujuan Pembelajaran di Excel dengan aspek penilaian yang ada di CekNilai.
+                Hubungkan setiap kolom Tujuan Pembelajaran di Excel dengan komponen nilai yang ada di CekNilai.
               </p>
 
               <div style={{ maxHeight: "35vh", overflowY: "auto", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)" }}>
@@ -170,7 +170,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
                   <thead>
                     <tr style={{ backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", textAlign: "left" }}>
                       <th style={{ padding: "8px 12px", color: "var(--text-muted)", fontWeight: "700" }}>Kolom TP (Excel)</th>
-                      <th style={{ padding: "8px 12px", color: "var(--text-muted)", fontWeight: "700" }}>Diambil dari Aspek (CekNilai)</th>
+                      <th style={{ padding: "8px 12px", color: "var(--text-muted)", fontWeight: "700" }}>Diambil dari Komponen (CekNilai)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -186,7 +186,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
                             onChange={(e) => handleAspectChange(tpCol.index, e.target.value)}
                             style={{ width: "100%", padding: "5px 8px", fontSize: "0.8rem" }}
                           >
-                            <option value="">-- Pilih Aspek Nilai --</option>
+                            <option value="">-- Pilih Komponen Nilai --</option>
                             {kelas.kolomNilai.map(col => (
                               <option key={col.id} value={col.id}>
                                 {col.nama} ({col.bobot}%)
@@ -205,7 +205,7 @@ export default function RaporIntegrationModal({ isOpen, onClose, kelas, students
             <div style={{ fontSize: "0.74rem", color: "var(--text-muted)", display: "flex", gap: "6px", alignItems: "flex-start", backgroundColor: "rgba(59,130,246,0.03)", padding: "10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.1)" }}>
               <span>💡</span>
               <span>
-                <strong>Smart Fallback Aktif:</strong> Jika nilai rapor siswa &lt; 100 tetapi semua aspek mencapai KKM, sistem otomatis memaksa aspek bernilai terendah menjadi status <strong>"R"</strong> agar file valid diunggah ke e-Rapor.
+                <strong>Smart Fallback Aktif:</strong> Jika nilai rapor siswa &lt; 100 tetapi semua komponen mencapai KKM, sistem otomatis memaksa komponen bernilai terendah menjadi status <strong>"R"</strong> agar file valid diunggah ke e-Rapor.
               </span>
             </div>
 

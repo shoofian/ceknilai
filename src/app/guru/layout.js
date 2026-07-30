@@ -110,7 +110,8 @@ export default function GuruLayout({ children }) {
   // Cetak Laporan is now hidden from sidebar navigation as it is accessible as a modal preview inside Kelola Kelas.
 
   navItems.push({ name: "👤 Profil Saya", path: "/guru/profil" });
-  navItems.push({ name: "👑 Masa Aktif & Referral", path: "/guru/referral" });
+  navItems.push({ name: "👑 Masa Aktif", path: "/guru/masa-aktif" });
+  navItems.push({ name: "🎁 Hadiah & Referral", path: "/guru/hadiah" });
 
   if (guru) {
     navItems.splice(2, 0, { name: "👨‍🏫 Wali Kelas", path: "/guru/walikelas" });

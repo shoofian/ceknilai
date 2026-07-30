@@ -215,8 +215,15 @@ export default function GuruDashboard() {
               ))}
             </div>
           ) : (
-            <div style={{ padding: "30px", textAlign: "center", color: "var(--text-muted)", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)" }}>
-              Belum ada kelas aktif yang terdaftar.
+            <div style={{ padding: "40px 20px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", border: "2px dashed var(--primary-glow)", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+              <div style={{ fontSize: "3.5rem", marginBottom: "8px", filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.1))" }}>🏫</div>
+              <h5 style={{ fontSize: "1.25rem", fontWeight: "800", color: "var(--text-primary)" }}>Belum Ada Kelas</h5>
+              <p style={{ color: "var(--text-secondary)", maxWidth: "350px", fontSize: "0.9rem", lineHeight: "1.5" }}>
+                Mari mulai langkah pertama Anda dengan mendaftarkan kelas baru untuk tahun ajaran ini.
+              </p>
+              <Link href="/guru/kelas" className="btn btn-primary" style={{ marginTop: "8px", padding: "12px 28px", fontSize: "1rem", fontWeight: "700", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "8px", borderRadius: "99px", boxShadow: "0 8px 20px var(--primary-glow)", transition: "transform 0.2s" }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"} onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
+                ➕ Buat Kelas Pertamamu
+              </Link>
             </div>
           )}
         </div>
