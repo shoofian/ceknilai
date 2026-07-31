@@ -3867,7 +3867,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse 2s infinite" : "none" }}
                     disabled={isLocked}
                   >
-                    ⚙️ Atur Komponen, Bobot & KKM
+                    ⚙️ Tambah Komponen Nilai
                     {(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && (
                       <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "4px" }}>Wajib Diisi</span>
                     )}
