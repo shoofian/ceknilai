@@ -7008,20 +7008,6 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </div>
 
-                  style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
-                  disabled={isSavingBobot}
-                >
-                  {isSavingBobot ? (
-                    <>
-                      <span className="btn-spinner" />
-                      Menyimpan...
-                    </>
-                  ) : (
-                    <>💾 Simpan</>
-                  )}
-                </button>
-              </div>
-            </div>
             {/* ===== BAGIAN: Status & KKM ===== */}
             <div style={{ padding: "0 24px", display: "flex", flexDirection: "column", gap: "16px", borderTop: "2px dashed var(--border-color)", paddingTop: "20px", marginTop: "10px" }}>
               <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>📊 Status & KKM</h4>
