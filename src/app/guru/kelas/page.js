@@ -796,7 +796,7 @@ export default function KelolaKelas() {
           <button 
             onClick={handleOpenAdd} 
             className="btn btn-primary"
-            style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+            style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (kelasData.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (kelasData.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
             disabled={isLocked}
           >
             ➕ Tambah Kelas Baru
@@ -942,10 +942,13 @@ export default function KelolaKelas() {
           <button 
             onClick={handleOpenAdd} 
             className="btn btn-primary" 
-            style={{ display: "inline-flex", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+            style={{ display: "inline-flex", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: !isLocked ? "pulse-soft 2s infinite" : "none" }}
             disabled={isLocked}
           >
             ➕ Tambah Kelas Pertama
+            {!isLocked && (
+              <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "6px" }}>Mulai Disini</span>
+            )}
           </button>
         </div>
       )}

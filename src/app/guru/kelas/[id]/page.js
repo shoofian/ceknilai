@@ -3864,7 +3864,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <button 
                     onClick={() => { setKolomModalOpen(true); }} 
                     className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse 2s infinite" : "none" }}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
                     disabled={isLocked}
                   >
                     ⚙️ Tambah Komponen Nilai
@@ -3884,10 +3884,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
                   <button 
                     onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
-                    className="btn btn-secondary" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
+                    className={(!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) ? "btn btn-primary" : "btn btn-secondary"} 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", boxShadow: (!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) ? "pulse-soft 2s infinite" : "none" }}
                   >
                     📊 Kelola Data Siswa
+                    {(!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) && (
+                      <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "4px" }}>Wajib Diisi</span>
+                    )}
                   </button>
                   <button 
                     onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
