@@ -110,7 +110,16 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // States untuk Kolom Nilai
+  const [presetSelectionModalOpen, setPresetSelectionModalOpen] = useState(false);
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
+
+  const handleOpenKolomModal = () => {
+    if (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) {
+      setPresetSelectionModalOpen(true);
+    } else {
+      setKolomModalOpen(true);
+    }
+  };
   const [fabOpen, setFabOpen] = useState(false);
   const [newAspects, setNewAspects] = useState([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]);
   const [kolomError, setKolomError] = useState("");
@@ -2802,7 +2811,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <button
               onClick={() => {
 
-                setKolomModalOpen(true);
+                handleOpenKolomModal();
                 const configCard = document.getElementById("konfigurasi-kelas");
                 if (configCard) {
                   configCard.scrollIntoView({ behavior: 'smooth' });
@@ -3805,7 +3814,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               width: "100%"
             }}>
               <button 
-                onClick={() => { setKolomModalOpen(true); }} 
+                onClick={() => { handleOpenKolomModal(); }} 
                 className="btn btn-outline" 
                 style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
               >
@@ -3862,7 +3871,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <button 
-                    onClick={() => { setKolomModalOpen(true); }} 
+                    onClick={() => { handleOpenKolomModal(); }} 
                     className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
                     style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
                     disabled={isLocked}
@@ -5385,7 +5394,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 onClick={() => {
                   setOnboardingModalOpen(false);
-                  setKolomModalOpen(true);
+                  handleOpenKolomModal();
                   const configCard = document.getElementById("konfigurasi-kelas");
                   if (configCard) {
                     configCard.scrollIntoView({ behavior: 'smooth' });
@@ -6417,6 +6426,73 @@ export default function DetailKelas({ params: paramsPromise }) {
         );
       })()}
 
+      {/* ===== MODAL: Pemilihan Preset ===== */}
+      {presetSelectionModalOpen && (
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "800px", padding: "32px", maxHeight: "90vh", overflowY: "auto", position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800" }}>Pilih Struktur Komponen Nilai</h3>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "4px" }}>Pilih preset yang sesuai dengan kurikulum Anda, atau mulai dari nol secara manual.</p>
+              </div>
+              <button onClick={() => setPresetSelectionModalOpen(false)} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}>✕</button>
+            </div>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
+              {/* Option Kustom */}
+              <div 
+                onClick={() => {
+                  setPresetSelectionModalOpen(false);
+                  setKolomModalOpen(true);
+                }}
+                style={{ border: "2px dashed var(--border-color)", padding: "20px", borderRadius: "var(--radius-md)", cursor: "pointer", display: "flex", flexDirection: "column", gap: "8px", transition: "all 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = "var(--primary)"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border-color)"}
+              >
+                <div style={{ fontSize: "2rem" }}>📝</div>
+                <h4 style={{ fontSize: "1.1rem", fontWeight: "700" }}>Mulai Kosong (Kustom)</h4>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Buat komponen, kategori, dan bobot nilai secara manual dari awal tanpa template.</p>
+              </div>
+
+              {/* Options Presets */}
+              {ASPEK_PRESETS.map(preset => (
+                <div 
+                  key={preset.id}
+                  onClick={() => {
+                    setKelas(prev => ({
+                      ...prev,
+                      kolomNilai: JSON.parse(JSON.stringify(preset.kolomNilai))
+                    }));
+                    setNewAspects([]);
+                    if (preset.kolomNilai.length > 0) {
+                      setActiveAspectId(preset.kolomNilai[0].id);
+                    }
+                    setPresetSelectionModalOpen(false);
+                    setKolomModalOpen(true);
+                  }}
+                  style={{ border: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", padding: "20px", borderRadius: "var(--radius-md)", cursor: "pointer", display: "flex", flexDirection: "column", gap: "8px", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.boxShadow = "0 4px 12px var(--primary-glow)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.boxShadow = "none"; }}
+                >
+                  <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--text-primary)" }}>{preset.nama}</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", minHeight: "36px" }}>{preset.deskripsi}</p>
+                  
+                  <div style={{ marginTop: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Preview Kolom:</span>
+                    <ul style={{ margin: "8px 0 0 0", paddingLeft: "20px", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                      {preset.kolomNilai.slice(0, 3).map((col, idx) => (
+                        <li key={idx}><strong>{col.nama}</strong> ({col.bobot}%) {col.isGroup && col.subKolom?.length > 0 && <span style={{opacity:0.7}}>• {col.subKolom.length} sub-kolom</span>}</li>
+                      ))}
+                      {preset.kolomNilai.length > 3 && <li><em>+ {preset.kolomNilai.length - 3} lainnya</em></li>}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ===== MODAL: Atur Komponen, Bobot & KKM ===== */}
       {kolomModalOpen && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "12px" }}>
@@ -6426,43 +6502,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <h3>⚙️ Pengaturan Komponen & KKM</h3>
               </div>
               <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
-            </div>
-            {/* --- PRESET SELECTOR BAR --- */}
-            <div style={{ padding: "10px 24px", backgroundColor: "var(--bg-secondary)", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-primary)" }}>✨ Preset Kurikulum:</span>
-                <select
-                  defaultValue=""
-                  className="form-input"
-                  style={{ padding: "4px 10px", fontSize: "0.78rem", maxWidth: "280px" }}
-                  onChange={(e) => {
-                    const selectedId = e.target.value;
-                    if (!selectedId) return;
-                    const preset = ASPEK_PRESETS.find(p => p.id === selectedId);
-                    if (preset) {
-                      if (confirm(`⚠️ Terapkan ${preset.nama}?\n\nStruktur komponen & bobot di modal ini akan digantikan dengan preset terpilih.`)) {
-                        setKelas(prev => ({
-                          ...prev,
-                          kolomNilai: JSON.parse(JSON.stringify(preset.kolomNilai))
-                        }));
-                        setNewAspects([]);
-                        if (preset.kolomNilai.length > 0) {
-                          setActiveAspectId(preset.kolomNilai[0].id);
-                        }
-                      }
-                    }
-                    e.target.value = "";
-                  }}
-                >
-                  <option value="" disabled>-- Pilih Preset Komponen --</option>
-                  {ASPEK_PRESETS.map(p => (
-                    <option key={p.id} value={p.id}>{p.nama}</option>
-                  ))}
-                </select>
-              </div>
-              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic" }}>
-                Pilih preset untuk mengisi komponen &amp; bobot 1-klik otomatis
-              </span>
             </div>
 
             <div className="aspect-modal-container">
