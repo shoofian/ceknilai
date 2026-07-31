@@ -230,11 +230,9 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Hub Modal Operasi Data
   const [kelolaSiswaModalOpen, setKelolaSiswaModalOpen] = useState(false);
-  const [kelolaSiswaTab, setKelolaSiswaTab] = useState('tambah'); // 'tambah' | 'cepat' | 'ekspor' | 'impor'
-  const [quickNames, setQuickNames] = useState("");
-  const [isQuickAdding, setIsQuickAdding] = useState(false);
+  const [kelolaSiswaTab, setKelolaSiswaTab] = useState('tambah'); // 'tambah' | 'impor'
   const [cetakEksporModalOpen, setCetakEksporModalOpen] = useState(false);
-  const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor'
+  const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor' | 'excel'
 
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(() => {
     if (typeof window !== "undefined") {
@@ -1003,45 +1001,6 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNilaiKatrol("");
     setSiswaError("");
     setSiswaModalOpen(true);
-  };
-
-  const handleQuickAddSiswa = async () => {
-    if (!quickNames.trim()) return;
-    
-    setIsQuickAdding(true);
-    try {
-      const names = quickNames.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-      const siswaList = names.map((nama, idx) => {
-        // Generate temporary NISN: TMP + random string
-        const tempNisn = `TMP${Math.floor(Date.now() / 1000).toString(36).toUpperCase()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${idx}`;
-        return {
-          nisn: tempNisn,
-          nama: nama,
-          tanggalLahir: "",
-          nilai: {}
-        };
-      });
-
-      const response = await fetch(`/api/kelas/${classId}/import`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siswaList }),
-      });
-      
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Gagal menambahkan data");
-      
-      triggerAlert(`Berhasil membuat ${result.added} akun siswa dengan NISN sementara!`);
-      setKelolaSiswaModalOpen(false);
-      setQuickNames("");
-      fetchKelas(); // reload data
-    } catch (err) {
-      triggerAlert(`Error: ${err.message}`, null, { isDanger: true });
-    } finally {
-      setIsQuickAdding(false);
-    }
-  };
-
   const handleTogglePublish = async () => {
     const newStatus = !kelas.isNilaiAkhirGenerated;
     const confirmMsg = newStatus 
@@ -2523,8 +2482,8 @@ export default function DetailKelas({ params: paramsPromise }) {
           return l.includes("tanggal lahir") || l.includes("tgl lahir");
         });
         
-        if (nisnIdx === -1 || namaIdx === -1) {
-          alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: NISN, Nama");
+        if (namaIdx === -1) {
+          alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: Nama");
           return;
         }
 
@@ -2602,9 +2561,13 @@ export default function DetailKelas({ params: paramsPromise }) {
           const tglVal = normalizeTanggal(tglRaw);
           const rombelVal = rombelIdx !== -1 && cols[rombelIdx] !== undefined ? String(cols[rombelIdx]).trim() : "";
 
+          let finalNisn = nisnVal;
+          if (!finalNisn) {
+            finalNisn = `TMP${Math.floor(Date.now() / 1000).toString(36).toUpperCase()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}${i}`;
+          }
+
           // Pengecekan data tidak lengkap
           const missingFields = [];
-          if (!nisnVal) missingFields.push("NISN");
           if (!namaVal) missingFields.push("Nama");
 
           if (missingFields.length > 0) {
@@ -2646,7 +2609,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           });
           
           parsedSiswa.push({
-            nisn: nisnVal,
+            nisn: finalNisn,
             nama: namaVal,
             tanggalLahir: tglVal,
             nilai: nilaiObj
@@ -5782,16 +5745,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                 👤 Tambah
               </button>
               <button
-                onClick={() => setKelolaSiswaTab('cepat')}
-                style={{
-                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: kelolaSiswaTab === 'cepat' ? "var(--primary)" : "transparent",
-                  color: kelolaSiswaTab === 'cepat' ? "#fff" : "var(--text-secondary)"
-                }}
-              >
-                ⚡ Cepat
-              </button>
-              <button
                 onClick={() => setKelolaSiswaTab('impor')}
                 style={{
                   flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
@@ -5829,31 +5782,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </div>
               )}
 
-              {kelolaSiswaTab === 'cepat' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Cukup <strong>Salin (Copy)</strong> daftar nama siswa dari Excel, Word, atau WhatsApp, lalu <strong>Tempel (Paste)</strong> di kotak bawah ini. NISN akan dibuat otomatis secara acak sebagai ID sementara.
-                  </p>
-                  <textarea 
-                    className="form-input" 
-                    placeholder="Contoh:&#10;Ahmad Budi&#10;Citra Kirana&#10;Dedi Corbuzier" 
-                    rows={6}
-                    value={quickNames}
-                    onChange={(e) => setQuickNames(e.target.value)}
-                    style={{ fontSize: "0.85rem", resize: "vertical", fontFamily: "monospace" }}
-                  />
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "4px" }}>
-                    <button
-                      onClick={handleQuickAddSiswa}
-                      className="btn btn-primary"
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                      disabled={isLocked || isQuickAdding || !quickNames.trim()}
-                    >
-                      {isQuickAdding ? "Memproses..." : "⚡ Buat Akun Siswa Sekarang"}
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {kelolaSiswaTab === 'impor' && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -5862,8 +5790,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </p>
                   <div style={{ backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-primary)" }}>
                     <ul style={{ margin: 0, paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <li><strong>NISN</strong> (Nomor Induk Siswa Nasional) - <em>Wajib</em></li>
                       <li><strong>Nama</strong> (Nama Lengkap Siswa) - <em>Wajib</em></li>
+                      <li><strong>NISN</strong> (Nomor Induk Siswa Nasional) - <em style={{color: "var(--primary)"}}>Opsional (Jika kosong, dibuat otomatis)</em></li>
                       <li><strong>Tanggal Lahir</strong> (Format Bebas) - <em>Opsional</em></li>
                     </ul>
                     <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "8px" }}>
