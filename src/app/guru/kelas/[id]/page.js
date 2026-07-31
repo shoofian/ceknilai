@@ -6633,6 +6633,20 @@ export default function DetailKelas({ params: paramsPromise }) {
                     );
                   })}
                   
+                  {/* --- KKM Menu Item --- */}
+                  <div
+                    className={`aspect-item-card ${activeAspectId === 'kkm' ? "active" : ""}`}
+                    onClick={() => {
+                      setActiveAspectId('kkm');
+                      setMobileActiveView("detail");
+                    }}
+                    style={{ border: "1px dashed var(--primary)", backgroundColor: "rgba(59,130,246,0.05)", marginTop: "12px", marginBottom: "8px" }}
+                  >
+                    <div className="aspect-item-card-header">
+                      <span className="aspect-item-card-title">🎯 KKM & Predikat</span>
+                    </div>
+                  </div>
+                  
                   {/* Button Add New Aspect */}
                   <button
                     onClick={() => {
@@ -6688,6 +6702,68 @@ export default function DetailKelas({ params: paramsPromise }) {
                   ← Kembali ke Daftar Komponen
                 </button>
                 {(() => {
+                  if (activeAspectId === 'kkm') {
+                    return (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "10px 0" }}>
+                        <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>📊 Status & KKM</h4>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
+                          Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
+                        </p>
+                        
+                        {/* Header grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
+                          <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
+                          <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
+                        </div>
+                        
+                        {/* A */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
+                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeA}</div>
+                          <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                        </div>
+                        
+                        {/* B */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
+                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
+                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeB}</div>
+                          <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                        </div>
+                        
+                        {/* C */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
+                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
+                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeC}</div>
+                          <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                        </div>
+                        
+                        {/* D */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
+                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
+                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>&lt; {gradeC}</div>
+                          <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
+                        </div>
+                        
+                        {/* KKM */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap", marginBottom: "8px" }}>
+                          <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
+                          <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => {
+                            const kkmValue = e.target.value === "" ? "" : Number(e.target.value);
+                            setKkm(kkmValue);
+                            if (typeof kkmValue === "number" && kkmValue > 0) {
+                              const interval = Math.round((100 - kkmValue) / 3);
+                              setGradeC(kkmValue);
+                              setGradeB(kkmValue + interval);
+                              setGradeA(kkmValue + (interval * 2));
+                              setGradeD(0);
+                            }
+                          }} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
+                        </div>
+                      </div>
+                    );
+                  }
+
                   const activeAspect = kelas.kolomNilai.find(c => c.id === activeAspectId) || newAspects.find(a => a.id === activeAspectId);
                   
                   if (!activeAspect) {
@@ -7008,71 +7084,42 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </div>
 
-            {/* ===== BAGIAN: Status & KKM ===== */}
-            <div style={{ padding: "0 24px", display: "flex", flexDirection: "column", gap: "16px", borderTop: "2px dashed var(--border-color)", paddingTop: "20px", marginTop: "10px" }}>
-              <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>📊 Status & KKM</h4>
-              <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
-                Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
-              </p>
-                
-                {/* Header grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
-                  <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
-                </div>
-                
-                {/* A */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
-                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeA}</div>
-                  <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* B */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
-                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeB}</div>
-                  <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* C */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
-                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeC}</div>
-                  <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* D */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                  <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
-                  <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>&lt; {gradeC}</div>
-                  <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                </div>
-                
-                {/* KKM */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap", marginBottom: "8px" }}>
-                  <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
-                  <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => {
-                    const kkmValue = e.target.value === "" ? "" : Number(e.target.value);
-                    setKkm(kkmValue);
-                    if (typeof kkmValue === "number" && kkmValue > 0) {
-                      const interval = Math.round((100 - kkmValue) / 3);
-                      setGradeC(kkmValue);
-                      setGradeB(kkmValue + interval);
-                      setGradeA(kkmValue + (interval * 2));
-                      setGradeD(0);
-                    }
-                  }} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
-                </div>
-                
-                {/* Actions Gabungan KKM & Komponen */}
-                <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "16px" }}>
-                  <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>Batal</button>
-                  <button onClick={saveAllBobot} className="btn btn-primary" style={{ padding: "8px 24px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "8px" }} disabled={isSavingBobot}>
-                    {isSavingBobot ? <><span className="btn-spinner" /> Menyimpan...</> : <>💾 Simpan Semua Pengaturan</>}
-                  </button>
-                </div>
+            {/* Footer Modal Actions */}
+            <div className="aspect-modal-footer">
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "0.88rem", fontWeight: "700", color: totalBobot === 100 ? "var(--success)" : "var(--warning)" }}>
+                  Total Bobot: {totalBobot}%
+                </span>
+                <span className={`badge ${totalBobot === 100 ? "badge-success" : "badge-warning"}`} style={{ fontSize: "0.62rem" }}>
+                  {totalBobot === 100 ? "✓ Lengkap" : "Harus 100%"}
+                </span>
+              </div>
+              <div className="aspect-modal-footer-buttons">
+                <button onClick={handleCloseKolomModal} className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.82rem" }} disabled={isSavingBobot}>
+                  Batal & Tutup
+                </button>
+                <button onClick={handleOpenDuplicate} className="btn btn-secondary btn-salin-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Salin Komponen & Bobot dari Kelas Lain" disabled={isSavingBobot || isApplyingToOther}>
+                  📋 Salin dari Kelas Lain
+                </button>
+                <button onClick={handleOpenApplyToOther} className="btn btn-secondary btn-terapkan-kelas" style={{ padding: "8px 16px", fontSize: "0.82rem" }} title="Terapkan Komponen & Bobot ke Kelas Lain" disabled={isSavingBobot || isApplyingToOther}>
+                  📤 Terapkan ke Kelas Lain
+                </button>
+                <button
+                  onClick={saveAllBobot}
+                  className="btn btn-primary btn-simpan-aspek"
+                  style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
+                  disabled={isSavingBobot}
+                >
+                  {isSavingBobot ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Menyimpan...
+                    </>
+                  ) : (
+                    <>💾 Simpan Semua Pengaturan</>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
