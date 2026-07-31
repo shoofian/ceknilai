@@ -6633,17 +6633,32 @@ export default function DetailKelas({ params: paramsPromise }) {
                     );
                   })}
                   
-                  {/* --- KKM Menu Item --- */}
+                  {/* --- KKM Menu Item (Inline Form) --- */}
                   <div
-                    className={`aspect-item-card ${activeAspectId === 'kkm' ? "active" : ""}`}
-                    onClick={() => {
-                      setActiveAspectId('kkm');
-                      setMobileActiveView("detail");
-                    }}
-                    style={{ border: "1px dashed var(--primary)", backgroundColor: "rgba(59,130,246,0.05)", marginTop: "12px", marginBottom: "8px" }}
+                    className="aspect-item-card"
+                    style={{ border: "1px dashed var(--primary)", backgroundColor: "rgba(59,130,246,0.05)", marginTop: "12px", marginBottom: "8px", cursor: "default" }}
                   >
-                    <div className="aspect-item-card-header">
-                      <span className="aspect-item-card-title">🎯 KKM & Predikat</span>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", width: "100%", padding: "4px" }}>
+                      <span className="aspect-item-card-title" style={{ fontWeight: "700" }}>🎯 KKM (Lulus ≥)</span>
+                      <input 
+                        type="number" 
+                        className="form-input" 
+                        value={kkm} 
+                        min={0} 
+                        max={100} 
+                        onChange={e => {
+                          const kkmValue = e.target.value === "" ? "" : Number(e.target.value);
+                          setKkm(kkmValue);
+                          if (typeof kkmValue === "number" && kkmValue > 0) {
+                            const interval = Math.round((100 - kkmValue) / 3);
+                            setGradeC(kkmValue);
+                            setGradeB(kkmValue + interval);
+                            setGradeA(kkmValue + (interval * 2));
+                            setGradeD(0);
+                          }
+                        }} 
+                        style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} 
+                      />
                     </div>
                   </div>
                   
@@ -6702,68 +6717,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                   ← Kembali ke Daftar Komponen
                 </button>
                 {(() => {
-                  if (activeAspectId === 'kkm') {
-                    return (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "10px 0" }}>
-                        <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>📊 Status & KKM</h4>
-                        <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
-                          Atur ambang batas tiap peringkat dan label status sesuai keinginan Anda (contoh: <strong>Sangat Baik</strong>, <strong>Lulus</strong>, dll).
-                        </p>
-                        
-                        {/* Header grid */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center" }}>
-                          <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Peringkat</span>
-                          <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Nilai ≥</span>
-                          <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase" }}>Label Status</span>
-                        </div>
-                        
-                        {/* A */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(59,130,246,0.15)" }}>
-                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--primary)" }}>🏆 A</span>
-                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeA}</div>
-                          <input type="text" className="form-input" value={statusA} onChange={e => setStatusA(e.target.value)} placeholder="Sangat Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                        </div>
-                        
-                        {/* B */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(34,197,94,0.12)" }}>
-                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--success)" }}>✅ B</span>
-                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeB}</div>
-                          <input type="text" className="form-input" value={statusB} onChange={e => setStatusB(e.target.value)} placeholder="Baik" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                        </div>
-                        
-                        {/* C */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(234,179,8,0.15)" }}>
-                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--warning)" }}>⚠️ C</span>
-                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>≥ {gradeC}</div>
-                          <input type="text" className="form-input" value={statusC} onChange={e => setStatusC(e.target.value)} placeholder="Cukup" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                        </div>
-                        
-                        {/* D */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr 1.2fr", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-tertiary)", padding: "6px 10px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(239,68,68,0.1)" }}>
-                          <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--danger)" }}>❌ D</span>
-                          <div style={{ textAlign: "center", fontSize: "0.9rem", fontWeight: "700", color: "var(--text-primary)" }}>&lt; {gradeC}</div>
-                          <input type="text" className="form-input" value={statusD} onChange={e => setStatusD(e.target.value)} placeholder="Kurang" maxLength={30} style={{ padding: "4px 8px", fontSize: "0.85rem" }} />
-                        </div>
-                        
-                        {/* KKM */}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border-color)", flexWrap: "wrap", marginBottom: "8px" }}>
-                          <span style={{ fontWeight: "700", fontSize: "0.82rem", whiteSpace: "nowrap" }}>🎯 KKM (Lulus ≥)</span>
-                          <input type="number" className="form-input" value={kkm} min={0} max={100} onChange={e => {
-                            const kkmValue = e.target.value === "" ? "" : Number(e.target.value);
-                            setKkm(kkmValue);
-                            if (typeof kkmValue === "number" && kkmValue > 0) {
-                              const interval = Math.round((100 - kkmValue) / 3);
-                              setGradeC(kkmValue);
-                              setGradeB(kkmValue + interval);
-                              setGradeA(kkmValue + (interval * 2));
-                              setGradeD(0);
-                            }
-                          }} style={{ padding: "4px 8px", fontSize: "0.85rem", maxWidth: "70px", textAlign: "center" }} />
-                        </div>
-                      </div>
-                    );
-                  }
-
                   const activeAspect = kelas.kolomNilai.find(c => c.id === activeAspectId) || newAspects.find(a => a.id === activeAspectId);
                   
                   if (!activeAspect) {
