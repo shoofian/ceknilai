@@ -5801,16 +5801,6 @@ export default function DetailKelas({ params: paramsPromise }) {
               >
                 📤 Impor
               </button>
-              <button
-                onClick={() => setKelolaSiswaTab('ekspor')}
-                style={{
-                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: kelolaSiswaTab === 'ekspor' ? "var(--primary)" : "transparent",
-                  color: kelolaSiswaTab === 'ekspor' ? "#fff" : "var(--text-secondary)"
-                }}
-              >
-                📥 Ekspor
-              </button>
             </div>
 
             {/* Tab Content */}
@@ -5908,25 +5898,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </div>
               )}
 
-              {kelolaSiswaTab === 'ekspor' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Unduh seluruh data siswa yang terdaftar di kelas ini dalam bentuk file spreadsheet Excel (.xlsx).
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
-                    <button
-                      onClick={() => {
-                        setKelolaSiswaModalOpen(false);
-                        downloadExcelTemplate();
-                      }}
-                      className="btn btn-primary"
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                    >
-                      📥 Ekspor File Excel
-                    </button>
-                  </div>
-                </div>
-              )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "12px" }}>
                 <button onClick={() => setKelolaSiswaModalOpen(false)} className="btn btn-secondary" style={{ padding: "6px 16px", fontSize: "0.82rem" }}>Tutup</button>
@@ -5979,6 +5950,16 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }}
               >
                 📋 E-Rapor
+              </button>
+              <button
+                onClick={() => setCetakEksporTab('excel')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: cetakEksporTab === 'excel' ? "var(--primary)" : "transparent",
+                  color: cetakEksporTab === 'excel' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                📥 Excel
               </button>
             </div>
 
@@ -6040,6 +6021,26 @@ export default function DetailKelas({ params: paramsPromise }) {
                       disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0}
                     >
                       📋 Integrasi ke E-Rapor
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {cetakEksporTab === 'excel' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Unduh seluruh data siswa beserta nilainya ke dalam format spreadsheet Excel (.xlsx).
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={() => {
+                        setCetakEksporModalOpen(false);
+                        downloadExcelTemplate();
+                      }}
+                      className="btn btn-primary"
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
+                    >
+                      📥 Ekspor Data ke Excel
                     </button>
                   </div>
                 </div>
