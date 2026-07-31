@@ -796,7 +796,7 @@ export default function KelolaKelas() {
           <button 
             onClick={handleOpenAdd} 
             className="btn btn-primary"
-            style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (kelasData.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (kelasData.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
+            style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (kelas.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (kelas.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
             disabled={isLocked}
           >
             ➕ Tambah Kelas Baru
