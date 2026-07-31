@@ -3863,11 +3863,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   <button 
                     onClick={() => { setKolomModalOpen(true); }} 
-                    className="btn btn-outline" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                    className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
+                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse 2s infinite" : "none" }}
                     disabled={isLocked}
                   >
                     ⚙️ Atur Komponen, Bobot & KKM
+                    {(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && (
+                      <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "4px" }}>Wajib Diisi</span>
+                    )}
                   </button>
                 </div>
               </div>
@@ -5368,13 +5371,27 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
 
             {/* Action */}
-            <div style={{ marginTop: "16px" }}>
+            <div style={{ marginTop: "16px", display: "flex", gap: "12px" }}>
               <button 
                 onClick={() => setOnboardingModalOpen(false)}
-                className="btn btn-primary" 
-                style={{ width: "100%", padding: "14px", fontSize: "1rem", borderRadius: "var(--radius-md)", justifyContent: "center", boxShadow: "0 4px 15px var(--primary-glow)" }}
+                className="btn btn-secondary" 
+                style={{ flex: 1, padding: "14px", fontSize: "0.9rem", borderRadius: "var(--radius-md)", justifyContent: "center" }}
               >
-                Siap, Ayo Mulai! 🚀
+                Nanti Saja
+              </button>
+              <button 
+                onClick={() => {
+                  setOnboardingModalOpen(false);
+                  setKolomModalOpen(true);
+                  const configCard = document.getElementById("konfigurasi-kelas");
+                  if (configCard) {
+                    configCard.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="btn btn-primary" 
+                style={{ flex: 2, padding: "14px", fontSize: "1rem", borderRadius: "var(--radius-md)", justifyContent: "center", boxShadow: "0 4px 15px var(--primary-glow)" }}
+              >
+                Mulai Atur Komponen 🚀
               </button>
             </div>
             
