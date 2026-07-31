@@ -192,6 +192,10 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [previewList, setPreviewList] = useState([]);
   const [importing, setImporting] = useState(false);
   const [importWarnings, setImportWarnings] = useState([]);
+  const [rombelSelectModalOpen, setRombelSelectModalOpen] = useState(false);
+  const [tempParsedSiswa, setTempParsedSiswa] = useState([]);
+  const [availableRombels, setAvailableRombels] = useState([]);
+  const [selectedRombelFilter, setSelectedRombelFilter] = useState("");
 
   // State loading saat simpan komponen & bobot
   const [isSavingBobot, setIsSavingBobot] = useState(false);
@@ -1001,6 +1005,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNilaiKatrol("");
     setSiswaError("");
     setSiswaModalOpen(true);
+  };
+
   const handleTogglePublish = async () => {
     const newStatus = !kelas.isNilaiAkhirGenerated;
     const confirmMsg = newStatus 
@@ -2612,6 +2618,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             nisn: finalNisn,
             nama: namaVal,
             tanggalLahir: tglVal,
+            rombel: rombelVal,
             nilai: nilaiObj
           });
         }
@@ -2626,9 +2633,19 @@ export default function DetailKelas({ params: paramsPromise }) {
           return;
         }
         
-        setImportWarnings(warnings);
-        setPreviewList(parsedSiswa);
-        setPreviewModalOpen(true);
+        // Cek Rombel
+        const uniqueRombels = [...new Set(parsedSiswa.map(s => s.rombel).filter(r => r))];
+        if (uniqueRombels.length > 1) {
+          setAvailableRombels(uniqueRombels);
+          setTempParsedSiswa(parsedSiswa);
+          setSelectedRombelFilter(uniqueRombels.includes(kelas.rombelNama) ? kelas.rombelNama : uniqueRombels[0]);
+          setImportWarnings(warnings);
+          setRombelSelectModalOpen(true);
+        } else {
+          setImportWarnings(warnings);
+          setPreviewList(parsedSiswa);
+          setPreviewModalOpen(true);
+        }
         
         // Reset file input agar bisa upload file yang sama lagi jika butuh
         e.target.value = null;
@@ -4867,6 +4884,60 @@ export default function DetailKelas({ params: paramsPromise }) {
 
 
 
+
+      {/* MODAL: ROMBEL SELECTION */}
+      {rombelSelectModalOpen && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "480px", display: "flex", flexDirection: "column", gap: "16px", padding: "24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <span style={{ fontSize: "1.5rem" }}>👥</span>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Pilih Rombongan Belajar</h3>
+            </div>
+            
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+              File Excel/Dapodik yang Anda unggah mengandung data siswa dari <strong>beberapa kelas sekaligus</strong> ({availableRombels.length} rombel terdeteksi).
+              <br/><br/>
+              Anda saat ini sedang mengimpor ke kelas <strong style={{ color: "var(--text-primary)" }}>{kelas.nama}</strong>. Silakan pilih satu rombel yang datanya ingin diekstrak:
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <label style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--text-secondary)" }}>Pilih Rombel / Kelas:</label>
+              <select 
+                value={selectedRombelFilter}
+                onChange={(e) => setSelectedRombelFilter(e.target.value)}
+                className="form-input"
+                style={{ fontSize: "0.9rem", padding: "10px" }}
+              >
+                {availableRombels.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px" }}>
+              <button 
+                onClick={() => setRombelSelectModalOpen(false)} 
+                className="btn btn-secondary"
+                style={{ padding: "8px 16px", fontSize: "0.85rem" }}
+              >
+                Batal
+              </button>
+              <button 
+                onClick={() => {
+                  const filtered = tempParsedSiswa.filter(s => s.rombel === selectedRombelFilter);
+                  setPreviewList(filtered);
+                  setRombelSelectModalOpen(false);
+                  setPreviewModalOpen(true);
+                }} 
+                className="btn btn-primary"
+                style={{ padding: "8px 24px", fontSize: "0.85rem", fontWeight: "700" }}
+              >
+                Lanjutkan Ekstrak &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: PREMIUM EXCEL IMPORT PREVIEW & CONFIRMATION */}
       {previewModalOpen && (
