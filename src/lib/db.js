@@ -1271,6 +1271,64 @@ export async function logAktivitasGuru(guruUsername, aksi, detail) {
   }
 }
 
+export async function logAktivitasNilai(guruUsername, kelasNama, siswaNama, nisn) {
+  if (!supabase || !guruUsername) return null;
+  try {
+    const fifteenMinsAgo = new Date(Date.now() - 15 * 60000).toISOString();
+    const { data: recentLogs } = await supabase
+      .from('log_aktivitas_guru')
+      .select('*')
+      .eq('guru_username', guruUsername)
+      .eq('aksi', 'EDIT_NILAI_PRESENSI')
+      .gte('created_at', fifteenMinsAgo)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (recentLogs && recentLogs.length > 0) {
+      const recentLog = recentLogs[0];
+      try {
+        const detailObj = JSON.parse(recentLog.detail);
+        if (detailObj.kelasNama === kelasNama) {
+          const existingSiswa = detailObj.siswa || [];
+          if (!existingSiswa.some(s => s.nisn === nisn)) {
+            existingSiswa.push({ nama: siswaNama, nisn });
+          }
+          detailObj.siswa = existingSiswa;
+          
+          const { data } = await supabase
+            .from('log_aktivitas_guru')
+            .update({ detail: JSON.stringify(detailObj) })
+            .eq('id', recentLog.id)
+            .select()
+            .single();
+          return data;
+        }
+      } catch (e) {
+        // Fallback to insert
+      }
+    }
+
+    const initialDetail = JSON.stringify({
+      kelasNama,
+      siswa: [{ nama: siswaNama, nisn }]
+    });
+    
+    const { data } = await supabase
+      .from('log_aktivitas_guru')
+      .insert({
+        guru_username: guruUsername,
+        aksi: 'EDIT_NILAI_PRESENSI',
+        detail: initialDetail
+      })
+      .select()
+      .single();
+    return data;
+  } catch (err) {
+    console.error('Failed to log teacher nilai activity:', err);
+    return null;
+  }
+}
+
 export async function getSuperadminTeacherLogs() {
   if (!supabase) return [];
   try {

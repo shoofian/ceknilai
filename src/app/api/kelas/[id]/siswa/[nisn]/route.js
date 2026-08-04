@@ -79,19 +79,27 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Gagal memperbarui siswa' }, { status: 400 });
     }
 
-    // Log teacher activity
-    const { logAktivitasGuru } = await import('@/lib/db');
-    let logDetail = `Memperbarui data siswa "${siswaLama.nama}" (NISN: ${nisn}) di kelas "${kelas.nama}"`;
-    if (targetKelas) {
-      logDetail = `Memindahkan siswa "${siswaLama.nama}" (NISN: ${targetNisn}) dari kelas "${kelas.nama}" ke kelas "${targetKelas.nama}"`;
-    } else if (cleanNewNisn && cleanNewNisn !== nisn) {
-      logDetail = `Memperbarui data siswa "${siswaLama.nama}" (NISN lama: ${nisn}, NISN baru: ${cleanNewNisn}) di kelas "${kelas.nama}"`;
+    // Log teacher activity (hanya jika bukan update nilai/catatan saja)
+    const updateKeys = Object.keys(updates);
+    const isOnlyNilaiCatatan = updateKeys.length > 0 && updateKeys.every(key => ['nilai', 'catatan'].includes(key));
+
+    const { logAktivitasGuru, logAktivitasNilai } = await import('@/lib/db');
+    if (!isOnlyNilaiCatatan) {
+      let logDetail = `Memperbarui data siswa "${siswaLama.nama}" (NISN: ${nisn}) di kelas "${kelas.nama}"`;
+      if (targetKelas) {
+        logDetail = `Memindahkan siswa "${siswaLama.nama}" (NISN: ${targetNisn}) dari kelas "${kelas.nama}" ke kelas "${targetKelas.nama}"`;
+      } else if (cleanNewNisn && cleanNewNisn !== nisn) {
+        logDetail = `Memperbarui data siswa "${siswaLama.nama}" (NISN lama: ${nisn}, NISN baru: ${cleanNewNisn}) di kelas "${kelas.nama}"`;
+      }
+      await logAktivitasGuru(
+        username,
+        'EDIT_SISWA',
+        logDetail
+      );
+    } else {
+      // Aggregate logs for grades/attendance input
+      await logAktivitasNilai(username, kelas.nama, siswaLama.nama, nisn);
     }
-    await logAktivitasGuru(
-      username,
-      'EDIT_SISWA',
-      logDetail
-    );
 
     return NextResponse.json({ success: true, siswa: updated });
   } catch (error) {

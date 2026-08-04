@@ -571,6 +571,28 @@ export default function SuperadminPanel() {
                           textColor = "var(--warning)";
                         }
 
+                        let detailContent = log.detail;
+                        if (log.aksi === 'EDIT_NILAI_PRESENSI') {
+                          try {
+                            const parsed = JSON.parse(log.detail);
+                            detailContent = (
+                              <div>
+                                Memperbarui nilai/presensi untuk <strong>{parsed.siswa.length} siswa</strong> di kelas <strong>{parsed.kelasNama}</strong>.
+                                <details style={{ marginTop: '8px', fontSize: '0.8rem' }}>
+                                  <summary style={{ cursor: 'pointer', color: 'var(--primary)', fontWeight: '600' }}>Lihat Daftar Siswa</summary>
+                                  <ul style={{ marginTop: '4px', paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+                                    {parsed.siswa.map((s, i) => (
+                                      <li key={i}>{s.nama} <code>({s.nisn})</code></li>
+                                    ))}
+                                  </ul>
+                                </details>
+                              </div>
+                            );
+                          } catch (e) {
+                            detailContent = log.detail;
+                          }
+                        }
+
                         return (
                           <tr key={log.id}>
                             <td>{formattedDate}</td>
@@ -581,10 +603,10 @@ export default function SuperadminPanel() {
                             </td>
                             <td>
                               <span className="badge" style={{ backgroundColor: badgeColor, color: textColor, border: "none", fontWeight: "700" }}>
-                                {log.aksi}
+                                {log.aksi === 'EDIT_NILAI_PRESENSI' ? 'INPUT_NILAI' : log.aksi}
                               </span>
                             </td>
-                            <td>{log.detail}</td>
+                            <td>{detailContent}</td>
                           </tr>
                         );
                       })}
