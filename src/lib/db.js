@@ -1632,3 +1632,42 @@ export async function deleteBankSiswa(id) {
     return false;
   }
 }
+
+export async function getBankRombels(sekolahId, tahunPelajaran) {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('bank_siswa')
+      .select('tingkatan, rombel')
+      .eq('sekolah_id', sekolahId)
+      .eq('tahun_pelajaran', tahunPelajaran);
+
+    if (error) {
+      console.error('Error fetching bank rombels:', error);
+      return [];
+    }
+
+    const uniqueRombels = [];
+    const seen = new Set();
+    data.forEach(item => {
+      const key = `${item.tingkatan}-${item.rombel}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueRombels.push({ tingkatan: item.tingkatan, rombel: item.rombel });
+      }
+    });
+
+    uniqueRombels.sort((a, b) => {
+      if (a.tingkatan !== b.tingkatan) {
+        return String(a.tingkatan).localeCompare(String(b.tingkatan), undefined, { numeric: true });
+      }
+      return String(a.rombel).localeCompare(String(b.rombel), undefined, { numeric: true });
+    });
+
+    return uniqueRombels;
+  } catch (err) {
+    console.error('Unexpected error in getBankRombels:', err);
+    return [];
+  }
+}
+

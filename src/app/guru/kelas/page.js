@@ -26,6 +26,11 @@ export default function KelolaKelas() {
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Bank Data States
+  const [bankRombels, setBankRombels] = useState([]);
+  const [loadingBankRombels, setLoadingBankRombels] = useState(false);
+  const [useBankData, setUseBankData] = useState(true);
 
   // Filter States
   const [filterTingkatan, setFilterTingkatan] = useState("Semua");
@@ -155,6 +160,29 @@ export default function KelolaKelas() {
     window.addEventListener("click", handleCloseDropdowns);
     return () => window.removeEventListener("click", handleCloseDropdowns);
   }, []);
+
+  useEffect(() => {
+    if (creationMethod === "manual" && !isEditing) {
+      const fetchBankRombels = async () => {
+        setLoadingBankRombels(true);
+        try {
+          const res = await fetch(`/api/kelas/bank-rombel?tahun_pelajaran=${encodeURIComponent(tahunAjaran)}`);
+          if (res.ok) {
+            const data = await res.json();
+            setBankRombels(data);
+          } else {
+            setBankRombels([]);
+          }
+        } catch (err) {
+          console.error(err);
+          setBankRombels([]);
+        } finally {
+          setLoadingBankRombels(false);
+        }
+      };
+      fetchBankRombels();
+    }
+  }, [tahunAjaran, creationMethod, isEditing]);
 
   const handleOpenAdd = () => {
     setIsEditing(false);
@@ -1136,45 +1164,98 @@ export default function KelolaKelas() {
                 </h3>
 
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                  {/* 1 & 2. Tingkatan & No./Nama Rombel Bersandingan */}
-                  <div style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "12px" }}>
+                  {/* 1 & 2. Tingkatan & No./Nama Rombel */}
+                  {!isEditing && bankRombels.length > 0 && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "-10px" }}>
+                      <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: "var(--primary)", fontWeight: "600" }}>
+                        <input
+                          type="checkbox"
+                          checked={useBankData}
+                          onChange={(e) => {
+                            setUseBankData(e.target.checked);
+                            if (e.target.checked) {
+                              setTingkatan("");
+                              setRombelNama("");
+                            }
+                          }}
+                        />
+                        Pilih dari Bank Data Sekolah
+                      </label>
+                    </div>
+                  )}
+                  
+                  {useBankData && !isEditing && bankRombels.length > 0 ? (
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Tingkatan <span style={{ color: "var(--danger)" }}>*</span></label>
+                      <label className="form-label">Tingkatan & Rombel (dari Bank Data) <span style={{ color: "var(--danger)" }}>*</span></label>
                       <select
                         className="form-input"
-                        value={tingkatan}
-                        onChange={(e) => setTingkatan(e.target.value)}
+                        value={`${tingkatan}-${rombelNama}`}
+                        onChange={(e) => {
+                          if (!e.target.value) {
+                            setTingkatan("");
+                            setRombelNama("");
+                            return;
+                          }
+                          const [t, ...r] = e.target.value.split('-');
+                          setTingkatan(t);
+                          setRombelNama(r.join('-'));
+                        }}
                         style={{ 
                           appearance: "auto", 
                           backgroundColor: "var(--bg-secondary)", 
                           color: "var(--text-primary)", 
                           border: "1px solid var(--border-color)" 
                         }}
+                        required
                       >
-                        <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih --</option>
-                        {TINGKATAN_OPTIONS.map(t => (
-                          <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
+                        <option value="-" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Rombel --</option>
+                        {bankRombels.map(br => (
+                          <option key={`${br.tingkatan}-${br.rombel}`} value={`${br.tingkatan}-${br.rombel}`} style={{ backgroundColor: "var(--bg-secondary)" }}>
+                            Tingkat {br.tingkatan} - {br.rombel}
+                          </option>
                         ))}
                       </select>
                     </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "12px" }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Tingkatan <span style={{ color: "var(--danger)" }}>*</span></label>
+                        <select
+                          className="form-input"
+                          value={tingkatan}
+                          onChange={(e) => setTingkatan(e.target.value)}
+                          style={{ 
+                            appearance: "auto", 
+                            backgroundColor: "var(--bg-secondary)", 
+                            color: "var(--text-primary)", 
+                            border: "1px solid var(--border-color)" 
+                          }}
+                        >
+                          <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih --</option>
+                          {TINGKATAN_OPTIONS.map(t => (
+                            <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
 
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="Contoh: MIPA 1 atau 1"
-                        className="form-input"
-                        value={rombelNama}
-                        onChange={(e) => setRombelNama(e.target.value)}
-                        required
-                      />
-                      {detectLevelInRombel(tingkatan, rombelNama) && (
-                        <span style={{ color: "var(--warning)", fontSize: "0.75rem", marginTop: "4px", display: "block", lineHeight: "1.3" }}>
-                          ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{tingkatan} MIPA 1").
-                        </span>
-                      )}
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">No./Nama Rombel <span style={{ color: "var(--danger)" }}>*</span></label>
+                        <input
+                          type="text"
+                          placeholder="Contoh: MIPA 1 atau 1"
+                          className="form-input"
+                          value={rombelNama}
+                          onChange={(e) => setRombelNama(e.target.value)}
+                          required
+                        />
+                        {detectLevelInRombel(tingkatan, rombelNama) && (
+                          <span style={{ color: "var(--warning)", fontSize: "0.75rem", marginTop: "4px", display: "block", lineHeight: "1.3" }}>
+                            ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{tingkatan} MIPA 1").
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* 3. Pratinjau Nama Kelas */}
                   <div style={{ 
