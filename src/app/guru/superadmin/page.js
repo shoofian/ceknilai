@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import BankDataPanel from "@/components/BankDataPanel";
 
 export default function SuperadminPanel() {
   const [activeTab, setActiveTab] = useState("logs");
@@ -450,6 +451,13 @@ export default function SuperadminPanel() {
         >
           💳 Pembayaran & Referral
         </button>
+        <button
+          onClick={() => setActiveTab("bank_data")}
+          className={`btn ${activeTab === "bank_data" ? "btn-primary" : "btn-secondary"}`}
+          style={{ padding: "8px 16px", borderRadius: "8px" }}
+        >
+          📂 Bank Data Siswa
+        </button>
       </div>
 
       {loading ? (
@@ -621,7 +629,10 @@ export default function SuperadminPanel() {
             </div>
           )}
 
-          {/* TAB 2: MANAJEMEN GURU */}
+          {/* TAB 3: BANK DATA SISWA */}
+          {activeTab === "bank_data" && <BankDataPanel />}
+
+          {/* TAB 4: MANAJEMEN GURU */}
           {activeTab === "guru" && (
             <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>

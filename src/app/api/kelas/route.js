@@ -47,7 +47,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
     }
 
-    const { nama, mataPelajaran, tahunAjaran, semester, tingkatan, rombelNama, namaKustom, kolomNilai, siswa, skemaPenilaian } = await request.json();
+    const { nama, mataPelajaran, tahunAjaran, semester, tingkatan, rombelNama, namaKustom, kolomNilai, siswa, skemaPenilaian, syncBankData } = await request.json();
     if (!nama) {
       return NextResponse.json({ error: 'Nama kelas harus diisi' }, { status: 400 });
     }
@@ -56,6 +56,32 @@ export async function POST(request) {
     }
 
     try {
+      let finalSiswa = siswa || [];
+      if (syncBankData && tingkatan && rombelNama && tahunAjaran) {
+        // Fetch guru's school ID
+        const { getGuruByUsername, getBankSiswa } = await import('@/lib/db');
+        const guruData = await getGuruByUsername(username);
+        
+        if (guruData && guruData.sekolah_id) {
+          const bankSiswa = await getBankSiswa(guruData.sekolah_id, tahunAjaran);
+          
+          const filteredBankSiswa = bankSiswa.filter(
+            s => String(s.tingkatan) === String(tingkatan) && 
+                 String(s.rombel).toLowerCase() === String(rombelNama).toLowerCase()
+          );
+          
+          if (filteredBankSiswa.length > 0) {
+            // Append without duplicates
+            const existingNisns = new Set(finalSiswa.map(s => String(s.nisn)));
+            const newStudents = filteredBankSiswa
+              .filter(s => !existingNisns.has(String(s.nisn)))
+              .map(s => ({ nisn: String(s.nisn), nama: s.nama }));
+              
+            finalSiswa = [...finalSiswa, ...newStudents];
+          }
+        }
+      }
+
       const newKelas = await createKelas({
         nama,
         mataPelajaran,
@@ -65,7 +91,7 @@ export async function POST(request) {
         rombelNama,
         namaKustom,
         kolomNilai: kolomNilai || [],
-        siswa: siswa || [],
+        siswa: finalSiswa,
         skemaPenilaian
       }, username);
 

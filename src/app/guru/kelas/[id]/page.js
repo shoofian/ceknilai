@@ -234,7 +234,8 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Hub Modal Operasi Data
   const [kelolaSiswaModalOpen, setKelolaSiswaModalOpen] = useState(false);
-  const [kelolaSiswaTab, setKelolaSiswaTab] = useState('tambah'); // 'tambah' | 'impor'
+  const [kelolaSiswaTab, setKelolaSiswaTab] = useState('tambah'); // 'tambah' | 'impor' | 'sync'
+  const [isSyncingBankData, setIsSyncingBankData] = useState(false);
   const [cetakEksporModalOpen, setCetakEksporModalOpen] = useState(false);
   const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor' | 'excel'
 
@@ -1163,6 +1164,35 @@ export default function DetailKelas({ params: paramsPromise }) {
       } finally {
         setIsSavingPertemuan(false);
       }
+    }
+  };
+
+  const handleSyncBankData = async () => {
+    if (isSyncingBankData || isLocked) return;
+    setIsSyncingBankData(true);
+    try {
+      const response = await fetch("/api/kelas/sync-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kelasId: classId })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        if (data.count > 0) {
+          alert(`Berhasil menarik ${data.count} siswa baru dari Bank Data!`);
+          fetchKelasDetail();
+        } else {
+          alert(data.message || "Tidak ada siswa baru yang ditemukan untuk disinkronkan.");
+        }
+        setKelolaSiswaModalOpen(false);
+      } else {
+        alert(data.error || "Gagal melakukan sinkronisasi dengan Bank Data.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi saat mencoba sinkronisasi.");
+    } finally {
+      setIsSyncingBankData(false);
     }
   };
 
@@ -5825,6 +5855,16 @@ export default function DetailKelas({ params: paramsPromise }) {
               >
                 📤 Impor
               </button>
+              <button
+                onClick={() => setKelolaSiswaTab('sync')}
+                style={{
+                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
+                  backgroundColor: kelolaSiswaTab === 'sync' ? "var(--primary)" : "transparent",
+                  color: kelolaSiswaTab === 'sync' ? "#fff" : "var(--text-secondary)"
+                }}
+              >
+                🔄 Sinkronisasi
+              </button>
             </div>
 
             {/* Tab Content */}
@@ -5893,6 +5933,27 @@ export default function DetailKelas({ params: paramsPromise }) {
                         disabled={isLocked}
                       />
                     </label>
+                  </div>
+                </div>
+              )}
+
+              {kelolaSiswaTab === 'sync' && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: "600", lineHeight: "1.5" }}>
+                    Tarik Data Otomatis
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                    Ambil daftar siswa terbaru dari Bank Data Siswa yang dikelola oleh sekolah. Siswa baru yang belum ada di kelas Anda (berdasarkan {kelas?.tingkatan} {kelas?.rombel_nama}) akan langsung dimasukkan tanpa menghapus nilai siswa yang sudah ada.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
+                    <button
+                      onClick={handleSyncBankData}
+                      className={`btn btn-primary ${isSyncingBankData || isLocked ? "disabled" : ""}`}
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", cursor: isSyncingBankData || isLocked ? "not-allowed" : "pointer", opacity: isSyncingBankData || isLocked ? 0.5 : 1 }}
+                      disabled={isSyncingBankData || isLocked}
+                    >
+                      {isSyncingBankData ? "⏳ Mensinkronkan..." : "🔄 Tarik dari Bank Data"}
+                    </button>
                   </div>
                 </div>
               )}

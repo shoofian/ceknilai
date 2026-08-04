@@ -1564,3 +1564,71 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
   }
 }
 
+// === BANK DATA SISWA FUNCTIONS ===
+
+export async function getBankSiswa(sekolahId, tahunPelajaran) {
+  if (!supabase) return [];
+  try {
+    let query = supabase
+      .from('bank_siswa')
+      .select('*')
+      .order('tingkatan', { ascending: true })
+      .order('rombel', { ascending: true })
+      .order('nama', { ascending: true });
+      
+    if (sekolahId) {
+      query = query.eq('sekolah_id', sekolahId);
+    }
+    if (tahunPelajaran) {
+      query = query.eq('tahun_pelajaran', tahunPelajaran);
+    }
+    
+    const { data, error } = await query;
+    if (error) {
+      console.error('Error fetching bank siswa:', error);
+      return [];
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in getBankSiswa:', err);
+    return [];
+  }
+}
+
+export async function upsertBankSiswa(dataArray) {
+  if (!supabase || !dataArray || dataArray.length === 0) return { success: false, error: 'Tidak ada data untuk diimpor' };
+  try {
+    const { data, error } = await supabase
+      .from('bank_siswa')
+      .upsert(dataArray, { onConflict: 'nisn,sekolah_id,tahun_pelajaran' })
+      .select();
+      
+    if (error) {
+      console.error('Error upserting bank siswa:', error);
+      return { success: false, error: error.message };
+    }
+    return { success: true, data };
+  } catch (err) {
+    console.error('Unexpected error in upsertBankSiswa:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function deleteBankSiswa(id) {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('bank_siswa')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error deleting from bank siswa:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in deleteBankSiswa:', err);
+    return false;
+  }
+}

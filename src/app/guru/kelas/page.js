@@ -22,6 +22,7 @@ export default function KelolaKelas() {
   const [tahunAjaran, setTahunAjaran] = useState(`${new Date().getFullYear()}/${new Date().getFullYear() + 1}`);
   const [semester, setSemester] = useState("");
   const [presetAspek, setPresetAspek] = useState("kurikulum-merdeka-standar");
+  const [syncBankData, setSyncBankData] = useState(true);
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -250,7 +251,8 @@ export default function KelolaKelas() {
         mataPelajaran: effectiveMapel,
         tahunAjaran: tahunAjaran.trim(),
         semester: semester.trim(),
-        kolomNilai: isEditing ? undefined : initialKolomNilai
+        kolomNilai: isEditing ? undefined : initialKolomNilai,
+        syncBankData: !isEditing ? syncBankData : false
       };
       if (isEditing) {
         response = await fetch(`/api/kelas/${currentId}`, {
@@ -1298,6 +1300,25 @@ export default function KelolaKelas() {
                       <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
                         Otomatis membuat struktur komponen &amp; bobot penilaian sesuai standar kurikulum.
                       </span>
+                    </div>
+                  )}
+
+                  {!isEditing && (
+                    <div className="form-group" style={{ marginBottom: 0, marginTop: "8px" }}>
+                      <label className="checkbox-label" style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={syncBankData}
+                          onChange={(e) => setSyncBankData(e.target.checked)}
+                          style={{ marginTop: "4px" }}
+                        />
+                        <div>
+                          <span style={{ fontWeight: "600", display: "block" }}>🔄 Sinkronisasi dengan Bank Data Siswa</span>
+                          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>
+                            Otomatis memasukkan daftar siswa ke kelas ini berdasarkan Tingkatan, Rombel, dan Tahun Ajaran dari Bank Data.
+                          </span>
+                        </div>
+                      </label>
                     </div>
                   )}
 
