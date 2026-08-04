@@ -5,17 +5,18 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-
-
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('guru_session');
-    if (!session || !session.value) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
-    const guru = await getGuru(session.value);
+    const guru = await getGuru(username);
+    if (!guru) {
+      return NextResponse.json({ error: 'Akun tidak ditemukan' }, { status: 404 });
+    }
+    
     const { password: _, ...guruData } = guru;
     return NextResponse.json(guruData);
   } catch (error) {
@@ -26,14 +27,13 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('guru_session');
-    if (!session || !session.value) {
+    const usernameFromAuth = await checkAuth();
+    if (!usernameFromAuth) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
     const { isGuruLocked } = await import('@/lib/db');
-    if (await isGuruLocked(session.value)) {
+    if (await isGuruLocked(usernameFromAuth)) {
       return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
     }
 
@@ -43,7 +43,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Nama, username, dan email harus diisi' }, { status: 400 });
     }
 
-    const currentGuru = await getGuru(session.value);
+    const currentGuru = await getGuru(usernameFromAuth);
 
     const updatedProfile = {
       nama: nama.trim(),
@@ -60,23 +60,37 @@ export async function POST(request) {
       if (!oldPassword) {
         return NextResponse.json({ error: 'Password lama harus diisi untuk mengubah password' }, { status: 400 });
       }
-      if (oldPassword !== currentGuru.password) {
+      
+      const bcrypt = await import('bcryptjs');
+      let isOldPasswordValid = false;
+      if (currentGuru.password.startsWith('$2a$') || currentGuru.password.startsWith('$2b$')) {
+        isOldPasswordValid = bcrypt.compareSync(oldPassword, currentGuru.password);
+      } else {
+        isOldPasswordValid = (oldPassword === currentGuru.password);
+      }
+      
+      if (!isOldPasswordValid) {
         return NextResponse.json({ error: 'Password lama salah' }, { status: 400 });
       }
       if (newPassword.length < 6) {
         return NextResponse.json({ error: 'Password baru minimal 6 karakter' }, { status: 400 });
       }
-      updatedProfile.password = newPassword;
+      
+      const salt = bcrypt.genSaltSync(10);
+      updatedProfile.password = bcrypt.hashSync(newPassword, salt);
     }
 
-    const updated = await updateGuru(session.value, updatedProfile);
+    const updated = await updateGuru(usernameFromAuth, updatedProfile);
     if (!updated) {
       return NextResponse.json({ error: 'Gagal memperbarui profil atau username sudah digunakan' }, { status: 400 });
     }
 
     // Sync session cookie if username changed
-    if (updated.username.toLowerCase() !== session.value.toLowerCase()) {
-      cookieStore.set('guru_session', updated.username, {
+    if (updated.username.toLowerCase() !== usernameFromAuth.toLowerCase()) {
+      const { signToken } = await import('@/lib/auth');
+      const token = await signToken({ username: updated.username });
+      const cookieStore = await cookies();
+      cookieStore.set('guru_session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -88,9 +102,9 @@ export async function POST(request) {
     // Log teacher activity
     const { logAktivitasGuru } = await import('@/lib/db');
     if (newPassword) {
-      await logAktivitasGuru(session.value, 'UBAH_PASSWORD', 'Memperbarui kata sandi akun');
+      await logAktivitasGuru(usernameFromAuth, 'UBAH_PASSWORD', 'Memperbarui kata sandi akun');
     } else {
-      await logAktivitasGuru(session.value, 'EDIT_PROFIL', 'Memperbarui informasi profil akun');
+      await logAktivitasGuru(usernameFromAuth, 'EDIT_PROFIL', 'Memperbarui informasi profil akun');
     }
 
     const { password: _, ...guruData } = updated;

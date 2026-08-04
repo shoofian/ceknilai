@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { checkAuth } from '@/lib/auth';
 import { getGuru } from '@/lib/db';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,13 +14,12 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('guru_session');
-    if (!session || !session.value) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json([]);
     }
     
-    const guru = await getGuru(session.value);
+    const guru = await getGuru(username);
     if (!guru || !guru.sekolah_id) {
       return NextResponse.json([]);
     }

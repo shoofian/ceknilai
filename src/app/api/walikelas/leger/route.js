@@ -1,19 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getGuru, getLegerData } from '@/lib/db';
+import { checkAuth } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('guru_session');
-    
-    if (!session || !session.value) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Belum login' }, { status: 401 });
     }
     
-    const guru = await getGuru(session.value);
+    const guru = await getGuru(username);
     if (!guru || !guru.username) {
       return NextResponse.json({ error: 'Sesi tidak valid' }, { status: 401 });
     }
