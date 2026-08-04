@@ -1633,6 +1633,26 @@ export async function deleteBankSiswa(id) {
   }
 }
 
+export async function resetBankData(sekolahId, tahunPelajaran) {
+  if (!supabase) return false;
+  try {
+    const { error } = await supabase
+      .from('bank_siswa')
+      .delete()
+      .eq('sekolah_id', sekolahId)
+      .eq('tahun_pelajaran', tahunPelajaran);
+
+    if (error) {
+      console.error('Error resetting bank data:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in resetBankData:', err);
+    return false;
+  }
+}
+
 export async function getBankRombels(sekolahId, tahunPelajaran) {
   if (!supabase) return [];
   try {

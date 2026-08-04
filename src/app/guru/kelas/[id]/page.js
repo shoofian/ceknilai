@@ -235,7 +235,10 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Hub Modal Operasi Data
   const [kelolaSiswaModalOpen, setKelolaSiswaModalOpen] = useState(false);
   const [kelolaSiswaTab, setKelolaSiswaTab] = useState('tambah'); // 'tambah' | 'impor' | 'sync'
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isSyncingBankData, setIsSyncingBankData] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncPreviewData, setSyncPreviewData] = useState(null);
   const [cetakEksporModalOpen, setCetakEksporModalOpen] = useState(false);
   const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor' | 'excel'
 
@@ -1174,23 +1177,53 @@ export default function DetailKelas({ params: paramsPromise }) {
       const response = await fetch("/api/kelas/sync-bank", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kelasId: classId })
+        body: JSON.stringify({ kelasId: classId, action: 'preview' })
       });
       const data = await response.json();
       if (response.ok) {
-        if (data.count > 0) {
-          alert(`Berhasil menarik ${data.count} siswa baru dari Bank Data!`);
-          fetchKelasDetail();
+        if (data.preview) {
+          setSyncPreviewData(data);
+          setShowSyncModal(true);
         } else {
-          alert(data.message || "Tidak ada siswa baru yang ditemukan untuk disinkronkan.");
+          alert(data.message || "Tidak ada perubahan yang perlu disinkronkan.");
         }
-        setKelolaSiswaModalOpen(false);
       } else {
-        alert(data.error || "Gagal melakukan sinkronisasi dengan Bank Data.");
+        alert(data.error || "Gagal memuat pratinjau sinkronisasi.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi saat mencoba sinkronisasi.");
+      alert("Terjadi kesalahan koneksi saat mencoba pratinjau sinkronisasi.");
+    } finally {
+      setIsSyncingBankData(false);
+    }
+  };
+
+  const handleCommitSyncBankData = async () => {
+    if (isSyncingBankData || isLocked || !syncPreviewData) return;
+    setIsSyncingBankData(true);
+    try {
+      const response = await fetch("/api/kelas/sync-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          kelasId: classId, 
+          action: 'commit', 
+          previewData: syncPreviewData 
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert("Sinkronisasi Bank Data berhasil dilakukan!");
+        setShowSyncModal(false);
+        setSyncPreviewData(null);
+        setKelolaSiswaModalOpen(false);
+        fetchKelasDetail();
+      } else {
+        alert(data.error || "Gagal menyimpan hasil sinkronisasi.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi saat menyimpan sinkronisasi.");
     } finally {
       setIsSyncingBankData(false);
     }
@@ -8244,6 +8277,85 @@ export default function DetailKelas({ params: paramsPromise }) {
           gap: "8px"
         }}>
           ✨ {starToast}
+        </div>
+      )}
+
+      {showSyncModal && syncPreviewData && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1000,
+          display: "flex", justifyContent: "center", alignItems: "center"
+        }}>
+          <div style={{
+            background: "var(--bg-primary)", padding: "24px",
+            borderRadius: "16px", maxWidth: "600px", width: "95%",
+            maxHeight: "90vh", overflowY: "auto"
+          }}>
+            <h3 style={{ marginTop: 0, color: "var(--primary)" }}>Pratinjau Sinkronisasi Bank Data</h3>
+            
+            {syncPreviewData.removed && syncPreviewData.removed.length > 0 && (
+              <div style={{
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                borderLeft: "4px solid var(--danger)",
+                padding: "12px",
+                marginBottom: "16px",
+                borderRadius: "4px"
+              }}>
+                <h4 style={{ margin: "0 0 8px 0", color: "var(--danger)" }}>⚠️ Peringatan Penghapusan Siswa</h4>
+                <p style={{ margin: 0, fontSize: "0.85rem" }}>
+                  Jika Anda melanjutkan, <strong>{syncPreviewData.removed.length} siswa</strong> yang tidak lagi ada di Bank Data akan dihapus dari kelas ini beserta <strong>seluruh data nilainya</strong> secara permanen.
+                </p>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {syncPreviewData.added && syncPreviewData.added.length > 0 && (
+                <div>
+                  <h4 style={{ margin: "0 0 8px 0", color: "#10b981" }}>Menambahkan ({syncPreviewData.added.length}):</h4>
+                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
+                    {syncPreviewData.added.map(s => <li key={s.nisn}>{s.nama} ({s.nisn})</li>)}
+                  </ul>
+                </div>
+              )}
+
+              {syncPreviewData.updated && syncPreviewData.updated.length > 0 && (
+                <div>
+                  <h4 style={{ margin: "0 0 8px 0", color: "#f59e0b" }}>Pembaruan Nama ({syncPreviewData.updated.length}):</h4>
+                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
+                    {syncPreviewData.updated.map(s => <li key={s.nisn}>{s.namaLama} ➔ {s.namaBaru}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              {syncPreviewData.removed && syncPreviewData.removed.length > 0 && (
+                <div>
+                  <h4 style={{ margin: "0 0 8px 0", color: "var(--danger)" }}>Menghapus ({syncPreviewData.removed.length}):</h4>
+                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
+                    {syncPreviewData.removed.map(s => <li key={s.nisn}>{s.nama} ({s.nisn})</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setShowSyncModal(false);
+                  setSyncPreviewData(null);
+                }}
+              >
+                Batal
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleCommitSyncBankData}
+                disabled={isSyncingBankData}
+              >
+                {isSyncingBankData ? "Menyimpan..." : "Lanjutkan Sinkronisasi"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

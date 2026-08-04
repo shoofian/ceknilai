@@ -8,6 +8,8 @@ export default function BankDataPanel() {
   
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
   
   const [sekolahList, setSekolahList] = useState([]);
   
@@ -84,6 +86,34 @@ export default function BankDataPanel() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleResetBankData = async () => {
+    if (!targetSekolahId) {
+      alert("Silakan pilih Sekolah Tujuan terlebih dahulu.");
+      return;
+    }
+    
+    setIsDeletingBulk(true);
+    try {
+      const res = await fetch(`/api/superadmin/bank-siswa?action=reset&sekolah_id=${targetSekolahId}&tahun_pelajaran=${encodeURIComponent(targetTahunPelajaran)}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setUploadMessage("Bank data berhasil direset!");
+        setTimeout(() => setUploadMessage(""), 3000);
+        setShowConfirmReset(false);
+        fetchBankData();
+      } else {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Gagal mereset data");
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setIsDeletingBulk(false);
     }
   };
 
@@ -276,11 +306,24 @@ export default function BankDataPanel() {
             <option value="2026/2027">2026/2027</option>
           </select>
         </div>
-        <div>
+        <div style={{ display: "flex", gap: "8px" }}>
           <label className={`btn ${uploading ? 'btn-secondary' : 'btn-primary'}`} style={{ cursor: uploading ? "not-allowed" : "pointer" }}>
             {uploading ? "⏳ Memproses..." : "📤 Impor Excel"}
             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} disabled={uploading} style={{ display: "none" }} />
           </label>
+          <button 
+            className="btn btn-danger" 
+            onClick={() => {
+              if (!targetSekolahId) {
+                alert("Pilih sekolah terlebih dahulu sebelum menghapus data.");
+                return;
+              }
+              setShowConfirmReset(true);
+            }}
+            disabled={isDeletingBulk || uploading}
+          >
+            {isDeletingBulk ? "🗑️ Menghapus..." : "🗑️ Hapus Semua"}
+          </button>
         </div>
       </div>
       {uploadMessage && <p style={{ color: "var(--primary)", fontSize: "0.85rem", fontWeight: "600" }}>{uploadMessage}</p>}
@@ -328,6 +371,28 @@ export default function BankDataPanel() {
       ) : (
         <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
           Belum ada data di Bank Siswa.
+        </div>
+      )}
+
+      {showConfirmReset && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1000,
+          display: "flex", justifyContent: "center", alignItems: "center"
+        }}>
+          <div style={{
+            background: "var(--bg-primary)", padding: "24px",
+            borderRadius: "16px", maxWidth: "400px", width: "90%"
+          }}>
+            <h3 style={{ color: "var(--danger)", marginTop: 0 }}>⚠️ Hapus Semua Data?</h3>
+            <p>Anda yakin ingin menghapus <strong>seluruh</strong> data siswa untuk sekolah dan tahun pelajaran yang dipilih? Tindakan ini tidak dapat dibatalkan!</p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "20px" }}>
+              <button className="btn btn-secondary" onClick={() => setShowConfirmReset(false)}>Batal</button>
+              <button className="btn btn-danger" onClick={handleResetBankData} disabled={isDeletingBulk}>
+                {isDeletingBulk ? "Menghapus..." : "Ya, Hapus Semua"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -15,67 +15,103 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
-    const { kelasId } = await request.json();
+    const { kelasId, action = 'commit', previewData } = await request.json();
     if (!kelasId) {
       return NextResponse.json({ error: 'ID Kelas tidak ditemukan' }, { status: 400 });
     }
 
-    // Cek kelas dan otorisasi
     const kelas = await getKelasById(kelasId, username);
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan atau Anda tidak memiliki akses' }, { status: 404 });
     }
 
-    // Ambil data guru untuk mendapatkan sekolah_id
     const guruData = await getGuru(username);
     if (!guruData || !guruData.sekolah_id) {
-      return NextResponse.json({ error: 'Gagal mendapatkan data sekolah guru. Hubungi superadmin untuk mengatur ID Sekolah pada akun Anda.' }, { status: 400 });
+      return NextResponse.json({ error: 'Gagal mendapatkan data sekolah guru.' }, { status: 400 });
     }
 
-    // Tarik dari bank data
-    const bankSiswa = await getBankSiswa(guruData.sekolah_id, kelas.tahun_ajaran || '2024/2025');
-    
-    // Filter berdasarkan tingkatan dan rombel kelas
-    const filteredBankSiswa = bankSiswa.filter(
-      s => String(s.tingkatan) === String(kelas.tingkatan) && 
-           String(s.rombel).toLowerCase() === String(kelas.rombel_nama).toLowerCase()
-    );
+    // Gunakan original_sekolah_id jika ada, fallback ke sekolah guru saat ini
+    const targetSekolahId = kelas.skemaPenilaian?.original_sekolah_id || guruData.sekolah_id;
 
-    if (filteredBankSiswa.length === 0) {
-      return NextResponse.json({ message: 'Tidak ada siswa yang cocok di Bank Data untuk tingkatan dan rombel ini.', count: 0 });
+    if (action === 'preview') {
+      const bankSiswa = await getBankSiswa(targetSekolahId, kelas.tahun_ajaran || '2024/2025');
+      
+      const filteredBankSiswa = bankSiswa.filter(
+        s => String(s.tingkatan) === String(kelas.tingkatan) && 
+             String(s.rombel).toLowerCase() === String(kelas.rombel_nama).toLowerCase()
+      );
+
+      const existingSiswa = kelas.siswa || [];
+      const existingNisns = new Map(existingSiswa.map(s => [String(s.nisn), s]));
+      const bankNisns = new Map(filteredBankSiswa.map(s => [String(s.nisn), s]));
+      
+      const added = [];
+      const updated = [];
+      
+      bankNisns.forEach((bankS, nisn) => {
+        if (!existingNisns.has(nisn)) {
+          added.push({ nisn, nama: bankS.nama });
+        } else {
+          const exS = existingNisns.get(nisn);
+          if (exS.nama !== bankS.nama) {
+            updated.push({ nisn, namaLama: exS.nama, namaBaru: bankS.nama, nilai: exS.nilai, tanggalLahir: exS.tanggalLahir, catatan: exS.catatan });
+          }
+        }
+      });
+      
+      const removed = [];
+      existingNisns.forEach((exS, nisn) => {
+        if (!bankNisns.has(nisn)) {
+          removed.push({ nisn, nama: exS.nama });
+        }
+      });
+
+      if (added.length === 0 && updated.length === 0 && removed.length === 0) {
+        return NextResponse.json({ message: 'Data kelas sudah tersinkronisasi 100% dengan Bank Data.' });
+      }
+
+      return NextResponse.json({ preview: true, added, updated, removed });
     }
 
-    // Bandingkan dengan siswa yang sudah ada di kelas
-    const existingSiswa = kelas.siswa || [];
-    const existingNisns = new Set(existingSiswa.map(s => String(s.nisn)));
-    
-    const newStudents = filteredBankSiswa
-      .filter(s => !existingNisns.has(String(s.nisn)))
-      .map(s => ({ nisn: String(s.nisn), nama: s.nama }));
+    if (action === 'commit' && previewData) {
+      const { added = [], updated = [], removed = [] } = previewData;
+      const existingSiswa = kelas.siswa || [];
+      const existingMap = new Map(existingSiswa.map(s => [String(s.nisn), s]));
+      
+      // Update data existing with new names
+      updated.forEach(u => {
+        if (existingMap.has(u.nisn)) {
+          existingMap.get(u.nisn).nama = u.namaBaru;
+        }
+      });
 
-    if (newStudents.length === 0) {
-      return NextResponse.json({ message: 'Semua siswa dari Bank Data sudah ada di kelas ini.', count: 0 });
+      // Remove deleted students (this will delete their grades as well in DB if handled via deleteSiswaFromKelas)
+      const { deleteSiswaFromKelas } = await import('@/lib/db');
+      for (const r of removed) {
+        await deleteSiswaFromKelas(kelasId, r.nisn, username);
+        existingMap.delete(r.nisn);
+      }
+      
+      // Combine updated existing and added students
+      const finalSiswa = Array.from(existingMap.values()).concat(added);
+      
+      const result = await updateKelas(kelasId, { siswa: finalSiswa }, username);
+      
+      if (!result) {
+        return NextResponse.json({ error: 'Gagal menyimpan pembaruan sinkronisasi.' }, { status: 500 });
+      }
+
+      const { logAktivitasGuru } = await import('@/lib/db');
+      await logAktivitasGuru(
+        username,
+        'EDIT_KELAS',
+        `Sinkronisasi 2-Arah Bank Data: ${added.length} ditambah, ${removed.length} dihapus, ${updated.length} diubah namanya.`
+      );
+
+      return NextResponse.json({ success: true, kelas: result });
     }
 
-    // Gabungkan siswa lama dengan siswa baru dari bank data
-    const finalSiswa = [...existingSiswa, ...newStudents];
-
-    // Update kelas
-    const result = await updateKelas(kelasId, { siswa: finalSiswa }, username);
-    
-    if (!result) {
-      return NextResponse.json({ error: 'Gagal menyimpan pembaruan kelas.' }, { status: 500 });
-    }
-
-    // Log teacher activity
-    const { logAktivitasGuru } = await import('@/lib/db');
-    await logAktivitasGuru(
-      username,
-      'EDIT_KELAS',
-      `Sinkronisasi Bank Data: Menambahkan ${newStudents.length} siswa baru ke kelas "${kelas.nama}"`
-    );
-
-    return NextResponse.json({ success: true, count: newStudents.length, addedStudents: newStudents, kelas: result });
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Error syncing with bank data:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan internal server' }, { status: 500 });

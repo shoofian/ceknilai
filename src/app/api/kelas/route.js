@@ -57,10 +57,16 @@ export async function POST(request) {
 
     try {
       let finalSiswa = siswa || [];
+      const { getGuru, getBankSiswa } = await import('@/lib/db');
+      const guruData = await getGuru(username);
+      
+      let modifiedSkemaPenilaian = skemaPenilaian ? { ...skemaPenilaian } : {};
+      if (guruData && guruData.sekolah_id) {
+        modifiedSkemaPenilaian.original_sekolah_id = guruData.sekolah_id;
+      }
+
       if (syncBankData && tingkatan && rombelNama && tahunAjaran) {
         // Fetch guru's school ID
-        const { getGuru, getBankSiswa } = await import('@/lib/db');
-        const guruData = await getGuru(username);
         
         if (guruData && guruData.sekolah_id) {
           const bankSiswa = await getBankSiswa(guruData.sekolah_id, tahunAjaran);
@@ -92,7 +98,7 @@ export async function POST(request) {
         namaKustom,
         kolomNilai: kolomNilai || [],
         siswa: finalSiswa,
-        skemaPenilaian
+        skemaPenilaian: modifiedSkemaPenilaian
       }, username);
 
       // Log teacher activity

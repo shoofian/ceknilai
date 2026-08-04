@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBankSiswa, upsertBankSiswa, deleteBankSiswa } from '@/lib/db';
+import { getBankSiswa, upsertBankSiswa, deleteBankSiswa, resetBankData } from '@/lib/db';
 import { cookies } from 'next/headers';
 
 const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
@@ -73,6 +73,21 @@ export async function DELETE(request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+
+    if (action === 'reset') {
+      const sekolahId = searchParams.get('sekolah_id');
+      const tahunPelajaran = searchParams.get('tahun_pelajaran');
+      if (!sekolahId || !tahunPelajaran) {
+        return NextResponse.json({ error: 'sekolah_id dan tahun_pelajaran diperlukan untuk reset' }, { status: 400 });
+      }
+      const success = await resetBankData(sekolahId, tahunPelajaran);
+      if (!success) {
+        return NextResponse.json({ error: 'Gagal mereset data' }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, message: 'Bank data berhasil direset' });
+    }
+
     const id = searchParams.get('id');
 
     if (!id) {
