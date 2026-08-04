@@ -90,22 +90,26 @@ export default function ProfilGuru() {
     if (!nama.trim() || !username.trim() || !email.trim()) {
       setErrorMsg("Nama, username, dan email harus diisi.");
       setSuccessMsg("");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (walikelasTingkatan && !walikelasRombelNama.trim()) {
       setErrorMsg("Nama/No. Rombel perwalian harus diisi jika tingkatan wali kelas ditentukan.");
       setSuccessMsg("");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (!walikelasTingkatan && walikelasRombelNama.trim()) {
       setErrorMsg("Tingkatan wali kelas harus diisi jika Rombel perwalian ditentukan.");
       setSuccessMsg("");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     if (detectLevelInRombel(walikelasTingkatan, walikelasRombelNama)) {
       setErrorMsg("Format Rombel tidak sesuai. Cukup tulis nama rombel saja (contoh: \"MIPA 1\", bukan \"XI MIPA 1\" atau \"11 MIPA 1\").");
       setSuccessMsg("");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -129,16 +133,19 @@ export default function ProfilGuru() {
       if (!oldPassword.trim()) {
         setErrorMsg("Harap masukkan password lama untuk mengubah password.");
         setSubmitting(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       if (newPassword.trim().length < 6) {
         setErrorMsg("Password baru minimal harus 6 karakter.");
         setSubmitting(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       if (newPassword !== confirmPassword) {
         setErrorMsg("Konfirmasi password baru tidak cocok.");
         setSubmitting(false);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
       payload.oldPassword = oldPassword;
@@ -177,16 +184,20 @@ export default function ProfilGuru() {
         setUsername(data.user.username);
         setEmail(data.user.email);
         
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
         // Refresh page component to sync sidebar data
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       } else {
         setErrorMsg(data.error || "Gagal memperbarui profil.");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (err) {
       console.error(err);
       setErrorMsg("Terjadi kesalahan koneksi server.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setSubmitting(false);
     }
@@ -201,7 +212,7 @@ export default function ProfilGuru() {
   }
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px", maxWidth: "1200px", margin: "0 auto", width: "100%" }}>
       
       {/* Title */}
       <div className="page-title-section">
@@ -209,18 +220,29 @@ export default function ProfilGuru() {
         <p className="page-subtitle">Perbarui data profil pribadi Anda dan amankan akun dengan mengubah kata sandi.</p>
       </div>
 
-      <div className="grid-cols-2" style={{ gridTemplateColumns: "1.2fr 0.8fr", alignItems: "start" }}>
-        
-        {/* Left Side: Profile & Password Form */}
-        <div className="glass-card">
-          <h4 style={{ fontSize: "1.2rem", fontWeight: "800", marginBottom: "24px", display: "flex", alignItems: "center", gap: "8px" }}>
-            👤 Sunting Profil & Akun
-          </h4>
+      {/* Notification Messages */}
+      {errorMsg && (
+        <div style={{ padding: "16px", borderRadius: "var(--radius-md)", backgroundColor: "var(--danger-glow)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--danger)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span>❌</span> <strong>Gagal:</strong> {errorMsg}
+        </div>
+      )}
 
-          <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      {successMsg && (
+        <div style={{ padding: "16px", borderRadius: "var(--radius-md)", backgroundColor: "var(--success-glow)", border: "1px solid rgba(16, 185, 129, 0.2)", color: "var(--success)", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "8px" }}>
+          <strong>Berhasil:</strong> {successMsg}
+        </div>
+      )}
+
+      <form onSubmit={handleUpdateProfile} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        
+        {/* Main Grid Layout for Forms */}
+        <div className="profile-grid">
+          
+          {/* Section 1: Profil Dasar & Akun */}
+          <div className="glass-card profile-section">
+            <h4 className="section-header">👤 Informasi Akun</h4>
             
-            {/* Nama Lengkap */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-group">
               <label className="form-label">Nama Lengkap & Gelar</label>
               <input
                 type="text"
@@ -233,9 +255,8 @@ export default function ProfilGuru() {
               />
             </div>
 
-            {/* Grid for Username and Email */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
-              <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-row">
+              <div className="form-group">
                 <label className="form-label">Username</label>
                 <input
                   type="text"
@@ -248,7 +269,7 @@ export default function ProfilGuru() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group">
                 <label className="form-label">Alamat Email</label>
                 <input
                   type="email"
@@ -262,163 +283,80 @@ export default function ProfilGuru() {
               </div>
             </div>
 
-            {/* Asal Sekolah */}
-            <div className="form-group" style={{ marginBottom: 0, position: "relative" }}>
+            <div className="form-group" style={{ position: "relative" }}>
               <label className="form-label">Asal Sekolah</label>
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <div style={{ flex: 1, position: "relative" }}>
-                  <input
-                    type="text"
-                    placeholder="🔍 Cari asal sekolah (ketik nama atau NPSN)..."
-                    className="form-input"
-                    value={sekolahSearchQuery}
-                    onChange={(e) => {
-                      setSekolahSearchQuery(e.target.value);
-                      if (!e.target.value.trim()) {
-                        setSekolahId("");
-                        setSekolahSearchResults([]);
-                        setShowSekolahDropdown(false);
-                        return;
-                      }
-                      fetch(`/api/sekolah/search?query=${encodeURIComponent(e.target.value)}`)
-                        .then(res => res.json())
-                        .then(data => {
-                          setSekolahSearchResults(data);
-                          setShowSekolahDropdown(true);
-                        });
-                    }}
-                    onFocus={() => { if (sekolahSearchQuery.trim()) setShowSekolahDropdown(true); }}
-                    onBlur={() => setTimeout(() => setShowSekolahDropdown(false), 200)}
-                    disabled={isLocked}
-                    style={{ width: "100%" }}
-                  />
-                  {showSekolahDropdown && sekolahSearchResults.length > 0 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        right: 0,
-                        backgroundColor: "var(--bg-secondary)",
-                        border: "1px solid var(--border-focus)",
-                        borderRadius: "var(--radius-sm)",
-                        zIndex: 1000,
-                        maxHeight: "180px",
-                        overflowY: "auto",
-                        boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
-                        marginTop: "4px"
-                      }}
-                    >
-                      {sekolahSearchResults.map(s => (
-                        <div
-                          key={s.id}
-                          onMouseDown={() => {
-                            setSekolahId(s.id);
-                            setSekolahSearchQuery(s.nama);
-                            setShowSekolahDropdown(false);
-                          }}
-                          style={{
-                            padding: "10px 12px",
-                            cursor: "pointer",
-                            fontSize: "0.85rem",
-                            borderBottom: "1px solid var(--border-color)",
-                            transition: "background-color 0.15s ease"
-                          }}
-                          className="sekolah-search-item"
-                        >
-                          <div style={{ fontWeight: "700" }}>{s.nama}</div>
-                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>NPSN: {s.npsn}</div>
-                        </div>
-                      ))}
+              <input
+                type="text"
+                placeholder="🔍 Cari asal sekolah (ketik nama atau NPSN)..."
+                className="form-input"
+                value={sekolahSearchQuery}
+                onChange={(e) => {
+                  setSekolahSearchQuery(e.target.value);
+                  if (!e.target.value.trim()) {
+                    setSekolahId("");
+                    setSekolahSearchResults([]);
+                    setShowSekolahDropdown(false);
+                    return;
+                  }
+                  fetch(`/api/sekolah/search?query=${encodeURIComponent(e.target.value)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      setSekolahSearchResults(data);
+                      setShowSekolahDropdown(true);
+                    });
+                }}
+                onFocus={() => { if (sekolahSearchQuery.trim()) setShowSekolahDropdown(true); }}
+                onBlur={() => setTimeout(() => setShowSekolahDropdown(false), 200)}
+                disabled={isLocked}
+              />
+              {showSekolahDropdown && sekolahSearchQuery.trim().length > 0 && (
+                <div className="autocomplete-dropdown">
+                  {sekolahSearchResults.length > 0 ? (
+                    sekolahSearchResults.map(s => (
+                      <div
+                        key={s.id}
+                        onMouseDown={() => {
+                          setSekolahId(s.id);
+                          setSekolahSearchQuery(s.nama);
+                          setShowSekolahDropdown(false);
+                        }}
+                        className="autocomplete-item"
+                      >
+                        <div style={{ fontWeight: "700" }}>{s.nama}</div>
+                        <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>NPSN: {s.npsn}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ padding: "12px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                      Tidak ditemukan hasil yang cocok.
                     </div>
                   )}
+                  <div
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      setRegisterModalOpen(true);
+                      setRegisterError("");
+                      setShowSekolahDropdown(false);
+                    }}
+                    className="autocomplete-add-new"
+                  >
+                    ❓ Sekolah saya tidak muncul. <strong>Daftarkan Baru &rarr;</strong>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => { setRegisterModalOpen(true); setRegisterError(""); }}
-                  className="btn btn-secondary"
-                  disabled={isLocked}
-                  style={{ whiteSpace: "nowrap", padding: "12px 16px", fontSize: "0.85rem" }}
-                  title="Daftarkan Sekolah Baru"
-                >
-                  ➕ Daftar Baru
-                </button>
-              </div>
+              )}
             </div>
+          </div>
 
-            {/* Wali Rombel */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "12px" }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tingkatan Wali Kelas <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
-                <select
-                  className="form-input"
-                  value={walikelasTingkatan}
-                  onChange={(e) => {
-                    setWalikelasTingkatan(e.target.value);
-                    if (!e.target.value) setWalikelasRombelNama("");
-                  }}
-                  disabled={isLocked}
-                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-                >
-                  <option value="">Bukan Wali</option>
-                  <option value="10">Kelas 10 (X)</option>
-                  <option value="11">Kelas 11 (XI)</option>
-                  <option value="12">Kelas 12 (XII)</option>
-                </select>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Nama/No. Rombel Wali</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: MIPA 1 atau 1"
-                  className="form-input"
-                  value={walikelasRombelNama}
-                  onChange={(e) => setWalikelasRombelNama(e.target.value)}
-                  disabled={isLocked || !walikelasTingkatan}
-                  required={!!walikelasTingkatan}
-                />
-                {detectLevelInRombel(walikelasTingkatan, walikelasRombelNama) && (
-                  <p style={{ color: "var(--danger)", fontSize: "0.75rem", margin: "4px 0 0 0" }}>
-                    ⚠️ Cukup tulis nama rombel saja (contoh: "MIPA 1", bukan "XI MIPA 1" atau "{walikelasTingkatan} MIPA 1").
-                  </p>
-                )}
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Tahun Pelajaran Wali</label>
-                <select
-                  className="form-input"
-                  value={walikelasTahunAjaran}
-                  onChange={(e) => setWalikelasTahunAjaran(e.target.value)}
-                  disabled={isLocked || !walikelasTingkatan}
-                  required={!!walikelasTingkatan}
-                  style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
-                >
-                  <option value="2024/2025">2024/2025</option>
-                  <option value="2025/2026">2025/2026</option>
-                  <option value="2026/2027">2026/2027</option>
-                </select>
-              </div>
-            </div>
- 
-            {/* Divider */}
-            <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "10px 0" }}></div>
-
-            {/* LAPORAN & SEKOLAH HEADER */}
-            <div>
-              <h5 style={{ fontSize: "0.95rem", fontWeight: "700" }}>🏫 Informasi Sekolah & Kepala Sekolah (Laporan)</h5>
-              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                Pengaturan nama sekolah, alamat, dan data kepala sekolah untuk cetak laporan hasil belajar (KHS).
-              </p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
-              <div className="form-group" style={{ marginBottom: 0 }}>
+          {/* Section 2: Data Laporan */}
+          <div className="glass-card profile-section">
+            <h4 className="section-header">🏫 Data Cetak Laporan</h4>
+            
+            <div className="form-row">
+              <div className="form-group">
                 <label className="form-label">Alamat Sekolah</label>
                 <input
                   type="text"
-                  placeholder="Contoh: Jl. Raya Pendidikan No. 12"
+                  placeholder="Jl. Raya Pendidikan No. 12"
                   className="form-input"
                   value={alamatSekolah}
                   onChange={(e) => setAlamatSekolah(e.target.value)}
@@ -426,11 +364,11 @@ export default function ProfilGuru() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group">
                 <label className="form-label">Telepon Sekolah</label>
                 <input
                   type="text"
-                  placeholder="Contoh: (021) 123456"
+                  placeholder="(021) 123456"
                   className="form-input"
                   value={telpSekolah}
                   onChange={(e) => setTelpSekolah(e.target.value)}
@@ -439,38 +377,12 @@ export default function ProfilGuru() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Kota Penerbitan Laporan</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Jakarta"
-                  className="form-input"
-                  value={kotaCetak}
-                  onChange={(e) => setKotaCetak(e.target.value)}
-                  disabled={isLocked}
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">NIP Guru Pengampu <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
-                <input
-                  type="text"
-                  placeholder="NIP Anda"
-                  className="form-input"
-                  value={nipGuru}
-                  onChange={(e) => setNipGuru(e.target.value)}
-                  disabled={isLocked}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
-              <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="form-row">
+              <div className="form-group">
                 <label className="form-label">Nama Kepala Sekolah</label>
                 <input
                   type="text"
-                  placeholder="Nama Kepala Sekolah beserta gelar"
+                  placeholder="Nama beserta gelar"
                   className="form-input"
                   value={namaKepsek}
                   onChange={(e) => setNamaKepsek(e.target.value)}
@@ -478,7 +390,7 @@ export default function ProfilGuru() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group">
                 <label className="form-label">NIP Kepala Sekolah</label>
                 <input
                   type="text"
@@ -491,20 +403,99 @@ export default function ProfilGuru() {
               </div>
             </div>
 
-            {/* Divider */}
-            <div style={{ height: "1px", backgroundColor: "var(--border-color)", margin: "10px 0" }}></div>
-
-            {/* PASSWORD CHANGES HEADER */}
-            <div>
-              <h5 style={{ fontSize: "0.95rem", fontWeight: "700" }}>🔒 Ubah Kata Sandi (Opsional)</h5>
-              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "2px" }}>
-                Biarkan bidang di bawah ini kosong jika Anda tidak berniat mengubah kata sandi.
-              </p>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Kota Penerbitan Laporan</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Jakarta"
+                  className="form-input"
+                  value={kotaCetak}
+                  onChange={(e) => setKotaCetak(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">NIP Guru <span className="label-optional">(opsional)</span></label>
+                <input
+                  type="text"
+                  placeholder="NIP Anda"
+                  className="form-input"
+                  value={nipGuru}
+                  onChange={(e) => setNipGuru(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
             </div>
+          </div>
 
-            {/* Password input fields */}
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Password Lama <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
+          {/* Section 3: Wali Kelas */}
+          <div className="glass-card profile-section">
+            <h4 className="section-header">👨‍🏫 Perwalian (Wali Kelas)</h4>
+            
+            <div className="form-row-3">
+              <div className="form-group">
+                <label className="form-label">Tingkatan <span className="label-optional">(opsional)</span></label>
+                <select
+                  className="form-input select-styled"
+                  value={walikelasTingkatan}
+                  onChange={(e) => {
+                    setWalikelasTingkatan(e.target.value);
+                    if (!e.target.value) setWalikelasRombelNama("");
+                  }}
+                  disabled={isLocked}
+                >
+                  <option value="">Bukan Wali</option>
+                  <option value="10">Kelas 10 (X)</option>
+                  <option value="11">Kelas 11 (XI)</option>
+                  <option value="12">Kelas 12 (XII)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Nama/No. Rombel</label>
+                <input
+                  type="text"
+                  placeholder="MIPA 1 / 1"
+                  className="form-input"
+                  value={walikelasRombelNama}
+                  onChange={(e) => setWalikelasRombelNama(e.target.value)}
+                  disabled={isLocked || !walikelasTingkatan}
+                  required={!!walikelasTingkatan}
+                />
+                {detectLevelInRombel(walikelasTingkatan, walikelasRombelNama) && (
+                  <p className="form-warning">
+                    Cukup nama rombel, misal "MIPA 1" bukan "{walikelasTingkatan} MIPA 1"
+                  </p>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Tahun Pelajaran</label>
+                <select
+                  className="form-input select-styled"
+                  value={walikelasTahunAjaran}
+                  onChange={(e) => setWalikelasTahunAjaran(e.target.value)}
+                  disabled={isLocked || !walikelasTingkatan}
+                  required={!!walikelasTingkatan}
+                >
+                  <option value="2024/2025">2024/2025</option>
+                  <option value="2025/2026">2025/2026</option>
+                  <option value="2026/2027">2026/2027</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Keamanan */}
+          <div className="glass-card profile-section">
+            <h4 className="section-header">🔒 Keamanan Akun</h4>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "16px" }}>
+              Biarkan kosong jika Anda tidak ingin mengubah kata sandi Anda.
+            </p>
+
+            <div className="form-group">
+              <label className="form-label">Password Lama <span className="label-optional">(opsional)</span></label>
               <input
                 type="password"
                 placeholder="Masukkan kata sandi saat ini"
@@ -515,9 +506,9 @@ export default function ProfilGuru() {
               />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }} className="grid-cols-1">
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Password Baru <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Password Baru <span className="label-optional">(opsional)</span></label>
                 <input
                   type="password"
                   placeholder="Minimal 6 karakter"
@@ -528,8 +519,8 @@ export default function ProfilGuru() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label">Konfirmasi Password Baru <span style={{ fontWeight: "500", color: "var(--text-muted)", fontSize: "0.75rem" }}>(opsional)</span></label>
+              <div className="form-group">
+                <label className="form-label">Konfirmasi Password <span className="label-optional">(opsional)</span></label>
                 <input
                   type="password"
                   placeholder="Ulangi password baru"
@@ -540,93 +531,39 @@ export default function ProfilGuru() {
                 />
               </div>
             </div>
-
-            {/* Notification messages */}
-            {errorMsg && (
-              <div style={{ padding: "12px 16px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", border: "1px solid rgba(239, 68, 68, 0.15)", color: "var(--danger)", fontSize: "0.85rem" }}>
-                ❌ {errorMsg}
-              </div>
-            )}
-
-            {successMsg && (
-              <div style={{ padding: "12px 16px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--success-glow)", border: "1px solid rgba(16, 185, 129, 0.15)", color: "var(--success)", fontSize: "0.85rem" }}>
-                {successMsg}
-              </div>
-            )}
-
-            {/* Submit */}
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              style={{ 
-                width: "fit-content", 
-                padding: "12px 30px", 
-                alignSelf: "flex-end",
-                opacity: isLocked ? 0.6 : 1,
-                cursor: isLocked ? "not-allowed" : "pointer"
-              }} 
-              disabled={isLocked || submitting}
-            >
-              {submitting ? (
-                <>
-                  <span className="btn-spinner" />
-                  Menyimpan...
-                </>
-              ) : isLocked ? (
-                "🔒 Akun Terkunci"
-              ) : (
-                "💾 Perbarui Profil Akun"
-              )}
-            </button>
-
-          </form>
-        </div>
-
-        {/* Right Side: Account Verification / Information info box */}
-        <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          <h4 style={{ fontSize: "1.15rem", fontWeight: "700" }}>ℹ️ Informasi Akun Guru</h4>
-          
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontSize: "0.85rem", lineHeight: "1.6" }}>
-            <p>
-              Akun guru ini dikelola secara terpusat oleh <strong>Superadmin SMA Digital</strong>.
-            </p>
-            <p>
-              Mengubah username akan memengaruhi tautan login Anda. Pastikan Anda mengingat kredensial baru Anda sebelum keluar dari sistem!
-            </p>
-            
-            <div style={{ backgroundColor: "var(--bg-tertiary)", padding: "16px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "10px" }}>
-              <h5 style={{ fontWeight: "700", marginBottom: "6px" }}>🔒 Catatan Keamanan:</h5>
-              <ul style={{ paddingLeft: "16px", display: "flex", flexDirection: "column", gap: "4px", color: "var(--text-secondary)" }}>
-                <li>Gunakan kombinasi kata sandi yang kuat (huruf, angka, simbol).</li>
-                <li>Jangan pernah membagikan kredensial login Anda kepada siapapun.</li>
-                <li>Selalu lakukan logout jika mengakses sistem di komputer publik/bersama.</li>
-              </ul>
-            </div>
           </div>
         </div>
 
-      </div>
+        {/* Submit Actions */}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "8px" }}>
+          <button 
+            type="submit" 
+            className="btn btn-primary btn-lg" 
+            disabled={isLocked || submitting}
+          >
+            {submitting ? (
+              <>
+                <span className="btn-spinner" />
+                Menyimpan...
+              </>
+            ) : isLocked ? (
+              "🔒 Akun Terkunci"
+            ) : (
+              "💾 Simpan Perubahan"
+            )}
+          </button>
+        </div>
+
+      </form>
 
       {/* Modal Daftarkan Sekolah Baru */}
       {registerModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.65)",
-            backdropFilter: "blur(6px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
-          }}
-        >
-          <div className="glass-card" style={{ width: "100%", maxWidth: "400px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: "800", marginBottom: "16px" }}>
+        <div className="modal-overlay">
+          <div className="glass-card modal-content">
+            <h3 className="modal-title">
               🏫 Daftarkan Sekolah Baru
             </h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "16px", lineHeight: "1.5" }}>
+            <p className="modal-desc">
               Silakan masukkan nama resmi sekolah (tanpa singkatan SMAN/SMKN/SMPN/SDN) dan 8 digit nomor NPSN resmi.
             </p>
 
@@ -660,7 +597,7 @@ export default function ProfilGuru() {
                 </div>
               )}
 
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "8px" }}>
+              <div className="modal-actions">
                 <button
                   type="button"
                   onClick={() => setRegisterModalOpen(false)}
@@ -671,7 +608,7 @@ export default function ProfilGuru() {
                 </button>
                 <button
                   disabled={isRegistering}
-                  onMouseDown={async () => {
+                  onClick={async () => {
                     if (!newSekolahNama.trim() || !newSekolahNpsn.trim()) {
                       setRegisterError("Semua kolom wajib diisi.");
                       return;
@@ -720,9 +657,176 @@ export default function ProfilGuru() {
           </div>
         </div>
       )}
+
       <style jsx global>{`
-        .sekolah-search-item:hover {
-          background-color: var(--bg-tertiary) !important;
+        /* Responsive Grid for Forms */
+        .profile-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 24px;
+        }
+        
+        .profile-section {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .section-header {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: var(--primary);
+          border-bottom: 2px solid var(--border-color);
+          padding-bottom: 12px;
+          margin-bottom: 8px;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 16px;
+        }
+        
+        .form-row-3 {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1.2fr;
+          gap: 12px;
+        }
+
+        .label-optional {
+          font-weight: 500;
+          color: var(--text-muted);
+          font-size: 0.75rem;
+        }
+        
+        .form-warning {
+          color: var(--danger);
+          font-size: 0.75rem;
+          margin: 6px 0 0 0;
+          line-height: 1.4;
+        }
+
+        .select-styled {
+          appearance: auto;
+          background-color: var(--bg-secondary);
+          color: var(--text-primary);
+          border: 1px solid var(--border-color);
+        }
+
+        .btn-lg {
+          padding: 14px 32px;
+          font-size: 1rem;
+          font-weight: 700;
+          box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        /* Autocomplete Styles */
+        .autocomplete-dropdown {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 0;
+          right: 0;
+          background-color: var(--bg-secondary);
+          border: 1px solid var(--border-focus);
+          border-radius: var(--radius-sm);
+          z-index: 1000;
+          max-height: 250px;
+          overflow-y: auto;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .autocomplete-item {
+          padding: 12px 14px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          border-bottom: 1px solid var(--border-color);
+          transition: background-color 0.15s ease;
+        }
+
+        .autocomplete-item:hover {
+          background-color: var(--bg-tertiary);
+        }
+        
+        .autocomplete-add-new {
+          padding: 12px 14px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          background-color: rgba(79, 70, 229, 0.05);
+          color: var(--primary);
+          text-align: center;
+          transition: all 0.2s ease;
+        }
+        
+        .autocomplete-add-new:hover {
+          background-color: var(--primary);
+          color: white;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background-color: rgba(15, 23, 42, 0.75);
+          backdrop-filter: blur(8px);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+
+        .modal-content {
+          width: 100%;
+          max-width: 450px;
+          border: 1px solid var(--border-focus);
+          box-shadow: 0 24px 50px rgba(0,0,0,0.4);
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-title {
+          font-size: 1.35rem;
+          font-weight: 800;
+          margin-bottom: 12px;
+          color: var(--text-primary);
+        }
+
+        .modal-desc {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          margin-bottom: 20px;
+          line-height: 1.6;
+        }
+
+        .modal-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: flex-end;
+          margin-top: 16px;
+        }
+
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+          .profile-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+        }
+        
+        @media (max-width: 640px) {
+          .form-row, .form-row-3 {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          
+          .btn-lg {
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
     </div>

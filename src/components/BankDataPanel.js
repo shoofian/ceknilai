@@ -14,11 +14,49 @@ export default function BankDataPanel() {
   // Default values for upload
   const [targetSekolahId, setTargetSekolahId] = useState("");
   const [targetTahunPelajaran, setTargetTahunPelajaran] = useState("2024/2025");
+  
+  // States for school autocomplete
+  const [searchSekolahTerm, setSearchSekolahTerm] = useState("");
+  const [sekolahResults, setSekolahResults] = useState([]);
+  const [isSearchingSekolah, setIsSearchingSekolah] = useState(false);
+  const [showSekolahDropdown, setShowSekolahDropdown] = useState(false);
+  
+  // Timer for debouncing
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
     fetchBankData();
-    fetchSekolahList();
   }, []);
+
+  const handleSearchSekolah = async (e) => {
+    const val = e.target.value;
+    setSearchSekolahTerm(val);
+    setTargetSekolahId(""); // Reset ID if user types something new
+    
+    if (searchTimeout) clearTimeout(searchTimeout);
+    
+    if (!val.trim()) {
+      // Load default list if empty
+      setSekolahResults([]);
+      // we can also fetch all if needed:
+      // set timeout to fetch all
+    }
+
+    setSearchTimeout(setTimeout(async () => {
+      setIsSearchingSekolah(true);
+      try {
+        const res = await fetch(`/api/sekolah/search?query=${encodeURIComponent(val)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSekolahResults(data);
+        }
+      } catch (err) {
+        console.error("Gagal mencari sekolah:", err);
+      } finally {
+        setIsSearchingSekolah(false);
+      }
+    }, 500));
+  };
 
   const fetchBankData = async () => {
     setLoading(true);
@@ -33,14 +71,6 @@ export default function BankDataPanel() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchSekolahList = async () => {
-    try {
-      const res = await fetch("/api/auth/signup"); // This endpoint might have getSekolah, wait, maybe I need a dedicated endpoint. 
-      // Actually, I can just fetch from an existing endpoint or I'll implement a simple one if it doesn't exist.
-      // Let's check how signup gets schools.
-    } catch(e) {}
   };
 
   const handleDelete = async (id) => {
@@ -168,18 +198,73 @@ export default function BankDataPanel() {
       </div>
 
       <div style={{ background: "var(--background-secondary)", padding: "16px", borderRadius: "12px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div style={{ flex: "1", minWidth: "200px" }}>
-          <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>Sekolah Tujuan</label>
+        <div style={{ flex: "1", minWidth: "250px", position: "relative" }}>
+          <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>Sekolah Tujuan <span style={{ color: "var(--danger)" }}>*</span></label>
           <input
             type="text"
             className="form-input"
-            placeholder="Masukkan ID Sekolah..."
-            value={targetSekolahId}
-            onChange={(e) => setTargetSekolahId(e.target.value)}
+            placeholder="Ketik nama sekolah..."
+            value={searchSekolahTerm}
+            onChange={handleSearchSekolah}
+            onFocus={() => {
+              if (!targetSekolahId && searchSekolahTerm.length === 0) {
+                handleSearchSekolah({ target: { value: '' } });
+              }
+              setShowSekolahDropdown(true);
+            }}
+            onBlur={() => setTimeout(() => setShowSekolahDropdown(false), 200)}
+            style={{ 
+              borderColor: targetSekolahId ? "var(--primary)" : "var(--border-color)",
+              backgroundColor: targetSekolahId ? "rgba(79, 70, 229, 0.05)" : "var(--bg-secondary)"
+            }}
           />
+          {targetSekolahId && (
+            <div style={{ position: "absolute", right: "12px", top: "34px", color: "var(--primary)", fontSize: "0.8rem", fontWeight: "bold" }}>
+              ✓ Terpilih
+            </div>
+          )}
+          {showSekolahDropdown && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              backgroundColor: "var(--bg-primary)",
+              border: "1px solid var(--border-color)",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              maxHeight: "200px",
+              overflowY: "auto",
+              zIndex: 10,
+              marginTop: "4px"
+            }}>
+              {isSearchingSekolah ? (
+                <div style={{ padding: "12px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)" }}>Mencari...</div>
+              ) : sekolahResults.length > 0 ? (
+                sekolahResults.map((sek) => (
+                  <div
+                    key={sek.id}
+                    onClick={() => {
+                      setTargetSekolahId(sek.id);
+                      setSearchSekolahTerm(sek.nama);
+                      setShowSekolahDropdown(false);
+                    }}
+                    style={{ padding: "10px 12px", cursor: "pointer", borderBottom: "1px solid var(--border-color)", fontSize: "0.85rem" }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    <div style={{ fontWeight: "600" }}>{sek.nama}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{sek.kecamatan}, {sek.kabupaten}</div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: "12px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)" }}>Tidak ditemukan</div>
+              )}
+            </div>
+          )}
         </div>
         <div style={{ flex: "1", minWidth: "150px" }}>
-          <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>Tahun Pelajaran</label>
+          <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>Tahun Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
           <select 
             className="form-input"
             value={targetTahunPelajaran}
@@ -188,6 +273,7 @@ export default function BankDataPanel() {
             <option value="2023/2024">2023/2024</option>
             <option value="2024/2025">2024/2025</option>
             <option value="2025/2026">2025/2026</option>
+            <option value="2026/2027">2026/2027</option>
           </select>
         </div>
         <div>
