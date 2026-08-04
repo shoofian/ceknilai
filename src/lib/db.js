@@ -1691,15 +1691,17 @@ export async function getBankRombels(sekolahId, tahunPelajaran) {
       return [];
     }
 
-    const uniqueRombels = [];
-    const seen = new Set();
+    const rombelMap = new Map();
     data.forEach(item => {
       const key = `${item.tingkatan}-${item.rombel}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueRombels.push({ tingkatan: item.tingkatan, rombel: item.rombel });
+      if (!rombelMap.has(key)) {
+        rombelMap.set(key, { tingkatan: item.tingkatan, rombel: item.rombel, siswaCount: 1 });
+      } else {
+        rombelMap.get(key).siswaCount++;
       }
     });
+
+    const uniqueRombels = Array.from(rombelMap.values());
 
     uniqueRombels.sort((a, b) => {
       if (a.tingkatan !== b.tingkatan) {

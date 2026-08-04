@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getGuru, getBankRombels } from '@/lib/db';
-import { cookies } from 'next/headers';
+import { checkAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('guru_session');
-
-    if (!session || !session.value) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const username = session.value;
     const guru = await getGuru(username);
 
     if (!guru || !guru.sekolah_id) {

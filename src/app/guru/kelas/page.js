@@ -280,7 +280,7 @@ export default function KelolaKelas() {
         tahunAjaran: tahunAjaran.trim(),
         semester: semester.trim(),
         kolomNilai: isEditing ? undefined : initialKolomNilai,
-        syncBankData: !isEditing ? syncBankData : false
+        syncBankData: false
       };
       if (isEditing) {
         response = await fetch(`/api/kelas/${currentId}`, {
@@ -1045,27 +1045,27 @@ export default function KelolaKelas() {
                     </span>
                   </div>
 
-                  {/* Pilihan 2: Buat Manual */}
+                  {/* Pilihan 3: Ambil dari Bank Data */}
                   <div 
-                    onClick={() => setCreationMethod("manual")}
-                    onMouseEnter={() => setHoverMethod("manual")}
+                    onClick={() => { setCreationMethod("bank"); setBankRombels([]); setSelectedBankRombels({}); }}
+                    onMouseEnter={() => setHoverMethod("bank")}
                     onMouseLeave={() => setHoverMethod(null)}
                     style={{
-                      border: hoverMethod === "manual" ? "1px solid var(--primary)" : "1px solid var(--border-color)",
+                      border: hoverMethod === "bank" ? "1px solid var(--primary)" : "1px solid var(--border-color)",
                       borderRadius: "var(--radius-md)",
                       padding: "20px",
                       cursor: "pointer",
-                      backgroundColor: hoverMethod === "manual" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      backgroundColor: hoverMethod === "bank" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
                       transition: "var(--transition)",
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px"
                     }}
                   >
-                    <span style={{ fontSize: "2rem" }}>✍️</span>
-                    <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>Buat Kelas Manual</strong>
+                    <span style={{ fontSize: "2rem" }}>☁️</span>
+                    <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>Ambil dari Bank Data</strong>
                     <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                      <strong>Direkomendasikan untuk 1-2 kelas / kelas kustom.</strong> Buat identitas kelas (Tingkatan, Rombel, Mapel) sekarang, lalu masukkan data siswa secara manual nanti (seperti kelas remedial, ekskul, dll.).
+                      <strong>Direkomendasikan.</strong> Tarik data otomatis dari pusat Bank Data sekolah Anda. Mirip dengan impor massal namun tanpa perlu file Excel.
                     </span>
                   </div>
                 </div>
@@ -1073,6 +1073,142 @@ export default function KelolaKelas() {
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
                   <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" style={{ fontSize: "0.85rem" }}>
                     Batal
+                  </button>
+                </div>
+              </div>
+            ) : creationMethod === "bank" && !isEditing ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.4rem" }}>☁️</span>
+                    <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Ambil dari Bank Data</h3>
+                  </div>
+                  <button onClick={() => setModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}>✕</button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <label className="form-label" style={{ marginBottom: "0" }}>Tahun Pelajaran</label>
+                  <select
+                    className="form-input"
+                    value={tahunAjaran}
+                    onChange={(e) => {
+                       setTahunAjaran(e.target.value);
+                       setBankRombels([]);
+                       setSelectedBankRombels({});
+                    }}
+                    style={{ padding: "8px", fontSize: "0.9rem", appearance: "auto" }}
+                  >
+                    <option value="" disabled>-- Pilih T.A. --</option>
+                    {TAHUN_AJARAN_OPTIONS.map(ta => (
+                      <option key={ta} value={ta}>{ta}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px", minHeight: "150px" }}>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", margin: 0 }}>Pilih Rombel yang Tersedia:</h4>
+                  {loadingBankRombels ? (
+                    <div style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                      Sedang memuat data dari Bank Data...
+                    </div>
+                  ) : bankRombels.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "30px", border: "1px dashed var(--border-color)", borderRadius: "var(--radius-sm)", backgroundColor: "var(--bg-tertiary)" }}>
+                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📭</div>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Tidak ada data rombel di Bank Data untuk Tahun Ajaran {tahunAjaran}</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", maxHeight: "250px", overflowY: "auto", padding: "4px" }} className="modal-content-scroll">
+                      {bankRombels.map(br => {
+                        const key = `${br.tingkatan}-${br.rombel}`;
+                        return (
+                          <label key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", cursor: "pointer", backgroundColor: selectedBankRombels[key] ? "rgba(59,130,246,0.1)" : "var(--bg-secondary)", transition: "var(--transition)" }}>
+                            <input 
+                              type="checkbox" 
+                              checked={!!selectedBankRombels[key]} 
+                              onChange={(e) => {
+                                setSelectedBankRombels(prev => ({ ...prev, [key]: e.target.checked }));
+                              }}
+                            />
+                            <div style={{ display: "flex", flexDirection: "column" }}>
+                              <strong style={{ fontSize: "0.9rem" }}>Tingkat {br.tingkatan} - {br.rombel}</strong>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{br.siswaCount || '?'} Siswa</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {dapodikUploadError && (
+                  <div style={{ padding: "12px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.82rem", border: "1px solid rgba(239, 68, 68, 0.15)" }}>
+                    ❌ {dapodikUploadError}
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
+                  <button type="button" onClick={() => setModalOpen(false)} className="btn btn-secondary" style={{ fontSize: "0.85rem" }} disabled={bankSiswaLoading}>
+                    Batal
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    style={{ fontSize: "0.85rem" }}
+                    disabled={Object.values(selectedBankRombels).filter(Boolean).length === 0 || bankSiswaLoading}
+                    onClick={async () => {
+                      setBankSiswaLoading(true);
+                      setDapodikUploadError("");
+                      try {
+                        const res = await fetch(`/api/kelas/bank-data?tahun_pelajaran=${encodeURIComponent(tahunAjaran)}`);
+                        if (!res.ok) throw new Error("Gagal mengambil Bank Data Siswa");
+                        const data = await res.json();
+                        
+                        const selectedKeys = Object.keys(selectedBankRombels).filter(k => selectedBankRombels[k]);
+                        const targetRombels = new Set(selectedKeys.map(k => k.split('-')[1]));
+                        
+                        const filteredStudents = data.filter(s => targetRombels.has(s.rombel));
+                        if (filteredStudents.length === 0) {
+                          throw new Error("Tidak ada siswa ditemukan di Bank Data untuk rombel terpilih.");
+                        }
+                        
+                        const extStudents = filteredStudents.map(s => ({
+                          nisn: s.nisn,
+                          nama: s.nama,
+                          rombel: s.rombel,
+                          tanggalLahir: s.tanggal_lahir || "",
+                          nilai: {},
+                          catatan: ""
+                        }));
+                        
+                        const initialForms = [];
+                        selectedKeys.forEach((key, idx) => {
+                          const [t, r] = key.split('-');
+                          initialForms.push({
+                            id: Date.now() + idx,
+                            tingkatan: t,
+                            rombelNama: r,
+                            namaKustom: "",
+                            mataPelajaran: "",
+                            mataPelajaranCustom: "",
+                            tahunAjaran: tahunAjaran,
+                            semester: "Ganjil",
+                            sourceRombel: r
+                          });
+                        });
+                        
+                        setParsedStudents(extStudents);
+                        setParsedClasses(Array.from(targetRombels));
+                        setBulkForms(initialForms);
+                        setBulkModalOpen(true);
+                        setModalOpen(false);
+                      } catch (err) {
+                        setDapodikUploadError(err.message);
+                      } finally {
+                        setBankSiswaLoading(false);
+                      }
+                    }}
+                  >
+                    {bankSiswaLoading ? "Menarik Data..." : "Lanjutkan ke Impor Massal ➔"}
                   </button>
                 </div>
               </div>
@@ -1384,24 +1520,7 @@ export default function KelolaKelas() {
                     </div>
                   )}
 
-                  {!isEditing && (
-                    <div className="form-group" style={{ marginBottom: 0, marginTop: "8px" }}>
-                      <label className="checkbox-label" style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
-                        <input
-                          type="checkbox"
-                          checked={syncBankData}
-                          onChange={(e) => setSyncBankData(e.target.checked)}
-                          style={{ marginTop: "4px" }}
-                        />
-                        <div>
-                          <span style={{ fontWeight: "600", display: "block" }}>🔄 Sinkronisasi dengan Bank Data Siswa</span>
-                          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "block" }}>
-                            Otomatis memasukkan daftar siswa ke kelas ini berdasarkan Tingkatan, Rombel, dan Tahun Ajaran dari Bank Data.
-                          </span>
-                        </div>
-                      </label>
-                    </div>
-                  )}
+                  {/* Sinkronisasi dihapus karena sudah ada mode tersendiri */}
 
                   {error && (
                     <div style={{ padding: "10px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", color: "var(--danger)", fontSize: "0.85rem" }}>
@@ -1463,7 +1582,7 @@ export default function KelolaKelas() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
               <div>
                 <h3 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)" }}>
-                  📦 Impor Kelas Massal (Dapodik)
+                  📦 Pembuatan Kelas Massal
                 </h3>
                 <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "4px" }}>
                   Ditemukan <strong>{parsedStudents.length} siswa</strong> dari <strong>{parsedClasses.length} rombel/kelas</strong>. Silakan atur pembuatan kelas di bawah ini.
@@ -1506,7 +1625,7 @@ export default function KelolaKelas() {
                       <th style={{ width: "22%" }}>Mata Pelajaran</th>
                       <th style={{ width: "14%" }}>T.A.</th>
                       <th style={{ width: "12%" }}>Semester</th>
-                      <th style={{ width: "18%" }}>Sumber Dapodik</th>
+                      <th style={{ width: "18%" }}>Sumber Siswa</th>
                       <th style={{ width: "4%" }}></th>
                     </tr>
                   </thead>
