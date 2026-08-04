@@ -59,8 +59,8 @@ export async function POST(request) {
       let finalSiswa = siswa || [];
       if (syncBankData && tingkatan && rombelNama && tahunAjaran) {
         // Fetch guru's school ID
-        const { getGuruByUsername, getBankSiswa } = await import('@/lib/db');
-        const guruData = await getGuruByUsername(username);
+        const { getGuru, getBankSiswa } = await import('@/lib/db');
+        const guruData = await getGuru(username);
         
         if (guruData && guruData.sekolah_id) {
           const bankSiswa = await getBankSiswa(guruData.sekolah_id, tahunAjaran);

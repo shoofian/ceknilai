@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getKelasById, getGuruByUsername, getBankSiswa, updateKelas } from '@/lib/db';
+import { getKelasById, getGuru, getBankSiswa, updateKelas } from '@/lib/db';
 
 async function checkAuth() {
   const cookieStore = await cookies();
@@ -27,7 +27,7 @@ export async function POST(request) {
     }
 
     // Ambil data guru untuk mendapatkan sekolah_id
-    const guruData = await getGuruByUsername(username);
+    const guruData = await getGuru(username);
     if (!guruData || !guruData.sekolah_id) {
       return NextResponse.json({ error: 'Gagal mendapatkan data sekolah guru. Hubungi superadmin untuk mengatur ID Sekolah pada akun Anda.' }, { status: 400 });
     }
