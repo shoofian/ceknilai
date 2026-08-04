@@ -33,7 +33,7 @@ export async function checkAuth() {
   // Coba verifikasi sebagai JWT terlebih dahulu
   const payload = await verifyToken(session.value);
   if (payload && payload.username) {
-    return payload.username.toLowerCase();
+    return payload.username;
   }
 
   return null;

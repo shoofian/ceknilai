@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server';
 import { getGuru } from '@/lib/db';
+import { checkAuth } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const session = cookieStore.get('guru_session');
-    
-    if (!session || !session.value) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json(
         { loggedIn: false, error: 'Belum masuk' },
         { status: 401 }
       );
     }
     
-    const guru = await getGuru(session.value);
+    const guru = await getGuru(username);
     
     // Keamanan: Validasi bahwa data guru yang diambil cocok dengan username sesi
-    if (!guru || !guru.username || guru.username.toLowerCase() !== session.value.toLowerCase()) {
+    if (!guru || !guru.username || guru.username.toLowerCase() !== username.toLowerCase()) {
       return NextResponse.json(
         { loggedIn: false, error: 'Sesi tidak valid' },
         { status: 401 }
