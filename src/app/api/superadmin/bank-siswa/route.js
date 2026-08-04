@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import { getBankSiswa, upsertBankSiswa, deleteBankSiswa } from '@/lib/db';
 import { cookies } from 'next/headers';
 
+const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
+
 async function checkSuperadminAuth() {
   const cookieStore = await cookies();
-  const session = cookieStore.get('superadmin_session');
-  return session && session.value === 'authenticated';
+  const session = cookieStore.get('guru_session');
+  if (!session || !session.value) return null;
+  const username = session.value.toLowerCase();
+  return SUPERADMIN_USERNAMES.includes(username);
 }
 
 export async function GET(request) {
