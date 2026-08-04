@@ -7,9 +7,30 @@ export async function POST(request) {
     const { username, password } = await request.json();
     const guru = await getGuru(username);
     
-    if (username.trim().toLowerCase() === guru.username.toLowerCase() && password === guru.password) {
+    if (!guru) {
+      return NextResponse.json({ error: 'Username atau password salah' }, { status: 401 });
+    }
+
+    let isPasswordValid = false;
+    const bcrypt = await import('bcryptjs');
+
+    // 1. Coba verifikasi dengan bcrypt (jika sudah dihash)
+    if (guru.password.startsWith('$2a$') || guru.password.startsWith('$2b$')) {
+      isPasswordValid = bcrypt.compareSync(password, guru.password);
+    } 
+    // 2. Fallback: Cek plain-text (untuk akun lama) dan lakukan Transparent Migration
+    else if (password === guru.password) {
+      isPasswordValid = true;
+      const { migrateGuruPassword } = await import('@/lib/db');
+      await migrateGuruPassword(guru.username, password); // Enkripsi dan simpan otomatis
+    }
+
+    if (username.trim().toLowerCase() === guru.username.toLowerCase() && isPasswordValid) {
       const cookieStore = await cookies();
-      cookieStore.set('guru_session', guru.username, {
+      const { signToken } = await import('@/lib/auth');
+      const token = await signToken({ username: guru.username });
+
+      cookieStore.set('guru_session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',

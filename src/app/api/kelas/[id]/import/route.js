@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
+import { checkAuth } from '@/lib/auth';
 import { getKelasById, updateKelas } from '@/lib/db';
-import { cookies } from 'next/headers';
 
 // Helper to check auth
-async function checkAuth() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get('guru_session');
-  return session && session.value ? session.value : null;
-}
+
 
 // Helper to parse dates of various formats to YYYY-MM-DD
 function parseDateToYmd(dateStr) {

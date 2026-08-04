@@ -1,16 +1,10 @@
 import { NextResponse } from 'next/server';
+import { checkSuperadminAuth } from '@/lib/auth';
 import { logAktivitasGuru } from '@/lib/db';
-import { cookies } from 'next/headers';
 
 const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
 
-async function checkSuperadminAuth() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get('guru_session');
-  if (!session || !session.value) return null;
-  const username = session.value.toLowerCase();
-  return SUPERADMIN_USERNAMES.includes(username) ? session.value : null;
-}
+
 
 export async function POST(request) {
   try {

@@ -44,7 +44,10 @@ export async function POST(request) {
 
     // Automatically log them in by setting cookie
     const cookieStore = await cookies();
-    cookieStore.set('guru_session', cleanUsername, {
+    const { signToken } = await import('@/lib/auth');
+    const token = await signToken({ username: cleanUsername });
+
+    cookieStore.set('guru_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

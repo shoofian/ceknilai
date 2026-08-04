@@ -1,12 +1,8 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { checkAuth } from '@/lib/auth';
 import { getKelasById, getGuru, getBankSiswa, updateKelas } from '@/lib/db';
 
-async function checkAuth() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get('guru_session');
-  return session && session.value ? session.value : null;
-}
+
 
 export async function POST(request) {
   try {

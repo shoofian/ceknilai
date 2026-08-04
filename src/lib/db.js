@@ -1113,16 +1113,21 @@ export async function getAllGurus() {
   }
 }
 
+import bcrypt from 'bcryptjs';
+
 export async function createGuruByAdmin(guruData) {
   if (!supabase) return null;
   try {
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(guruData.password, salt);
+
     const { data, error } = await supabase
       .from('guru')
       .insert({
         username: guruData.username.trim().toLowerCase(),
         nama: guruData.nama.trim(),
         email: guruData.email.trim(),
-        password: guruData.password
+        password: hashedPassword
       })
       .select()
       .single();
@@ -1145,13 +1150,12 @@ export async function updateGuruByAdmin(username, updatedData) {
       email: updatedData.email.trim()
     };
     if (updatedData.password) {
-      payload.password = updatedData.password;
+      const salt = bcrypt.genSaltSync(10);
+      payload.password = bcrypt.hashSync(updatedData.password, salt);
     }
     if (updatedData.is_locked !== undefined) {
-      payload.is_locked = !!updatedData.is_locked;
-    }
-    if (updatedData.lock_message !== undefined) {
-      payload.lock_message = updatedData.lock_message;
+      payload.is_locked = updatedData.is_locked;
+      payload.lock_message = updatedData.lock_message || null;
     }
     if (updatedData.sekolah_id !== undefined) {
       payload.sekolah_id = updatedData.sekolah_id || null;
@@ -1197,6 +1201,26 @@ export async function updateGuruByAdmin(username, updatedData) {
   } catch (err) {
     console.error('Unexpected error in updateGuruByAdmin:', err);
     throw err;
+  }
+}
+
+export async function migrateGuruPassword(username, plainPassword) {
+  if (!supabase) return false;
+  try {
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(plainPassword, salt);
+    const { error } = await supabase
+      .from('guru')
+      .update({ password: hashedPassword })
+      .eq('username', username);
+    if (error) {
+      console.error('Error migrating password:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in migrateGuruPassword:', err);
+    return false;
   }
 }
 

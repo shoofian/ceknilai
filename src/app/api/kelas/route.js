@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
+import { checkAuth } from '@/lib/auth';
 import { getKelas, createKelas } from '@/lib/db';
-import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-async function checkAuth() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get('guru_session');
-  return session && session.value ? session.value : null;
-}
+
 
 export async function GET(request) {
   try {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { checkSuperadminAuth } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
@@ -10,13 +10,7 @@ const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession
 
 const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
 
-async function checkSuperadminAuth() {
-  const cookieStore = await cookies();
-  const session = cookieStore.get('guru_session');
-  if (!session || !session.value) return null;
-  const username = session.value.toLowerCase();
-  return SUPERADMIN_USERNAMES.includes(username) ? session.value : null;
-}
+
 
 export async function POST(request) {
   try {
