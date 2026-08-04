@@ -73,8 +73,11 @@ export async function POST(request) {
     await logAktivitasGuru(guru.username, 'LOGIN_GOOGLE', 'Melakukan login menggunakan Google');
 
     // Set session cookie
+    const { signToken } = await import('@/lib/auth');
+    const token = await signToken({ username: guru.username });
+    
     const cookieStore = await cookies();
-    cookieStore.set('guru_session', guru.username, {
+    cookieStore.set('guru_session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
