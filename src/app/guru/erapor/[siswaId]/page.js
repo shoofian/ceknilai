@@ -14,8 +14,12 @@ export default function RaporPreview({ params }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
+  const [nipGuru, setNipGuru] = useState("-");
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setNipGuru(localStorage.getItem("rep_nipGuru") || "-");
+    }
     const fetchData = async () => {
       try {
         const res = await fetch(`/api/erapor/siswa/${siswaId}`);
@@ -394,7 +398,9 @@ export default function RaporPreview({ params }) {
             <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "90%", fontWeight: "bold" }}>
               {data.identitas.nama_wali_kelas || "Wali Kelas, S.Pd"}
             </div>
-            <p style={{ marginTop: "4px" }}>NIP. -</p>
+            <p style={{ marginTop: "4px" }}>
+              {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. -"}
+            </p>
           </div>
         </div>
 
