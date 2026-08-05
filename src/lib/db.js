@@ -1598,7 +1598,8 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
       .select('*')
       .order('tingkatan', { ascending: true })
       .order('rombel', { ascending: true })
-      .order('nama', { ascending: true });
+      .order('nama', { ascending: true })
+      .limit(10000);
       
     if (sekolahId) {
       query = query.eq('sekolah_id', sekolahId);
@@ -1617,10 +1618,10 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
     
     // Merge with students registered by teachers in this school
     if (sekolahId) {
-      const { data: gurus } = await supabase.from('guru').select('username').eq('sekolah_id', sekolahId);
+      const { data: gurus } = await supabase.from('guru').select('username').eq('sekolah_id', sekolahId).limit(1000);
       if (gurus && gurus.length > 0) {
         const guruUsernames = gurus.map(g => g.username);
-        let kelasQuery = supabase.from('kelas').select('id, tingkatan, rombel_nama, tahun_ajaran').in('guru_username', guruUsernames);
+        let kelasQuery = supabase.from('kelas').select('id, tingkatan, rombel_nama, tahun_ajaran').in('guru_username', guruUsernames).limit(5000);
         if (tahunPelajaran) kelasQuery = kelasQuery.eq('tahun_ajaran', tahunPelajaran);
         const { data: kelases } = await kelasQuery;
         
@@ -1629,7 +1630,7 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
           const kelasMap = {};
           kelases.forEach(k => kelasMap[k.id] = { tingkatan: k.tingkatan, rombel: k.rombel_nama, tahun_ajaran: k.tahun_ajaran });
           
-          const { data: siswas } = await supabase.from('siswa').select('nisn, nama, tanggal_lahir, kelas_id').in('kelas_id', kelasIds);
+          const { data: siswas } = await supabase.from('siswa').select('nisn, nama, tanggal_lahir, kelas_id').in('kelas_id', kelasIds).limit(20000);
           
           if (siswas && siswas.length > 0) {
             const getSiswaKey = (nisn, tp) => `${String(nisn || '').trim()}_${String(tp || '').trim()}`;
