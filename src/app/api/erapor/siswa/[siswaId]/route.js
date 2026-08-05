@@ -57,14 +57,23 @@ export async function GET(request, { params }) {
     };
 
     // 3. Ambil data nilai akademik dari leger
-    // Gunakan semester ganjil (1) atau genap (2). Sementara hardcode 1 atau baca setting.
-    const leger = await getLegerData(
+    let leger = await getLegerData(
       guru.sekolah_id, 
       guru.walikelas_tingkatan, 
       guru.walikelas_rombel_nama, 
       guru.tahun_ajaran || '2025/2026', 
-      1
+      "Ganjil"
     );
+
+    if (!leger || !leger.siswa || !leger.siswa.find(s => s.nisn === siswaId)) {
+      leger = await getLegerData(
+        guru.sekolah_id, 
+        guru.walikelas_tingkatan, 
+        guru.walikelas_rombel_nama, 
+        guru.tahun_ajaran || '2025/2026', 
+        "Genap"
+      );
+    }
 
     let nilaiAkademik = [];
     let ekskul = [{ nama: "Pramuka", predikat: "B", keterangan: "Baik" }]; // Mock ekskul karena di db ceknilai belum ada tabel ekskul

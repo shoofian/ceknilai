@@ -32,13 +32,23 @@ export async function GET(request) {
     // Gunakan fungsi yang sama dengan halaman Wali Kelas agar data presisi
     const { getLegerData } = await import('@/lib/db');
     // Ambil data ganjil atau genap, siswa akan muncul jika terdaftar di salah satu mapel.
-    const leger = await getLegerData(
+    let leger = await getLegerData(
       guru.sekolah_id, 
       guru.walikelas_tingkatan, 
       guru.walikelas_rombel_nama, 
       guru.tahun_ajaran || '2025/2026', 
-      1 // Default semester ganjil
+      "Ganjil"
     );
+
+    if (!leger || !leger.siswa || leger.siswa.length === 0) {
+      leger = await getLegerData(
+        guru.sekolah_id, 
+        guru.walikelas_tingkatan, 
+        guru.walikelas_rombel_nama, 
+        guru.tahun_ajaran || '2025/2026', 
+        "Genap"
+      );
+    }
 
     if (!leger || !leger.siswa || leger.siswa.length === 0) {
       return NextResponse.json({ siswa: [] });
