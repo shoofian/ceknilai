@@ -10,67 +10,73 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
   // Form States
   const [selectedSiswa, setSelectedSiswa] = useState(null);
   const [formEkskulId, setFormEkskulId] = useState('');
-  const [formPredikat, setFormPredikat] = useState('');
+  const [formPredikat, setFormPredikat] = useState('Sangat Baik');
   const [formKeterangan, setFormKeterangan] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  // Fetch Master Ekskul
+  // 1. Ambil daftar master ekskul
   useEffect(() => {
     const fetchMaster = async () => {
       try {
         const res = await fetch('/api/superadmin/ekskul');
         if (res.ok) {
           const data = await res.json();
-          setMasterEkskul(data);
+          setMasterEkskul(data || []);
         }
       } catch (err) {
-        console.error('Failed to fetch master ekskul', err);
+        console.error('Gagal mengambil master ekskul', err);
       }
     };
     fetchMaster();
   }, []);
 
-  // Fetch Nilai Ekskul for all students in the class
+  // 2. Ambil nilai ekskul kelas ini
   const fetchNilaiEkskul = async () => {
-    setLoading(true);
     try {
-      const promises = siswa.map(s => 
-        fetch(`/api/walikelas/ekskul?nisn=${s.nisn}&tahun_ajaran=${encodeURIComponent(tahunAjaran)}&semester=${encodeURIComponent(semester)}`)
-          .then(res => res.json())
-      );
-      const results = await Promise.all(promises);
-      const allNilai = results.flat().filter(n => !n.error);
-      setNilaiEkskul(allNilai);
+      setLoading(true);
+      const res = await fetch(`/api/walikelas/ekskul?tahun_ajaran=${encodeURIComponent(tahunAjaran)}&semester=${encodeURIComponent(semester)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNilaiEkskul(data.data || []);
+      }
     } catch (err) {
-      console.error('Failed to fetch nilai ekskul', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (siswa.length > 0) {
-      fetchNilaiEkskul();
-    }
-  }, [siswa, tahunAjaran, semester]);
+    fetchNilaiEkskul();
+  }, [tahunAjaran, semester]);
 
-  const handleOpenModal = (s) => {
-    setSelectedSiswa(s);
-    setFormEkskulId('');
+  const openModal = (siswa) => {
+    setSelectedSiswa(siswa);
+    setFormEkskulId(masterEkskul.length > 0 ? masterEkskul[0].id : '');
     setFormPredikat('Sangat Baik');
     setFormKeterangan('');
+    setSubmitError('');
     setModalOpen(true);
   };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!formEkskulId || !formPredikat) {
-      alert('Ekskul dan Predikat harus diisi');
+  const handleEdit = (ekskul) => {
+    setSelectedSiswa({ nisn: ekskul.nisn, nama: ekskul.bank_siswa?.nama || '-' });
+    setFormEkskulId(ekskul.ekskul_id);
+    setFormPredikat(ekskul.predikat);
+    setFormKeterangan(ekskul.keterangan || '');
+    setSubmitError('');
+    setModalOpen(true);
+  };
+
+  const saveEkskul = async () => {
+    if (!formEkskulId) {
+      setSubmitError('Pilih ekskul terlebih dahulu');
       return;
     }
-
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
+      setSubmitError('');
       const payload = {
         nisn: selectedSiswa.nisn,
         ekskul_id: formEkskulId,
@@ -91,11 +97,11 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
         fetchNilaiEkskul();
       } else {
         const data = await res.json();
-        alert(data.error || 'Gagal menyimpan nilai ekskul');
+        setSubmitError(data.error || 'Gagal menyimpan nilai ekskul');
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan server');
+      setSubmitError('Terjadi kesalahan server: ' + (err.message || 'Network error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -208,7 +214,13 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
               Siswa: <strong style={{ color: 'var(--text-primary)' }}>{selectedSiswa?.nama}</strong>
             </p>
 
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {submitError && (
+              <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem' }}>
+                {submitError}
+              </div>
+            )}
+
+            <form onSubmit={(e) => { e.preventDefault(); saveEkskul(); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: '600' }}>Pilih Ekstrakurikuler</label>
                 <select 

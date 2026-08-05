@@ -109,6 +109,6 @@ export async function POST(request) {
     return NextResponse.json({ success: true, data: resultData[0] });
   } catch (error) {
     console.error('Error in POST /api/walikelas/ekskul:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Internal server error' }, { status: 500 });
   }
 }
