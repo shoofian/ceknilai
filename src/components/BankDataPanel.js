@@ -174,12 +174,13 @@ export default function BankDataPanel({ targetSekolahId }) {
   const uniqueRombel = [...new Set(bankData.map(item => item.rombel))].filter(Boolean).sort();
 
   const filteredData = bankData.filter(item => {
-    const matchesSearch = item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.nisn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.rombel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.tahun_pelajaran.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTingkat = filterTingkat ? item.tingkatan === filterTingkat : true;
-    const matchesRombel = filterRombel ? item.rombel === filterRombel : true;
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = String(item.nama || '').toLowerCase().includes(searchLower) ||
+                          String(item.nisn || '').toLowerCase().includes(searchLower) ||
+                          String(item.rombel || '').toLowerCase().includes(searchLower) ||
+                          String(item.tahun_pelajaran || '').toLowerCase().includes(searchLower);
+    const matchesTingkat = filterTingkat ? String(item.tingkatan) === filterTingkat : true;
+    const matchesRombel = filterRombel ? String(item.rombel) === filterRombel : true;
     
     return matchesSearch && matchesTingkat && matchesRombel;
   });
