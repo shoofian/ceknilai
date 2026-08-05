@@ -29,27 +29,25 @@ export async function GET(request) {
       return NextResponse.json({ siswa: [] });
     }
 
-    // 1. Ambil data siswa dari bank_siswa
-    const { data: bankSiswaList, error: errBank } = await supabase
-      .from('bank_siswa')
-      .select('*')
-      .eq('sekolah_id', guru.sekolah_id)
-      .eq('tahun_pelajaran', guru.tahun_ajaran || '2025/2026')
-      .eq('tingkatan', guru.walikelas_tingkatan)
-      .eq('rombel', guru.walikelas_rombel_nama)
-      .order('nama', { ascending: true });
+    // Gunakan fungsi yang sama dengan halaman Wali Kelas agar data presisi
+    const { getLegerData } = await import('@/lib/db');
+    // Ambil data ganjil atau genap, siswa akan muncul jika terdaftar di salah satu mapel.
+    const leger = await getLegerData(
+      guru.sekolah_id, 
+      guru.walikelas_tingkatan, 
+      guru.walikelas_rombel_nama, 
+      guru.tahun_ajaran || '2025/2026', 
+      1 // Default semester ganjil
+    );
 
-    if (errBank) {
-      console.error('Error fetching bank_siswa for erapor:', errBank);
-      return NextResponse.json({ error: 'Gagal mengambil data siswa' }, { status: 500 });
-    }
-
-    if (!bankSiswaList || bankSiswaList.length === 0) {
+    if (!leger || !leger.siswa || leger.siswa.length === 0) {
       return NextResponse.json({ siswa: [] });
     }
 
+    const students = leger.siswa;
+
     // 2. Ambil status biodata siswa untuk menandai 'Selesai' atau 'Belum Selesai'
-    const nisnList = bankSiswaList.map(s => s.nisn);
+    const nisnList = students.map(s => s.nisn);
     const { data: biodataList, error: errBiodata } = await supabase
       .from('biodata_siswa')
       .select('nisn')
@@ -60,13 +58,15 @@ export async function GET(request) {
       biodataList.forEach(b => biodataMap.add(b.nisn));
     }
 
-    // 3. Gabungkan data
-    const siswa = bankSiswaList.map(s => ({
-      id: s.id, // ID bank siswa
+    // 3. Siapkan response
+    const siswa = students.map(s => ({
       nisn: s.nisn,
       nama: s.nama,
       status_pengisian: biodataMap.has(s.nisn) ? 'Selesai' : 'Belum Selesai'
     }));
+
+    // Urutkan berdasarkan nama
+    siswa.sort((a, b) => a.nama.localeCompare(b.nama));
 
     return NextResponse.json({ siswa });
   } catch (error) {
