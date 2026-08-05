@@ -85,7 +85,7 @@ export async function GET(request, { params }) {
     };
 
     let nilaiAkademik = [];
-    let ekskul = [{ nama: "Pramuka", predikat: "B", keterangan: "Baik" }];
+    let ekskul = []; 
     let absensi = { sakit: 0, izin: 0, tanpa_keterangan: 0 };
     let catatanWaliKelas = "-";
 
@@ -108,13 +108,20 @@ export async function GET(request, { params }) {
 
     const studentName = studentLeger.nama || bankSiswa?.nama || 'Siswa';
 
+    const formatTanggalLahir = (tgl) => {
+      if (!tgl || tgl === '-') return '-';
+      const d = new Date(tgl);
+      if (isNaN(d.getTime())) return tgl; // Return original if not a standard date format
+      return d.toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
+    };
+
     const payload = {
       identitas: {
         nama: studentName,
         nisn: siswaId,
         nipd: baseBiodata.nipd,
         tempat_lahir: baseBiodata.tempat_lahir,
-        tanggal_lahir: baseBiodata.tanggal_lahir ? new Date(baseBiodata.tanggal_lahir).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : '-',
+        tanggal_lahir: formatTanggalLahir(baseBiodata.tanggal_lahir),
         jenis_kelamin: baseBiodata.jenis_kelamin,
         agama: baseBiodata.agama,
         status_keluarga: baseBiodata.status_keluarga,
