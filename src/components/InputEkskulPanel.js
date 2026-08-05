@@ -191,19 +191,20 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
       {modalOpen && typeof document !== 'undefined' && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'var(--bg-primary)', zIndex: 9999,
-          display: 'flex', flexDirection: 'column',
-          width: '100vw', height: '100vh', overflowY: 'auto'
+          backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',
+          padding: '20px'
         }}>
-          <div style={{ 
+          <div className="glass-card" style={{ 
             padding: '24px', 
             width: '100%', 
-            maxWidth: '600px', 
-            margin: '0 auto',
-            flex: 1
+            maxWidth: '500px', 
+            maxHeight: '90vh', 
+            overflowY: 'auto', 
+            backgroundColor: 'var(--bg-primary)' 
           }}>
-            <h4 style={{ margin: '0 0 16px 0', fontSize: '1.5rem' }}>Tambah Nilai Ekskul</h4>
-            <p style={{ margin: '0 0 24px 0', fontSize: '1rem', color: 'var(--text-secondary)' }}>
+            <h4 style={{ margin: '0 0 16px 0' }}>Tambah Nilai Ekskul</h4>
+            <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               Siswa: <strong style={{ color: 'var(--text-primary)' }}>{selectedSiswa?.nama}</strong>
             </p>
 
