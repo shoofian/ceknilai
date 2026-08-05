@@ -69,10 +69,30 @@ export async function POST(request) {
     const targetTahunAjaran = tahun_ajaran || guru.tahun_ajaran || '2025/2026';
     const targetSemester = semester || 'Ganjil';
 
-    const { data, error } = await supabase
+    const { data: existing, error: findError } = await supabase
       .from('nilai_ekskul')
-      .upsert(
-        {
+      .select('id')
+      .eq('nisn', nisn)
+      .eq('ekskul_id', ekskul_id)
+      .eq('tahun_ajaran', targetTahunAjaran)
+      .eq('semester', targetSemester)
+      .maybeSingle();
+
+    if (findError) throw findError;
+
+    let resultData;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('nilai_ekskul')
+        .update({ predikat, keterangan: keterangan || '' })
+        .eq('id', existing.id)
+        .select();
+      if (error) throw error;
+      resultData = data;
+    } else {
+      const { data, error } = await supabase
+        .from('nilai_ekskul')
+        .insert({
           sekolah_id: guru.sekolah_id,
           tahun_ajaran: targetTahunAjaran,
           semester: targetSemester,
@@ -80,14 +100,13 @@ export async function POST(request) {
           ekskul_id,
           predikat,
           keterangan: keterangan || ''
-        },
-        { onConflict: 'tahun_ajaran,semester,nisn,ekskul_id' }
-      )
-      .select();
+        })
+        .select();
+      if (error) throw error;
+      resultData = data;
+    }
 
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: data[0] });
+    return NextResponse.json({ success: true, data: resultData[0] });
   } catch (error) {
     console.error('Error in POST /api/walikelas/ekskul:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
