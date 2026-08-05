@@ -15,7 +15,7 @@ CREATE TABLE nilai_ekskul (
     semester VARCHAR(20) NOT NULL,
     nisn VARCHAR(50) NOT NULL,
     ekskul_id UUID REFERENCES master_ekskul(id) ON DELETE CASCADE,
-    predikat VARCHAR(10) NOT NULL, -- Sangat Baik, Baik, Cukup, Kurang
+    predikat VARCHAR(20) NOT NULL, -- Sangat Baik, Baik, Cukup, Kurang
     keterangan TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
