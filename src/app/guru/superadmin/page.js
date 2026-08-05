@@ -11,6 +11,42 @@ export default function SuperadminPanel() {
   const [authorized, setAuthorized] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
 
+  // Global School Context for Bank Data & Ekskul
+  const [globalTargetSekolahId, setGlobalTargetSekolahId] = useState("");
+  const [globalSearchSekolahTerm, setGlobalSearchSekolahTerm] = useState("");
+  const [globalSekolahResults, setGlobalSekolahResults] = useState([]);
+  const [globalIsSearchingSekolah, setGlobalIsSearchingSekolah] = useState(false);
+  const [globalShowSekolahDropdown, setGlobalShowSekolahDropdown] = useState(false);
+  const [globalSearchTimeout, setGlobalSearchTimeout] = useState(null);
+
+  const handleGlobalSearchSekolah = async (e) => {
+    const val = e.target.value;
+    setGlobalSearchSekolahTerm(val);
+    setGlobalTargetSekolahId(""); // Reset ID if user types something new
+    
+    if (globalSearchTimeout) clearTimeout(globalSearchTimeout);
+    
+    if (!val.trim()) {
+      setGlobalSekolahResults([]);
+      return;
+    }
+
+    setGlobalSearchTimeout(setTimeout(async () => {
+      setGlobalIsSearchingSekolah(true);
+      try {
+        const res = await fetch(`/api/sekolah/search?query=${encodeURIComponent(val)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setGlobalSekolahResults(data);
+        }
+      } catch (err) {
+        console.error("Gagal mencari sekolah:", err);
+      } finally {
+        setGlobalIsSearchingSekolah(false);
+      }
+    }, 500));
+  };
+
   // Data States
   const [logs, setLogs] = useState([]);
   const [gurus, setGurus] = useState([]);
@@ -422,6 +458,77 @@ export default function SuperadminPanel() {
         <p className="page-subtitle">Kelola otorisasi akun guru secara terpusat dan tinjau log riwayat akses siswa.</p>
       </div>
 
+      {/* Global School Selector */}
+      <div style={{ background: "var(--bg-secondary)", padding: "16px", borderRadius: "12px", display: "flex", flexWrap: "wrap", alignItems: "flex-end", border: "1px solid var(--border-color)", marginBottom: "8px" }}>
+        <div style={{ flex: "1", minWidth: "250px", position: "relative" }}>
+          <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>
+            🏫 Sekolah Aktif (Konteks Global) <span style={{ color: "var(--danger)" }}>*</span>
+          </label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Cari dan pilih sekolah untuk dikelola..."
+            value={globalSearchSekolahTerm}
+            onChange={handleGlobalSearchSekolah}
+            onFocus={() => {
+              if (!globalTargetSekolahId && globalSearchSekolahTerm.length === 0) {
+                handleGlobalSearchSekolah({ target: { value: '' } });
+              }
+              setGlobalShowSekolahDropdown(true);
+            }}
+            onBlur={() => setTimeout(() => setGlobalShowSekolahDropdown(false), 200)}
+            style={{ 
+              borderColor: globalTargetSekolahId ? "var(--primary)" : "var(--border-color)",
+              backgroundColor: globalTargetSekolahId ? "rgba(79, 70, 229, 0.05)" : "var(--bg-primary)"
+            }}
+          />
+          {globalTargetSekolahId && (
+            <div style={{ position: "absolute", right: "12px", top: "34px", color: "var(--primary)", fontSize: "0.8rem", fontWeight: "bold" }}>
+              ✓ Terpilih
+            </div>
+          )}
+          {globalShowSekolahDropdown && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              right: 0,
+              backgroundColor: "var(--bg-primary)",
+              border: "1px solid var(--border-color)",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              maxHeight: "200px",
+              overflowY: "auto",
+              zIndex: 10,
+              marginTop: "4px"
+            }}>
+              {globalIsSearchingSekolah ? (
+                <div style={{ padding: "12px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)" }}>Mencari...</div>
+              ) : globalSekolahResults.length > 0 ? (
+                globalSekolahResults.map((sek) => (
+                  <div
+                    key={sek.id}
+                    onClick={() => {
+                      setGlobalTargetSekolahId(sek.id);
+                      setGlobalSearchSekolahTerm(sek.nama);
+                      setGlobalShowSekolahDropdown(false);
+                    }}
+                    style={{ padding: "10px 12px", cursor: "pointer", borderBottom: "1px solid var(--border-color)", fontSize: "0.85rem" }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    <div style={{ fontWeight: "600" }}>{sek.nama}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{sek.kecamatan}, {sek.kabupaten}</div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: "12px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)" }}>Tidak ditemukan</div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Tabs */}
       <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
         <button
@@ -638,10 +745,10 @@ export default function SuperadminPanel() {
           )}
 
           {/* TAB 3: BANK DATA SISWA */}
-          {activeTab === "bank_data" && <BankDataPanel />}
+          {activeTab === "bank_data" && <BankDataPanel targetSekolahId={globalTargetSekolahId} />}
 
           {/* TAB EKSKUL */}
-          {activeTab === "ekskul" && <EkskulAdminPanel />}
+          {activeTab === "ekskul" && <EkskulAdminPanel targetSekolahId={globalTargetSekolahId} />}
 
           {/* TAB 4: MANAJEMEN GURU */}
           {activeTab === "guru" && (
