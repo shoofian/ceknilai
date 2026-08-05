@@ -13,7 +13,7 @@ export default function ManajemenSekolahPanel({ targetSekolahId }) {
   const [formData, setFormData] = useState({
     nama: "",
     npsn: "",
-    alamat_sekolah: "",
+    alamat: "",
     kode_pos: "",
     desa_kelurahan: "",
     kecamatan: "",
@@ -39,7 +39,7 @@ export default function ManajemenSekolahPanel({ targetSekolahId }) {
           setFormData({
             nama: data.nama || "",
             npsn: data.npsn || "",
-            alamat_sekolah: data.alamat_sekolah || "",
+            alamat: data.alamat || "",
             kode_pos: data.kode_pos || "",
             desa_kelurahan: data.desa_kelurahan || "",
             kecamatan: data.kecamatan || "",
@@ -153,7 +153,7 @@ export default function ManajemenSekolahPanel({ targetSekolahId }) {
                   </div>
                   <div>
                     <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>Alamat Lengkap</label>
-                    <input type="text" className="form-input" value={formData.alamat_sekolah} onChange={(e) => setFormData({...formData, alamat_sekolah: e.target.value})} />
+                    <input type="text" className="form-input" value={formData.alamat} onChange={(e) => setFormData({...formData, alamat: e.target.value})} />
                   </div>
                   <div>
                     <label style={{ display: "block", fontSize: "0.85rem", fontWeight: "600", marginBottom: "6px" }}>Kode Pos</label>
