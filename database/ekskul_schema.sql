@@ -1,7 +1,7 @@
 -- Tabel untuk mendefinisikan jenis ekstrakurikuler yang ada di sekolah
 CREATE TABLE master_ekskul (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sekolah_id UUID REFERENCES sekolah(id) ON DELETE CASCADE,
+    sekolah_id TEXT REFERENCES sekolah(id) ON DELETE CASCADE,
     nama_ekskul VARCHAR(100) NOT NULL,
     pembina VARCHAR(150),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -10,7 +10,7 @@ CREATE TABLE master_ekskul (
 -- Tabel untuk menyimpan nilai ekstrakurikuler per siswa
 CREATE TABLE nilai_ekskul (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sekolah_id UUID REFERENCES sekolah(id) ON DELETE CASCADE,
+    sekolah_id TEXT REFERENCES sekolah(id) ON DELETE CASCADE,
     tahun_ajaran VARCHAR(20) NOT NULL,
     semester VARCHAR(20) NOT NULL,
     nisn VARCHAR(50) NOT NULL,
