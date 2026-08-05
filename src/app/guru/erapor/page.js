@@ -246,85 +246,123 @@ export default function ERaporDashboard() {
             e-Rapor Kurikulum Merdeka
           </h1>
           <p className="text-gray-500 mt-1">Kelola dan cetak rapor peserta didik Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}</p>
-        </div>
-        <div className="mt-4 md:mt-0 flex gap-4 flex-wrap">
-          <div className="bg-blue-50 px-4 py-2 rounded-xl flex items-center gap-3 border border-blue-100">
-            <Users className="text-blue-600" size={20} />
-            <div>
-              <p className="text-xs text-blue-600 font-medium">Total Siswa</p>
-              <p className="text-lg font-bold text-blue-700">{students.length}</p>
-            </div>
-          </div>
-          
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            accept=".xlsx, .xls, .csv" 
-            className="hidden" 
-          />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors shadow-sm disabled:opacity-50"
-          >
-            <Upload size={18} />
-            {isUploading ? "Mengimpor..." : "Impor Dapodik"}
-          </button>
+          <p className="page-subtitle">Kelola dan cetak rapor peserta didik Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}</p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Toolbar */}
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      {/* Upload Notification */}
+      {uploadStatus.show && (
+        <div className={`glass-card`} style={{ 
+          marginBottom: "24px", 
+          padding: "16px",
+          display: "flex", alignItems: "center", gap: "12px",
+          borderLeft: `4px solid ${uploadStatus.isError ? "var(--danger)" : "var(--success)"}` 
+        }}>
+          {uploadStatus.isError ? <AlertTriangle style={{ color: "var(--danger)" }} /> : <Check style={{ color: "var(--success)" }} />}
+          <span style={{ color: uploadStatus.isError ? "var(--danger)" : "var(--success)", fontWeight: "600" }}>
+            {uploadStatus.message}
+          </span>
+        </div>
+      )}
+
+      {/* Dashboard Stats & Actions */}
+      <div className="grid-cols-2" style={{ marginBottom: "24px" }}>
+        <div className="stat-card">
+          <div>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase" }}>Total Siswa Perwalian</p>
+            <h3 style={{ fontSize: "2rem", marginTop: "4px" }}>{students.length}</h3>
+          </div>
+          <div className="stat-icon" style={{ backgroundColor: "var(--primary-glow)", color: "var(--primary)" }}>
+            👥
+          </div>
+        </div>
+
+        <div className="glass-card" style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", marginBottom: "12px" }}>Integrasi Dapodik</p>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+            <input 
+              type="file" 
+              accept=".xlsx, .xls, .csv" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleFileUpload} 
+              style={{ display: "none" }}
+            />
+            <button 
+              onClick={() => fileInputRef.current.click()} 
+              disabled={isUploading}
+              className="btn btn-success"
+              style={{ flex: 1 }}
+            >
+              {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+              {isUploading ? "Mengimpor..." : "📥 Impor Biodata Excel"}
+            </button>
+            <button className="btn btn-secondary">
+              <Download size={18} /> Format Kosong
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table Section */}
+      <div className="glass-card">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
+          <h3 style={{ fontSize: "1.2rem" }}>Daftar Siswa & Status Rapor</h3>
+          
+          <div style={{ position: "relative", width: "100%", maxWidth: "300px" }}>
+            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input 
               type="text" 
-              placeholder="Cari siswa..." 
-              className="pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm w-64 transition-all"
+              placeholder="Cari nama atau NISN..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="form-input"
+              style={{ paddingLeft: "36px" }}
             />
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="table-container">
+          <table className="premium-table">
             <thead>
-              <tr className="bg-gray-50/80 text-gray-500 text-sm border-b border-gray-100">
-                <th className="px-6 py-4 font-semibold">Nama Siswa</th>
-                <th className="px-6 py-4 font-semibold">NISN</th>
-                <th className="px-6 py-4 font-semibold">Status Pengisian</th>
-                <th className="px-6 py-4 font-semibold text-right">Aksi</th>
+              <tr>
+                <th style={{ width: "50px" }}>No</th>
+                <th>Nama Lengkap</th>
+                <th>NISN</th>
+                <th>Status Biodata</th>
+                <th style={{ textAlign: "right" }}>Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {students.map((student) => (
-                <tr key={student.id} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-gray-800">{student.name}</p>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">{student.nisn}</td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
-                      student.status === 'Selesai' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'
-                    }`}>
-                      {student.status === 'Selesai' && <CheckCircle size={14} />}
-                      {student.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link 
-                      href={`/guru/erapor/${student.id}`}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-medium rounded-xl transition-all shadow-sm hover:shadow-md"
-                    >
-                      <Printer size={16} />
-                      Pratinjau / Cetak
-                    </Link>
+            <tbody>
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((siswa, idx) => (
+                  <tr key={siswa.nisn || idx}>
+                    <td>{idx + 1}</td>
+                    <td style={{ fontWeight: "600" }}>{siswa.nama}</td>
+                    <td style={{ color: "var(--text-secondary)", fontFamily: "monospace" }}>{siswa.nisn}</td>
+                    <td>
+                      <span className={`badge ${siswa.status_pengisian === "Selesai" ? "badge-success" : "badge-warning"}`}>
+                        {siswa.status_pengisian}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      <Link 
+                        href={`/guru/erapor/${siswa.nisn}`}
+                        className="btn btn-primary"
+                        style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}
+                      >
+                        <Printer size={16} /> Pratinjau Rapor
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                    {search ? "Siswa tidak ditemukan." : "Belum ada data siswa di kelas ini. Hubungi Operator Sekolah."}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
