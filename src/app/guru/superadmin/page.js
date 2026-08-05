@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import BankDataPanel from "@/components/BankDataPanel";
+import EkskulAdminPanel from "@/components/EkskulAdminPanel";
 
 export default function SuperadminPanel() {
   const [activeTab, setActiveTab] = useState("logs");
@@ -458,6 +459,13 @@ export default function SuperadminPanel() {
         >
           📂 Bank Data Siswa
         </button>
+        <button
+          onClick={() => setActiveTab("ekskul")}
+          className={`btn ${activeTab === "ekskul" ? "btn-primary" : "btn-secondary"}`}
+          style={{ padding: "8px 16px", borderRadius: "8px" }}
+        >
+          🏅 Manajemen Ekskul
+        </button>
       </div>
 
       {loading ? (
@@ -631,6 +639,9 @@ export default function SuperadminPanel() {
 
           {/* TAB 3: BANK DATA SISWA */}
           {activeTab === "bank_data" && <BankDataPanel />}
+
+          {/* TAB EKSKUL */}
+          {activeTab === "ekskul" && <EkskulAdminPanel />}
 
           {/* TAB 4: MANAJEMEN GURU */}
           {activeTab === "guru" && (

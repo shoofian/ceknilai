@@ -89,6 +89,28 @@ export async function GET(request, { params }) {
     let absensi = { sakit: 0, izin: 0, tanpa_keterangan: 0 };
     let catatanWaliKelas = "-";
 
+    // 4. Ambil data ekstrakurikuler dari nilai_ekskul
+    const { data: dbEkskul } = await supabase
+      .from('nilai_ekskul')
+      .select(`
+        predikat,
+        keterangan,
+        master_ekskul (nama_ekskul)
+      `)
+      .eq('nisn', siswaId)
+      .eq('tahun_ajaran', guru.tahun_ajaran || '2025/2026')
+      // Note: we might need to filter by semester if we want, or just get all for the year
+      // For now we get Ganjil by default, or Genap if fallback.
+      .limit(10);
+      
+    if (dbEkskul && dbEkskul.length > 0) {
+      ekskul = dbEkskul.map(e => ({
+        nama: e.master_ekskul?.nama_ekskul || 'Ekskul',
+        predikat: e.predikat,
+        keterangan: e.keterangan || '-'
+      }));
+    }
+
     // Ambil absensi
     absensi = {
       sakit: studentLeger.absensi?.S || 0,
@@ -116,6 +138,7 @@ export async function GET(request, { params }) {
     };
 
     const payload = {
+      sekolah: guru.sekolah || {},
       identitas: {
         nama: studentName,
         nisn: siswaId,

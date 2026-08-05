@@ -4,6 +4,7 @@ import { useState, useEffect, Fragment, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import InputEkskulPanel from "@/components/InputEkskulPanel";
 
 export default function WaliKelasDashboard() {
   const router = useRouter();
@@ -699,6 +700,7 @@ export default function WaliKelasDashboard() {
           { id: "leger", label: "📊 Buku Leger Nilai" },
           { id: "catatan", label: "📝 Catatan Guru" },
           { id: "kehadiran", label: "📅 Rekap Kehadiran" },
+          { id: "ekskul", label: "🏅 Ekstrakurikuler" },
           { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` },
           { id: "perpaduan", label: "🌓 Perpaduan Semester" }
         ].map(tab => (
@@ -1274,6 +1276,8 @@ export default function WaliKelasDashboard() {
             </div>
           )}
         </div>
+      ) : activeTab === "ekskul" ? (
+        <InputEkskulPanel siswa={siswa} tahunAjaran={tahunAjaran} semester={semester} />
       ) : activeTab === "ews" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           

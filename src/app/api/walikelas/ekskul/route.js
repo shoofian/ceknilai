@@ -1,0 +1,95 @@
+import { NextResponse } from 'next/server';
+import { checkAuth } from '@/lib/auth';
+import { getGuru } from '@/lib/db';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: { persistSession: false }
+});
+
+export async function GET(request) {
+  try {
+    const username = await checkAuth();
+    if (!username) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    const guru = await getGuru(username);
+    if (!guru || !guru.walikelas_tingkatan) {
+      return NextResponse.json({ error: 'Bukan wali kelas' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const nisn = searchParams.get('nisn');
+    const tahun_ajaran = searchParams.get('tahun_ajaran') || guru.tahun_ajaran || '2025/2026';
+    const semester = searchParams.get('semester') || 'Ganjil';
+
+    if (!nisn) {
+      return NextResponse.json({ error: 'NISN dibutuhkan' }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from('nilai_ekskul')
+      .select(`
+        *,
+        master_ekskul (nama_ekskul, pembina)
+      `)
+      .eq('sekolah_id', guru.sekolah_id)
+      .eq('nisn', nisn)
+      .eq('tahun_ajaran', tahun_ajaran)
+      .eq('semester', semester);
+
+    if (error) throw error;
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error in GET /api/walikelas/ekskul:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function POST(request) {
+  try {
+    const username = await checkAuth();
+    if (!username) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    
+    const guru = await getGuru(username);
+    if (!guru || !guru.walikelas_tingkatan) {
+      return NextResponse.json({ error: 'Bukan wali kelas' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { nisn, ekskul_id, predikat, keterangan, tahun_ajaran, semester } = body;
+
+    if (!nisn || !ekskul_id || !predikat) {
+      return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+    }
+
+    const targetTahunAjaran = tahun_ajaran || guru.tahun_ajaran || '2025/2026';
+    const targetSemester = semester || 'Ganjil';
+
+    const { data, error } = await supabase
+      .from('nilai_ekskul')
+      .upsert(
+        {
+          sekolah_id: guru.sekolah_id,
+          tahun_ajaran: targetTahunAjaran,
+          semester: targetSemester,
+          nisn,
+          ekskul_id,
+          predikat,
+          keterangan: keterangan || ''
+        },
+        { onConflict: 'tahun_ajaran,semester,nisn,ekskul_id' }
+      )
+      .select();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, data: data[0] });
+  } catch (error) {
+    console.error('Error in POST /api/walikelas/ekskul:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

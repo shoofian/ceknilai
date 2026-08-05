@@ -167,7 +167,67 @@ export default function RaporPreview({ params }) {
         </div>
       </div>
 
-      {/* ==================== HALAMAN 2: BIODATA ==================== */}
+      {/* ==================== HALAMAN 2: IDENTITAS SEKOLAH ==================== */}
+      <div className="rapor-page" style={{ padding: "80px 64px" }}>
+        <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>RAPOR PESERTA DIDIK DAN PROFIL PESERTA DIDIK</h1>
+        
+        <table className="biodata-table" style={{ width: "100%", fontSize: "16px", lineHeight: "1.8" }}>
+          <tbody>
+            <tr>
+              <td style={{ width: "250px" }}>Nama Sekolah</td>
+              <td style={{ width: "16px" }}>:</td>
+              <td style={{ fontWeight: "bold" }}>{data.identitas.sekolah}</td>
+            </tr>
+            <tr>
+              <td>NPSN</td>
+              <td>:</td>
+              <td>{data.sekolah?.npsn || "-"}</td>
+            </tr>
+            <tr>
+              <td>Alamat Sekolah</td>
+              <td>:</td>
+              <td>{data.identitas.alamat_sekolah}</td>
+            </tr>
+            <tr>
+              <td>Kode Pos</td>
+              <td>:</td>
+              <td>{data.sekolah?.kode_pos || "-"}</td>
+            </tr>
+            <tr>
+              <td>Desa/Kelurahan</td>
+              <td>:</td>
+              <td>{data.sekolah?.desa_kelurahan || "-"}</td>
+            </tr>
+            <tr>
+              <td>Kecamatan</td>
+              <td>:</td>
+              <td>{data.sekolah?.kecamatan || "-"}</td>
+            </tr>
+            <tr>
+              <td>Kabupaten/Kota</td>
+              <td>:</td>
+              <td>{data.sekolah?.kabupaten_kota || "-"}</td>
+            </tr>
+            <tr>
+              <td>Provinsi</td>
+              <td>:</td>
+              <td>{data.sekolah?.provinsi || "-"}</td>
+            </tr>
+            <tr>
+              <td>Website</td>
+              <td>:</td>
+              <td>{data.sekolah?.website || "-"}</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td>:</td>
+              <td>{data.sekolah?.email || "-"}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* ==================== HALAMAN 3: BIODATA ==================== */}
       <div className="rapor-page" style={{ padding: "80px 64px" }}>
         
         <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>KETERANGAN TENTANG DIRI PESERTA DIDIK</h1>
@@ -351,6 +411,11 @@ export default function RaporPreview({ params }) {
                   <td style={{ verticalAlign: "top" }}>{item.keterangan}</td>
                 </tr>
               ))}
+              {(!data.ekskul || data.ekskul.length === 0) && (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: "center", padding: "12px", fontStyle: "italic" }}>Belum ada data ekstrakurikuler.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
