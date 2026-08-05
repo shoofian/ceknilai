@@ -25,24 +25,25 @@ export async function GET(request) {
     const tahun_ajaran = searchParams.get('tahun_ajaran') || guru.tahun_ajaran || '2025/2026';
     const semester = searchParams.get('semester') || 'Ganjil';
 
-    if (!nisn) {
-      return NextResponse.json({ error: 'NISN dibutuhkan' }, { status: 400 });
-    }
-
-    const { data, error } = await supabase
+    let query = supabase
       .from('nilai_ekskul')
       .select(`
         *,
         master_ekskul (nama_ekskul, pembina)
       `)
       .eq('sekolah_id', guru.sekolah_id)
-      .eq('nisn', nisn)
       .eq('tahun_ajaran', tahun_ajaran)
       .eq('semester', semester);
+      
+    if (nisn) {
+      query = query.eq('nisn', nisn);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
-    return NextResponse.json(data);
+    return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('Error in GET /api/walikelas/ekskul:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
