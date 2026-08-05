@@ -1613,62 +1613,7 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
       console.error('Error fetching bank siswa:', error);
       return [];
     }
-
-    let mergedData = [...(data || [])];
-    
-    // Merge with students registered by teachers in this school
-    if (sekolahId) {
-      const { data: gurus } = await supabase.from('guru').select('username').eq('sekolah_id', sekolahId).limit(1000);
-      if (gurus && gurus.length > 0) {
-        const guruUsernames = gurus.map(g => g.username);
-        let kelasQuery = supabase.from('kelas').select('id, tingkatan, rombel_nama, tahun_ajaran').in('guru_username', guruUsernames).limit(5000);
-        if (tahunPelajaran) kelasQuery = kelasQuery.eq('tahun_ajaran', tahunPelajaran);
-        const { data: kelases } = await kelasQuery;
-        
-        if (kelases && kelases.length > 0) {
-          const kelasIds = kelases.map(k => k.id);
-          const kelasMap = {};
-          kelases.forEach(k => kelasMap[k.id] = { tingkatan: k.tingkatan, rombel: k.rombel_nama, tahun_ajaran: k.tahun_ajaran });
-          
-          const { data: siswas } = await supabase.from('siswa').select('nisn, nama, tanggal_lahir, kelas_id').in('kelas_id', kelasIds).limit(20000);
-          
-          if (siswas && siswas.length > 0) {
-            const getSiswaKey = (nisn, tp) => `${String(nisn || '').trim()}_${String(tp || '').trim()}`;
-            const existingKeys = new Set(mergedData.map(s => getSiswaKey(s.nisn, s.tahun_pelajaran)));
-            
-            for (let s of siswas) {
-              const nisnStr = String(s.nisn).trim();
-              const tpStr = String(kelasMap[s.kelas_id]?.tahun_ajaran || tahunPelajaran || '').trim();
-              const key = getSiswaKey(nisnStr, tpStr);
-              
-              if (!existingKeys.has(key)) {
-                mergedData.push({
-                  id: `siswa_${key}`,
-                  nisn: nisnStr,
-                  nama: s.nama,
-                  tingkatan: kelasMap[s.kelas_id]?.tingkatan || '',
-                  rombel: kelasMap[s.kelas_id]?.rombel || '',
-                  tanggal_lahir: s.tanggal_lahir,
-                  sekolah_id: sekolahId,
-                  tahun_pelajaran: tpStr,
-                  is_from_siswa: true
-                });
-                existingKeys.add(key);
-              }
-            }
-          }
-        }
-      }
-    }
-    
-    // Sort mergedData again after merging
-    mergedData.sort((a, b) => {
-      if (a.tingkatan !== b.tingkatan) return String(a.tingkatan).localeCompare(String(b.tingkatan));
-      if (a.rombel !== b.rombel) return String(a.rombel).localeCompare(String(b.rombel));
-      return String(a.nama).localeCompare(String(b.nama));
-    });
-
-    return mergedData;
+    return data;
   } catch (err) {
     console.error('Unexpected error in getBankSiswa:', err);
     return [];

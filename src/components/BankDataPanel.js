@@ -309,13 +309,9 @@ export default function BankDataPanel({ targetSekolahId }) {
                   <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{siswa.sekolah_id?.substring(0, 8)}...</td>
                   <td>{siswa.tahun_pelajaran}</td>
                   <td>
-                    {siswa.is_from_siswa ? (
-                      <span style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: "bold" }}>Data Kelas</span>
-                    ) : (
-                      <button onClick={() => handleDelete(siswa.id)} className="btn btn-secondary" style={{ padding: "4px 8px", fontSize: "0.75rem", color: "var(--danger)" }}>
-                        Hapus
-                      </button>
-                    )}
+                    <button onClick={() => handleDelete(siswa.id)} className="btn btn-secondary" style={{ padding: "4px 8px", fontSize: "0.75rem", color: "var(--danger)" }}>
+                      Hapus
+                    </button>
                   </td>
                 </tr>
               ))}
