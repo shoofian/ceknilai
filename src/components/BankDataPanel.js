@@ -7,6 +7,7 @@ export default function BankDataPanel({ targetSekolahId }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterTingkat, setFilterTingkat] = useState("");
   const [filterRombel, setFilterRombel] = useState("");
+  const [filterTahun, setFilterTahun] = useState("");
   
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
@@ -172,6 +173,7 @@ export default function BankDataPanel({ targetSekolahId }) {
 
   const uniqueTingkat = [...new Set(bankData.map(item => item.tingkatan))].filter(Boolean).sort((a, b) => Number(a) - Number(b));
   const uniqueRombel = [...new Set(bankData.map(item => item.rombel))].filter(Boolean).sort();
+  const uniqueTahun = [...new Set(bankData.map(item => item.tahun_pelajaran))].filter(Boolean).sort().reverse();
 
   const filteredData = bankData.filter(item => {
     const searchLower = searchQuery.toLowerCase();
@@ -181,8 +183,9 @@ export default function BankDataPanel({ targetSekolahId }) {
                           String(item.tahun_pelajaran || '').toLowerCase().includes(searchLower);
     const matchesTingkat = filterTingkat ? String(item.tingkatan) === filterTingkat : true;
     const matchesRombel = filterRombel ? String(item.rombel) === filterRombel : true;
+    const matchesTahun = filterTahun ? String(item.tahun_pelajaran) === filterTahun : true;
     
-    return matchesSearch && matchesTingkat && matchesRombel;
+    return matchesSearch && matchesTingkat && matchesRombel && matchesTahun;
   });
 
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
@@ -191,7 +194,7 @@ export default function BankDataPanel({ targetSekolahId }) {
   // reset page if filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterTingkat, filterRombel]);
+  }, [searchQuery, filterTingkat, filterRombel, filterTahun]);
 
   return (
     <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -215,6 +218,15 @@ export default function BankDataPanel({ targetSekolahId }) {
           >
             <option value="">Semua Rombel</option>
             {uniqueRombel.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <select 
+            className="form-input" 
+            value={filterTahun} 
+            onChange={e => setFilterTahun(e.target.value)}
+            style={{ maxWidth: "150px", padding: "8px 12px", fontSize: "0.85rem" }}
+          >
+            <option value="">Semua Tahun</option>
+            {uniqueTahun.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           <input
             type="text"
