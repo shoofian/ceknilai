@@ -1620,14 +1620,14 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
       const { data: gurus } = await supabase.from('guru').select('username').eq('sekolah_id', sekolahId);
       if (gurus && gurus.length > 0) {
         const guruUsernames = gurus.map(g => g.username);
-        let kelasQuery = supabase.from('kelas').select('id, tingkatan, rombel_nama').in('guru_username', guruUsernames);
+        let kelasQuery = supabase.from('kelas').select('id, tingkatan, rombel_nama, tahun_ajaran').in('guru_username', guruUsernames);
         if (tahunPelajaran) kelasQuery = kelasQuery.eq('tahun_ajaran', tahunPelajaran);
         const { data: kelases } = await kelasQuery;
         
         if (kelases && kelases.length > 0) {
           const kelasIds = kelases.map(k => k.id);
           const kelasMap = {};
-          kelases.forEach(k => kelasMap[k.id] = { tingkatan: k.tingkatan, rombel: k.rombel_nama });
+          kelases.forEach(k => kelasMap[k.id] = { tingkatan: k.tingkatan, rombel: k.rombel_nama, tahun_ajaran: k.tahun_ajaran });
           
           const { data: siswas } = await supabase.from('siswa').select('nisn, nama, tanggal_lahir, kelas_id').in('kelas_id', kelasIds);
           
@@ -1644,7 +1644,7 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
                   rombel: kelasMap[s.kelas_id]?.rombel || '',
                   tanggal_lahir: s.tanggal_lahir,
                   sekolah_id: sekolahId,
-                  tahun_pelajaran: tahunPelajaran,
+                  tahun_pelajaran: kelasMap[s.kelas_id]?.tahun_ajaran || tahunPelajaran || '',
                   is_from_siswa: true
                 });
                 existingNisns.add(nisnStr);
