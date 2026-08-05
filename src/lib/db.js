@@ -1632,22 +1632,27 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
           const { data: siswas } = await supabase.from('siswa').select('nisn, nama, tanggal_lahir, kelas_id').in('kelas_id', kelasIds);
           
           if (siswas && siswas.length > 0) {
-            const existingNisns = new Set(mergedData.map(s => String(s.nisn).trim()));
+            const getSiswaKey = (nisn, tp) => `${String(nisn || '').trim()}_${String(tp || '').trim()}`;
+            const existingKeys = new Set(mergedData.map(s => getSiswaKey(s.nisn, s.tahun_pelajaran)));
+            
             for (let s of siswas) {
               const nisnStr = String(s.nisn).trim();
-              if (!existingNisns.has(nisnStr)) {
+              const tpStr = String(kelasMap[s.kelas_id]?.tahun_ajaran || tahunPelajaran || '').trim();
+              const key = getSiswaKey(nisnStr, tpStr);
+              
+              if (!existingKeys.has(key)) {
                 mergedData.push({
-                  id: `siswa_${nisnStr}`,
+                  id: `siswa_${key}`,
                   nisn: nisnStr,
                   nama: s.nama,
                   tingkatan: kelasMap[s.kelas_id]?.tingkatan || '',
                   rombel: kelasMap[s.kelas_id]?.rombel || '',
                   tanggal_lahir: s.tanggal_lahir,
                   sekolah_id: sekolahId,
-                  tahun_pelajaran: kelasMap[s.kelas_id]?.tahun_ajaran || tahunPelajaran || '',
+                  tahun_pelajaran: tpStr,
                   is_from_siswa: true
                 });
-                existingNisns.add(nisnStr);
+                existingKeys.add(key);
               }
             }
           }
