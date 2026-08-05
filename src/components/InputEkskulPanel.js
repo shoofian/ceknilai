@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
   const [masterEkskul, setMasterEkskul] = useState([]);
@@ -187,7 +188,7 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
       </table>
 
       {/* Modal Tambah Ekskul */}
-      {modalOpen && (
+      {modalOpen && typeof document !== 'undefined' && createPortal(
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'var(--bg-primary)', zIndex: 9999,
@@ -256,7 +257,8 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
