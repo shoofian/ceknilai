@@ -5,6 +5,11 @@ export default function BankDataPanel({ targetSekolahId }) {
   const [bankData, setBankData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterTingkat, setFilterTingkat] = useState("");
+  const [filterRombel, setFilterRombel] = useState("");
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
   
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState("");
@@ -25,6 +30,7 @@ export default function BankDataPanel({ targetSekolahId }) {
       if (res.ok) {
         const data = await res.json();
         setBankData(data);
+        setCurrentPage(1); // Reset page on new data
       }
     } catch (err) {
       console.error("Gagal mengambil data bank siswa:", err);
@@ -164,25 +170,60 @@ export default function BankDataPanel({ targetSekolahId }) {
     }
   };
 
-  const filteredData = bankData.filter(item => 
-    item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.nisn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.rombel.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.tahun_pelajaran.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const uniqueTingkat = [...new Set(bankData.map(item => item.tingkatan))].filter(Boolean).sort((a, b) => Number(a) - Number(b));
+  const uniqueRombel = [...new Set(bankData.map(item => item.rombel))].filter(Boolean).sort();
+
+  const filteredData = bankData.filter(item => {
+    const matchesSearch = item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.nisn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.rombel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.tahun_pelajaran.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTingkat = filterTingkat ? item.tingkatan === filterTingkat : true;
+    const matchesRombel = filterRombel ? item.rombel === filterRombel : true;
+    
+    return matchesSearch && matchesTingkat && matchesRombel;
+  });
+
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+  const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // reset page if filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterTingkat, filterRombel]);
 
   return (
     <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <h4 style={{ margin: 0, fontWeight: "800" }}>Bank Data Siswa</h4>
-        <input
-          type="text"
-          placeholder="🔍 Cari nama, NISN, atau rombel..."
-          className="form-input"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ maxWidth: "300px", padding: "8px 12px", fontSize: "0.85rem" }}
-        />
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
+          <select 
+            className="form-input" 
+            value={filterTingkat} 
+            onChange={e => setFilterTingkat(e.target.value)}
+            style={{ maxWidth: "120px", padding: "8px 12px", fontSize: "0.85rem" }}
+          >
+            <option value="">Semua Tingkat</option>
+            {uniqueTingkat.map(t => <option key={t} value={t}>Tingkat {t}</option>)}
+          </select>
+          <select 
+            className="form-input" 
+            value={filterRombel} 
+            onChange={e => setFilterRombel(e.target.value)}
+            style={{ maxWidth: "150px", padding: "8px 12px", fontSize: "0.85rem" }}
+          >
+            <option value="">Semua Rombel</option>
+            {uniqueRombel.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <input
+            type="text"
+            placeholder="🔍 Cari nama, NISN..."
+            className="form-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ maxWidth: "200px", padding: "8px 12px", fontSize: "0.85rem" }}
+          />
+        </div>
       </div>
 
       {!targetSekolahId ? (
@@ -246,8 +287,8 @@ export default function BankDataPanel({ targetSekolahId }) {
               </tr>
             </thead>
             <tbody>
-              {filteredData.slice(0, 100).map((siswa) => (
-                <tr key={siswa.id}>
+              {paginatedData.map((siswa) => (
+                <tr key={siswa.id || `siswa_${siswa.nisn}`}>
                   <td><code>{siswa.nisn}</code></td>
                   <td><strong>{siswa.nama}</strong></td>
                   <td>{siswa.tingkatan}</td>
@@ -267,11 +308,32 @@ export default function BankDataPanel({ targetSekolahId }) {
               ))}
             </tbody>
           </table>
-          {filteredData.length > 100 && (
-            <p style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "12px" }}>
-              Menampilkan 100 data teratas dari {filteredData.length} hasil pencarian.
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px", flexWrap: "wrap", gap: "12px" }}>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>
+              Menampilkan {((currentPage - 1) * pageSize) + 1} - {Math.min(currentPage * pageSize, filteredData.length)} dari {filteredData.length} siswa
             </p>
-          )}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+              >
+                Sebelumnya
+              </button>
+              <span style={{ display: "flex", alignItems: "center", padding: "0 8px", fontSize: "0.85rem", fontWeight: "600" }}>
+                Halaman {currentPage} / {totalPages}
+              </span>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+              >
+                Selanjutnya
+              </button>
+            </div>
+          </div>
         </div>
       ) : (
         <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
