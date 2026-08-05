@@ -24,11 +24,19 @@ export async function GET(request) {
     const guru = await checkSuperadmin();
     if (!guru) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
-    const { data, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const sekolahId = searchParams.get('sekolah_id');
+
+    let query = supabase
       .from('master_ekskul')
       .select('*')
-      .eq('sekolah_id', guru.sekolah_id)
       .order('nama_ekskul', { ascending: true });
+
+    if (sekolahId) {
+      query = query.eq('sekolah_id', sekolahId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
@@ -45,17 +53,17 @@ export async function POST(request) {
     if (!guru) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
     const body = await request.json();
-    const { nama_ekskul, pembina } = body;
+    const { nama_ekskul, pembina, sekolah_id } = body;
 
-    if (!nama_ekskul) {
-      return NextResponse.json({ error: 'Nama ekskul wajib diisi' }, { status: 400 });
+    if (!nama_ekskul || !sekolah_id) {
+      return NextResponse.json({ error: 'Nama ekskul dan sekolah_id wajib diisi' }, { status: 400 });
     }
 
     const { data, error } = await supabase
       .from('master_ekskul')
       .insert([
         { 
-          sekolah_id: guru.sekolah_id,
+          sekolah_id: sekolah_id,
           nama_ekskul,
           pembina: pembina || ''
         }

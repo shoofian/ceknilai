@@ -31,7 +31,6 @@ export async function PUT(request, { params }) {
       .from('master_ekskul')
       .update({ nama_ekskul, pembina })
       .eq('id', id)
-      .eq('sekolah_id', guru.sekolah_id)
       .select();
 
     if (error) throw error;
@@ -53,8 +52,7 @@ export async function DELETE(request, { params }) {
     const { error } = await supabase
       .from('master_ekskul')
       .delete()
-      .eq('id', id)
-      .eq('sekolah_id', guru.sekolah_id);
+      .eq('id', id);
 
     if (error) throw error;
 

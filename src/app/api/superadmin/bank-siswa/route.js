@@ -18,10 +18,11 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const sekolahId = searchParams.get('sekolah_id');
     const tahunPelajaran = searchParams.get('tahun_pelajaran');
 
-    // Force sekolahId to be the logged in user's sekolah_id
-    const data = await getBankSiswa(guru.sekolah_id || null, tahunPelajaran || null);
+    // Use provided sekolahId (if any), since superadmin is global
+    const data = await getBankSiswa(sekolahId || null, tahunPelajaran || null);
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching bank siswa:', error);
@@ -49,7 +50,7 @@ export async function POST(request) {
       tingkatan: String(item.tingkatan).trim(),
       rombel: String(item.rombel).trim(),
       tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toISOString().split('T')[0] : null,
-      sekolah_id: guru.sekolah_id, // FORCE OVERRIDE
+      sekolah_id: item.sekolah_id,
       tahun_pelajaran: item.tahun_pelajaran
     }));
 
@@ -77,7 +78,7 @@ export async function DELETE(request) {
     const action = searchParams.get('action');
 
     if (action === 'reset') {
-      const sekolahId = guru.sekolah_id; // FORCE OVERRIDE
+      const sekolahId = searchParams.get('sekolah_id');
       const tahunPelajaran = searchParams.get('tahun_pelajaran');
       if (!sekolahId || !tahunPelajaran) {
         return NextResponse.json({ error: 'sekolah_id dan tahun_pelajaran diperlukan untuk reset' }, { status: 400 });
