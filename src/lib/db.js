@@ -1612,7 +1612,57 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
       console.error('Error fetching bank siswa:', error);
       return [];
     }
-    return data;
+
+    let mergedData = [...(data || [])];
+    
+    // Merge with students registered by teachers in this school
+    if (sekolahId) {
+      const { data: gurus } = await supabase.from('guru').select('username').eq('sekolah_id', sekolahId);
+      if (gurus && gurus.length > 0) {
+        const guruUsernames = gurus.map(g => g.username);
+        let kelasQuery = supabase.from('kelas').select('id, tingkatan, rombel_nama').in('guru_username', guruUsernames);
+        if (tahunPelajaran) kelasQuery = kelasQuery.eq('tahun_ajaran', tahunPelajaran);
+        const { data: kelases } = await kelasQuery;
+        
+        if (kelases && kelases.length > 0) {
+          const kelasIds = kelases.map(k => k.id);
+          const kelasMap = {};
+          kelases.forEach(k => kelasMap[k.id] = { tingkatan: k.tingkatan, rombel: k.rombel_nama });
+          
+          const { data: siswas } = await supabase.from('siswa').select('nisn, nama, tanggal_lahir, kelas_id').in('kelas_id', kelasIds);
+          
+          if (siswas && siswas.length > 0) {
+            const existingNisns = new Set(mergedData.map(s => String(s.nisn).trim()));
+            for (let s of siswas) {
+              const nisnStr = String(s.nisn).trim();
+              if (!existingNisns.has(nisnStr)) {
+                mergedData.push({
+                  id: `siswa_${nisnStr}`,
+                  nisn: nisnStr,
+                  nama: s.nama,
+                  tingkatan: kelasMap[s.kelas_id]?.tingkatan || '',
+                  rombel: kelasMap[s.kelas_id]?.rombel || '',
+                  tanggal_lahir: s.tanggal_lahir,
+                  sekolah_id: sekolahId,
+                  tahun_pelajaran: tahunPelajaran,
+                  is_from_siswa: true
+                });
+                existingNisns.add(nisnStr);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Sort mergedData again after merging
+    mergedData.sort((a, b) => {
+      if (a.tingkatan !== b.tingkatan) return String(a.tingkatan).localeCompare(String(b.tingkatan));
+      if (a.rombel !== b.rombel) return String(a.rombel).localeCompare(String(b.rombel));
+      return String(a.nama).localeCompare(String(b.nama));
+    });
+
+    return mergedData;
   } catch (err) {
     console.error('Unexpected error in getBankSiswa:', err);
     return [];

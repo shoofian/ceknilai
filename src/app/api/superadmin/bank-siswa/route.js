@@ -1,19 +1,11 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '@/lib/auth';
+import { checkSuperadminAuth } from '@/lib/auth';
 import { getGuru, getBankSiswa, upsertBankSiswa, deleteBankSiswa, resetBankData } from '@/lib/db';
-
-async function getSuperadminUser() {
-  const username = await checkAuth();
-  if (!username) return null;
-  const guru = await getGuru(username);
-  if (!guru || guru.role !== 'superadmin') return null;
-  return guru;
-}
 
 export async function GET(request) {
   try {
-    const guru = await getSuperadminUser();
-    if (!guru) {
+    const isSuperadmin = await checkSuperadminAuth();
+    if (!isSuperadmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -32,8 +24,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const guru = await getSuperadminUser();
-    if (!guru) {
+    const isSuperadmin = await checkSuperadminAuth();
+    if (!isSuperadmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -69,8 +61,8 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const guru = await getSuperadminUser();
-    if (!guru) {
+    const isSuperadmin = await checkSuperadminAuth();
+    if (!isSuperadmin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

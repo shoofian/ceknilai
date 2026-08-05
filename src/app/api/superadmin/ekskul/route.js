@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkAuth } from '@/lib/auth';
+import { checkSuperadminAuth } from '@/lib/auth';
 import { getGuru } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
 
@@ -10,19 +10,10 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false }
 });
 
-// Helper to check superadmin
-async function checkSuperadmin() {
-  const username = await checkAuth();
-  if (!username) return null;
-  const guru = await getGuru(username);
-  if (!guru || guru.role !== 'superadmin') return null;
-  return guru;
-}
-
 export async function GET(request) {
   try {
-    const guru = await checkSuperadmin();
-    if (!guru) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    const isSuperadmin = await checkSuperadminAuth();
+    if (!isSuperadmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
     const { searchParams } = new URL(request.url);
     const sekolahId = searchParams.get('sekolah_id');
@@ -49,8 +40,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const guru = await checkSuperadmin();
-    if (!guru) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    const isSuperadmin = await checkSuperadminAuth();
+    if (!isSuperadmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
     const body = await request.json();
     const { nama_ekskul, pembina, sekolah_id } = body;
