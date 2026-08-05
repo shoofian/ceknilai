@@ -130,29 +130,44 @@ export async function GET(request, { params }) {
 
     const studentName = studentLeger.nama || bankSiswa?.nama || 'Siswa';
 
-    const formatTanggalLahir = (tgl) => {
-      if (!tgl || tgl === '-') return '-';
-      const d = new Date(tgl);
-      if (isNaN(d.getTime())) return tgl; // Return original if not a standard date format
-      return d.toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
+    // Fetch full school data for the report card
+    let sekolahData = guru.sekolah || {};
+    if (guru.sekolah_id) {
+      const { data: dbSekolah } = await supabase.from('sekolah').select('*').eq('id', guru.sekolah_id).maybeSingle();
+      if (dbSekolah) sekolahData = dbSekolah;
+    }
+
+    const formatTanggalLahir = (tgl, fallbackTgl) => {
+      let dateToUse = tgl;
+      if (!dateToUse || dateToUse === '-' || dateToUse === '1900-01-01' || dateToUse === 'Invalid Date') {
+        dateToUse = fallbackTgl;
+      }
+      if (!dateToUse || dateToUse === '-' || dateToUse === '1900-01-01' || dateToUse === 'Invalid Date') {
+        return '-';
+      }
+      const d = new Date(dateToUse);
+      if (isNaN(d.getTime())) return dateToUse; 
+      const formatted = d.toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'});
+      if (formatted.toLowerCase().includes('invalid')) return dateToUse;
+      return formatted;
     };
 
     const payload = {
-      sekolah: guru.sekolah || {},
+      sekolah: sekolahData,
       identitas: {
         nama: studentName,
         nisn: siswaId,
         nipd: baseBiodata.nipd,
         tempat_lahir: baseBiodata.tempat_lahir,
-        tanggal_lahir: formatTanggalLahir(baseBiodata.tanggal_lahir),
+        tanggal_lahir: formatTanggalLahir(baseBiodata.tanggal_lahir, bankSiswa?.tanggal_lahir),
         jenis_kelamin: baseBiodata.jenis_kelamin,
         agama: baseBiodata.agama,
         status_keluarga: baseBiodata.status_keluarga,
         anak_ke: baseBiodata.anak_ke,
         alamat: baseBiodata.alamat_lengkap,
         telepon: baseBiodata.telepon,
-        sekolah: guru.sekolah?.nama || 'Sekolahku',
-        alamat_sekolah: '-', // Bisa diisi dari tabel sekolah
+        sekolah: sekolahData.nama || 'Sekolahku',
+        alamat_sekolah: sekolahData.alamat_sekolah || sekolahData.desa_kelurahan || '-',
         kelas: `${guru.walikelas_tingkatan} ${guru.walikelas_rombel_nama}`,
         fase: guru.walikelas_tingkatan <= 6 ? (guru.walikelas_tingkatan <= 2 ? 'A' : (guru.walikelas_tingkatan <= 4 ? 'B' : 'C')) : (guru.walikelas_tingkatan <= 9 ? 'D' : (guru.walikelas_tingkatan <= 10 ? 'E' : 'F')), 
         semester: "1 (Ganjil)",
