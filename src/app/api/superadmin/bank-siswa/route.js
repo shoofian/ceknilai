@@ -1,22 +1,27 @@
 import { NextResponse } from 'next/server';
-import { checkSuperadminAuth } from '@/lib/auth';
-import { getBankSiswa, upsertBankSiswa, deleteBankSiswa, resetBankData } from '@/lib/db';
+import { checkAuth } from '@/lib/auth';
+import { getGuru, getBankSiswa, upsertBankSiswa, deleteBankSiswa, resetBankData } from '@/lib/db';
 
-const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
-
-
+async function getSuperadminUser() {
+  const username = await checkAuth();
+  if (!username) return null;
+  const guru = await getGuru(username);
+  if (!guru || guru.role !== 'superadmin') return null;
+  return guru;
+}
 
 export async function GET(request) {
   try {
-    if (!await checkSuperadminAuth()) {
+    const guru = await getSuperadminUser();
+    if (!guru) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const sekolahId = searchParams.get('sekolah_id');
     const tahunPelajaran = searchParams.get('tahun_pelajaran');
 
-    const data = await getBankSiswa(sekolahId || null, tahunPelajaran || null);
+    // Force sekolahId to be the logged in user's sekolah_id
+    const data = await getBankSiswa(guru.sekolah_id || null, tahunPelajaran || null);
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching bank siswa:', error);
@@ -26,7 +31,8 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    if (!await checkSuperadminAuth()) {
+    const guru = await getSuperadminUser();
+    if (!guru) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -43,7 +49,7 @@ export async function POST(request) {
       tingkatan: String(item.tingkatan).trim(),
       rombel: String(item.rombel).trim(),
       tanggal_lahir: item.tanggal_lahir ? new Date(item.tanggal_lahir).toISOString().split('T')[0] : null,
-      sekolah_id: item.sekolah_id,
+      sekolah_id: guru.sekolah_id, // FORCE OVERRIDE
       tahun_pelajaran: item.tahun_pelajaran
     }));
 
@@ -62,7 +68,8 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    if (!await checkSuperadminAuth()) {
+    const guru = await getSuperadminUser();
+    if (!guru) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -70,7 +77,7 @@ export async function DELETE(request) {
     const action = searchParams.get('action');
 
     if (action === 'reset') {
-      const sekolahId = searchParams.get('sekolah_id');
+      const sekolahId = guru.sekolah_id; // FORCE OVERRIDE
       const tahunPelajaran = searchParams.get('tahun_pelajaran');
       if (!sekolahId || !tahunPelajaran) {
         return NextResponse.json({ error: 'sekolah_id dan tahun_pelajaran diperlukan untuk reset' }, { status: 400 });
