@@ -12,11 +12,17 @@ export default function ERaporDashboard() {
   
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   
   // Auth and Role States
   const [authorized, setAuthorized] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [guru, setGuru] = useState(null);
+
+  const filteredStudents = students.filter(s => 
+    (s.nama && s.nama.toLowerCase().includes(search.toLowerCase())) || 
+    (s.nisn && s.nisn.includes(search))
+  );
 
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
@@ -42,7 +48,15 @@ export default function ERaporDashboard() {
               setErrorMsg("Akses Ditolak: Anda bukan Wali Kelas aktif. Hanya Wali Kelas yang dapat mengelola dan mencetak e-Rapor.");
             } else {
               setAuthorized(true);
-              setStudents(mockStudents); 
+              
+              // Fetch from backend
+              const resSiswa = await fetch("/api/erapor/siswa");
+              if (resSiswa.ok) {
+                const dataSiswa = await resSiswa.json();
+                setStudents(dataSiswa.siswa || []);
+              } else {
+                setErrorMsg("Gagal memuat daftar siswa dari database.");
+              }
             }
           } else {
             router.push("/login");
