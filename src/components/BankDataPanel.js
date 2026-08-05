@@ -195,8 +195,6 @@ export default function BankDataPanel({ targetSekolahId }) {
       <>
       <div style={{ background: "var(--background-secondary)", padding: "16px", borderRadius: "12px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
         <div style={{ flex: "1", minWidth: "150px" }}>
-          <input
-        <div style={{ flex: "1", minWidth: "150px" }}>
           <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>Tahun Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
           <select 
             className="form-input"
