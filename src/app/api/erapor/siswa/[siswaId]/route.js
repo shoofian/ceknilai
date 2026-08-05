@@ -30,23 +30,51 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Database tidak terhubung' }, { status: 500 });
     }
 
-    // 1. Ambil data siswa dasar dari bank_siswa
-    const { data: bankSiswa, error: errBank } = await supabase
+    // 1. Ambil data nilai akademik dari leger terlebih dahulu
+    const { getLegerData } = await import('@/lib/db');
+    let leger = await getLegerData(
+      guru.sekolah_id, 
+      guru.walikelas_tingkatan, 
+      guru.walikelas_rombel_nama, 
+      guru.tahun_ajaran || '2025/2026', 
+      "Ganjil"
+    );
+
+    let studentLeger = null;
+    if (leger && leger.siswa) {
+      studentLeger = leger.siswa.find(s => s.nisn === siswaId);
+    }
+
+    if (!studentLeger) {
+      leger = await getLegerData(
+        guru.sekolah_id, 
+        guru.walikelas_tingkatan, 
+        guru.walikelas_rombel_nama, 
+        guru.tahun_ajaran || '2025/2026', 
+        "Genap"
+      );
+      if (leger && leger.siswa) {
+        studentLeger = leger.siswa.find(s => s.nisn === siswaId);
+      }
+    }
+
+    if (!studentLeger) {
+      return NextResponse.json({ error: 'Siswa tidak ditemukan di data nilai kelas ini' }, { status: 404 });
+    }
+
+    // 2. Coba ambil dari bank_siswa (opsional)
+    const { data: bankSiswa } = await supabase
       .from('bank_siswa')
       .select('*')
       .eq('nisn', siswaId)
-      .single();
+      .maybeSingle();
 
-    if (errBank || !bankSiswa) {
-      return NextResponse.json({ error: 'Siswa tidak ditemukan di bank data' }, { status: 404 });
-    }
-
-    // 2. Ambil Biodata e-Rapor dari biodata_siswa
-    const { data: biodata, error: errBiodata } = await supabase
+    // 3. Ambil Biodata e-Rapor dari biodata_siswa
+    const { data: biodata } = await supabase
       .from('biodata_siswa')
       .select('*')
       .eq('nisn', siswaId)
-      .single();
+      .maybeSingle();
 
     // Biodata default jika belum mengisi
     const baseBiodata = biodata || {
@@ -56,57 +84,34 @@ export async function GET(request, { params }) {
       nama_wali: '-', pekerjaan_wali: '-', alamat_wali: '-'
     };
 
-    // 3. Ambil data nilai akademik dari leger
-    let leger = await getLegerData(
-      guru.sekolah_id, 
-      guru.walikelas_tingkatan, 
-      guru.walikelas_rombel_nama, 
-      guru.tahun_ajaran || '2025/2026', 
-      "Ganjil"
-    );
-
-    if (!leger || !leger.siswa || !leger.siswa.find(s => s.nisn === siswaId)) {
-      leger = await getLegerData(
-        guru.sekolah_id, 
-        guru.walikelas_tingkatan, 
-        guru.walikelas_rombel_nama, 
-        guru.tahun_ajaran || '2025/2026', 
-        "Genap"
-      );
-    }
-
     let nilaiAkademik = [];
-    let ekskul = [{ nama: "Pramuka", predikat: "B", keterangan: "Baik" }]; // Mock ekskul karena di db ceknilai belum ada tabel ekskul
+    let ekskul = [{ nama: "Pramuka", predikat: "B", keterangan: "Baik" }];
     let absensi = { sakit: 0, izin: 0, tanpa_keterangan: 0 };
     let catatanWaliKelas = "-";
 
-    if (leger && leger.siswa) {
-      const studentLeger = leger.siswa.find(s => s.nisn === siswaId);
-      if (studentLeger) {
-        // Ambil absensi
-        absensi = {
-          sakit: studentLeger.absensi?.S || 0,
-          izin: studentLeger.absensi?.I || 0,
-          tanpa_keterangan: studentLeger.absensi?.A || 0,
-        };
+    // Ambil absensi
+    absensi = {
+      sakit: studentLeger.absensi?.S || 0,
+      izin: studentLeger.absensi?.I || 0,
+      tanpa_keterangan: studentLeger.absensi?.A || 0,
+    };
 
-        // Format nilai
-        if (studentLeger.nilaiMapel) {
-          nilaiAkademik = Object.keys(studentLeger.nilaiMapel).map(mapel => ({
-            mapel: mapel,
-            nilai: studentLeger.nilaiMapel[mapel],
-            // Jika tidak ada catatan, buat deskripsi kompetensi otomatis
-            tertinggi: studentLeger.catatanMapel?.[mapel] || `Mencapai kompetensi pada mata pelajaran ${mapel}`,
-            terendah: "Perlu pendampingan untuk materi yang lebih kompleks"
-          }));
-        }
-      }
+    // Format nilai
+    if (studentLeger.nilaiMapel) {
+      nilaiAkademik = Object.keys(studentLeger.nilaiMapel).map(mapel => ({
+        mapel: mapel,
+        nilai: studentLeger.nilaiMapel[mapel],
+        tertinggi: studentLeger.catatanMapel?.[mapel] || `Mencapai kompetensi pada mata pelajaran ${mapel}`,
+        terendah: "Perlu pendampingan untuk materi yang lebih kompleks"
+      }));
     }
+
+    const studentName = studentLeger.nama || bankSiswa?.nama || 'Siswa';
 
     const payload = {
       identitas: {
-        nama: bankSiswa.nama,
-        nisn: bankSiswa.nisn,
+        nama: studentName,
+        nisn: siswaId,
         nipd: baseBiodata.nipd,
         tempat_lahir: baseBiodata.tempat_lahir,
         tanggal_lahir: baseBiodata.tanggal_lahir ? new Date(baseBiodata.tanggal_lahir).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : '-',
@@ -119,7 +124,7 @@ export async function GET(request, { params }) {
         sekolah: guru.sekolah?.nama || 'Sekolahku',
         alamat_sekolah: '-', // Bisa diisi dari tabel sekolah
         kelas: `${guru.walikelas_tingkatan} ${guru.walikelas_rombel_nama}`,
-        fase: guru.walikelas_tingkatan <= 6 ? (guru.walikelas_tingkatan <= 2 ? 'A' : (guru.walikelas_tingkatan <= 4 ? 'B' : 'C')) : (guru.walikelas_tingkatan <= 9 ? 'D' : (guru.walikelas_tingkatan <= 10 ? 'E' : 'F')), // Logika Fase Kurmer
+        fase: guru.walikelas_tingkatan <= 6 ? (guru.walikelas_tingkatan <= 2 ? 'A' : (guru.walikelas_tingkatan <= 4 ? 'B' : 'C')) : (guru.walikelas_tingkatan <= 9 ? 'D' : (guru.walikelas_tingkatan <= 10 ? 'E' : 'F')), 
         semester: "1 (Ganjil)",
         tahun_ajaran: guru.tahun_ajaran || '2025/2026',
         
