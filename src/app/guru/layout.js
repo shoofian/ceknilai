@@ -115,6 +115,9 @@ export default function GuruLayout({ children }) {
 
   if (guru) {
     navItems.splice(2, 0, { name: "👨‍🏫 Wali Kelas", path: "/guru/walikelas" });
+    if (guru.walikelas_tingkatan && guru.walikelas_rombel_nama) {
+      navItems.splice(3, 0, { name: "📄 e-Rapor", path: "/guru/erapor" });
+    }
   }
 
   if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
