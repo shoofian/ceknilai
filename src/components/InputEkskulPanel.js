@@ -179,7 +179,7 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
                 </td>
                 <td style={{ textAlign: 'center' }}>
                   <button 
-                    onClick={() => handleOpenModal(s)}
+                    onClick={() => openModal(s)}
                     disabled={masterEkskul.length === 0}
                     className="btn btn-primary" 
                     style={{ padding: '6px 12px', fontSize: '0.85rem' }}
