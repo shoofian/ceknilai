@@ -8,6 +8,7 @@ export default function EkskulAdminPanel({ targetSekolahId }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editId, setEditId] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [teachers, setTeachers] = useState([]);
 
   const fetchEkskul = async () => {
     setLoading(true);
@@ -27,6 +28,16 @@ export default function EkskulAdminPanel({ targetSekolahId }) {
 
   useEffect(() => {
     fetchEkskul();
+    if (targetSekolahId) {
+      fetch(`/api/superadmin/guru?sekolah_id=${targetSekolahId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setTeachers(data);
+        })
+        .catch(err => console.error('Error fetching teachers', err));
+    } else {
+      setTeachers([]);
+    }
   }, [targetSekolahId]);
 
   const handleSubmit = async (e) => {
@@ -143,13 +154,16 @@ export default function EkskulAdminPanel({ targetSekolahId }) {
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px' }}>
                 Nama Pembina (Opsional)
               </label>
-              <input
-                type="text"
+              <select
                 className="form-input"
-                placeholder="Nama guru pembina"
                 value={formPembina}
                 onChange={(e) => setFormPembina(e.target.value)}
-              />
+              >
+                <option value="">-- Pilih Guru Pembina --</option>
+                {teachers.map(t => (
+                  <option key={t.username} value={t.nama}>{t.nama}</option>
+                ))}
+              </select>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>

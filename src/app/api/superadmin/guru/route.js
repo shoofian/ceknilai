@@ -8,14 +8,21 @@ const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
 
 
 
-export async function GET() {
+export async function GET(request) {
   try {
     const superadmin = await checkSuperadminAuth();
     if (!superadmin) {
       return NextResponse.json({ error: 'Akses ditolak. Khusus Superadmin.' }, { status: 403 });
     }
 
-    const gurus = await getAllGurus();
+    const { searchParams } = new URL(request.url);
+    const sekolahId = searchParams.get('sekolah_id');
+
+    let gurus = await getAllGurus();
+    if (sekolahId) {
+      gurus = gurus.filter(g => g.sekolah_id == sekolahId);
+    }
+
     // Remove passwords from response for security (although we could keep them, it's safer to remove them or only show masked)
     const sanitizedGurus = gurus.map(({ password, ...rest }) => rest);
     return NextResponse.json(sanitizedGurus);
