@@ -15,7 +15,7 @@ if (supabaseUrl && supabaseKey) {
 
 export async function GET(request, { params }) {
   try {
-    const { siswaId } = params; // This is the NISN
+    const { siswaId } = await params; // This is the NISN
     const username = await checkAuth();
     if (!username) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
@@ -42,7 +42,7 @@ export async function GET(request, { params }) {
 
     let studentLeger = null;
     if (leger && leger.siswa) {
-      studentLeger = leger.siswa.find(s => s.nisn === siswaId);
+      studentLeger = leger.siswa.find(s => String(s.nisn).trim() === String(siswaId).trim());
     }
 
     if (!studentLeger) {
@@ -54,7 +54,7 @@ export async function GET(request, { params }) {
         "Genap"
       );
       if (leger && leger.siswa) {
-        studentLeger = leger.siswa.find(s => s.nisn === siswaId);
+        studentLeger = leger.siswa.find(s => String(s.nisn).trim() === String(siswaId).trim());
       }
     }
 
