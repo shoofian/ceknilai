@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import BankDataPanel from "@/components/BankDataPanel";
-import EkskulAdminPanel from "@/components/EkskulAdminPanel";
+import ManajemenSekolahPanel from "@/components/ManajemenSekolahPanel";
 
 export default function SuperadminPanel() {
   const [activeTab, setActiveTab] = useState("logs");
@@ -560,18 +559,11 @@ export default function SuperadminPanel() {
           💳 Pembayaran & Referral
         </button>
         <button
-          onClick={() => setActiveTab("bank_data")}
-          className={`btn ${activeTab === "bank_data" ? "btn-primary" : "btn-secondary"}`}
+          onClick={() => setActiveTab("sekolah")}
+          className={`btn ${activeTab === "sekolah" ? "btn-primary" : "btn-secondary"}`}
           style={{ padding: "8px 16px", borderRadius: "8px" }}
         >
-          📂 Bank Data Siswa
-        </button>
-        <button
-          onClick={() => setActiveTab("ekskul")}
-          className={`btn ${activeTab === "ekskul" ? "btn-primary" : "btn-secondary"}`}
-          style={{ padding: "8px 16px", borderRadius: "8px" }}
-        >
-          🏅 Manajemen Ekskul
+          🏫 Manajemen Sekolah
         </button>
       </div>
 
@@ -744,11 +736,8 @@ export default function SuperadminPanel() {
             </div>
           )}
 
-          {/* TAB 3: BANK DATA SISWA */}
-          {activeTab === "bank_data" && <BankDataPanel targetSekolahId={globalTargetSekolahId} />}
-
-          {/* TAB EKSKUL */}
-          {activeTab === "ekskul" && <EkskulAdminPanel targetSekolahId={globalTargetSekolahId} />}
+          {/* TAB SEKOLAH */}
+          {activeTab === "sekolah" && <ManajemenSekolahPanel targetSekolahId={globalTargetSekolahId} />}
 
           {/* TAB 4: MANAJEMEN GURU */}
           {activeTab === "guru" && (
