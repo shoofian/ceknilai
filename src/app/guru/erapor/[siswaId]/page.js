@@ -370,25 +370,17 @@ export default function RaporPreview({ params }) {
                   <td style={{ fontWeight: "bold", verticalAlign: "top" }}>{item.mapel}</td>
                   <td style={{ textAlign: "center", fontWeight: "bold", fontSize: "16px", verticalAlign: "top" }}>{item.nilai}</td>
                   <td style={{ verticalAlign: "top", lineHeight: "1.5" }}>
-                    {item.catatan_guru ? (
+                    {item.tertinggi && (
                       <div style={{ marginBottom: "8px" }}>
-                        {item.catatan_guru}
+                        <span style={{ fontWeight: "bold" }}>Tercapai: </span>
+                        {item.tertinggi}
                       </div>
-                    ) : (
-                      <>
-                        {item.tertinggi && (
-                          <div style={{ marginBottom: "8px" }}>
-                            <span style={{ fontWeight: "bold" }}>Tercapai: </span>
-                            {item.tertinggi}
-                          </div>
-                        )}
-                        {item.terendah && (
-                          <div>
-                            <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
-                            {item.terendah}
-                          </div>
-                        )}
-                      </>
+                    )}
+                    {item.terendah && (
+                      <div>
+                        <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
+                        {item.terendah}
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -402,9 +394,38 @@ export default function RaporPreview({ params }) {
           </table>
         </div>
 
+        {/* Catatan Perkembangan Siswa */}
+        <div className="page-break-inside-avoid" style={{ marginBottom: "24px" }}>
+          <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>B. CATATAN PERKEMBANGAN SISWA</h3>
+          <table className="table-rapor">
+            <thead>
+              <tr>
+                <th style={{ width: "40px" }}>No</th>
+                <th style={{ width: "180px", textAlign: "left" }}>Mata Pelajaran</th>
+                <th style={{ textAlign: "left" }}>Catatan Perkembangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.nilai.filter(n => n.catatan_guru).length > 0 ? (
+                data.nilai.filter(n => n.catatan_guru).map((item, index) => (
+                  <tr key={index}>
+                    <td style={{ textAlign: "center", verticalAlign: "top" }}>{index + 1}</td>
+                    <td style={{ fontWeight: "bold", verticalAlign: "top" }}>{item.mapel}</td>
+                    <td style={{ verticalAlign: "top", lineHeight: "1.5" }}>{item.catatan_guru}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "center", padding: "20px" }}>Belum ada catatan perkembangan khusus dari guru mata pelajaran.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
         {/* Ekstrakurikuler */}
         <div className="page-break-inside-avoid" style={{ marginBottom: "24px" }}>
-          <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>B. EKSTRAKURIKULER</h3>
+          <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>C. EKSTRAKURIKULER</h3>
           <table className="table-rapor">
             <thead>
               <tr>
@@ -435,7 +456,7 @@ export default function RaporPreview({ params }) {
         {/* Absensi & Catatan */}
         <div className="page-break-inside-avoid" style={{ display: "flex", justifyContent: "space-between", gap: "32px", marginBottom: "24px" }}>
           <div style={{ width: "45%" }}>
-            <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>C. KETIDAKHADIRAN</h3>
+            <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>D. KETIDAKHADIRAN</h3>
             <table className="table-rapor">
               <tbody>
                 <tr>
@@ -454,7 +475,7 @@ export default function RaporPreview({ params }) {
             </table>
           </div>
           <div style={{ width: "50%" }}>
-            <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>D. CATATAN WALI KELAS</h3>
+            <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>E. CATATAN WALI KELAS</h3>
             <div style={{ border: "1px solid black", padding: "16px", minHeight: "100px", fontStyle: "italic", lineHeight: "1.5" }}>
               "{data.catatan}"
             </div>
