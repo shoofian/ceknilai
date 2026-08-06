@@ -513,14 +513,26 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
-  const [activeTab, setActiveTab] = useState('nilai');
+  const [activeTab, setActiveTab] = useState('dashboard'); // default to dashboard
+  const [viewMode, setViewMode] = useState('tabs');
 
-  // Load activeTab from sessionStorage on mount
+  // Load activeTab and viewMode from sessionStorage/localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined" && classId) {
-      const saved = sessionStorage.getItem(`activeTab_${classId}`);
-      if (saved) {
-        setActiveTab(saved);
+      const savedTab = sessionStorage.getItem(`activeTab_${classId}`);
+      const savedViewMode = localStorage.getItem('ceknilai_view_mode');
+      
+      if (savedViewMode) {
+        setViewMode(savedViewMode);
+        if (savedViewMode === "tabs" && (!savedTab || savedTab === "dashboard")) {
+          setActiveTab("nilai");
+        } else if (savedViewMode === "dashboard" && !savedTab) {
+          setActiveTab("dashboard");
+        } else if (savedTab) {
+          setActiveTab(savedTab);
+        }
+      } else if (savedTab) {
+        setActiveTab(savedTab);
       }
     }
   }, [classId]);
@@ -533,6 +545,16 @@ export default function DetailKelas({ params: paramsPromise }) {
   }, [activeTab, classId]);
 
 
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('ceknilai_view_mode', mode);
+    if (mode === 'dashboard') {
+      setActiveTab('dashboard');
+    } else {
+      if (activeTab === 'dashboard') setActiveTab('nilai');
+    }
+  };
 
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
@@ -2920,43 +2942,131 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* Tab Navigation - Single Line Grid (No Scroll) */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: "4px",
-        backgroundColor: "var(--bg-secondary)",
-        padding: "4px",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid var(--border-color)",
-        width: "100%"
-      }}>
-        {[{ id: "nilai", label: "📊 Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik" }, { id: "tindak-lanjut", label: "📢 Lanjutan" }].map(tab => (
+      {/* View Mode Toggle */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
+        <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className="btn"
+            onClick={() => handleViewModeChange('dashboard')}
             style={{
-              padding: "6px 2px",
-              fontSize: "0.76rem",
-              fontWeight: "700",
-              borderRadius: "var(--radius-sm)",
+              padding: "6px 12px",
+              fontSize: "0.8rem",
+              borderRadius: "var(--radius-xs)",
               border: "none",
+              fontWeight: viewMode === 'dashboard' ? "700" : "500",
+              backgroundColor: viewMode === 'dashboard' ? "var(--bg-primary)" : "transparent",
+              color: viewMode === 'dashboard' ? "var(--primary)" : "var(--text-muted)",
+              boxShadow: viewMode === 'dashboard' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
               cursor: "pointer",
-              transition: "all 0.2s",
-              backgroundColor: activeTab === tab.id ? "var(--primary)" : "transparent",
-              color: activeTab === tab.id ? "#ffffff" : "var(--text-secondary)",
-              boxShadow: activeTab === tab.id ? "0 2px 8px rgba(59,130,246,0.35)" : "none",
-              whiteSpace: "nowrap",
-              justifyContent: "center",
               display: "flex",
-              alignItems: "center"
+              alignItems: "center",
+              gap: "6px"
             }}
           >
-            {tab.label}
+            🗂️ Dasbor
           </button>
-        ))}
+          <button
+            onClick={() => handleViewModeChange('tabs')}
+            style={{
+              padding: "6px 12px",
+              fontSize: "0.8rem",
+              borderRadius: "var(--radius-xs)",
+              border: "none",
+              fontWeight: viewMode === 'tabs' ? "700" : "500",
+              backgroundColor: viewMode === 'tabs' ? "var(--bg-primary)" : "transparent",
+              color: viewMode === 'tabs' ? "var(--primary)" : "var(--text-muted)",
+              boxShadow: viewMode === 'tabs' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            📑 Tab
+          </button>
+        </div>
       </div>
+
+      {/* Tab Navigation - Single Line Grid (No Scroll) */}
+      {viewMode === 'tabs' ? (
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+          gap: "4px",
+          backgroundColor: "var(--bg-secondary)",
+          padding: "4px",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border-color)",
+          width: "100%"
+        }}>
+          {[{ id: "nilai", label: "📊 Nilai" }, { id: "presensi", label: "📅 Presensi" }, { id: "analitik", label: "📈 Analitik" }, { id: "tindak-lanjut", label: "📢 Lanjutan" }].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="btn"
+              style={{
+                padding: "8px",
+                fontSize: "0.8rem",
+                fontWeight: "700",
+                borderRadius: "var(--radius-sm)",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                backgroundColor: activeTab === tab.id ? "var(--primary)" : "transparent",
+                color: activeTab === tab.id ? "#ffffff" : "var(--text-secondary)",
+                boxShadow: activeTab === tab.id ? "0 2px 8px rgba(59,130,246,0.35)" : "none",
+                whiteSpace: "nowrap",
+                justifyContent: "center",
+                display: "flex",
+                alignItems: "center"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Back Button for Dashboard Mode */}
+      {viewMode === 'dashboard' && activeTab !== 'dashboard' && (
+        <div style={{ display: "flex", marginBottom: "8px" }}>
+          <button 
+            onClick={() => setActiveTab('dashboard')}
+            className="btn"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)", fontWeight: "600", borderRadius: "var(--radius-md)" }}
+          >
+            ← Kembali ke Menu Kelas
+          </button>
+        </div>
+      )}
+
+      {/* Dashboard Cards Content */}
+      {activeTab === 'dashboard' && viewMode === 'dashboard' && (
+        <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", marginTop: "12px" }}>
+          {[
+            { id: "nilai", icon: "📊", title: "Manajemen Nilai", desc: "Kelola kolom, aspek penilaian, dan daftar nilai siswa." },
+            { id: "presensi", icon: "📅", title: "Presensi Siswa", desc: "Isi dan pantau kehadiran siswa untuk mapel Anda." },
+            { id: "analitik", icon: "📈", title: "Analitik Kelas", desc: "Lihat statistik, peringkat, dan tren nilai." },
+            { id: "tindak-lanjut", label: "📢 Lanjutan", icon: "📢", title: "Tindak Lanjut & e-Rapor", desc: "Kirim rapor mini, kelola e-Rapor, dan rekap aksi." }
+          ].map(menu => (
+            <div 
+              key={menu.id}
+              onClick={() => setActiveTab(menu.id)}
+              className="glass-card"
+              style={{ padding: "24px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "16px", border: "1px solid var(--border-color)" }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.transform = "none"; }}
+            >
+              <div style={{ fontSize: "2.5rem", backgroundColor: "var(--bg-secondary)", width: "64px", height: "64px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {menu.icon}
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)", lineHeight: "1.2" }}>{menu.title}</h4>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>{menu.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ============= ANALITIK & PERINGKAT TAB ============= */}
       {activeTab === "analitik" && (

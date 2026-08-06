@@ -60,7 +60,7 @@ export default function WaliKelasDashboard() {
 
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
-    localStorage.setItem('walikelas_view_mode', mode);
+    localStorage.setItem('ceknilai_view_mode', mode);
     if (mode === 'dashboard') {
       setActiveTab('dashboard');
     } else {
@@ -148,7 +148,7 @@ export default function WaliKelasDashboard() {
 
   useEffect(() => {
     setMounted(true);
-    const savedViewMode = localStorage.getItem('walikelas_view_mode');
+    const savedViewMode = localStorage.getItem('ceknilai_view_mode');
     if (savedViewMode) {
       setViewMode(savedViewMode);
       if (savedViewMode === "tabs") {

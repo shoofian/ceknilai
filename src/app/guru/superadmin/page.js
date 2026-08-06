@@ -5,10 +5,38 @@ import { useRouter } from "next/navigation";
 import ManajemenSekolahPanel from "@/components/ManajemenSekolahPanel";
 
 export default function SuperadminPanel() {
-  const [activeTab, setActiveTab] = useState("logs");
+  const [activeTab, setActiveTab] = useState("dashboard"); // default to dashboard
+  const [viewMode, setViewMode] = useState("tabs");
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [currentUser, setCurrentUser] = useState("");
+
+  // Load viewMode from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedViewMode = localStorage.getItem('ceknilai_view_mode');
+      if (savedViewMode) {
+        setViewMode(savedViewMode);
+        if (savedViewMode === "tabs") {
+          setActiveTab("logs");
+        } else {
+          setActiveTab("dashboard");
+        }
+      } else {
+        setActiveTab("logs");
+      }
+    }
+  }, []);
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('ceknilai_view_mode', mode);
+    if (mode === 'dashboard') {
+      setActiveTab('dashboard');
+    } else {
+      if (activeTab === 'dashboard') setActiveTab('logs');
+    }
+  };
 
   // Global School Context for Bank Data & Ekskul
   const [globalTargetSekolahId, setGlobalTargetSekolahId] = useState("");
@@ -527,45 +555,133 @@ export default function SuperadminPanel() {
           )}
         </div>
       </div>
+         {/* View Mode Toggle */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+        <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+          <button
+            onClick={() => handleViewModeChange('dashboard')}
+            style={{
+              padding: "6px 12px",
+              fontSize: "0.8rem",
+              borderRadius: "var(--radius-xs)",
+              border: "none",
+              fontWeight: viewMode === 'dashboard' ? "700" : "500",
+              backgroundColor: viewMode === 'dashboard' ? "var(--bg-primary)" : "transparent",
+              color: viewMode === 'dashboard' ? "var(--primary)" : "var(--text-muted)",
+              boxShadow: viewMode === 'dashboard' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            🗂️ Dasbor
+          </button>
+          <button
+            onClick={() => handleViewModeChange('tabs')}
+            style={{
+              padding: "6px 12px",
+              fontSize: "0.8rem",
+              borderRadius: "var(--radius-xs)",
+              border: "none",
+              fontWeight: viewMode === 'tabs' ? "700" : "500",
+              backgroundColor: viewMode === 'tabs' ? "var(--bg-primary)" : "transparent",
+              color: viewMode === 'tabs' ? "var(--primary)" : "var(--text-muted)",
+              boxShadow: viewMode === 'tabs' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px"
+            }}
+          >
+            📑 Tab
+          </button>
+        </div>
+      </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
-        <button
-          onClick={() => setActiveTab("logs")}
-          className={`btn ${activeTab === "logs" ? "btn-primary" : "btn-secondary"}`}
-          style={{ padding: "8px 16px", borderRadius: "8px" }}
-        >
-          📋 Log Aktivitas Siswa
-        </button>
-        <button
-          onClick={() => setActiveTab("logs_guru")}
-          className={`btn ${activeTab === "logs_guru" ? "btn-primary" : "btn-secondary"}`}
-          style={{ padding: "8px 16px", borderRadius: "8px" }}
-        >
-          👨‍🏫 Log Aktivitas Guru
-        </button>
-        <button
-          onClick={() => setActiveTab("guru")}
-          className={`btn ${activeTab === "guru" ? "btn-primary" : "btn-secondary"}`}
-          style={{ padding: "8px 16px", borderRadius: "8px" }}
-        >
-          🔑 Manajemen Akun Guru
-        </button>
-        <button
-          onClick={() => setActiveTab("pembayaran")}
-          className={`btn ${activeTab === "pembayaran" ? "btn-primary" : "btn-secondary"}`}
-          style={{ padding: "8px 16px", borderRadius: "8px" }}
-        >
-          💳 Pembayaran & Referral
-        </button>
-        <button
-          onClick={() => setActiveTab("sekolah")}
-          className={`btn ${activeTab === "sekolah" ? "btn-primary" : "btn-secondary"}`}
-          style={{ padding: "8px 16px", borderRadius: "8px" }}
-        >
-          🏫 Manajemen Sekolah
-        </button>
-      </div>
+      {viewMode === 'tabs' ? (
+        <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", overflowX: "auto", whiteSpace: "nowrap" }}>
+          <button
+            onClick={() => setActiveTab("logs")}
+            className={`btn ${activeTab === "logs" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
+          >
+            📋 Log Aktivitas Siswa
+          </button>
+          <button
+            onClick={() => setActiveTab("logs_guru")}
+            className={`btn ${activeTab === "logs_guru" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
+          >
+            👨‍🏫 Log Aktivitas Guru
+          </button>
+          <button
+            onClick={() => setActiveTab("guru")}
+            className={`btn ${activeTab === "guru" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
+          >
+            🔑 Manajemen Akun Guru
+          </button>
+          <button
+            onClick={() => setActiveTab("pembayaran")}
+            className={`btn ${activeTab === "pembayaran" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
+          >
+            💳 Manajemen Pembayaran
+          </button>
+          <button
+            onClick={() => setActiveTab("sekolah")}
+            className={`btn ${activeTab === "sekolah" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
+          >
+            🏫 Konfigurasi Sekolah
+          </button>
+        </div>
+      ) : null}
+
+      {/* Back Button for Dashboard Mode */}
+      {viewMode === 'dashboard' && activeTab !== 'dashboard' && (
+        <div style={{ display: "flex", marginBottom: "16px" }}>
+          <button 
+            onClick={() => setActiveTab('dashboard')}
+            className="btn"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)", fontWeight: "600", borderRadius: "var(--radius-md)" }}
+          >
+            ← Kembali ke Menu Superadmin
+          </button>
+        </div>
+      )}
+
+      {/* Dashboard Cards Content */}
+      {activeTab === 'dashboard' && viewMode === 'dashboard' && (
+        <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", marginTop: "12px" }}>
+          {[
+            { id: "logs", icon: "📋", title: "Log Aktivitas Siswa", desc: "Pantau riwayat aksi dan aktivitas belajar siswa." },
+            { id: "logs_guru", icon: "👨‍🏫", title: "Log Aktivitas Guru", desc: "Pantau pengisian nilai dan aktivitas guru pengampu." },
+            { id: "guru", icon: "🔑", title: "Manajemen Akun Guru", desc: "Kelola daftar guru, akses, dan pendaftaran." },
+            { id: "pembayaran", icon: "💳", title: "Manajemen Pembayaran", desc: "Kelola langganan, referral, dan status aktif akun." },
+            { id: "sekolah", icon: "🏫", title: "Konfigurasi Sekolah", desc: "Atur identitas sekolah dan pengarsipan data." }
+          ].map(menu => (
+            <div 
+              key={menu.id}
+              onClick={() => setActiveTab(menu.id)}
+              className="glass-card"
+              style={{ padding: "24px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "16px", border: "1px solid var(--border-color)" }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.transform = "none"; }}
+            >
+              <div style={{ fontSize: "2.5rem", backgroundColor: "var(--bg-secondary)", width: "64px", height: "64px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {menu.icon}
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)", lineHeight: "1.2" }}>{menu.title}</h4>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>{menu.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
