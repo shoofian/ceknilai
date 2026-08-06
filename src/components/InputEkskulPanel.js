@@ -175,9 +175,19 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {siswaEkskuls.map(ne => (
-                        <div key={`nilai-${ne.id}`} style={{ padding: '8px 0', borderBottom: '1px dashed var(--border-color)', fontSize: '0.85rem' }}>
-                          <strong style={{ color: 'var(--primary)' }}>{ne.predikat}</strong>
-                          {ne.keterangan && <span style={{ color: 'var(--text-secondary)' }}> | {ne.keterangan}</span>}
+                        <div key={`nilai-${ne.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed var(--border-color)', fontSize: '0.85rem' }}>
+                          <div>
+                            <strong style={{ color: 'var(--primary)' }}>{ne.predikat}</strong>
+                            {ne.keterangan && <span style={{ color: 'var(--text-secondary)' }}> | {ne.keterangan}</span>}
+                          </div>
+                          <button 
+                            onClick={() => handleDelete(ne.id)}
+                            className="btn btn-secondary" 
+                            title={`Hapus ${ne.master_ekskul?.nama_ekskul || 'Ekskul'}`}
+                            style={{ padding: '2px 6px', fontSize: '0.7rem', borderColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', marginLeft: '8px' }}
+                          >
+                            ✖
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -185,31 +195,14 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
                 </td>
 
                 <td style={{ textAlign: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                    <button 
-                      onClick={() => openModal(s)}
-                      disabled={masterEkskul.length === 0}
-                      className="btn btn-primary" 
-                      style={{ padding: '6px 12px', fontSize: '0.85rem', width: '100%' }}
-                    >
-                      ➕ Tambah Nilai
-                    </button>
-                    {siswaEkskuls.length > 0 && (
-                      <div style={{ display: 'flex', gap: '4px', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        {siswaEkskuls.map(ne => (
-                           <button 
-                             key={`btn-hapus-${ne.id}`}
-                             onClick={() => handleDelete(ne.id)}
-                             className="btn btn-secondary" 
-                             title={`Hapus ${ne.master_ekskul?.nama_ekskul || 'Ekskul'}`}
-                             style={{ padding: '4px 8px', fontSize: '0.7rem', borderColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)' }}
-                           >
-                             ✖ Hapus
-                           </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <button 
+                    onClick={() => openModal(s)}
+                    disabled={masterEkskul.length === 0}
+                    className="btn btn-primary" 
+                    style={{ padding: '6px 12px', fontSize: '0.85rem', width: '100%' }}
+                  >
+                    ➕ Tambah Nilai
+                  </button>
                 </td>
               </tr>
             );
