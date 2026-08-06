@@ -1040,6 +1040,10 @@ export default function StudentPortal() {
                                       <td>5. Alpha (A)</td>
                                       <td>{res.rekapPresensi.summary.A || 0} hari</td>
                                     </tr>
+                                    <tr>
+                                      <td>6. Persentase Kehadiran</td>
+                                      <td>{res.rekapPresensi.persentase || 0}%</td>
+                                    </tr>
                                   </tbody>
                                 </table>
                               </div>
