@@ -376,14 +376,18 @@ export default function RaporPreview({ params }) {
                       </div>
                     ) : (
                       <>
-                        <div style={{ marginBottom: "8px" }}>
-                          <span style={{ fontWeight: "bold" }}>Tercapai: </span>
-                          {item.tertinggi}
-                        </div>
-                        <div>
-                          <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
-                          {item.terendah}
-                        </div>
+                        {item.tertinggi && (
+                          <div style={{ marginBottom: "8px" }}>
+                            <span style={{ fontWeight: "bold" }}>Tercapai: </span>
+                            {item.tertinggi}
+                          </div>
+                        )}
+                        {item.terendah && (
+                          <div>
+                            <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
+                            {item.terendah}
+                          </div>
+                        )}
                       </>
                     )}
                   </td>

@@ -1454,6 +1454,7 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
             nilaiMapel: {},
             isSelesaiMapel: {},
             catatanMapel: {},
+            tpMapel: {},
             kehadiran: { H: 0, S: 0, I: 0, A: 0, D: 0 },
             kehadiranMapel: {}
           };
@@ -1505,6 +1506,11 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
           }
         };
 
+        let highestScore = -1;
+        let lowestScore = 101;
+        let highestColId = null;
+        let lowestColId = null;
+
         k.kolomNilai.forEach(col => {
           const { score, isFilled, isAllFilled } = getColScore(s, col);
           if (isFilled) {
@@ -1512,8 +1518,27 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
             if (isAllFilled) {
               jumlahAspekTerisi++;
             }
+            if (score > highestScore) {
+              highestScore = score;
+              highestColId = col.id;
+            }
+            if (score < lowestScore) {
+              lowestScore = score;
+              lowestColId = col.id;
+            }
           }
         });
+        
+        // Save highest and lowest TP descriptions
+        if (highestColId !== null && lowestColId !== null) {
+          const tpConfig = k.skemaPenilaian?.tpConfig || {};
+          studentsMap[s.nisn].tpMapel[k.mataPelajaran] = {
+            tertinggi: tpConfig[highestColId] || "",
+            terendah: highestColId !== lowestColId ? (tpConfig[lowestColId] || "") : ""
+          };
+        } else {
+          studentsMap[s.nisn].tpMapel[k.mataPelajaran] = { tertinggi: "", terendah: "" };
+        }
         
         // Hitung Kehadiran (Presensi) jika digunakan
         const skema = k.skemaPenilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "" };
