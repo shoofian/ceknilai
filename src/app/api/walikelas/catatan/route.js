@@ -1,14 +1,12 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/db';
+import { checkAuth } from '@/lib/auth';
 
 export async function POST(req) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    
     // Validasi session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -41,11 +39,9 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    
     // Validasi session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
+    const username = await checkAuth();
+    if (!username) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

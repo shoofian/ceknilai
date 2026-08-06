@@ -12,8 +12,9 @@ if (supabaseUrl && supabaseKey) {
     }
   });
 } else {
-  console.warn("WARNING: Supabase URL or Key is missing. Database calls will fail. Please configure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.");
 }
+
+export { supabase };
 
 export function normalizeRombelNama(str) {
   if (!str) return "";
