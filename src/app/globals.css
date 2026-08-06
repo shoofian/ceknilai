@@ -1532,6 +1532,40 @@ input[type="date"].form-input {
   gap: 12px;
 }
 
+/* Mobile Compact Helpers */
+@media (max-width: 576px) {
+  .mobile-compact {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  
+  .mobile-compact h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .mobile-compact p {
+    font-size: 0.75rem !important;
+  }
+  
+  .mobile-compact .badge {
+    padding: 2px 6px !important;
+    font-size: 0.6rem !important;
+  }
+
+  .mobile-compact-stats {
+    padding: 8px 12px !important;
+  }
+  
+  .mobile-compact-stats > span:first-child {
+    font-size: 0.65rem !important;
+  }
+  
+  .mobile-compact-stats div > span:first-child {
+    font-size: 1.1rem !important;
+  }
+}
+
 /* Responsive Modal Atur Aspek (Mobile) */
 @media (max-width: 768px) {
   .aspect-modal-card {

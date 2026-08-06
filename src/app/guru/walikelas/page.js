@@ -643,7 +643,7 @@ export default function WaliKelasDashboard() {
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
       
       {/* Title Header */}
-      <div className="page-title-section no-print" style={{ 
+      <div className="page-title-section no-print mobile-compact" style={{ 
         display: "flex", 
         justifyContent: "space-between", 
         alignItems: "center", 
@@ -668,7 +668,7 @@ export default function WaliKelasDashboard() {
         </div>
       </div>
 
-      <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "16px" }}>
+      <div className="glass-card mobile-compact" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "16px" }}>
         <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
           {guru && (
             <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
