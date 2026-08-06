@@ -26,6 +26,12 @@ export default function WaliKelasDashboard() {
   const [activeTab, setActiveTab] = useState("mapel");
   const [selectedTingkatan, setSelectedTingkatan] = useState("");
 
+  // Catatan Wali Kelas States
+  const [catatanWalikelasData, setCatatanWalikelasData] = useState({}); // { [nisn]: string }
+  const [catatanWalikelasDraft, setCatatanWalikelasDraft] = useState({}); // { [nisn]: string }
+  const [catatanWalikelasSiswaTerpilih, setCatatanWalikelasSiswaTerpilih] = useState(null);
+  const [savingCatatanWalikelas, setSavingCatatanWalikelas] = useState({}); // { [nisn]: boolean }
+
   // Presensi Sub-tab and Filter States
   const [presensiSubTab, setPresensiSubTab] = useState("guru");
   const [selectedPresensiMapel, setSelectedPresensiMapel] = useState("");
@@ -69,7 +75,30 @@ export default function WaliKelasDashboard() {
     return list;
   }, [siswa, legerSortConfig]);
 
-  // Options
+  const saveCatatanWalikelas = async (nisn) => {
+    const draftText = catatanWalikelasDraft[nisn] || "";
+    setSavingCatatanWalikelas(prev => ({ ...prev, [nisn]: true }));
+
+    try {
+      const res = await fetch("/api/walikelas/catatan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nisn, tahun_ajaran: tahunAjaran, semester, catatan: draftText })
+      });
+
+      if (res.ok) {
+        setCatatanWalikelasData(prev => ({ ...prev, [nisn]: draftText }));
+        setCatatanWalikelasSiswaTerpilih(null);
+      } else {
+        alert("Gagal menyimpan catatan wali kelas.");
+      }
+    } catch (err) {
+      console.error("Error saving catatan walikelas", err);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setSavingCatatanWalikelas(prev => ({ ...prev, [nisn]: false }));
+    }
+  };
   const TAHUN_AJARAN_OPTIONS = ["2023/2024", "2024/2025", "2025/2026", "2026/2027"];
   const SEMESTER_OPTIONS = ["Ganjil", "Genap"];
 
@@ -154,7 +183,21 @@ export default function WaliKelasDashboard() {
           setSiswa(data.siswa || []);
           setMataPelajaranList(data.mataPelajaranList || []);
         } else {
-          console.error("Gagal mengambil data leger");
+          setSiswa([]);
+          setMataPelajaranList([]);
+        }
+
+        // Fetch Catatan Wali Kelas
+        const catatanRes = await fetch(`/api/walikelas/catatan?tahun_ajaran=${tahunAjaran}&semester=${semester}`);
+        if (catatanRes.ok) {
+          const catatanData = await catatanRes.json();
+          const catatanMap = {};
+          if (catatanData.data) {
+             catatanData.data.forEach(item => {
+                catatanMap[item.nisn] = item.catatan;
+             });
+          }
+          setCatatanWalikelasData(catatanMap);
         }
       } catch (err) {
         console.error("Kesalahan koneksi API leger", err);
@@ -698,7 +741,8 @@ export default function WaliKelasDashboard() {
         {[
           { id: "mapel", label: "📚 Mata Pelajaran" },
           { id: "leger", label: "📊 Buku Leger Nilai" },
-          { id: "catatan", label: "📝 Catatan Guru" },
+          { id: "catatan", label: "📝 Catatan Guru Mapel" },
+          { id: "catatan_walikelas", label: "🧑‍🏫 Catatan Wali Kelas" },
           { id: "kehadiran", label: "📅 Rekap Kehadiran" },
           { id: "ekskul", label: "🏅 Ekstrakurikuler" },
           { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` },
@@ -994,6 +1038,68 @@ export default function WaliKelasDashboard() {
               <p style={{ fontSize: "0.85rem", margin: 0 }}>Belum ada data siswa untuk rombel ini pada periode terpilih.</p>
             </div>
           )}
+        </div>
+      ) : activeTab === "catatan_walikelas" ? (
+        <div className="glass-card animate-fade-in" style={{ overflow: "hidden" }}>
+          <div style={{ padding: "20px", borderBottom: "1px solid var(--border-color)", backgroundColor: "rgba(59, 130, 246, 0.05)" }}>
+            <h3 style={{ margin: "0 0 4px 0", fontSize: "1.1rem", color: "var(--primary)", fontWeight: "800" }}>Catatan Wali Kelas (Rapor)</h3>
+            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)" }}>Catatan ini akan tampil di bagian akhir rapor cetak siswa (E. Catatan Wali Kelas).</p>
+          </div>
+          <div style={{ overflowX: "auto" }}>
+            <table className="table premium-table" style={{ minWidth: "800px" }}>
+              <thead>
+                <tr>
+                  <th style={{ width: "50px", textAlign: "center" }}>No</th>
+                  <th style={{ width: "250px" }}>Nama Siswa</th>
+                  <th>Catatan Wali Kelas</th>
+                  <th style={{ width: "120px", textAlign: "center" }}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {siswa.length > 0 ? siswa.map((s, idx) => (
+                  <tr key={s.nisn}>
+                    <td style={{ textAlign: "center", color: "var(--text-muted)" }}>{idx + 1}</td>
+                    <td>
+                      <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontFamily: "monospace" }}>NISN: {s.nisn}</div>
+                    </td>
+                    <td>
+                      {catatanWalikelasData[s.nisn] ? (
+                        <div style={{ fontStyle: "italic", color: "var(--text-secondary)", fontSize: "0.9rem", whiteSpace: "pre-wrap" }}>"{catatanWalikelasData[s.nisn]}"</div>
+                      ) : (
+                        <span style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic" }}>Belum ada catatan...</span>
+                      )}
+                    </td>
+                    <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+                      <button
+                        onClick={() => {
+                          setCatatanWalikelasSiswaTerpilih(s);
+                          setCatatanWalikelasDraft(prev => ({ ...prev, [s.nisn]: catatanWalikelasData[s.nisn] || "" }));
+                        }}
+                        className="btn btn-secondary"
+                        style={{ 
+                          padding: "6px 12px", 
+                          fontSize: "0.8rem", 
+                          display: "inline-flex", 
+                          gap: "6px", 
+                          alignItems: "center",
+                          backgroundColor: catatanWalikelasData[s.nisn] ? "rgba(245, 158, 11, 0.1)" : "var(--bg-secondary)",
+                          borderColor: catatanWalikelasData[s.nisn] ? "rgba(245, 158, 11, 0.3)" : "var(--border-color)",
+                          color: catatanWalikelasData[s.nisn] ? "var(--warning)" : "var(--text-secondary)"
+                        }}
+                      >
+                        ✏️ {catatanWalikelasData[s.nisn] ? "Edit" : "Isi Catatan"}
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)" }}>Belum ada data siswa.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : activeTab === "kehadiran" ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -1456,9 +1562,49 @@ export default function WaliKelasDashboard() {
         </div>
       ) : null}
 
-            {renderModal()}
-
-
+      {renderModal()}
+      
+      {/* Modal Catatan Wali Kelas */}
+      {catatanWalikelasSiswaTerpilih && mounted && createPortal(
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) setCatatanWalikelasSiswaTerpilih(null); }}
+          style={{
+            position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+            backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+            zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+          }}
+        >
+          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "600px", padding: "24px", display: "flex", flexDirection: "column", border: "1px solid var(--border-focus)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.4)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", paddingBottom: "12px", borderBottom: "1px solid var(--border-color)" }}>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Catatan Wali Kelas</h3>
+              <button onClick={() => setCatatanWalikelasSiswaTerpilih(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            <p style={{ margin: "0 0 16px 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
+              Tulis catatan perkembangan, motivasi, atau pesan dari wali kelas untuk <strong>{catatanWalikelasSiswaTerpilih.nama}</strong>. Catatan ini akan dicetak pada halaman terakhir rapor.
+            </p>
+            <textarea
+              className="form-control"
+              rows="6"
+              placeholder="Contoh: Ananda sangat aktif dalam kelas, tingkatkan prestasimu di semester depan..."
+              value={catatanWalikelasDraft[catatanWalikelasSiswaTerpilih.nisn] !== undefined ? catatanWalikelasDraft[catatanWalikelasSiswaTerpilih.nisn] : ""}
+              onChange={(e) => setCatatanWalikelasDraft({ ...catatanWalikelasDraft, [catatanWalikelasSiswaTerpilih.nisn]: e.target.value })}
+              style={{ width: "100%", marginBottom: "20px", resize: "vertical" }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button className="btn" onClick={() => setCatatanWalikelasSiswaTerpilih(null)} style={{ padding: "8px 16px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)" }}>Batal</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => saveCatatanWalikelas(catatanWalikelasSiswaTerpilih.nisn)} 
+                disabled={savingCatatanWalikelas[catatanWalikelasSiswaTerpilih.nisn]}
+                style={{ padding: "8px 16px" }}
+              >
+                {savingCatatanWalikelas[catatanWalikelasSiswaTerpilih.nisn] ? "Menyimpan..." : "💾 Simpan Catatan"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       <style jsx global>{`
         @keyframes spin {

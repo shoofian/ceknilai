@@ -87,7 +87,6 @@ export async function GET(request, { params }) {
     let nilaiAkademik = [];
     let ekskul = []; 
     let absensi = { sakit: 0, izin: 0, tanpa_keterangan: 0 };
-    let catatanWaliKelas = "-";
 
     // 4. Ambil data ekstrakurikuler dari nilai_ekskul
     const { data: dbEkskul } = await supabase
@@ -138,6 +137,19 @@ export async function GET(request, { params }) {
           terendah: terendahText
         };
       });
+    }
+
+    let catatanWaliKelas = "-";
+    const { data: dbCatatanWali } = await supabase
+      .from('catatan_walikelas')
+      .select('catatan')
+      .eq('nisn', siswaId)
+      .eq('tahun_ajaran', tahun_ajaran)
+      .eq('semester', semester)
+      .maybeSingle();
+      
+    if (dbCatatanWali && dbCatatanWali.catatan) {
+      catatanWaliKelas = dbCatatanWali.catatan;
     }
 
     const studentName = studentLeger.nama || bankSiswa?.nama || 'Siswa';

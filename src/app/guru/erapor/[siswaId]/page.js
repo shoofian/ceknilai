@@ -483,22 +483,36 @@ export default function RaporPreview({ params }) {
         </div>
 
         {/* Tanda Tangan */}
-        <div className="page-break-inside-avoid" style={{ marginTop: "48px", display: "flex", justifyContent: "space-between", textAlign: "center", fontSize: "14px" }}>
-          <div style={{ width: "30%" }}>
-            <p style={{ marginBottom: "4px" }}>Mengetahui,</p>
-            <p>Orang Tua/Wali</p>
-            <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%" }}></div>
-          </div>
-          <div style={{ width: "30%" }}></div>
-          <div style={{ width: "35%" }}>
-            <p style={{ marginBottom: "4px" }}>Jakarta, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
-            <p>Wali Kelas</p>
-            <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "90%", fontWeight: "bold" }}>
-              {data.identitas.nama_wali_kelas || "Wali Kelas, S.Pd"}
+        <div className="page-break-inside-avoid" style={{ marginTop: "48px", fontSize: "14px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", textAlign: "center" }}>
+            <div style={{ width: "30%" }}>
+              <p style={{ marginBottom: "4px" }}>Mengetahui,</p>
+              <p>Orang Tua/Wali</p>
+              <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%" }}></div>
             </div>
-            <p style={{ marginTop: "4px" }}>
-              {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. -"}
-            </p>
+            <div style={{ width: "35%" }}>
+              <p style={{ marginBottom: "4px" }}>Jakarta, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+              <p>Wali Kelas</p>
+              <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "90%", fontWeight: "bold" }}>
+                {data.identitas.nama_wali_kelas || "Wali Kelas, S.Pd"}
+              </div>
+              <p style={{ marginTop: "4px" }}>
+                {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. -"}
+              </p>
+            </div>
+          </div>
+          
+          <div style={{ display: "flex", justifyContent: "center", textAlign: "center", marginTop: "32px" }}>
+            <div style={{ width: "40%" }}>
+              <p style={{ marginBottom: "4px" }}>Mengetahui,</p>
+              <p>Kepala Sekolah</p>
+              <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%", fontWeight: "bold" }}>
+                {data.sekolah?.kepala_sekolah || "Nama Kepala Sekolah"}
+              </div>
+              <p style={{ marginTop: "4px" }}>
+                {data.sekolah?.nip_kepala_sekolah ? `NIP. ${data.sekolah.nip_kepala_sekolah}` : "NIP. -"}
+              </p>
+            </div>
           </div>
         </div>
 
