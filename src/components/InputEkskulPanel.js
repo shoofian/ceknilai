@@ -139,7 +139,7 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
             <th>Nama Siswa</th>
             <th style={{ minWidth: '100px' }}>NISN</th>
             <th>Ekstrakurikuler yang Diikuti</th>
-            <th>Nilai (Predikat & Deskripsi)</th>
+            <th>Nilai</th>
             <th style={{ width: '150px', textAlign: 'center' }}>Aksi</th>
           </tr>
         </thead>
@@ -178,7 +178,6 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
                         <div key={`nilai-${ne.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed var(--border-color)', fontSize: '0.85rem' }}>
                           <div>
                             <strong style={{ color: 'var(--primary)' }}>{ne.predikat}</strong>
-                            {ne.keterangan && <span style={{ color: 'var(--text-secondary)' }}> | {ne.keterangan}</span>}
                           </div>
                           <button 
                             onClick={() => handleDelete(ne.id)}
