@@ -103,13 +103,12 @@ export default function GuruLayout({ children }) {
   };
 
   const navItems = [
-    { name: "🏠 Beranda", path: "/guru" },
+    { name: "👤 Profil Saya", path: "/guru/profil" },
     { name: "📚 Daftar Kelas", path: "/guru/kelas" },
   ];
 
   // Cetak Laporan is now hidden from sidebar navigation as it is accessible as a modal preview inside Kelola Kelas.
 
-  navItems.push({ name: "👤 Profil Saya", path: "/guru/profil" });
   navItems.push({ name: "👑 Masa Aktif", path: "/guru/masa-aktif" });
   navItems.push({ name: "🎁 Hadiah & Referral", path: "/guru/hadiah" });
 
