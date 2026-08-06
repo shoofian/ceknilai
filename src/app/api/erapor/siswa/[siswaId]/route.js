@@ -123,8 +123,9 @@ export async function GET(request, { params }) {
       nilaiAkademik = Object.keys(studentLeger.nilaiMapel).map(mapel => ({
         mapel: mapel,
         nilai: studentLeger.nilaiMapel[mapel],
-        tertinggi: studentLeger.catatanMapel?.[mapel] || `Mencapai kompetensi pada mata pelajaran ${mapel}`,
-        terendah: "Perlu pendampingan untuk materi yang lebih kompleks"
+        catatan_guru: studentLeger.catatanMapel?.[mapel] || "",
+        tertinggi: `Menunjukkan penguasaan kompetensi yang baik dalam mata pelajaran ${mapel}`,
+        terendah: "Perlu peningkatan dan pendampingan pada beberapa materi yang lebih kompleks"
       }));
     }
 

@@ -370,14 +370,22 @@ export default function RaporPreview({ params }) {
                   <td style={{ fontWeight: "bold", verticalAlign: "top" }}>{item.mapel}</td>
                   <td style={{ textAlign: "center", fontWeight: "bold", fontSize: "16px", verticalAlign: "top" }}>{item.nilai}</td>
                   <td style={{ verticalAlign: "top", lineHeight: "1.5" }}>
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ fontWeight: "bold" }}>Tercapai: </span>
-                      {item.tertinggi}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
-                      {item.terendah}
-                    </div>
+                    {item.catatan_guru ? (
+                      <div style={{ marginBottom: "8px" }}>
+                        {item.catatan_guru}
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ marginBottom: "8px" }}>
+                          <span style={{ fontWeight: "bold" }}>Tercapai: </span>
+                          {item.tertinggi}
+                        </div>
+                        <div>
+                          <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
+                          {item.terendah}
+                        </div>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
