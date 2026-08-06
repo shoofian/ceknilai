@@ -3647,7 +3647,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
               <thead>
                 <tr>
-                  <th style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                  <th style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: 0, zIndex: 22 }}>
                     <input
                       type="checkbox"
                       checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -3655,11 +3655,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                       style={{ cursor: "pointer", width: "16px", height: "16px" }}
                     />
                   </th>
-                  <th style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                  <th style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: "50px", zIndex: 22 }}>
                     No
                   </th>
-                  <th className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
-                  {(kelas.skemaPenilaian?.pertemuan || []).map((p, idx) => (
+                  <th className="sticky-nama" style={{ position: "sticky", left: "90px", zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" }}>Nama Siswa</th>
+                  {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map((p, idx) => (
                     <th key={p.id} style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
                         <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)" }} title={p.nama}>
@@ -3788,7 +3788,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </tr>
                 ) : kelas.siswa.map((siswa, sIdx) => (
                   <tr key={siswa.nisn} style={{ backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                    <td style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                    <td style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                       <input
                         type="checkbox"
                         checked={selectedNisns.includes(siswa.nisn)}
@@ -3796,20 +3796,20 @@ export default function DetailKelas({ params: paramsPromise }) {
                         style={{ cursor: "pointer", width: "16px", height: "16px" }}
                       />
                     </td>
-                    <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                    <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: "50px", zIndex: 12, backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                       {sIdx + 1}
                     </td>
                     <td 
                       className={`sticky-nama ${isNamaColumnExpanded ? 'expanded-active' : ''}`}
                       onClick={toggleNamaExpand}
                       title="Klik untuk melihat nama lengkap"
-                      style={{ position: "sticky", left: 0, zIndex: 12, fontWeight: "600", backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", cursor: "pointer" }}
+                      style={{ position: "sticky", left: "90px", zIndex: 12, fontWeight: "600", backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", cursor: "pointer", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                         <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, isNamaColumnExpanded)}</span>
                       </div>
                     </td>
-                    {(kelas.skemaPenilaian?.pertemuan || []).map(p => {
+                    {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map(p => {
                       const val = siswa.nilai[`_presensi_${p.id}`] || "";
                       const isUnlocked = unlockedPertemuanIds.includes(p.id);
                       return (
