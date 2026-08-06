@@ -3647,7 +3647,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
               <thead>
                 <tr>
-                  <th style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: 0, zIndex: 22 }}>
+                  <th className="mobile-hide" style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: 0, zIndex: 22 }}>
                     <input
                       type="checkbox"
                       checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -3655,7 +3655,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       style={{ cursor: "pointer", width: "16px", height: "16px" }}
                     />
                   </th>
-                  <th style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: "50px", zIndex: 22 }}>
+                  <th className="mobile-hide" style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: "50px", zIndex: 22 }}>
                     No
                   </th>
                   <th className="sticky-nama" style={{ position: "sticky", left: "90px", zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" }}>Nama Siswa</th>
@@ -3788,7 +3788,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </tr>
                 ) : kelas.siswa.map((siswa, sIdx) => (
                   <tr key={siswa.nisn} style={{ backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                    <td style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
+                    <td className="mobile-hide" style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", left: 0, zIndex: 12, backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                       <input
                         type="checkbox"
                         checked={selectedNisns.includes(siswa.nisn)}
@@ -3796,7 +3796,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         style={{ cursor: "pointer", width: "16px", height: "16px" }}
                       />
                     </td>
-                    <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: "50px", zIndex: 12, backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
+                    <td className="mobile-hide" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: "50px", zIndex: 12, backgroundColor: sIdx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                       {sIdx + 1}
                     </td>
                     <td 
@@ -4121,7 +4121,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 23 }}>
+                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 23 }}>
                         <input
                           type="checkbox"
                           checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -4129,10 +4129,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
                         />
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
                         No
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
+                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
                         NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
                       <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
@@ -4216,7 +4216,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr style={{ backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                        <td style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                        <td className="mobile-hide" style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
                           <input
                             type="checkbox"
                             checked={selectedNisns.includes(student.nisn)}
@@ -4224,10 +4224,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                             style={{ cursor: "pointer", width: "16px", height: "16px" }}
                           />
                         </td>
-                        <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                        <td className="mobile-hide" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
                           {idx + 1}
                         </td>
-                        <td style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
+                        <td className="mobile-hide" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
                         <td 
@@ -5303,6 +5303,24 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
 
         @media (max-width: 576px) {
+          .mobile-hide {
+            display: none !important;
+          }
+          
+          .sticky-nama {
+            max-width: 80px !important;
+            min-width: 80px !important;
+            width: 80px !important;
+            left: 0 !important; /* Force to left edge */
+            font-size: 0.7rem !important;
+            padding: 8px 6px !important;
+          }
+          
+          .sticky-nama.expanded-active {
+            max-width: 140px !important;
+            min-width: 140px !important;
+            width: 140px !important;
+          }
           .presensi-stats-grid {
             grid-template-columns: repeat(2, 1fr);
             padding: 0 16px;
