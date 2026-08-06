@@ -513,26 +513,29 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // State tab aktif: 'nilai' | 'ranking' | 'analitik'
-  const [activeTab, setActiveTab] = useState('dashboard'); // default to dashboard
   const [viewMode, setViewMode] = useState('tabs');
+  const [activeTab, setActiveTab] = useState('nilai'); // Default harus match dengan default viewMode agar tidak blank
 
   // Load activeTab and viewMode from sessionStorage/localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined" && classId) {
       const savedTab = sessionStorage.getItem(`activeTab_${classId}`);
-      const savedViewMode = localStorage.getItem('ceknilai_view_mode');
+      const savedViewMode = localStorage.getItem('ceknilai_view_mode') || 'tabs';
       
-      if (savedViewMode) {
-        setViewMode(savedViewMode);
-        if (savedViewMode === "tabs" && (!savedTab || savedTab === "dashboard")) {
-          setActiveTab("nilai");
-        } else if (savedViewMode === "dashboard" && !savedTab) {
-          setActiveTab("dashboard");
-        } else if (savedTab) {
+      setViewMode(savedViewMode);
+      
+      if (savedViewMode === 'tabs') {
+        if (!savedTab || savedTab === 'dashboard') {
+          setActiveTab('nilai');
+        } else {
           setActiveTab(savedTab);
         }
-      } else if (savedTab) {
-        setActiveTab(savedTab);
+      } else if (savedViewMode === 'dashboard') {
+        if (!savedTab) {
+          setActiveTab('dashboard');
+        } else {
+          setActiveTab(savedTab);
+        }
       }
     }
   }, [classId]);
