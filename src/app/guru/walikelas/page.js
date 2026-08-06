@@ -23,7 +23,8 @@ export default function WaliKelasDashboard() {
   // Data States
   const [siswa, setSiswa] = useState([]);
   const [mataPelajaranList, setMataPelajaranList] = useState([]);
-  const [activeTab, setActiveTab] = useState("mapel");
+  const [activeTab, setActiveTab] = useState("dashboard"); // default to dashboard in dashboard mode, or 'mapel' in tabs mode
+  const [viewMode, setViewMode] = useState("tabs"); // 'tabs' or 'dashboard'
   const [selectedTingkatan, setSelectedTingkatan] = useState("");
 
   // Catatan Wali Kelas States
@@ -55,6 +56,17 @@ export default function WaliKelasDashboard() {
       direction = "desc";
     }
     setLegerSortConfig({ key, direction });
+  };
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem('walikelas_view_mode', mode);
+    if (mode === 'dashboard') {
+      setActiveTab('dashboard');
+    } else {
+      // In tabs mode, don't allow 'dashboard' active tab
+      if (activeTab === 'dashboard') setActiveTab('mapel');
+    }
   };
 
   const sortedSiswa = useMemo(() => {
@@ -136,6 +148,13 @@ export default function WaliKelasDashboard() {
 
   useEffect(() => {
     setMounted(true);
+    const savedViewMode = localStorage.getItem('walikelas_view_mode');
+    if (savedViewMode) {
+      setViewMode(savedViewMode);
+      if (savedViewMode === "tabs") {
+        setActiveTab("mapel");
+      }
+    }
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/auth/session");
@@ -689,14 +708,56 @@ export default function WaliKelasDashboard() {
           </div>
         </div>
 
-        <button 
-          onClick={downloadLegerCSV} 
-          disabled={siswa.length === 0}
-          className="btn btn-secondary" 
-          style={{ display: "inline-flex", alignItems: "center", gap: "8px", height: "fit-content", opacity: siswa.length === 0 ? 0.5 : 1 }}
-        >
-          📥 Ekspor Leger (CSV)
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+            <button
+              onClick={() => handleViewModeChange('dashboard')}
+              style={{
+                padding: "6px 12px",
+                fontSize: "0.8rem",
+                borderRadius: "var(--radius-xs)",
+                border: "none",
+                fontWeight: viewMode === 'dashboard' ? "700" : "500",
+                backgroundColor: viewMode === 'dashboard' ? "var(--bg-primary)" : "transparent",
+                color: viewMode === 'dashboard' ? "var(--primary)" : "var(--text-muted)",
+                boxShadow: viewMode === 'dashboard' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}
+            >
+              🗂️ Dasbor
+            </button>
+            <button
+              onClick={() => handleViewModeChange('tabs')}
+              style={{
+                padding: "6px 12px",
+                fontSize: "0.8rem",
+                borderRadius: "var(--radius-xs)",
+                border: "none",
+                fontWeight: viewMode === 'tabs' ? "700" : "500",
+                backgroundColor: viewMode === 'tabs' ? "var(--bg-primary)" : "transparent",
+                color: viewMode === 'tabs' ? "var(--primary)" : "var(--text-muted)",
+                boxShadow: viewMode === 'tabs' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px"
+              }}
+            >
+              📑 Tab
+            </button>
+          </div>
+          <button 
+            onClick={downloadLegerCSV} 
+            disabled={siswa.length === 0}
+            className="btn btn-secondary" 
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", height: "fit-content", opacity: siswa.length === 0 ? 0.5 : 1 }}
+          >
+            📥 Ekspor Leger (CSV)
+          </button>
+        </div>
       </div>
 
       {/* Overview Cards (Real-time EWS metrics) */}
@@ -737,42 +798,88 @@ export default function WaliKelasDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "fit-content" }}>
-        {[
-          { id: "mapel", label: "📚 Mata Pelajaran" },
-          { id: "leger", label: "📊 Buku Leger Nilai" },
-          { id: "catatan", label: "📝 Catatan Guru Mapel" },
-          { id: "catatan_walikelas", label: "🧑‍🏫 Catatan Wali Kelas" },
-          { id: "kehadiran", label: "📅 Rekap Kehadiran" },
-          { id: "ekskul", label: "🏅 Ekstrakurikuler" },
-          { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` },
-          { id: "perpaduan", label: "🌓 Perpaduan Semester" }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className="btn"
-            style={{
-              padding: "8px 16px",
-              fontSize: "0.85rem",
-              backgroundColor: activeTab === tab.id ? "var(--bg-tertiary)" : "transparent",
-              color: activeTab === tab.id ? "var(--text-primary)" : "var(--text-muted)",
-              border: activeTab === tab.id ? "1px solid var(--border-color)" : "1px solid transparent",
-              borderRadius: "var(--radius-sm)",
-              fontWeight: activeTab === tab.id ? "700" : "500",
-              cursor: "pointer",
-              transition: "all 0.15s ease"
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {viewMode === 'tabs' ? (
+        <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", width: "100%", overflowX: "auto", whiteSpace: "nowrap" }}>
+          {[
+            { id: "mapel", label: "📚 Mata Pelajaran" },
+            { id: "leger", label: "📊 Buku Leger Nilai" },
+            { id: "catatan", label: "📝 Catatan Guru Mapel" },
+            { id: "catatan_walikelas", label: "🧑‍🏫 Catatan Wali Kelas" },
+            { id: "kehadiran", label: "📅 Rekap Kehadiran" },
+            { id: "ekskul", label: "🏅 Ekstrakurikuler" },
+            { id: "ews", label: `🚨 Deteksi Kerawanan (${ewsData.highRisk.length + ewsData.mediumRisk.length})` },
+            { id: "perpaduan", label: "🌓 Perpaduan Semester" }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className="btn"
+              style={{
+                padding: "8px 16px",
+                fontSize: "0.85rem",
+                backgroundColor: activeTab === tab.id ? "var(--bg-tertiary)" : "transparent",
+                color: activeTab === tab.id ? "var(--text-primary)" : "var(--text-muted)",
+                border: activeTab === tab.id ? "1px solid var(--border-color)" : "1px solid transparent",
+                borderRadius: "var(--radius-sm)",
+                fontWeight: activeTab === tab.id ? "700" : "500",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                flexShrink: 0
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-      {/* Tab Content */}
+      {/* Back Button for Dashboard Mode */}
+      {viewMode === 'dashboard' && activeTab !== 'dashboard' && (
+        <div style={{ display: "flex", marginBottom: "8px" }}>
+          <button 
+            onClick={() => setActiveTab('dashboard')}
+            className="btn"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "8px 16px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", color: "var(--text-primary)", fontWeight: "600", borderRadius: "var(--radius-md)" }}
+          >
+            ← Kembali ke Menu Dasbor
+          </button>
+        </div>
+      )}
+
+      {/* Tab Content / Dashboard Cards */}
       {loading ? (
         <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
           <span className="spinner" style={{ width: "30px", height: "30px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+        </div>
+      ) : activeTab === "dashboard" ? (
+        <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+          {[
+            { id: "mapel", icon: "📚", title: "Mata Pelajaran", desc: "Pantau ketuntasan nilai per mapel" },
+            { id: "leger", icon: "📊", title: "Buku Leger Nilai", desc: "Rekapitulasi seluruh nilai akhir kelas" },
+            { id: "catatan", icon: "📝", title: "Catatan Guru Mapel", desc: "Umpan balik dari guru pengampu" },
+            { id: "catatan_walikelas", icon: "🧑‍🏫", title: "Catatan Wali Kelas", desc: "Isi pesan untuk cetak rapor siswa" },
+            { id: "kehadiran", icon: "📅", title: "Rekap Kehadiran", desc: "Pantau rekap absensi per siswa" },
+            { id: "ekskul", icon: "🏅", title: "Ekstrakurikuler", desc: "Input nilai dan catatan kegiatan ekskul" },
+            { id: "ews", icon: "🚨", title: "Deteksi Kerawanan", desc: "Sistem peringatan dini (Early Warning System)" },
+            { id: "perpaduan", icon: "🌓", title: "Perpaduan Semester", desc: "Komparasi nilai Ganjil & Genap" }
+          ].map(menu => (
+            <div 
+              key={menu.id}
+              onClick={() => setActiveTab(menu.id)}
+              className="glass-card"
+              style={{ padding: "24px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "16px", border: "1px solid var(--border-color)" }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.transform = "none"; }}
+            >
+              <div style={{ fontSize: "2.5rem", backgroundColor: "var(--bg-secondary)", width: "64px", height: "64px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {menu.icon}
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)", lineHeight: "1.2" }}>{menu.title}</h4>
+                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>{menu.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       ) : activeTab === "mapel" ? (
         <div>
