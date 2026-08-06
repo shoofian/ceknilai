@@ -195,15 +195,16 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
                       ➕ Tambah Nilai
                     </button>
                     {siswaEkskuls.length > 0 && (
-                      <div style={{ display: 'flex', gap: '4px', width: '100%', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', gap: '4px', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {siswaEkskuls.map(ne => (
                            <button 
                              key={`btn-hapus-${ne.id}`}
                              onClick={() => handleDelete(ne.id)}
                              className="btn btn-secondary" 
-                             style={{ padding: '4px 8px', fontSize: '0.75rem', borderColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)', width: '100%' }}
+                             title={`Hapus ${ne.master_ekskul?.nama_ekskul || 'Ekskul'}`}
+                             style={{ padding: '4px 8px', fontSize: '0.7rem', borderColor: 'rgba(239, 68, 68, 0.2)', color: 'var(--danger)' }}
                            >
-                             Hapus {ne.master_ekskul?.nama_ekskul || 'Ekskul'}
+                             ✖ Hapus
                            </button>
                         ))}
                       </div>
