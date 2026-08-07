@@ -2919,15 +2919,10 @@ export default function DetailKelas({ params: paramsPromise }) {
               />
             )}
 
-            {kelas.isNilaiAkhirGenerated ? (
-              <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>🚀 NILAI AKHIR PUBLIK</span>
-            ) : (
-              <span className="badge badge-warning" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>🔒 NILAI AKHIR DRAFT</span>
-            )}
           </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "12px", flexWrap: "wrap" }}>
-            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500", fontSize: "0.9rem" }}>
-              {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px", flexWrap: "wrap" }}>
+            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500", fontSize: "0.85rem" }}>
+              {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"})
             </p>
             <div style={{ position: "relative" }}>
               <button 
