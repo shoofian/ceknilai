@@ -4048,14 +4048,14 @@ export default function DetailKelas({ params: paramsPromise }) {
             <button 
               onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
               className={(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
-              style={{ padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", boxShadow: (!kelas?.siswa || kelas.siswa.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.siswa || kelas.siswa.length === 0) ? "pulse-soft 2s infinite" : "none" }}
+              style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", boxShadow: (!kelas?.siswa || kelas.siswa.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.siswa || kelas.siswa.length === 0) ? "pulse-soft 2s infinite" : "none" }}
             >
               + Data Siswa
             </button>
             <button 
               onClick={() => { handleOpenKolomModal(); }} 
               className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
-              style={{ padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
+              style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
               disabled={isLocked}
             >
               + Komponen Nilai
@@ -4063,7 +4063,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <button 
               onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
               className="btn btn-secondary" 
-              style={{ padding: "6px 10px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", flexShrink: 0 }}
+              style={{ width: "auto", padding: "6px 10px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", flexShrink: 0 }}
               title="Cetak & Ekspor"
             >
               🖨️
@@ -4073,7 +4073,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
                 className="btn btn-secondary"
-                style={{ padding: "6px 8px", fontSize: "0.9rem", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ width: "auto", padding: "6px 8px", fontSize: "0.9rem", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
                 title="Lainnya"
               >
                 ⋮
