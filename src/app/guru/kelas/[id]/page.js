@@ -230,6 +230,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
   const [panduanActiveTab, setPanduanActiveTab] = useState("komponen"); // komponen, kkm, siswa, ekspor, erapor, katrol
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
 
   // States untuk Hub Modal Operasi Data
@@ -2841,8 +2842,71 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* Main Header Card */}
       <div className="glass-card mobile-compact" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
         <div style={{ flex: "1 1 min-content" }}>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", lineHeight: "1.2" }}>
-            {kelas.nama}
+          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", lineHeight: "1.2", position: "relative" }}>
+            <div className="class-switcher-dropdown" style={{ position: "relative" }}>
+              <span 
+                style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", padding: "4px 8px", margin: "-4px -8px", borderRadius: "var(--radius-sm)", transition: "background 0.2s" }}
+                onClick={() => setSwitcherOpen(!switcherOpen)}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                title="Pindah Kelas Lain"
+              >
+                {kelas.nama} <span style={{ fontSize: "1rem", color: "var(--text-muted)" }}>▼</span>
+              </span>
+              
+              {switcherOpen && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  marginTop: "8px",
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-md)",
+                  boxShadow: "var(--shadow-lg)",
+                  zIndex: 100,
+                  width: "max-content",
+                  minWidth: "220px",
+                  maxHeight: "350px",
+                  overflowY: "auto"
+                }}>
+                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    🚀 Pindah Kelas
+                  </div>
+                  {availableClasses.length > 0 ? availableClasses.map(c => (
+                    <div 
+                      key={c.id}
+                      onClick={() => window.location.href = `/guru/kelas/${c.id}`}
+                      style={{
+                        padding: "12px 16px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid var(--border-color)",
+                        transition: "background 0.2s",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "2px"
+                      }}
+                      onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                      onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                    >
+                      <div style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--text-primary)" }}>{c.nama}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500" }}>{c.mataPelajaran}</div>
+                    </div>
+                  )) : (
+                    <div style={{ padding: "16px", fontSize: "0.85rem", color: "var(--text-muted)", textAlign: "center" }}>Tidak ada kelas lain</div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Click away listener overlay */}
+            {switcherOpen && (
+              <div 
+                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+                onClick={() => setSwitcherOpen(false)}
+              />
+            )}
+
             {kelas.isNilaiAkhirGenerated ? (
               <span className="badge badge-success" style={{ fontSize: "0.75rem", padding: "4px 8px" }}>🚀 NILAI AKHIR PUBLIK</span>
             ) : (
