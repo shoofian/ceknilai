@@ -2918,16 +2918,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                 onClick={() => setSwitcherOpen(false)}
               />
             )}
-
-          </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px", flexWrap: "wrap" }}>
-            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500", fontSize: "0.85rem" }}>
-              {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"})
-            </p>
-            <div style={{ position: "relative" }}>
+            
+            <div style={{ position: "relative", marginLeft: "4px" }}>
               <button 
                 onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
-                style={{ padding: "6px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", cursor: "pointer", transition: "background 0.2s" }}
+                style={{ padding: "4px 8px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", cursor: "pointer", transition: "background 0.2s" }}
                 onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"}
                 title="Bagikan Kelas ke Siswa"
@@ -2990,6 +2985,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 onClick={() => setShareDropdownOpen(false)}
               />
             )}
+
+          </h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "8px", flexWrap: "wrap" }}>
+            <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500", fontSize: "0.85rem" }}>
+              {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"})
+            </p>
           </div>
         </div>
 
