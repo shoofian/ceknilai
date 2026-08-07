@@ -229,15 +229,15 @@ export default function GuruLayout({ children }) {
                 flexDirection: "column",
                 overflow: "hidden"
               }}>
-                <Link href="/guru/profil" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👤 Edit Profil
-                </Link>
-                <Link href="/guru/masa-aktif" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                </div>
+                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👑 Masa Aktif
-                </Link>
-                <Link href="/guru/hadiah" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                </div>
+                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/hadiah'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                   🎁 Referral
-                </Link>
+                </div>
               </div>
             )}
           </div>
@@ -466,15 +466,15 @@ export default function GuruLayout({ children }) {
                   flexDirection: "column",
                   overflow: "hidden"
                 }}>
-                  <Link href="/guru/profil" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👤 Edit Profil
-                  </Link>
-                  <Link href="/guru/masa-aktif" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                  </div>
+                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👑 Masa Aktif
-                  </Link>
-                  <Link href="/guru/hadiah" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                  </div>
+                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/hadiah'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     🎁 Referral
-                  </Link>
+                  </div>
                 </div>
               )}
             </div>
