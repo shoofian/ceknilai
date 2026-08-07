@@ -13,6 +13,7 @@ export default function GuruLayout({ children }) {
   const [isDark, setIsDark] = useState(false);
   const [isPopup, setIsPopup] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [kelasViewMode, setKelasViewMode] = useState('tabs');
   const router = useRouter();
   const pathname = usePathname();
 
@@ -51,10 +52,19 @@ export default function GuruLayout({ children }) {
     }
 
     if (typeof window !== "undefined") {
+      setKelasViewMode(localStorage.getItem("ceknilai_view_mode") || "tabs");
       const params = new URLSearchParams(window.location.search);
       setIsPopup(params.get("popup") === "true");
     }
   }, [pathname]);
+
+  const toggleKelasViewMode = () => {
+    const nextMode = kelasViewMode === 'tabs' ? 'dashboard' : 'tabs';
+    setKelasViewMode(nextMode);
+    localStorage.setItem('ceknilai_view_mode', nextMode);
+    window.dispatchEvent(new Event('ceknilai_view_mode_changed'));
+    setProfileDropdownOpen(false);
+  };
 
   // Toggle dark mode dan simpan ke localStorage
   const toggleDark = () => {
@@ -231,6 +241,9 @@ export default function GuruLayout({ children }) {
               }}>
                 <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👤 Edit Profil
+                </div>
+                <div onClick={toggleKelasViewMode} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  {kelasViewMode === 'tabs' ? '🗂️ Dasbor Kelas' : '📑 Tab Kelas'}
                 </div>
                 <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👑 Masa Aktif
@@ -468,6 +481,9 @@ export default function GuruLayout({ children }) {
                 }}>
                   <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👤 Edit Profil
+                  </div>
+                  <div onClick={toggleKelasViewMode} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                    {kelasViewMode === 'tabs' ? '🗂️ Dasbor Kelas' : '📑 Tab Kelas'}
                   </div>
                   <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👑 Masa Aktif

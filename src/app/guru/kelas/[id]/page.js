@@ -519,26 +519,35 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // Load activeTab and viewMode from sessionStorage/localStorage on mount
   useEffect(() => {
-    if (typeof window !== "undefined" && classId) {
-      const savedTab = sessionStorage.getItem(`activeTab_${classId}`);
-      const savedViewMode = localStorage.getItem('ceknilai_view_mode') || 'tabs';
-      
-      setViewMode(savedViewMode);
-      
-      if (savedViewMode === 'tabs') {
-        if (!savedTab || savedTab === 'dashboard') {
-          setActiveTab('nilai');
-        } else {
-          setActiveTab(savedTab);
-        }
-      } else if (savedViewMode === 'dashboard') {
-        if (!savedTab) {
-          setActiveTab('dashboard');
-        } else {
-          setActiveTab(savedTab);
+    const loadSettings = () => {
+      if (typeof window !== "undefined" && classId) {
+        const savedTab = sessionStorage.getItem(`activeTab_${classId}`);
+        const savedViewMode = localStorage.getItem('ceknilai_view_mode') || 'tabs';
+        
+        setViewMode(savedViewMode);
+        
+        if (savedViewMode === 'tabs') {
+          if (!savedTab || savedTab === 'dashboard') {
+            setActiveTab('nilai');
+          } else {
+            setActiveTab(savedTab);
+          }
+        } else if (savedViewMode === 'dashboard') {
+          if (!savedTab) {
+            setActiveTab('dashboard');
+          } else {
+            setActiveTab(savedTab);
+          }
         }
       }
-    }
+    };
+
+    loadSettings();
+    window.addEventListener('ceknilai_view_mode_changed', loadSettings);
+    
+    return () => {
+      window.removeEventListener('ceknilai_view_mode_changed', loadSettings);
+    };
   }, [classId]);
 
   // Persist activeTab on refresh
@@ -2788,54 +2797,12 @@ export default function DetailKelas({ params: paramsPromise }) {
     <>
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "40px" }}>
       
-      {/* Breadcrumbs & View Mode Toggle */}
+      {/* Breadcrumbs */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div style={{ display: "flex", gap: "8px", fontSize: "0.85rem", color: "var(--text-muted)", fontWeight: "500" }}>
           <Link href="/guru/kelas">📚 Daftar Kelas</Link>
           <span>/</span>
           <span style={{ color: "var(--text-primary)" }}>{kelas.nama}</span>
-        </div>
-        
-        {/* View Mode Toggle */}
-        <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
-          <button
-            onClick={() => handleViewModeChange('dashboard')}
-            style={{
-              padding: "6px 12px",
-              fontSize: "0.8rem",
-              borderRadius: "var(--radius-xs)",
-              border: "none",
-              fontWeight: viewMode === 'dashboard' ? "700" : "500",
-              backgroundColor: viewMode === 'dashboard' ? "var(--bg-primary)" : "transparent",
-              color: viewMode === 'dashboard' ? "var(--primary)" : "var(--text-muted)",
-              boxShadow: viewMode === 'dashboard' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            🗂️ Dasbor
-          </button>
-          <button
-            onClick={() => handleViewModeChange('tabs')}
-            style={{
-              padding: "6px 12px",
-              fontSize: "0.8rem",
-              borderRadius: "var(--radius-xs)",
-              border: "none",
-              fontWeight: viewMode === 'tabs' ? "700" : "500",
-              backgroundColor: viewMode === 'tabs' ? "var(--bg-primary)" : "transparent",
-              color: viewMode === 'tabs' ? "var(--primary)" : "var(--text-muted)",
-              boxShadow: viewMode === 'tabs' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            📑 Tab
-          </button>
         </div>
       </div>
 
