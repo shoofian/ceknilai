@@ -207,9 +207,6 @@ export default function GuruLayout({ children }) {
           >
             {isDark ? "☀️" : "🌙"}
           </button>
-          <span className="badge badge-primary" style={{ fontSize: "0.75rem" }}>
-            {guru?.nama?.split(",")[0] || "Guru"}
-          </span>
         </div>
       </div>
 
