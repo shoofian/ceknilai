@@ -240,7 +240,13 @@ export default function GuruLayout({ children }) {
                 <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👤 Edit Profil
                 </div>
-                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  👑 Masa Aktif
+                </div>
+                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/hadiah'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  🎁 Referral
+                </div>
+                <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tampilan Kelas</span>
                   <div style={{ display: "flex", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: "4px", gap: "4px", border: "1px solid var(--border-color)" }}>
                     <button 
@@ -256,12 +262,6 @@ export default function GuruLayout({ children }) {
                       📑 Tab
                     </button>
                   </div>
-                </div>
-                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
-                  👑 Masa Aktif
-                </div>
-                <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/hadiah'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
-                  🎁 Referral
                 </div>
               </div>
             )}
@@ -494,7 +494,13 @@ export default function GuruLayout({ children }) {
                   <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👤 Edit Profil
                   </div>
-                  <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                    👑 Masa Aktif
+                  </div>
+                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/hadiah'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                    🎁 Referral
+                  </div>
+                  <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
                     <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tampilan Kelas</span>
                     <div style={{ display: "flex", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: "4px", gap: "4px", border: "1px solid var(--border-color)" }}>
                       <button 
@@ -510,12 +516,6 @@ export default function GuruLayout({ children }) {
                         📑 Tab
                       </button>
                     </div>
-                  </div>
-                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
-                    👑 Masa Aktif
-                  </div>
-                  <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/hadiah'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
-                    🎁 Referral
                   </div>
                 </div>
               )}
