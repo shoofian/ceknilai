@@ -4033,10 +4033,6 @@ export default function DetailKelas({ params: paramsPromise }) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>📊 Buku Nilai Kelas</h4>
-              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.7rem", color: "var(--success)", fontWeight: "600", backgroundColor: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: "12px" }}>
-                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--success)" }}></span>
-                Tersimpan otomatis
-              </div>
             </div>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
               Ketik nilai pada tabel. Terkunci otomatis saat kursor berpindah.
