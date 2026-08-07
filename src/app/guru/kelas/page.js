@@ -809,28 +809,11 @@ export default function KelolaKelas() {
       `}} />
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
-      {/* Header section with add button */}
+      {/* Header section */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
         <div className="page-title-section" style={{ marginBottom: 0 }}>
           <h1 className="page-title">Manajemen Kelas</h1>
           <p className="page-subtitle">Buat dan kelola kelas aktif untuk tahun ajaran berjalan.</p>
-        </div>
-        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
-          <Link 
-            href="/guru/arsip" 
-            className="btn btn-outline"
-            style={{ display: "flex", alignItems: "center", gap: "6px", textDecoration: "none", fontSize: "0.9rem", padding: "10px 16px" }}
-          >
-            📁 Arsip Kelas
-          </Link>
-          <button 
-            onClick={handleOpenAdd} 
-            className="btn btn-primary"
-            style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (kelas.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (kelas.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
-            disabled={isLocked}
-          >
-            ➕ Tambah Kelas Baru
-          </button>
         </div>
       </div>
 
@@ -840,21 +823,40 @@ export default function KelolaKelas() {
         </div>
       ) : kelas.length > 0 ? (
         <>
-          {/* Filter Bar */}
-          <div className="glass-card" style={{ display: "flex", gap: "16px", flexWrap: "wrap", padding: "16px", alignItems: "center" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan</label>
+          {/* Filter Bar & Actions */}
+          <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", padding: "12px 16px", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan:</label>
               <select
                 className="form-input"
                 value={filterTingkatan}
                 onChange={(e) => setFilterTingkatan(e.target.value)}
-                style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "130px", appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                style={{ padding: "4px 10px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "120px", appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
               >
                 <option value="Semua" style={{ backgroundColor: "var(--bg-secondary)" }}>Semua Tingkatan</option>
                 {TINGKATAN_OPTIONS.map(t => (
                   <option key={t} value={String(t)} style={{ backgroundColor: "var(--bg-secondary)" }}>{t}</option>
                 ))}
               </select>
+            </div>
+            
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <Link 
+                href="/guru/arsip" 
+                className="btn btn-outline"
+                style={{ padding: "6px 12px", fontSize: "0.8rem", color: "var(--text-secondary)", borderColor: "var(--border-color)", borderStyle: "dashed" }}
+                title="Lihat Kelas yang Diarsipkan"
+              >
+                📁 Arsip
+              </Link>
+              <button 
+                onClick={handleOpenAdd} 
+                className="btn btn-primary"
+                style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", padding: "6px 12px", fontSize: "0.85rem" }}
+                disabled={isLocked}
+              >
+                ➕ Tambah Kelas
+              </button>
             </div>
           </div>
 
@@ -980,6 +982,12 @@ export default function KelolaKelas() {
               <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "6px" }}>Mulai Disini</span>
             )}
           </button>
+          
+          <div style={{ marginTop: "24px" }}>
+            <Link href="/guru/arsip" style={{ fontSize: "0.85rem", color: "var(--text-muted)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <span>📁</span> Buka Arsip Kelas
+            </Link>
+          </div>
         </div>
       )}
       </div>
