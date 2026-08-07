@@ -159,7 +159,7 @@ export default function GuruLayout({ children }) {
       {/* Click away listener overlay for Profile Dropdown */}
       {profileDropdownOpen && (
         <div 
-          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 80 }}
           onClick={() => setProfileDropdownOpen(false)}
         />
       )}
