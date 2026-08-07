@@ -4133,7 +4133,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
-                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 23 }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
                         <input
                           type="checkbox"
                           checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -4141,7 +4141,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
                         />
                       </th>
-                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
                         No
                       </th>
                       <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
@@ -4228,7 +4228,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr style={{ backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                        <td className="mobile-hide" style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                        <td style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
                           <input
                             type="checkbox"
                             checked={selectedNisns.includes(student.nisn)}
@@ -4236,7 +4236,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             style={{ cursor: "pointer", width: "16px", height: "16px" }}
                           />
                         </td>
-                        <td className="mobile-hide" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                        <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
                           {idx + 1}
                         </td>
                         <td className="mobile-hide" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
