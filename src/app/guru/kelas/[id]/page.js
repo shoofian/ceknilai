@@ -2884,7 +2884,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
       {/* Main Header Card */}
-      <div className="glass-card mobile-compact" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
+      <div className="glass-card mobile-compact" style={{ position: "relative", zIndex: 50, display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px", borderLeft: "5px solid var(--primary)" }}>
         <div style={{ flex: "1 1 min-content" }}>
           <h2 style={{ fontSize: "1.8rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", lineHeight: "1.2", position: "relative" }}>
             <div className="class-switcher-dropdown" style={{ position: "relative" }}>
@@ -2911,7 +2911,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   zIndex: 100,
                   width: "max-content",
                   minWidth: "220px",
-                  maxHeight: "350px",
+                  maxHeight: "50vh",
                   overflowY: "auto"
                 }}>
                   <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
