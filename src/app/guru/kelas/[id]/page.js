@@ -571,6 +571,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
+  const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
 
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
@@ -2928,19 +2929,72 @@ export default function DetailKelas({ params: paramsPromise }) {
             <p style={{ color: "var(--text-secondary)", margin: 0, fontWeight: "500", fontSize: "0.9rem" }}>
               {kelas.mataPelajaran} &bull; {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
             </p>
-            <div style={{ padding: "4px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", fontWeight: "600" }}>
-              <span>Kode Kelas: <span style={{ fontFamily: "monospace", color: "var(--primary)" }}>{kelas.id}</span></span>
+            <div style={{ position: "relative" }}>
               <button 
-                onClick={() => {
-                  navigator.clipboard.writeText(kelas.id);
-                  alert("Kode Kelas disalin!");
-                }}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem", padding: "2px" }}
-                title="Salin Kode Kelas"
+                onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
+                style={{ padding: "4px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", transition: "background 0.2s" }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"}
+                title="Bagikan Kelas ke Siswa"
               >
-                📋
+                ↗️ Bagikan Kelas
               </button>
+              
+              {shareDropdownOpen && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  marginTop: "8px",
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-md)",
+                  boxShadow: "var(--shadow-lg)",
+                  zIndex: 100,
+                  width: "max-content",
+                  minWidth: "200px",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden"
+                }}>
+                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Kode: <span style={{ fontFamily: "monospace", color: "var(--primary)" }}>{kelas.id}</span>
+                  </div>
+                  <div 
+                    onClick={() => {
+                      navigator.clipboard.writeText(kelas.id);
+                      alert("Kode Kelas disalin!");
+                      setShareDropdownOpen(false);
+                    }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border-color)" }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    📋 Salin Kode Kelas
+                  </div>
+                  <div 
+                    onClick={() => {
+                      const shareLink = `${window.location.origin}/?kelas=${kelas.id}`;
+                      navigator.clipboard.writeText(shareLink);
+                      alert("Tautan Kelas disalin!");
+                      setShareDropdownOpen(false);
+                    }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    🔗 Salin Tautan (Link)
+                  </div>
+                </div>
+              )}
             </div>
+
+            {shareDropdownOpen && (
+              <div 
+                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+                onClick={() => setShareDropdownOpen(false)}
+              />
+            )}
           </div>
         </div>
 
