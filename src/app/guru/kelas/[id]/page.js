@@ -4083,45 +4083,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </button>
           </div>
 
-          {!panelKontrolExpanded && (
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "4px",
-              paddingTop: "8px",
-              borderTop: "1px dashed var(--border-color)",
-              width: "100%"
-            }}>
-              <button 
-                onClick={() => { handleOpenKolomModal(); }} 
-                className="btn btn-outline" 
-                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
-              >
-                ⚙️ Aspek
-              </button>
-              <button 
-                onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
-                className="btn btn-secondary" 
-                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
-              >
-                📊 Siswa
-              </button>
-              <button 
-                onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
-                className="btn btn-secondary" 
-                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}
-              >
-                🖨️ Cetak
-              </button>
-              <button 
-                onClick={() => setAdvancedToolsModalOpen(true)}
-                className="btn btn-secondary" 
-                style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", backgroundColor: "rgba(139, 92, 246, 0.12)", color: "#7c3aed", borderColor: "rgba(139, 92, 246, 0.3)", fontWeight: "700", whiteSpace: "nowrap", justifyContent: "center" }}
-              >
-                🧪 Lanjutan
-              </button>
-            </div>
-          )}
+
 
           {panelKontrolExpanded && (
             <>
