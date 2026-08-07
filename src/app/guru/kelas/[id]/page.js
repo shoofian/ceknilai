@@ -201,8 +201,6 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [isSavingBobot, setIsSavingBobot] = useState(false);
 
   // States untuk Presensi
-  const [presensiModalOpen, setPresensiModalOpen] = useState(false);
-  const [isSavingPresensi, setIsSavingPresensi] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrCardModalOpen, setQrCardModalOpen] = useState(false);
   const [unlockedPertemuanIds, setUnlockedPertemuanIds] = useState([]);
@@ -213,8 +211,6 @@ export default function DetailKelas({ params: paramsPromise }) {
         : [...prev, pertemuanId]
     );
   };
-  // temporary settings while configuring
-  const [presensiConfigTemp, setPresensiConfigTemp] = useState({ digunakan: false, bobot: 0 });
 
   // States untuk Pertemuan
   const [pertemuanModalOpen, setPertemuanModalOpen] = useState(false);
@@ -586,7 +582,37 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSortConfig({ key, direction });
   };
 
+  const getStudentAttendancePercentage = (student) => {
+    const pertemuanList = kelas?.skemaPenilaian?.pertemuan || [];
+    if (pertemuanList.length === 0) return null;
+    
+    let totalHadir = 0;
+    let totalPertemuanDiisi = 0;
+    
+    pertemuanList.forEach(p => {
+      const val = student.nilai[`_presensi_${p.id}`];
+      if (val) {
+        totalPertemuanDiisi++;
+        if (val === 'H') {
+          totalHadir++;
+        }
+      }
+    });
+    
+    if (totalPertemuanDiisi === 0) return null;
+    return (totalHadir / totalPertemuanDiisi) * 100;
+  };
+
   const getColScore = (student, col, tempScores = null) => {
+    if (col.isPresensi) {
+      const attPercent = getStudentAttendancePercentage(student);
+      return {
+        score: attPercent,
+        isFilled: attPercent !== null,
+        isAllFilled: attPercent !== null
+      };
+    }
+
     if (col.isGroup && col.subKolom) {
       let subTotal = 0;
       let subFilledCount = 0;
@@ -739,8 +765,6 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
       });
       
-      // Hitung Presensi jika digunakan
-      const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
       const pertemuanList = skema.pertemuan || [];
       let complete = filledCount === kelas.kolomNilai.length;
       
@@ -751,18 +775,6 @@ export default function DetailKelas({ params: paramsPromise }) {
           attSummary[val]++;
         }
       });
-
-      if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
-        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
-        
-        // Poin kehadiran rata-rata (hanya dihitung berdasarkan jumlah pertemuan yg sudah diisi)
-        const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
-        total += attAvg * (presensiConfig.bobot / 100);
-        
-        // Jika ada pertemuan, anggap "complete" jika setidaknya semua nilai akademik terisi
-        // (atau bisa juga mewajibkan semua presensi terisi, tapi ini lebih fleksibel)
-      }
       
       // Tambahkan Nilai Katrol & Bonus jika ada
       let totalPoinBonus = 0;
@@ -1999,6 +2011,20 @@ export default function DetailKelas({ params: paramsPromise }) {
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
         return { ...col, nama: value };
+      }
+      return col;
+    });
+    setKelas({ ...kelas, kolomNilai: updatedKolom });
+  };
+
+  const handleIsPresensiChange = (colId, value) => {
+    const updatedKolom = kelas.kolomNilai.map(col => {
+      if (col.id === colId) {
+        return { ...col, isPresensi: value };
+      }
+      // Pastikan hanya 1 komponen yang aktif presensinya
+      if (value === true) {
+        return { ...col, isPresensi: false };
       }
       return col;
     });
@@ -3557,17 +3583,11 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateColumns: "repeat(2, 1fr)",
               gap: "4px",
               width: "100%",
               marginTop: "4px"
             }}>
-              <button onClick={() => {
-                setPresensiConfigTemp(kelas.skemaPenilaian?.presensi || { digunakan: false, bobot: 0 });
-                setPresensiModalOpen(true);
-              }} className="btn btn-outline" style={{ fontSize: "0.74rem", padding: "6px 2px", borderRadius: "6px", whiteSpace: "nowrap", justifyContent: "center", fontWeight: "700" }}>
-                ⚙️ Atur
-              </button>
               <button 
                 onClick={() => {
                   if (!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) {
@@ -4264,52 +4284,77 @@ export default function DetailKelas({ params: paramsPromise }) {
                             return (
                               <td key={sub.id} style={{ textAlign: "center", position: "relative" }}>
                                 <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
-                                  <input
-                                    id={`grade-${student.nisn}-${sub.id}`}
-                                    type="text"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[sub.id] !== null && student.nilai[sub.id] !== undefined ? student.nilai[sub.id] : "")}
-                                    onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                    onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
-                                    onWheel={(e) => e.target.blur()}
-                                    onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        handleGradeBlur(student.nisn, sub.id, e.target.value);
-                                        const currentRowIdx = sortedStudents.findIndex(s => s.nisn === student.nisn);
-                                        const nextStudent = sortedStudents[currentRowIdx + 1];
-                                        if (nextStudent) {
-                                          const nextInput = document.getElementById(`grade-${nextStudent.nisn}-${sub.id}`);
-                                          if (nextInput) {
-                                            nextInput.focus();
-                                            nextInput.select();
+                                  {sub.isPresensi ? (
+                                    <div 
+                                      className="form-input" 
+                                      style={{ 
+                                        width: "100%", 
+                                        padding: "6px 8px", 
+                                        fontSize: "0.85rem",
+                                        textAlign: "center",
+                                        backgroundColor: "rgba(16, 185, 129, 0.05)", 
+                                        color: "var(--success)", 
+                                        fontWeight: "800",
+                                        border: "1px dashed rgba(16, 185, 129, 0.4)",
+                                        borderRadius: "var(--radius-md)",
+                                        cursor: "not-allowed",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        minHeight: "33px"
+                                      }}
+                                      title="Otomatis terisi dari persentase kehadiran"
+                                    >
+                                      {getColScore(student, sub, null).score !== null ? Math.round(getColScore(student, sub, null).score) : "-"}
+                                    </div>
+                                  ) : (
+                                    <input
+                                      id={`grade-${student.nisn}-${sub.id}`}
+                                      type="text"
+                                      inputMode="numeric"
+                                      pattern="[0-9]*"
+                                      value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[sub.id] !== null && student.nilai[sub.id] !== undefined ? student.nilai[sub.id] : "")}
+                                      onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                      onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
+                                      onWheel={(e) => e.target.blur()}
+                                      onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                          e.preventDefault();
+                                          handleGradeBlur(student.nisn, sub.id, e.target.value);
+                                          const currentRowIdx = sortedStudents.findIndex(s => s.nisn === student.nisn);
+                                          const nextStudent = sortedStudents[currentRowIdx + 1];
+                                          if (nextStudent) {
+                                            const nextInput = document.getElementById(`grade-${nextStudent.nisn}-${sub.id}`);
+                                            if (nextInput) {
+                                              nextInput.focus();
+                                              nextInput.select();
+                                            }
                                           }
                                         }
-                                      }
-                                    }}
-                                    disabled={kelas.archived || isLocked}
-                                    className="form-input"
-                                    style={{
-                                      padding: "6px 8px",
-                                      fontSize: "0.85rem",
-                                      textAlign: "center",
-                                      border: currentStatus === "saved" 
-                                        ? "1px solid var(--success)" 
-                                        : currentStatus === "saving"
-                                          ? "1px solid var(--primary)" 
-                                          : currentStatus === "failed"
-                                            ? "1px solid var(--danger)"
-                                            : "1px solid var(--border-color)",
-                                      backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
-                                      transition: "all 0.15s ease",
-                                      cursor: (kelas.archived || isLocked) ? "not-allowed" : "text"
-                                    }}
-                                    placeholder="-"
-                                    min={0}
-                                    max={100}
-                                  />
+                                      }}
+                                      disabled={kelas.archived || isLocked}
+                                      className="form-input"
+                                      style={{
+                                        padding: "6px 8px",
+                                        fontSize: "0.85rem",
+                                        textAlign: "center",
+                                        border: currentStatus === "saved" 
+                                          ? "1px solid var(--success)" 
+                                          : currentStatus === "saving"
+                                            ? "1px solid var(--primary)" 
+                                            : currentStatus === "failed"
+                                              ? "1px solid var(--danger)"
+                                              : "1px solid var(--border-color)",
+                                        backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
+                                        transition: "all 0.15s ease",
+                                        cursor: (kelas.archived || isLocked) ? "not-allowed" : "text"
+                                      }}
+                                      placeholder="-"
+                                      min={0}
+                                      max={100}
+                                    />
+                                  )}
 
                                   {/* Small status dots for auto-saving indicator */}
                                   {currentStatus === "saving" && (
@@ -5726,86 +5771,6 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* Presensi Settings Modal */}
-      {presensiModalOpen && (
-        <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", backdropFilter: "blur(4px)" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "500px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: "800" }}>⚙️ Pengaturan Presensi</h3>
-              <button onClick={() => setPresensiModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
-            </div>
-            
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", backgroundColor: "var(--bg-tertiary)", padding: "16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                <input 
-                  type="checkbox" 
-                  id="gunakanPresensi"
-                  checked={presensiConfigTemp.digunakan}
-                  onChange={(e) => setPresensiConfigTemp({...presensiConfigTemp, digunakan: e.target.checked})}
-                  style={{ width: "20px", height: "20px", marginTop: "2px", accentColor: "var(--primary)" }}
-                />
-                <div>
-                  <label htmlFor="gunakanPresensi" style={{ fontWeight: "700", fontSize: "1rem", cursor: "pointer", color: "var(--text-primary)" }}>Gunakan Presensi sebagai Komponen Nilai Akhir</label>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
-                    Jika diaktifkan, rata-rata poin kehadiran akan menyumbang persentase pada Nilai Akhir siswa.
-                  </p>
-                </div>
-              </div>
-
-              {presensiConfigTemp.digunakan && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  <label style={{ fontSize: "0.9rem", fontWeight: "700", color: "var(--text-secondary)" }}>Bobot Presensi (%)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={presensiConfigTemp.bobot || ""}
-                    onChange={(e) => setPresensiConfigTemp({...presensiConfigTemp, bobot: Number(e.target.value)})}
-                    className="input-field"
-                    placeholder="Contoh: 10"
-                  />
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Saran: Jika bobot presensi 10%, pastikan sisa 90% dibagi ke komponen akademik lainnya agar total pas 100%.</span>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end", marginTop: "8px" }}>
-              <button onClick={() => setPresensiModalOpen(false)} className="btn btn-secondary">Batal</button>
-              <button 
-                onClick={async () => {
-                  setIsSavingPresensi(true);
-                  const updatedSkema = { ...kelas.skemaPenilaian, presensi: presensiConfigTemp };
-                  try {
-                    const response = await fetch(`/api/kelas/${kelas.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
-                    if (response.ok) {
-                      setKelas({ ...kelas, skemaPenilaian: updatedSkema });
-                      setPresensiModalOpen(false);
-                    } else {
-                      alert("Gagal menyimpan pengaturan presensi.");
-                    }
-                  } catch (e) {
-                    console.error(e);
-                    alert("Terjadi kesalahan.");
-                  } finally {
-                    setIsSavingPresensi(false);
-                  }
-                }} 
-                className="btn btn-primary"
-                disabled={isSavingPresensi || (presensiConfigTemp.digunakan && (!presensiConfigTemp.bobot || presensiConfigTemp.bobot <= 0))}
-              >
-                {isSavingPresensi ? (
-                  <>
-                    <span className="btn-spinner" />
-                    Menyimpan...
-                  </>
-                ) : (
-                  "Simpan Pengaturan"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tambah/Edit Pertemuan Modal */}
       {pertemuanModalOpen && (
@@ -7252,6 +7217,34 @@ export default function DetailKelas({ params: paramsPromise }) {
                           </div>
                         </div>
                       </div>
+
+                      {/* Integrasi Presensi (Hanya jika bukan grup) */}
+                      {!activeAspect.isGroup && (
+                        <div className="form-group" style={{ marginTop: "12px", display: "flex", alignItems: "flex-start", gap: "10px", backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                          <input 
+                            type="checkbox"
+                            checked={activeAspect.isPresensi || false}
+                            onChange={(e) => {
+                              if (isNew) {
+                                // If turning on, we might want to turn off others, but for new it's fine since it's just one array
+                                handleNewAspectChange(activeAspect.id, 'isPresensi', e.target.checked);
+                              } else {
+                                handleIsPresensiChange(activeAspect.id, e.target.checked);
+                              }
+                            }}
+                            disabled={!activeAspect.isPresensi && [...(kelas.kolomNilai || []), ...newAspects].some(c => c.isPresensi && c.id !== activeAspect.id)}
+                            style={{ marginTop: "4px", accentColor: "var(--primary)", width: "16px", height: "16px", cursor: "pointer" }}
+                          />
+                          <div>
+                            <label style={{ fontSize: "0.9rem", fontWeight: "700", cursor: "pointer", color: "var(--text-primary)" }}>
+                              Integrasi Otomatis dengan Presensi
+                            </label>
+                            <p style={{ fontSize: "0.75rem", margin: "2px 0 0 0", color: "var(--text-muted)", lineHeight: 1.4 }}>
+                              Jika diaktifkan, kolom ini akan otomatis terisi dengan persentase kehadiran. Hanya 1 komponen yang bisa diaktifkan.
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Visibility & DB Info Row */}
                       <div className="aspect-visibility-row" style={{ marginTop: "12px" }}>
