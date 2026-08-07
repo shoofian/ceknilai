@@ -58,12 +58,10 @@ export default function GuruLayout({ children }) {
     }
   }, [pathname]);
 
-  const toggleKelasViewMode = () => {
-    const nextMode = kelasViewMode === 'tabs' ? 'dashboard' : 'tabs';
-    setKelasViewMode(nextMode);
-    localStorage.setItem('ceknilai_view_mode', nextMode);
+  const handleSetViewMode = (mode) => {
+    setKelasViewMode(mode);
+    localStorage.setItem('ceknilai_view_mode', mode);
     window.dispatchEvent(new Event('ceknilai_view_mode_changed'));
-    setProfileDropdownOpen(false);
   };
 
   // Toggle dark mode dan simpan ke localStorage
@@ -242,8 +240,22 @@ export default function GuruLayout({ children }) {
                 <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👤 Edit Profil
                 </div>
-                <div onClick={toggleKelasViewMode} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
-                  {kelasViewMode === 'tabs' ? '🗂️ Dasbor Kelas' : '📑 Tab Kelas'}
+                <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tampilan Kelas</span>
+                  <div style={{ display: "flex", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: "4px", gap: "4px", border: "1px solid var(--border-color)" }}>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleSetViewMode('dashboard'); }}
+                      style={{ flex: 1, padding: "6px", fontSize: "0.8rem", borderRadius: "var(--radius-xs)", border: "none", backgroundColor: kelasViewMode === 'dashboard' ? 'var(--bg-primary)' : 'transparent', color: kelasViewMode === 'dashboard' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: kelasViewMode === 'dashboard' ? '700' : '500', cursor: "pointer", boxShadow: kelasViewMode === 'dashboard' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: "all 0.2s" }}
+                    >
+                      🗂️ Dasbor
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleSetViewMode('tabs'); }}
+                      style={{ flex: 1, padding: "6px", fontSize: "0.8rem", borderRadius: "var(--radius-xs)", border: "none", backgroundColor: kelasViewMode === 'tabs' ? 'var(--bg-primary)' : 'transparent', color: kelasViewMode === 'tabs' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: kelasViewMode === 'tabs' ? '700' : '500', cursor: "pointer", boxShadow: kelasViewMode === 'tabs' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: "all 0.2s" }}
+                    >
+                      📑 Tab
+                    </button>
+                  </div>
                 </div>
                 <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
                   👑 Masa Aktif
@@ -482,8 +494,22 @@ export default function GuruLayout({ children }) {
                   <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/profil'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👤 Edit Profil
                   </div>
-                  <div onClick={toggleKelasViewMode} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
-                    {kelasViewMode === 'tabs' ? '🗂️ Dasbor Kelas' : '📑 Tab Kelas'}
+                  <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>Tampilan Kelas</span>
+                    <div style={{ display: "flex", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", padding: "4px", gap: "4px", border: "1px solid var(--border-color)" }}>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleSetViewMode('dashboard'); }}
+                        style={{ flex: 1, padding: "6px", fontSize: "0.8rem", borderRadius: "var(--radius-xs)", border: "none", backgroundColor: kelasViewMode === 'dashboard' ? 'var(--bg-primary)' : 'transparent', color: kelasViewMode === 'dashboard' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: kelasViewMode === 'dashboard' ? '700' : '500', cursor: "pointer", boxShadow: kelasViewMode === 'dashboard' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: "all 0.2s" }}
+                      >
+                        🗂️ Dasbor
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleSetViewMode('tabs'); }}
+                        style={{ flex: 1, padding: "6px", fontSize: "0.8rem", borderRadius: "var(--radius-xs)", border: "none", backgroundColor: kelasViewMode === 'tabs' ? 'var(--bg-primary)' : 'transparent', color: kelasViewMode === 'tabs' ? 'var(--primary)' : 'var(--text-muted)', fontWeight: kelasViewMode === 'tabs' ? '700' : '500', cursor: "pointer", boxShadow: kelasViewMode === 'tabs' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none', transition: "all 0.2s" }}
+                      >
+                        📑 Tab
+                      </button>
+                    </div>
                   </div>
                   <div onClick={() => { setProfileDropdownOpen(false); router.push('/guru/masa-aktif'); }} style={{ padding: "12px 16px", cursor: "pointer", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
                     👑 Masa Aktif
