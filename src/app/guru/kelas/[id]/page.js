@@ -573,6 +573,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [laporanTheme, setLaporanTheme] = useState("dark");
   const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const [activeRowAction, setActiveRowAction] = useState(null);
 
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
@@ -4444,70 +4445,112 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                         {/* Row actions */}
                         <td style={{ textAlign: "center" }}>
-                          <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
-
-                            <div style={{ position: "relative" }}>
-                              <button onClick={() => handleOpenHistory(student)} className="btn btn-secondary" style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) ? 1 : 0.5 }} title="Lihat Riwayat Akses Siswa">
-                                👁️
-                              </button>
-                              {student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0 && (
-                                <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", border: "1px solid var(--bg-primary)" }} title="Siswa sudah pernah melihat nilainya"></span>
+                          <div style={{ position: "relative", display: "inline-flex", justifyContent: "center" }}>
+                            <button 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                setActiveRowAction(activeRowAction === student.nisn ? null : student.nisn); 
+                              }} 
+                              className="btn btn-secondary" 
+                              style={{ padding: "4px 8px", fontSize: "1.1rem", borderRadius: "6px", lineHeight: 1 }}
+                              title="Aksi Siswa"
+                            >
+                              ⋮
+                              {/* Indicator dot if there's history or notes */}
+                              {((student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) || student.catatan) && (
+                                <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", backgroundColor: "var(--warning)", borderRadius: "50%", border: "1px solid var(--bg-primary)" }}></span>
                               )}
-                            </div>
-                            <button 
-                              onClick={() => handlePrintStudentKHS(student)} 
-                              className="btn btn-secondary" 
-                              style={{ padding: "6px 8px", fontSize: "0.75rem" }} 
-                              title="Cetak KHS / Rapor Bayangan PDF"
-                            >
-                              🖨️
                             </button>
-                            <button 
-                              onClick={() => handleOpenEditSiswa(student)} 
-                              className="btn btn-secondary" 
-                              style={{ padding: "6px 8px", fontSize: "0.75rem", opacity: (kelas.archived || isLocked) ? 0.5 : 1, cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer" }} 
-                              title={(kelas.archived || isLocked) ? "Tidak dapat mengedit" : "Edit Profil Siswa"}
-                              disabled={kelas.archived || isLocked}
-                            >
-                              <div style={{ display: "flex", alignItems: "center" }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
+                            
+                            {activeRowAction === student.nisn && (
+                              <div style={{
+                                position: "absolute",
+                                top: "100%",
+                                right: "0",
+                                marginTop: "8px",
+                                background: "var(--bg-primary)",
+                                border: "1px solid var(--border-color)",
+                                borderRadius: "var(--radius-md)",
+                                boxShadow: "var(--shadow-lg)",
+                                zIndex: 100,
+                                width: "max-content",
+                                minWidth: "180px",
+                                display: "flex",
+                                flexDirection: "column",
+                                overflow: "hidden",
+                                textAlign: "left"
+                              }}>
+                                <div 
+                                  onClick={() => { setActiveRowAction(null); handleOpenHistory(student); }}
+                                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) ? 1 : 0.6 }}
+                                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                                >
+                                  <span>👁️</span> Riwayat Akses
+                                  {student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0 && (
+                                    <span style={{ width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", marginLeft: "auto" }} title="Sudah pernah melihat nilai"></span>
+                                  )}
+                                </div>
+                                <div 
+                                  onClick={() => { setActiveRowAction(null); handlePrintStudentKHS(student); }}
+                                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)" }}
+                                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                                >
+                                  <span>🖨️</span> Cetak KHS PDF
+                                </div>
+                                <div 
+                                  onClick={() => { 
+                                    if(!kelas.archived && !isLocked) {
+                                      setActiveRowAction(null); handleOpenEditSiswa(student);
+                                    }
+                                  }}
+                                  style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                                  onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
+                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                                >
+                                  <span>✏️</span> Edit Profil Siswa
+                                </div>
+                                <div 
+                                  onClick={() => { 
+                                    setActiveRowAction(null);
+                                    setCatatanSiswaTerpilih(student);
+                                    setCatatanDraft(prev => ({
+                                      ...prev,
+                                      [student.nisn]: student.catatan || ""
+                                    }));
+                                  }}
+                                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", background: student.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent" }}
+                                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                                  onMouseOut={e => e.currentTarget.style.backgroundColor = student.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent"}
+                                >
+                                  <span>📝</span> Catatan Guru
+                                  {student.catatan && (
+                                    <span style={{ width: "8px", height: "8px", backgroundColor: "#f59e0b", borderRadius: "50%", marginLeft: "auto" }} title="Ada Catatan"></span>
+                                  )}
+                                </div>
+                                <div 
+                                  onClick={() => { 
+                                    if(!kelas.archived && !isLocked) {
+                                      setActiveRowAction(null); handleDeleteSiswa(student.nisn, student.nama);
+                                    }
+                                  }}
+                                  style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", color: "var(--danger)", display: "flex", alignItems: "center", gap: "10px", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                                  onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.05)"; }}
+                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                                >
+                                  <span>🗑️</span> Hapus Siswa
+                                </div>
                               </div>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setCatatanSiswaTerpilih(student);
-                                setCatatanDraft(prev => ({
-                                  ...prev,
-                                  [student.nisn]: student.catatan || ""
-                                }));
-                              }}
-                              className="btn btn-secondary"
-                              style={{ 
-                                padding: "6px 8px", 
-                                fontSize: "0.75rem",
-                                background: student.catatan ? "rgba(245, 158, 11, 0.12)" : "var(--bg-secondary)",
-                                borderColor: student.catatan ? "rgba(245, 158, 11, 0.4)" : "var(--border-color)",
-                                color: student.catatan ? "var(--warning)" : "var(--text-secondary)",
-                                position: "relative"
-                              }}
-                              title={student.catatan ? "Lihat/Edit Catatan Guru (Ada Catatan)" : "Tambah Catatan Guru"}
-                            >
-                              ✏️
-                              {student.catatan && (
-                                <span style={{ position: "absolute", top: "-3px", right: "-3px", width: "7px", height: "7px", backgroundColor: "var(--warning)", borderRadius: "50%", border: "1px solid var(--bg-secondary)" }}></span>
-                              )}
-                            </button>
-                            <button 
-                              onClick={() => handleDeleteSiswa(student.nisn, student.nama)} 
-                              className="btn btn-secondary" 
-                              style={{ padding: "6px 8px", fontSize: "0.75rem", color: "var(--danger)", opacity: (kelas.archived || isLocked) ? 0.5 : 1, cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer" }} 
-                              title={(kelas.archived || isLocked) ? "Tidak dapat menghapus" : "Hapus Siswa"}
-                              disabled={kelas.archived || isLocked}
-                            >
-                              🗑️
-                            </button>
+                            )}
+                            
+                            {/* Overlay to close dropdown when clicking outside */}
+                            {activeRowAction === student.nisn && (
+                              <div 
+                                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+                                onClick={(e) => { e.stopPropagation(); setActiveRowAction(null); }}
+                              />
+                            )}
                           </div>
                         </td>
                       </tr>
