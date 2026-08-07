@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import html2canvas from "html2canvas";
 
@@ -49,6 +49,19 @@ export default function StudentPortal() {
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [joinSuccess, setJoinSuccess] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const kelas = params.get("kelas");
+      if (kelas) {
+        setJoinKodeKelas(kelas);
+        setJoinModalOpen(true);
+        // Remove parameter from URL to prevent reopening on manual refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+  }, []);
 
   const handleJoinClass = async (e) => {
     e.preventDefault();
