@@ -357,8 +357,6 @@ export default function GuruLayout({ children }) {
         <header className="header desktop-header no-print" style={{ margin: "-32px -32px 32px -32px", borderTop: "none" }}>
           <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>Panel Guru &bull; Penilaian Digital</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Login sebagai: <strong>{guru?.username}</strong></span>
-            <span className="badge badge-success" style={{ fontSize: "0.7rem" }}>Superadmin Verified</span>
 
             {/* Dark Mode Toggle - Desktop Header */}
             <button
