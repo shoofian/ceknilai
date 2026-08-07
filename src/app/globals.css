@@ -773,6 +773,21 @@ input[type="date"].form-input {
   .flex-wrap-mobile {
     flex-wrap: wrap;
   }
+
+  .premium-table th {
+    font-size: 0.7rem;
+    padding: 10px 8px;
+  }
+  
+  .premium-table td {
+    font-size: 0.8rem;
+    padding: 10px 8px;
+  }
+  
+  .premium-table .form-input {
+    font-size: 0.8rem !important;
+    padding: 4px 6px !important;
+  }
 }
 
 /* Modal Responsiveness */
