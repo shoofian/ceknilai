@@ -572,6 +572,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
   const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
+  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
 
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
@@ -4028,137 +4029,99 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* Table: Main Spreadsheet Gradebook */}
       <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
         
-        <div style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+        <div style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
           <div>
-            <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>📊 Buku Nilai Kelas</h4>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px" }}>
-              Ketikkan nilai langsung pada tabel. Nilai akan <strong>terkunci secara otomatis</strong> saat kursor berpindah (blur).
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <h4 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>📊 Buku Nilai Kelas</h4>
+              <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.7rem", color: "var(--success)", fontWeight: "600", backgroundColor: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: "12px" }}>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--success)" }}></span>
+                Tersimpan otomatis
+              </div>
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
+              Ketik nilai pada tabel. Terkunci otomatis saat kursor berpindah.
             </p>
           </div>
           
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--success)" }}></span>
-            <span>Auto-saving diaktifkan</span>
-          </div>
-        </div>
-
-        {/* Panel Kontrol Kelas (Quick Actions) */}
-        <div id="konfigurasi-kelas" className="glass-card" style={{
-          margin: "0 24px 20px 24px",
-          padding: panelKontrolExpanded ? "20px 24px" : "12px 24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: panelKontrolExpanded ? "16px" : "0px",
-          border: "1px solid var(--border-color)",
-          boxShadow: "var(--shadow-sm)",
-          transition: "all 0.2s ease"
-        }}>
-          {/* Header Bar with Toggle */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
-              ⚙️ Konfigurasi & Operasi Data
-            </span>
-            <button
-              onClick={() => setPanelKontrolExpanded(!panelKontrolExpanded)}
-              type="button"
-              style={{
-                fontSize: "0.78rem",
-                padding: "6px 14px",
-                borderRadius: "20px",
-                border: "1px solid var(--primary)",
-                backgroundColor: panelKontrolExpanded ? "rgba(59, 130, 246, 0.1)" : "var(--primary)",
-                color: panelKontrolExpanded ? "var(--primary)" : "#ffffff",
-                cursor: "pointer",
-                fontWeight: "700",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                transition: "all 0.2s ease"
-              }}
-              title={panelKontrolExpanded ? "Sembunyikan Panel Konfigurasi & Operasi" : "Buka Panel Konfigurasi & Operasi"}
+          {/* Action Toolbar */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <button 
+              onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
+              className={(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
+              style={{ padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", boxShadow: (!kelas?.siswa || kelas.siswa.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.siswa || kelas.siswa.length === 0) ? "pulse-soft 2s infinite" : "none" }}
             >
-              <span>{panelKontrolExpanded ? "👁️ Sembunyikan Panel" : "👁️ Buka Panel Konfigurasi"}</span>
-              <span style={{ fontSize: "0.7rem", opacity: 0.8 }}>{panelKontrolExpanded ? "▲" : "▼"}</span>
+              + Data Siswa
             </button>
+            <button 
+              onClick={() => { handleOpenKolomModal(); }} 
+              className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
+              style={{ padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
+              disabled={isLocked}
+            >
+              + Aspek Nilai
+            </button>
+            <button 
+              onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
+              className="btn btn-secondary" 
+              style={{ padding: "6px 10px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
+              title="Cetak & Ekspor"
+            >
+              🖨️
+            </button>
+            
+            <div style={{ position: "relative" }}>
+              <button 
+                onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
+                className="btn btn-secondary"
+                style={{ padding: "6px 8px", fontSize: "0.9rem", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                title="Lainnya"
+              >
+                ⋮
+              </button>
+              
+              {settingsDropdownOpen && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  marginTop: "8px",
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-md)",
+                  boxShadow: "var(--shadow-lg)",
+                  zIndex: 100,
+                  width: "max-content",
+                  minWidth: "220px",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden"
+                }}>
+                  <div 
+                    onClick={() => { setSettingsDropdownOpen(false); setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    📖 Panduan Penggunaan
+                  </div>
+                  <div 
+                    onClick={() => { setSettingsDropdownOpen(false); setAdvancedToolsModalOpen(true); }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", color: "var(--text-primary)" }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    🧪 Fitur Lanjutan (Eksperimental)
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-
-
-
-          {panelKontrolExpanded && (
-            <>
-              {/* Divider */}
-              <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
-
-              {/* Section: Panduan & Bantuan */}
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>💡 Bantuan</span>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  <button 
-                    onClick={() => { setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }} 
-                    className="btn btn-secondary"
-                    style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.8rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border-color)" }}
-                  >
-                    📖 Panduan & Cara Penggunaan Fitur
-                  </button>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
-
-              {/* Section: Konfigurasi */}
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>⚙️ Konfigurasi</span>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  <button 
-                    onClick={() => { handleOpenKolomModal(); }} 
-                    className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
-                    disabled={isLocked}
-                  >
-                    ⚙️ Tambah Komponen Nilai
-                    {(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && (
-                      <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "4px" }}>Wajib Diisi</span>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div style={{ height: "1px", backgroundColor: "var(--border-color)", opacity: 0.6 }}></div>
-
-              {/* Section: Operasi Data */}
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", minWidth: "120px" }}>🛠️ Operasi Data</span>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-                  <button 
-                    onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
-                    className={(!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) ? "btn btn-primary" : "btn btn-secondary"} 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", boxShadow: (!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) ? "pulse-soft 2s infinite" : "none" }}
-                  >
-                    📊 Kelola Data Siswa
-                    {(!kelas?.siswa || kelas.siswa.length === 0) && (kelas?.kolomNilai?.length > 0) && (
-                      <span className="badge badge-warning" style={{ fontSize: "0.6rem", padding: "2px 6px", marginLeft: "4px" }}>Wajib Diisi</span>
-                    )}
-                  </button>
-                  <button 
-                    onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
-                    className="btn btn-secondary" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px" }}
-                  >
-                    🖨️ Cetak & Ekspor
-                  </button>
-                  <button 
-                    onClick={() => setAdvancedToolsModalOpen(true)}
-                    className="btn btn-secondary" 
-                    style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", padding: "6px 12px", borderRadius: "6px", backgroundColor: "rgba(139, 92, 246, 0.12)", color: "#7c3aed", borderColor: "rgba(139, 92, 246, 0.3)", fontWeight: "600" }}
-                  >
-                    🧪 Fitur & Pengaturan Lanjutan
-                  </button>
-                </div>
-              </div>
-            </>
+          
+          {settingsDropdownOpen && (
+            <div 
+              style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+              onClick={() => setSettingsDropdownOpen(false)}
+            />
           )}
         </div>
 
