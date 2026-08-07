@@ -103,7 +103,6 @@ export default function GuruLayout({ children }) {
   };
 
   const navItems = [
-    { name: "👤 Profil Saya", path: "/guru/profil" },
     { name: "📚 Daftar Kelas", path: "/guru/kelas" },
   ];
 
@@ -170,7 +169,24 @@ export default function GuruLayout({ children }) {
           </button>
           <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>CekNilai Guru</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Profile Icon - Mobile */}
+          <Link href="/guru/profil" style={{ textDecoration: "none" }}>
+            <div style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: "var(--primary-glow)",
+              border: "1px solid var(--primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1rem",
+              cursor: "pointer"
+            }} title="Profil Saya">
+              👤
+            </div>
+          </Link>
           {/* Dark mode toggle - mobile */}
           <button
             onClick={toggleDark}
@@ -356,7 +372,30 @@ export default function GuruLayout({ children }) {
         {/* Top Header - Desktop Only */}
         <header className="header desktop-header no-print" style={{ margin: "-32px -32px 32px -32px", borderTop: "none" }}>
           <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>Panel Guru &bull; Penilaian Digital</h3>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+
+            {/* Profile Icon - Desktop Header */}
+            <Link href="/guru/profil" style={{ textDecoration: "none" }}>
+              <div style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                backgroundColor: "var(--primary-glow)",
+                border: "1px solid var(--primary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.1rem",
+                cursor: "pointer",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                transition: "transform 0.2s"
+              }} title="Profil Saya"
+                onMouseOver={e => e.currentTarget.style.transform = "scale(1.05)"}
+                onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
+              >
+                👤
+              </div>
+            </Link>
 
             {/* Dark Mode Toggle - Desktop Header */}
             <button
