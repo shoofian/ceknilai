@@ -2187,7 +2187,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         const res = await fetch(`/api/kelas/${classId}/kolom`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0, isGroup: aspect.isGroup, hitungMetode: aspect.hitungMetode || 'rata-rata', subKolom: aspect.subKolom }),
+          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0, isGroup: aspect.isGroup, hitungMetode: aspect.hitungMetode || 'rata-rata', subKolom: aspect.subKolom, isPresensi: aspect.isPresensi }),
         });
         if (!res.ok) {
            const data = await res.json();
@@ -2514,8 +2514,14 @@ export default function DetailKelas({ params: paramsPromise }) {
               row.push(val !== null && val !== undefined ? val : "");
             });
           } else {
-            const val = siswa.nilai[col.id];
-            row.push(val !== null && val !== undefined ? val : "");
+            let val;
+            if (col.isPresensi) {
+              const attPercent = getStudentAttendancePercentage(siswa);
+              val = attPercent !== null ? Math.round(attPercent) : "";
+            } else {
+              val = siswa.nilai[col.id];
+            }
+            row.push(val !== null && val !== undefined && val !== "" ? val : "");
           }
           
           const { score, isFilled } = getColScore(siswa, col, null);
@@ -7814,21 +7820,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     }
                   });
 
-                  // Presensi jika ada
-                  const skema = kelas.skemaPenilaian || {};
-                  const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
-                  const pertemuanList = skema.pertemuan || [];
-                  if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-                    let attSummary = { H: 0, I: 0, S: 0, A: 0, D: 0 };
-                    pertemuanList.forEach(p => {
-                      const val = student.nilai[`_presensi_${p.id}`];
-                      if (val && attSummary[val] !== undefined) attSummary[val]++;
-                    });
-                    let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
-                    let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
-                    const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
-                    totalMurni += attAvg * (presensiConfig.bobot / 100);
-                  }
+
 
                   let totalPoinBonus = 0;
                   if (skema.enableBonusStars) {
@@ -8149,9 +8141,15 @@ export default function DetailKelas({ params: paramsPromise }) {
               }
             }
           } else {
-            const rawVal = student.nilai?.[col.id];
-            isFilled = rawVal !== undefined && rawVal !== null && rawVal !== "";
-            scoreVal = isFilled ? Number(rawVal) : null;
+            if (col.isPresensi) {
+              const attPercent = getStudentAttendancePercentage(student);
+              isFilled = attPercent !== null;
+              scoreVal = isFilled ? Math.round(attPercent) : null;
+            } else {
+              const rawVal = student.nilai?.[col.id];
+              isFilled = rawVal !== undefined && rawVal !== null && rawVal !== "";
+              scoreVal = isFilled ? Number(rawVal) : null;
+            }
           }
 
           return {

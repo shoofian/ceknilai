@@ -17,7 +17,7 @@ export async function POST(request, { params }) {
     }
 
     const { id } = await params;
-    const { nama, bobot, isGroup, subKolom, hitungMetode, defaultNilai } = await request.json();
+    const { nama, bobot, isGroup, subKolom, hitungMetode, defaultNilai, isPresensi } = await request.json();
 
     if (!nama || bobot === undefined) {
       return NextResponse.json(
@@ -37,6 +37,7 @@ export async function POST(request, { params }) {
       nama: nama.trim(),
       bobot: Number(bobot),
       isGroup: !!isGroup,
+      isPresensi: !!isPresensi,
       defaultNilai: defaultNilai !== undefined && defaultNilai !== null && defaultNilai !== "" ? Number(defaultNilai) : null
     };
     
@@ -132,6 +133,7 @@ export async function PATCH(request, { params }) {
         nama: col.nama.trim(),
         bobot: Number(col.bobot),
         isGroup: !!col.isGroup,
+        isPresensi: !!col.isPresensi,
         defaultNilai: col.defaultNilai !== undefined && col.defaultNilai !== null && col.defaultNilai !== "" ? Number(col.defaultNilai) : null
       };
       if (cleanCol.isGroup) {
