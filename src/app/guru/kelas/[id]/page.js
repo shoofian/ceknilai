@@ -2932,12 +2932,12 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ position: "relative" }}>
               <button 
                 onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
-                style={{ padding: "4px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", transition: "background 0.2s" }}
+                style={{ padding: "6px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", cursor: "pointer", transition: "background 0.2s" }}
                 onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"}
                 title="Bagikan Kelas ke Siswa"
               >
-                ↗️ Bagikan Kelas
+                ↗️
               </button>
               
               {shareDropdownOpen && (
