@@ -154,7 +154,7 @@ export default function GuruLayout({ children }) {
   }
 
   return (
-    <div className="app-container" style={{ position: "relative", overflow: "hidden" }}>
+    <div className="app-container" style={{ position: "relative" }}>
       {/* Background Ambient Theme Glow */}
       <div className="theme-ambient-glow" />
 
