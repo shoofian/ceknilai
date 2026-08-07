@@ -170,23 +170,6 @@ export default function GuruLayout({ children }) {
           <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>CekNilai Guru</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {/* Profile Icon - Mobile */}
-          <Link href="/guru/profil" style={{ textDecoration: "none" }}>
-            <div style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "50%",
-              backgroundColor: "var(--primary-glow)",
-              border: "1px solid var(--primary)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1rem",
-              cursor: "pointer"
-            }} title="Profil Saya">
-              👤
-            </div>
-          </Link>
           {/* Dark mode toggle - mobile */}
           <button
             onClick={toggleDark}
@@ -207,6 +190,23 @@ export default function GuruLayout({ children }) {
           >
             {isDark ? "☀️" : "🌙"}
           </button>
+          {/* Profile Icon - Mobile */}
+          <Link href="/guru/profil" style={{ textDecoration: "none" }}>
+            <div style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
+              backgroundColor: "var(--primary-glow)",
+              border: "1px solid var(--primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1rem",
+              cursor: "pointer"
+            }} title="Profil Saya">
+              👤
+            </div>
+          </Link>
         </div>
       </div>
 
@@ -371,6 +371,28 @@ export default function GuruLayout({ children }) {
           <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>Panel Guru &bull; Penilaian Digital</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
 
+            {/* Dark Mode Toggle - Desktop Header */}
+            <button
+              onClick={toggleDark}
+              title={isDark ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "var(--bg-tertiary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "999px",
+                cursor: "pointer",
+                padding: "5px 14px 5px 10px",
+                fontSize: "0.82rem",
+                fontWeight: "600",
+                color: "var(--text-secondary)",
+              }}
+            >
+              <span style={{ fontSize: "1rem" }}>{isDark ? "☀️" : "🌙"}</span>
+              <span>{isDark ? "Light" : "Dark"}</span>
+            </button>
+            
             {/* Profile Icon - Desktop Header */}
             <Link href="/guru/profil" style={{ textDecoration: "none" }}>
               <div style={{
@@ -393,28 +415,6 @@ export default function GuruLayout({ children }) {
                 👤
               </div>
             </Link>
-
-            {/* Dark Mode Toggle - Desktop Header */}
-            <button
-              onClick={toggleDark}
-              title={isDark ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                background: "var(--bg-tertiary)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "999px",
-                cursor: "pointer",
-                padding: "5px 14px 5px 10px",
-                fontSize: "0.82rem",
-                fontWeight: "600",
-                color: "var(--text-secondary)",
-              }}
-            >
-              <span style={{ fontSize: "1rem" }}>{isDark ? "☀️" : "🌙"}</span>
-              <span>{isDark ? "Light" : "Dark"}</span>
-            </button>
           </div>
         </header>
 
