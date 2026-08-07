@@ -12,6 +12,7 @@ export default function GuruLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isPopup, setIsPopup] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -107,14 +108,11 @@ export default function GuruLayout({ children }) {
   ];
 
   // Cetak Laporan is now hidden from sidebar navigation as it is accessible as a modal preview inside Kelola Kelas.
-
-  navItems.push({ name: "👑 Masa Aktif", path: "/guru/masa-aktif" });
-  navItems.push({ name: "🎁 Hadiah & Referral", path: "/guru/hadiah" });
-
+  
   if (guru) {
-    navItems.splice(2, 0, { name: "👨‍🏫 Wali Kelas", path: "/guru/walikelas" });
+    navItems.push({ name: "👨‍🏫 Wali Kelas", path: "/guru/walikelas" });
     if (guru.walikelas_tingkatan && guru.walikelas_rombel_nama) {
-      navItems.splice(3, 0, { name: "📄 e-Rapor", path: "/guru/erapor" });
+      navItems.push({ name: "📄 e-Rapor", path: "/guru/erapor" });
     }
   }
 
@@ -158,6 +156,14 @@ export default function GuruLayout({ children }) {
       {/* Background Ambient Theme Glow */}
       <div className="theme-ambient-glow" />
 
+      {/* Click away listener overlay for Profile Dropdown */}
+      {profileDropdownOpen && (
+        <div 
+          style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+          onClick={() => setProfileDropdownOpen(false)}
+        />
+      )}
+
       {/* Mobile Top Header */}
       <div className="mobile-header no-print">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -190,8 +196,8 @@ export default function GuruLayout({ children }) {
           >
             {isDark ? "☀️" : "🌙"}
           </button>
-          {/* Profile Icon - Mobile */}
-          <Link href="/guru/profil" style={{ textDecoration: "none" }}>
+          {/* Profile Dropdown - Mobile */}
+          <div style={{ position: "relative" }}>
             <div style={{
               width: "32px",
               height: "32px",
@@ -203,10 +209,38 @@ export default function GuruLayout({ children }) {
               justifyContent: "center",
               fontSize: "1rem",
               cursor: "pointer"
-            }} title="Profil Saya">
+            }} title="Profil Saya" onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}>
               👤
             </div>
-          </Link>
+            
+            {profileDropdownOpen && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                marginTop: "8px",
+                background: "var(--bg-primary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "var(--radius-md)",
+                boxShadow: "var(--shadow-lg)",
+                zIndex: 100,
+                width: "200px",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden"
+              }}>
+                <Link href="/guru/profil" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  👤 Edit Profil
+                </Link>
+                <Link href="/guru/masa-aktif" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  👑 Masa Aktif
+                </Link>
+                <Link href="/guru/hadiah" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                  🎁 Referral
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -393,8 +427,8 @@ export default function GuruLayout({ children }) {
               <span>{isDark ? "Light" : "Dark"}</span>
             </button>
             
-            {/* Profile Icon - Desktop Header */}
-            <Link href="/guru/profil" style={{ textDecoration: "none" }}>
+            {/* Profile Dropdown - Desktop Header */}
+            <div style={{ position: "relative" }}>
               <div style={{
                 width: "36px",
                 height: "36px",
@@ -409,12 +443,41 @@ export default function GuruLayout({ children }) {
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                 transition: "transform 0.2s"
               }} title="Profil Saya"
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 onMouseOver={e => e.currentTarget.style.transform = "scale(1.05)"}
                 onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
               >
                 👤
               </div>
-            </Link>
+              
+              {profileDropdownOpen && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  marginTop: "8px",
+                  background: "var(--bg-primary)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-md)",
+                  boxShadow: "var(--shadow-lg)",
+                  zIndex: 100,
+                  width: "200px",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden"
+                }}>
+                  <Link href="/guru/profil" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                    👤 Edit Profil
+                  </Link>
+                  <Link href="/guru/masa-aktif" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", borderBottom: "1px solid var(--border-color)", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                    👑 Masa Aktif
+                  </Link>
+                  <Link href="/guru/hadiah" onClick={() => setProfileDropdownOpen(false)} style={{ padding: "12px 16px", textDecoration: "none", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }} onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"} onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}>
+                    🎁 Referral
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
