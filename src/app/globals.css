@@ -637,6 +637,24 @@ input[type="date"].form-input {
   position: relative;
 }
 
+/* Clip column highlights to the tbody to prevent them from expanding scroll boundaries */
+.premium-table tbody {
+  contain: paint;
+  clip-path: inset(0);
+}
+
+.premium-table tbody td:hover::before {
+  content: "";
+  position: absolute;
+  top: -5000px;
+  bottom: -5000px;
+  left: 0;
+  right: 0;
+  background-color: var(--sidebar-active-bg, rgba(59, 130, 246, 0.05));
+  z-index: 4;
+  pointer-events: none;
+}
+
 /* The active cell itself gets slightly darker highlight */
 .premium-table tbody td:hover::after {
   background-color: rgba(59, 130, 246, 0.15);
