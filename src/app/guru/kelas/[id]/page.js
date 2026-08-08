@@ -3762,7 +3762,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           )}
 
           <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", overflowX: "auto" }}>
-            <table className="premium-table" style={{ width: "100%", minWidth: "600px" }}>
+            <table className="premium-table crosshair-highlight" style={{ width: "100%", minWidth: "600px" }}>
               <thead>
                 <tr>
                   <th style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
@@ -4188,7 +4188,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               {(() => {
                 const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
               return (
-                <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
+                <table className="premium-table crosshair-highlight" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>

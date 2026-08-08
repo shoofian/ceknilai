@@ -144,8 +144,8 @@ export async function GET(request, { params }) {
       .from('catatan_walikelas')
       .select('catatan')
       .eq('nisn', siswaId)
-      .eq('tahun_ajaran', tahun_ajaran)
-      .eq('semester', semester)
+      .eq('tahun_ajaran', guru.tahun_ajaran || '2025/2026')
+      .eq('semester', 'Ganjil')
       .maybeSingle();
       
     if (dbCatatanWali && dbCatatanWali.catatan) {
