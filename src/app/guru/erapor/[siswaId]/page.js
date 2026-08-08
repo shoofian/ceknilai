@@ -180,7 +180,7 @@ export default function RaporPreview({ params }) {
 
       {/* ==================== HALAMAN 2: IDENTITAS SEKOLAH ==================== */}
       <div className="rapor-page" style={{ padding: "80px 64px" }}>
-        <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>RAPOR PESERTA DIDIK DAN PROFIL PESERTA DIDIK</h1>
+        <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>IDENTITAS SEKOLAH</h1>
         
         <table className="biodata-table" style={{ width: "100%", fontSize: "16px", lineHeight: "1.8" }}>
           <tbody>
@@ -241,7 +241,7 @@ export default function RaporPreview({ params }) {
       {/* ==================== HALAMAN 3: BIODATA ==================== */}
       <div className="rapor-page" style={{ padding: "80px 64px" }}>
         
-        <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>KETERANGAN TENTANG DIRI PESERTA DIDIK</h1>
+        <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>IDENTITAS PESERTA DIDIK</h1>
         
         <table className="biodata-table" style={{ width: "100%", fontSize: "16px" }}>
           <tbody>
