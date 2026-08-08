@@ -4320,7 +4320,18 @@ export default function DetailKelas({ params: paramsPromise }) {
                                       inputMode="numeric"
                                       pattern="[0-9]*"
                                       value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[sub.id] !== null && student.nilai[sub.id] !== undefined ? student.nilai[sub.id] : "")}
-                                      onChange={(e) => setTemporaryScores(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                      onChange={(e) => {
+                                        let val = e.target.value;
+                                        if (val !== "") {
+                                          val = val.replace(/[^0-9]/g, '');
+                                          if (val !== "") {
+                                            const num = parseInt(val, 10);
+                                            if (num > 100) val = "100";
+                                            else val = num.toString();
+                                          }
+                                        }
+                                        setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
+                                      }}
                                       onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
                                       onWheel={(e) => e.target.blur()}
                                       onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
@@ -4342,19 +4353,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                                       disabled={kelas.archived || isLocked}
                                       className="form-input"
                                       style={{
-                                        padding: "6px 8px",
-                                        fontSize: "0.85rem",
+                                        padding: "8px 8px",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "bold",
                                         textAlign: "center",
                                         border: currentStatus === "saved" 
-                                          ? "1px solid var(--success)" 
+                                          ? "2px solid var(--success)" 
                                           : currentStatus === "saving"
-                                            ? "1px solid var(--primary)" 
+                                            ? "2px solid var(--primary)" 
                                             : currentStatus === "failed"
-                                              ? "1px solid var(--danger)"
-                                              : "1px solid var(--border-color)",
-                                        backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-secondary)",
+                                              ? "2px solid var(--danger)"
+                                              : "2px solid var(--border-color)",
+                                        backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.05)" : "var(--bg-primary)",
                                         transition: "all 0.15s ease",
-                                        cursor: (kelas.archived || isLocked) ? "not-allowed" : "text"
+                                        cursor: (kelas.archived || isLocked) ? "not-allowed" : "text",
+                                        boxShadow: "inset 0 1px 3px rgba(0,0,0,0.05)",
+                                        borderRadius: "var(--radius-sm)",
+                                        width: "100%",
+                                        boxSizing: "border-box"
                                       }}
                                       placeholder="-"
                                       min={0}
