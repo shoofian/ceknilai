@@ -146,8 +146,19 @@ export default function RaporPreview({ params }) {
           <h1 style={{ fontSize: "28px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "8px" }}>Laporan Hasil Belajar</h1>
           <h2 style={{ fontSize: "24px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "64px" }}>(RAPOR)</h2>
           
-          <div style={{ width: "130px", height: "130px", margin: "0 auto 64px auto", display: "flex", alignItems: "center", justifyContent: "center", border: "4px solid black", borderRadius: "50%" }}>
-            <span style={{ fontWeight: "bold", color: "#9ca3af", fontFamily: "var(--font-body)", fontSize: "14px" }}>LOGO SEKOLAH</span>
+          <div style={{ width: "130px", height: "130px", margin: "0 auto 64px auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <img 
+              src={`https://ffrucebdhhrpkuszlshy.supabase.co/storage/v1/object/public/logos/${data.sekolah?.id}.png`}
+              alt="Logo Sekolah" 
+              style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              onError={(e) => { 
+                e.currentTarget.style.display = 'none'; 
+                e.currentTarget.nextSibling.style.display = 'flex'; 
+              }}
+            />
+            <div style={{ display: "none", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", border: "4px solid black", borderRadius: "50%" }}>
+              <span style={{ fontWeight: "bold", color: "#9ca3af", fontFamily: "var(--font-body)", fontSize: "14px" }}>LOGO SEKOLAH</span>
+            </div>
           </div>
 
           <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px", textTransform: "uppercase" }}>Nama Peserta Didik:</h3>

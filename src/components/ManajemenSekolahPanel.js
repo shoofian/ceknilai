@@ -9,6 +9,9 @@ export default function ManajemenSekolahPanel({ targetSekolahId }) {
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoVersion, setLogoVersion] = useState(Date.now());
+  const [logoUrl, setLogoUrl] = useState("");
 
   const [formData, setFormData] = useState({
     nama: "",
@@ -84,6 +87,39 @@ export default function ManajemenSekolahPanel({ targetSekolahId }) {
     }
   };
 
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !targetSekolahId) return;
+
+    setUploadingLogo(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    const formData = new FormData();
+    formData.append("logo", file);
+    formData.append("sekolahId", targetSekolahId);
+
+    try {
+      const res = await fetch("/api/superadmin/sekolah/logo", {
+        method: "POST",
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMsg("Logo sekolah berhasil diunggah!");
+        setLogoVersion(Date.now());
+        setLogoUrl(data.url);
+        setTimeout(() => setSuccessMsg(""), 3000);
+      } else {
+        setErrorMsg(data.error || "Gagal mengunggah logo");
+      }
+    } catch (err) {
+      setErrorMsg("Terjadi kesalahan saat mengunggah logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   if (!targetSekolahId) {
     return (
       <div className="glass-card" style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -141,6 +177,31 @@ export default function ManajemenSekolahPanel({ targetSekolahId }) {
                     {errorMsg}
                   </div>
                 )}
+
+                <div style={{ display: "flex", alignItems: "center", gap: "20px", padding: "16px", backgroundColor: "var(--bg-tertiary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                  <div style={{ width: "80px", height: "80px", borderRadius: "8px", border: "1px dashed var(--border-color)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "var(--bg-primary)" }}>
+                    <img 
+                      src={logoUrl || `https://ffrucebdhhrpkuszlshy.supabase.co/storage/v1/object/public/logos/${targetSekolahId}.png?t=${logoVersion}`} 
+                      alt="Logo Sekolah" 
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }} 
+                      onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextSibling.style.display = 'block'; }}
+                      onLoad={(e) => { e.currentTarget.style.display = 'block'; e.currentTarget.nextSibling.style.display = 'none'; }}
+                    />
+                    <div style={{ display: "none", fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center" }}>Tanpa Logo</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h6 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Logo Sekolah (E-Rapor)</h6>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleLogoUpload}
+                      style={{ fontSize: "0.85rem" }}
+                      disabled={uploadingLogo}
+                    />
+                    {uploadingLogo && <span style={{ fontSize: "0.8rem", marginLeft: "10px", color: "var(--primary)" }}>Mengunggah...</span>}
+                    <p style={{ margin: "6px 0 0 0", fontSize: "0.75rem", color: "var(--text-muted)" }}>Format disarankan: PNG dengan latar belakang transparan.</p>
+                  </div>
+                </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px" }}>
                   <div>
