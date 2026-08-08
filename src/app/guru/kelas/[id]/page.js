@@ -4049,7 +4049,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
           
           {/* Action Toolbar */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "nowrap", overflowX: "auto", paddingBottom: "4px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", overflow: "visible", paddingBottom: "4px" }}>
             <button 
               onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
               className={(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
@@ -8527,6 +8527,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
               >
                 <span>✏️</span> Edit Profil Siswa
+              </div>
+              <div 
+                onClick={() => { 
+                  setStudentActionModal(null);
+                  setCatatanSiswaTerpilih(studentActionModal);
+                  setCatatanDraft(prev => ({
+                    ...prev,
+                    [studentActionModal.nisn]: studentActionModal.catatan || ""
+                  }));
+                }}
+                style={{ padding: "12px 20px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", background: studentActionModal.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent" }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = studentActionModal.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent"}
+              >
+                <span>📝</span> Catatan Guru
+                {studentActionModal.catatan && (
+                  <span style={{ width: "8px", height: "8px", backgroundColor: "#f59e0b", borderRadius: "50%", marginLeft: "auto" }} title="Ada Catatan"></span>
+                )}
               </div>
               <div 
                 onClick={() => { 
