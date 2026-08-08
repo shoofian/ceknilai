@@ -221,7 +221,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [isSavingPertemuan, setIsSavingPertemuan] = useState(false);
   const [pertemuanMateri, setPertemuanMateri] = useState("");
   const [pertemuanKegiatan, setPertemuanKegiatan] = useState("");
-  const [agendaCollapsed, setAgendaCollapsed] = useState(true);
+  const [agendaModalOpen, setAgendaModalOpen] = useState(false);
+  const [studentActionModal, setStudentActionModal] = useState(null);
   const [defaultBulkStatus, setDefaultBulkStatus] = useState(""); // empty/blank by default
 
   const [panduanModalOpen, setPanduanModalOpen] = useState(false);
@@ -3626,7 +3627,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(2, 1fr)",
+              gridTemplateColumns: "repeat(3, 1fr)",
               gap: "4px",
               width: "100%",
               marginTop: "4px"
@@ -3659,6 +3660,26 @@ export default function DetailKelas({ params: paramsPromise }) {
                 📷 Scan
               </button>
               <button 
+                onClick={() => setAgendaModalOpen(true)} 
+                className="btn" 
+                style={{ 
+                  fontSize: "0.74rem", 
+                  padding: "6px 2px",
+                  backgroundColor: "var(--bg-secondary)",
+                  color: "var(--text-primary)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                📖 Jurnal
+              </button>
+              <button 
                 onClick={handleOpenAddPertemuan} 
                 className="btn btn-primary" 
                 style={{ 
@@ -3683,7 +3704,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
           {/* Ringkasan Statistik Presensi */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
-            <div className="presensi-stats-grid">
+            <div className="presensi-stats-grid hide-on-mobile">
               <div className="glass-card presensi-stats-card">
                 <div style={{ fontSize: "1.8rem" }}>📅</div>
                 <div>
@@ -3731,62 +3752,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           )}
 
-          {/* Collapsible Jurnal Agenda Pembelajaran */}
-          {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
-            <div className="glass-card" style={{ padding: "16px 20px", margin: "0 24px 12px 24px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", userSelect: "none" }} onClick={() => setAgendaCollapsed(!agendaCollapsed)}>
-                <h5 style={{ fontSize: "0.95rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px", margin: 0 }}>
-                  📖 Jurnal Agenda Pembelajaran ({kelas.skemaPenilaian.pertemuan.filter(p => p.materi || p.kegiatan || p.keterangan).length}/{kelas.skemaPenilaian.pertemuan.length} Terisi)
-                </h5>
-                <span style={{ fontSize: "0.8rem", color: "var(--primary)", fontWeight: "800", display: "flex", alignItems: "center", gap: "4px" }}>
-                  {agendaCollapsed ? "📖 Buka Jurnal" : "✕ Tutup Jurnal"}
-                </span>
-              </div>
-              
-              {!agendaCollapsed && (
-                <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px", borderTop: "1px solid var(--border-color)", paddingTop: "14px" }}>
-                  {kelas.skemaPenilaian.pertemuan.map((p, idx) => {
-                    const currentKegiatan = p.kegiatan || p.keterangan || "";
-                    return (
-                      <div key={p.id} style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "10px 12px", borderBottom: idx === kelas.skemaPenilaian.pertemuan.length - 1 ? "none" : "1px dashed var(--border-color)", flexWrap: "wrap" }}>
-                        <div style={{ minWidth: "120px", flex: "0 0 auto" }}>
-                          <strong style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>{p.nama}</strong>
-                          <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "2px" }}>{p.tanggal}</div>
-                        </div>
-                        
-                        <div style={{ flex: "1 1 200px", fontSize: "0.85rem", alignSelf: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {p.materi ? (
-                            <div>
-                              <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>Materi: </span>
-                              <span style={{ color: "var(--text-primary)" }}>{p.materi}</span>
-                            </div>
-                          ) : (
-                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Materi belum diisi</div>
-                          )}
-                          {currentKegiatan ? (
-                            <div>
-                              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>Kegiatan: </span>
-                              <span style={{ color: "var(--text-secondary)" }}>{currentKegiatan}</span>
-                            </div>
-                          ) : (
-                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Kegiatan belum diisi</div>
-                          )}
-                        </div>
-
-                        <button 
-                          onClick={() => handleOpenEditPertemuan(p)} 
-                          className="btn btn-secondary" 
-                          style={{ padding: "6px 12px", fontSize: "0.75rem", borderColor: "var(--border-color)", flex: "0 0 auto", marginLeft: "auto" }}
-                        >
-                          ✏️ Tulis
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Collapsible Jurnal Agenda Pembelajaran telah dipindahkan ke Modal */}
 
           {/* Hint scroll horizontal pada mobile */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
@@ -4585,103 +4551,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <button 
                               onClick={(e) => { 
                                 e.stopPropagation(); 
-                                setActiveRowAction(activeRowAction === student.nisn ? null : student.nisn); 
+                                setStudentActionModal(student); 
                               }} 
                               className="btn btn-secondary" 
                               style={{ padding: "4px 8px", fontSize: "1.1rem", borderRadius: "6px", lineHeight: 1 }}
                               title="Aksi Siswa"
                             >
                               ⋮
-                              {/* Indicator dot if there's history or notes */}
-                              {((student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) || student.catatan) && (
-                                <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", backgroundColor: "var(--warning)", borderRadius: "50%", border: "1px solid var(--bg-primary)" }}></span>
-                              )}
                             </button>
-                            
-                            {activeRowAction === student.nisn && (
-                              <div style={{
-                                position: "absolute",
-                                top: "100%",
-                                right: "0",
-                                marginTop: "8px",
-                                background: "var(--bg-primary)",
-                                border: "1px solid var(--border-color)",
-                                borderRadius: "var(--radius-md)",
-                                boxShadow: "var(--shadow-lg)",
-                                zIndex: 100,
-                                width: "max-content",
-                                minWidth: "180px",
-                                display: "flex",
-                                flexDirection: "column",
-                                overflow: "hidden",
-                                textAlign: "left"
-                              }}>
-                                <div 
-                                  onClick={() => { setActiveRowAction(null); handleOpenHistory(student); }}
-                                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0) ? 1 : 0.6 }}
-                                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
-                                >
-                                  <span>👁️</span> Riwayat Akses
-                                  {student.nilai && student.nilai._login_history && student.nilai._login_history.length > 0 && (
-                                    <span style={{ width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", marginLeft: "auto" }} title="Sudah pernah melihat nilai"></span>
-                                  )}
-                                </div>
-                                <div 
-                                  onClick={() => { setActiveRowAction(null); handlePrintStudentKHS(student); }}
-                                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)" }}
-                                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
-                                >
-                                  <span>🖨️</span> Cetak KHS PDF
-                                </div>
-                                <div 
-                                  onClick={() => { 
-                                    if(!kelas.archived && !isLocked) {
-                                      setActiveRowAction(null); handleOpenEditSiswa(student);
-                                    }
-                                  }}
-                                  style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
-                                  onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
-                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
-                                >
-                                  <span>✏️</span> Edit Profil Siswa
-                                </div>
-                                <div 
-                                  onClick={() => { 
-                                    setActiveRowAction(null);
-                                    setCatatanSiswaTerpilih(student);
-                                    setCatatanDraft(prev => ({
-                                      ...prev,
-                                      [student.nisn]: student.catatan || ""
-                                    }));
-                                  }}
-                                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", background: student.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent" }}
-                                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                                  onMouseOut={e => e.currentTarget.style.backgroundColor = student.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent"}
-                                >
-                                  <span>📝</span> Catatan Guru
-                                  {student.catatan && (
-                                    <span style={{ width: "8px", height: "8px", backgroundColor: "#f59e0b", borderRadius: "50%", marginLeft: "auto" }} title="Ada Catatan"></span>
-                                  )}
-                                </div>
-                                <div 
-                                  onClick={() => { 
-                                    if(!kelas.archived && !isLocked) {
-                                      setActiveRowAction(null); handleDeleteSiswa(student.nisn, student.nama);
-                                    }
-                                  }}
-                                  style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", color: "var(--danger)", display: "flex", alignItems: "center", gap: "10px", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
-                                  onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.05)"; }}
-                                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
-                                >
-                                  <span>🗑️</span> Hapus Siswa
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Overlay to close dropdown when clicking outside */}
-                            {activeRowAction === student.nisn && (
+                            {/* Aksi dropdown dipindahkan ke Modal untuk mencegah terpotong oleh tabel */}
+                          </div>
+                          {activeRowAction === student.nisn && (
                               <div 
                                 style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
                                 onClick={(e) => { e.stopPropagation(); setActiveRowAction(null); }}
@@ -8615,6 +8495,125 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
+      {/* Modal Aksi Siswa */}
+      {studentActionModal && (
+        <div className="modal-overlay" onClick={() => setStudentActionModal(null)}>
+          <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: "350px", padding: 0 }}>
+            <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)" }}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Aksi: {studentActionModal.nama}</h3>
+              <button onClick={() => setStudentActionModal(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            <div style={{ padding: "12px 0", display: "flex", flexDirection: "column" }}>
+              <div 
+                onClick={() => { setStudentActionModal(null); handleOpenHistory(studentActionModal); }}
+                style={{ padding: "12px 20px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (studentActionModal.nilai && studentActionModal.nilai._login_history && studentActionModal.nilai._login_history.length > 0) ? 1 : 0.6 }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span>👁️</span> Riwayat Akses
+                {studentActionModal.nilai && studentActionModal.nilai._login_history && studentActionModal.nilai._login_history.length > 0 && (
+                  <span style={{ width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", marginLeft: "auto" }} title="Sudah pernah melihat nilai"></span>
+                )}
+              </div>
+              <div 
+                onClick={() => { setStudentActionModal(null); handlePrintStudentKHS(studentActionModal); }}
+                style={{ padding: "12px 20px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)" }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span>🖨️</span> Cetak KHS PDF
+              </div>
+              <div 
+                onClick={() => { 
+                  if(!kelas.archived && !isLocked) {
+                    setStudentActionModal(null); handleOpenEditSiswa(studentActionModal);
+                  }
+                }}
+                style={{ padding: "12px 20px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span>✏️</span> Edit Profil Siswa
+              </div>
+              <div 
+                onClick={() => { 
+                  if(!kelas.archived && !isLocked) {
+                    setStudentActionModal(null); handleDeleteSiswa(studentActionModal.nisn, studentActionModal.nama);
+                  }
+                }}
+                style={{ padding: "12px 20px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.9rem", fontWeight: "600", color: "var(--danger)", display: "flex", alignItems: "center", gap: "10px", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.05)"; }}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span>🗑️</span> Hapus Siswa
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Jurnal Agenda */}
+      {agendaModalOpen && (
+        <div className="modal-overlay" onClick={() => setAgendaModalOpen(false)}>
+          <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%", padding: 0, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+            <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 10 }}>
+              <h3 style={{ margin: 0, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
+                📖 Jurnal Agenda Pembelajaran
+              </h3>
+              <button onClick={() => setAgendaModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            <div style={{ padding: "16px 20px", overflowY: "auto" }}>
+              {kelas.skemaPenilaian?.pertemuan?.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <p style={{ margin: "0 0 12px 0", fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                    Terisi: {kelas.skemaPenilaian.pertemuan.filter(p => p.materi || p.kegiatan || p.keterangan).length} dari {kelas.skemaPenilaian.pertemuan.length} Pertemuan
+                  </p>
+                  {kelas.skemaPenilaian.pertemuan.map((p, idx) => {
+                    const currentKegiatan = p.kegiatan || p.keterangan || "";
+                    return (
+                      <div key={p.id} style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "12px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap" }}>
+                        <div style={{ minWidth: "120px", flex: "0 0 auto" }}>
+                          <strong style={{ fontSize: "0.95rem", color: "var(--text-primary)" }}>{p.nama}</strong>
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>{p.tanggal}</div>
+                        </div>
+                        <div style={{ flex: "1 1 200px", fontSize: "0.85rem", alignSelf: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {p.materi ? (
+                            <div>
+                              <span style={{ fontWeight: "700", color: "var(--text-primary)" }}>Materi: </span>
+                              <span style={{ color: "var(--text-primary)" }}>{p.materi}</span>
+                            </div>
+                          ) : (
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Materi belum diisi</div>
+                          )}
+                          {currentKegiatan ? (
+                            <div>
+                              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>Kegiatan: </span>
+                              <span style={{ color: "var(--text-secondary)" }}>{currentKegiatan}</span>
+                            </div>
+                          ) : (
+                            <div style={{ fontStyle: "italic", color: "var(--text-muted)" }}>Kegiatan belum diisi</div>
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => { setAgendaModalOpen(false); handleOpenEditPertemuan(p); }} 
+                          className="btn btn-secondary" 
+                          style={{ padding: "6px 12px", fontSize: "0.8rem", borderColor: "var(--border-color)", flex: "0 0 auto", marginLeft: "auto" }}
+                        >
+                          ✏️ Tulis
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                  Belum ada data pertemuan.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

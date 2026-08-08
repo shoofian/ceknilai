@@ -1922,3 +1922,10 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
     font-size: 1.1rem !important;
   }
 }
+
+/* Hide element on mobile */
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
