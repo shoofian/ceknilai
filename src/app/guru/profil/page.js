@@ -48,15 +48,17 @@ export default function ProfilGuru() {
   const [namaKepsek, setNamaKepsek] = useState("");
   const [nipKepsek, setNipKepsek] = useState("");
   const [nipGuru, setNipGuru] = useState("");
+  const [tanggalCetak, setTanggalCetak] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setAlamatSekolah(localStorage.getItem("rep_alamatSekolah") || "");
       setTelpSekolah(localStorage.getItem("rep_telpSekolah") || "");
-      setKotaCetak(localStorage.getItem("rep_kotaCetak") || "");
+      setKotaCetak(localStorage.getItem("rep_kotaCetak") || "Jakarta");
       setNamaKepsek(localStorage.getItem("rep_namaKepsek") || "");
       setNipKepsek(localStorage.getItem("rep_nipKepsek") || "");
       setNipGuru(localStorage.getItem("rep_nipGuru") || "");
+      setTanggalCetak(localStorage.getItem("rep_tanggalCetak") || "");
     }
   }, []);
 
@@ -172,6 +174,7 @@ export default function ProfilGuru() {
           localStorage.setItem("rep_namaKepsek", namaKepsek.trim());
           localStorage.setItem("rep_nipKepsek", nipKepsek.trim());
           localStorage.setItem("rep_nipGuru", nipGuru.trim());
+          localStorage.setItem("rep_tanggalCetak", tanggalCetak.trim());
         }
 
         // Reset password fields
@@ -412,6 +415,17 @@ export default function ProfilGuru() {
                   className="form-input"
                   value={kotaCetak}
                   onChange={(e) => setKotaCetak(e.target.value)}
+                  disabled={isLocked}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tanggal Cetak <span className="label-optional">(opsional)</span></label>
+                <input
+                  type="text"
+                  placeholder="Contoh: 15 Desember 2026"
+                  className="form-input"
+                  value={tanggalCetak}
+                  onChange={(e) => setTanggalCetak(e.target.value)}
                   disabled={isLocked}
                 />
               </div>

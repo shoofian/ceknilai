@@ -15,10 +15,18 @@ export default function RaporPreview({ params }) {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [nipGuru, setNipGuru] = useState("-");
+  const [kotaCetak, setKotaCetak] = useState("Jakarta");
+  const [namaKepsek, setNamaKepsek] = useState("");
+  const [nipKepsek, setNipKepsek] = useState("");
+  const [tanggalCetak, setTanggalCetak] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setNipGuru(localStorage.getItem("rep_nipGuru") || "-");
+      setKotaCetak(localStorage.getItem("rep_kotaCetak") || "Jakarta");
+      setNamaKepsek(localStorage.getItem("rep_namaKepsek") || "");
+      setNipKepsek(localStorage.getItem("rep_nipKepsek") || "");
+      setTanggalCetak(localStorage.getItem("rep_tanggalCetak") || new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}));
     }
     const fetchData = async () => {
       try {
@@ -518,7 +526,7 @@ export default function RaporPreview({ params }) {
               <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%" }}></div>
             </div>
             <div style={{ width: "35%" }}>
-              <p style={{ marginBottom: "4px" }}>Jakarta, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+              <p style={{ marginBottom: "4px" }}>{kotaCetak}, {tanggalCetak}</p>
               <p>Wali Kelas</p>
               <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "90%", fontWeight: "bold" }}>
                 {data.identitas.nama_wali_kelas || "Wali Kelas, S.Pd"}
@@ -534,10 +542,10 @@ export default function RaporPreview({ params }) {
               <p style={{ marginBottom: "4px" }}>Mengetahui,</p>
               <p>Kepala Sekolah</p>
               <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%", fontWeight: "bold" }}>
-                {data.sekolah?.kepala_sekolah || "Nama Kepala Sekolah"}
+                {namaKepsek || data.sekolah?.kepala_sekolah || "Nama Kepala Sekolah"}
               </div>
               <p style={{ marginTop: "4px" }}>
-                {data.sekolah?.nip_kepala_sekolah ? `NIP. ${data.sekolah.nip_kepala_sekolah}` : "NIP. -"}
+                {nipKepsek ? `NIP. ${nipKepsek}` : (data.sekolah?.nip_kepala_sekolah ? `NIP. ${data.sekolah.nip_kepala_sekolah}` : "NIP. -")}
               </p>
             </div>
           </div>
