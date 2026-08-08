@@ -710,16 +710,7 @@ export default function KelolaKelas() {
     setIsBulkImporting(true);
 
     try {
-      // 1. Client-side check for student matching
-      for (const form of validForms) {
-        const studentsForThisClass = parsedStudents.filter((s) => s.rombel === form.sourceRombel);
-        if (studentsForThisClass.length === 0) {
-          throw new Error(
-            `Tidak ada siswa ditemukan untuk rombel "${form.sourceRombel}" di berkas yang diunggah. ` +
-            `Periksa apakah nama rombel di berkas sudah sesuai dengan pilihan di dropdown.`
-          );
-        }
-      }
+      // 1. Client-side check for student matching (Removed to allow empty classes)
 
       // 2. Prepare bulk payload
       const payload = {
