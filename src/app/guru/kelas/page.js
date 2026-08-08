@@ -860,7 +860,7 @@ export default function KelolaKelas() {
             </div>
           </div>
 
-          <div className="grid-cols-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+          <div className="grid-kelas">
           {kelas.filter(k => filterTingkatan === "Semua" || String(k.tingkatan) === filterTingkatan).map((k) => (
             <div 
               key={k.id} 
