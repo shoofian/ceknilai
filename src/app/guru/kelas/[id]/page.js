@@ -622,23 +622,26 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const getStudentAttendancePercentage = (student) => {
     const pertemuanList = kelas?.skemaPenilaian?.pertemuan || [];
-    if (pertemuanList.length === 0) return null;
+    const totalP = pertemuanList.length;
+    if (totalP === 0) return null;
     
-    let totalHadir = 0;
-    let totalPertemuanDiisi = 0;
+    let countH = 0;
+    let countD = 0;
+    let totalDiisi = 0;
     
     pertemuanList.forEach(p => {
       const val = student.nilai[`_presensi_${p.id}`];
       if (val) {
-        totalPertemuanDiisi++;
-        if (val === 'H') {
-          totalHadir++;
-        }
+        totalDiisi++;
+        if (val === 'H') countH++;
+        else if (val === 'D') countD++;
       }
     });
     
-    if (totalPertemuanDiisi === 0) return null;
-    return (totalHadir / totalPertemuanDiisi) * 100;
+    if (totalDiisi === 0) return null; // Jika belum pernah diabsen sama sekali, kembalikan null agar tampil "-"
+    
+    // Perhitungan sama dengan Buku Presensi: (Hadir + Dispensasi) / Total Pertemuan
+    return ((countH + countD) / totalP) * 100;
   };
 
   const getColScore = (student, col, tempScores = null) => {
