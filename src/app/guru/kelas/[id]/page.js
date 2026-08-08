@@ -4551,7 +4551,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <button 
                               onClick={(e) => { 
                                 e.stopPropagation(); 
-                                setStudentActionModal(student); 
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setStudentActionModal({ student, x: rect.right, y: rect.bottom }); 
                               }} 
                               className="btn btn-secondary" 
                               style={{ padding: "4px 8px", fontSize: "1.1rem", borderRadius: "6px", lineHeight: 1 }}
@@ -8488,29 +8489,46 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* Modal Aksi Siswa */}
-      {studentActionModal && (
-        <div className="modal-overlay animate-fade-in" onClick={() => setStudentActionModal(null)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "20px" }}>
-          <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: "350px", padding: 0 }}>
-            <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)" }}>
-              <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Aksi: {studentActionModal.nama}</h3>
-              <button onClick={() => setStudentActionModal(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+      {/* Dropdown Aksi Siswa (Fixed Overlay) */}
+      {studentActionModal && studentActionModal.student && (
+        <>
+          <div onClick={() => setStudentActionModal(null)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1040 }}></div>
+          <div 
+            className="animate-fade-in glass-card"
+            style={{ 
+              position: "fixed", 
+              top: Math.min(studentActionModal.y + 8, typeof window !== 'undefined' ? window.innerHeight - 300 : studentActionModal.y + 8), 
+              left: typeof window !== 'undefined' ? Math.min(studentActionModal.x - 220, window.innerWidth - 240) : studentActionModal.x - 220, 
+              zIndex: 1050, 
+              backgroundColor: "var(--bg-primary)", 
+              borderRadius: "var(--radius-md)", 
+              boxShadow: "var(--shadow-xl)", 
+              border: "1px solid var(--border-color)",
+              minWidth: "220px",
+              display: "flex", 
+              flexDirection: "column",
+              overflow: "hidden",
+              padding: 0
+            }}
+          >
+            <div className="modal-header" style={{ padding: "12px 16px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)" }}>
+              <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Aksi: {studentActionModal.student.nama}</h3>
             </div>
-            <div style={{ padding: "12px 0", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               <div 
-                onClick={() => { setStudentActionModal(null); handleOpenHistory(studentActionModal); }}
-                style={{ padding: "12px 20px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (studentActionModal.nilai && studentActionModal.nilai._login_history && studentActionModal.nilai._login_history.length > 0) ? 1 : 0.6 }}
+                onClick={() => { setStudentActionModal(null); handleOpenHistory(studentActionModal.student); }}
+                style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (studentActionModal.student.nilai && studentActionModal.student.nilai._login_history && studentActionModal.student.nilai._login_history.length > 0) ? 1 : 0.6 }}
                 onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
               >
                 <span>👁️</span> Riwayat Akses
-                {studentActionModal.nilai && studentActionModal.nilai._login_history && studentActionModal.nilai._login_history.length > 0 && (
+                {studentActionModal.student.nilai && studentActionModal.student.nilai._login_history && studentActionModal.student.nilai._login_history.length > 0 && (
                   <span style={{ width: "8px", height: "8px", backgroundColor: "var(--success)", borderRadius: "50%", marginLeft: "auto" }} title="Sudah pernah melihat nilai"></span>
                 )}
               </div>
               <div 
-                onClick={() => { setStudentActionModal(null); handlePrintStudentKHS(studentActionModal); }}
-                style={{ padding: "12px 20px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)" }}
+                onClick={() => { setStudentActionModal(null); handlePrintStudentKHS(studentActionModal.student); }}
+                style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)" }}
                 onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
               >
@@ -8519,10 +8537,10 @@ export default function DetailKelas({ params: paramsPromise }) {
               <div 
                 onClick={() => { 
                   if(!kelas.archived && !isLocked) {
-                    setStudentActionModal(null); handleOpenEditSiswa(studentActionModal);
+                    setStudentActionModal(null); handleOpenEditSiswa(studentActionModal.student);
                   }
                 }}
-                style={{ padding: "12px 20px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
                 onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "var(--bg-secondary)"; }}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
               >
@@ -8531,28 +8549,28 @@ export default function DetailKelas({ params: paramsPromise }) {
               <div 
                 onClick={() => { 
                   setStudentActionModal(null);
-                  setCatatanSiswaTerpilih(studentActionModal);
+                  setCatatanSiswaTerpilih(studentActionModal.student);
                   setCatatanDraft(prev => ({
                     ...prev,
-                    [studentActionModal.nisn]: studentActionModal.catatan || ""
+                    [studentActionModal.student.nisn]: studentActionModal.student.catatan || ""
                   }));
                 }}
-                style={{ padding: "12px 20px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", background: studentActionModal.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent" }}
+                style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", background: studentActionModal.student.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent" }}
                 onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                onMouseOut={e => e.currentTarget.style.backgroundColor = studentActionModal.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = studentActionModal.student.catatan ? "rgba(245, 158, 11, 0.05)" : "transparent"}
               >
                 <span>📝</span> Catatan Guru
-                {studentActionModal.catatan && (
+                {studentActionModal.student.catatan && (
                   <span style={{ width: "8px", height: "8px", backgroundColor: "#f59e0b", borderRadius: "50%", marginLeft: "auto" }} title="Ada Catatan"></span>
                 )}
               </div>
               <div 
                 onClick={() => { 
                   if(!kelas.archived && !isLocked) {
-                    setStudentActionModal(null); handleDeleteSiswa(studentActionModal.nisn, studentActionModal.nama);
+                    setStudentActionModal(null); handleDeleteSiswa(studentActionModal.student.nisn, studentActionModal.student.nama);
                   }
                 }}
-                style={{ padding: "12px 20px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.9rem", fontWeight: "600", color: "var(--danger)", display: "flex", alignItems: "center", gap: "10px", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", color: "var(--danger)", display: "flex", alignItems: "center", gap: "10px", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
                 onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.05)"; }}
                 onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
               >
@@ -8560,13 +8578,13 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Modal Jurnal Agenda */}
       {agendaModalOpen && (
-        <div className="modal-overlay animate-fade-in" onClick={() => setAgendaModalOpen(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "20px" }}>
-          <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%", padding: 0, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+        <div className="animate-fade-in" onClick={() => setAgendaModalOpen(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "20px" }}>
+          <div className="glass-card animate-fade-in" onClick={e => e.stopPropagation()} style={{ backgroundColor: "var(--bg-primary)", maxWidth: "600px", width: "100%", padding: 0, maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 10 }}>
               <h3 style={{ margin: 0, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
                 📖 Jurnal Agenda Pembelajaran
