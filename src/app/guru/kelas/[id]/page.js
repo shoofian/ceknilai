@@ -8490,7 +8490,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* Modal Aksi Siswa */}
       {studentActionModal && (
-        <div className="modal-overlay" onClick={() => setStudentActionModal(null)}>
+        <div className="modal-overlay animate-fade-in" onClick={() => setStudentActionModal(null)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "20px" }}>
           <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: "350px", padding: 0 }}>
             <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)" }}>
               <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Aksi: {studentActionModal.nama}</h3>
@@ -8565,7 +8565,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* Modal Jurnal Agenda */}
       {agendaModalOpen && (
-        <div className="modal-overlay" onClick={() => setAgendaModalOpen(false)}>
+        <div className="modal-overlay animate-fade-in" onClick={() => setAgendaModalOpen(false)} style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "20px" }}>
           <div className="modal-content animate-fade-in" onClick={e => e.stopPropagation()} style={{ maxWidth: "600px", width: "90%", padding: 0, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
             <div className="modal-header" style={{ padding: "16px 20px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 10 }}>
               <h3 style={{ margin: 0, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
