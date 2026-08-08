@@ -30,6 +30,8 @@ export default function KelolaKelas() {
   // Bank Data States
   const [bankRombels, setBankRombels] = useState([]);
   const [loadingBankRombels, setLoadingBankRombels] = useState(false);
+  const [selectedBankRombels, setSelectedBankRombels] = useState({});
+  const [bankSiswaLoading, setBankSiswaLoading] = useState(false);
   const [useBankData, setUseBankData] = useState(true);
 
   // Filter States
