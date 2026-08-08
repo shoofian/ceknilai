@@ -622,8 +622,43 @@ input[type="date"].form-input {
   transition: var(--transition);
 }
 
-.premium-table tbody tr:hover {
-  background: rgba(59, 130, 246, 0.02);
+/* Row hover highlight - Using !important to override inline row backgrounds */
+.premium-table tbody tr:hover td {
+  background-color: var(--sidebar-active-bg, rgba(59, 130, 246, 0.08)) !important;
+}
+
+/* Crosshair Highlight for Column (via pseudo-element on hovered cell) */
+.premium-table td, .premium-table th {
+  position: relative;
+}
+
+/* The overflow hidden goes on the container to clip the pseudo-elements */
+.table-container {
+  overflow: hidden;
+}
+
+.premium-table tbody td:hover::before {
+  content: "";
+  position: absolute;
+  top: -5000px;
+  bottom: -5000px;
+  left: 0;
+  right: 0;
+  background-color: var(--sidebar-active-bg, rgba(59, 130, 246, 0.08));
+  z-index: 10;
+  pointer-events: none; /* Let clicks pass through to input */
+}
+
+/* The active cell itself gets slightly darker highlight */
+.premium-table tbody td:hover {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Freeze Panes Enhanced Visuals */
+.table-container.is-scrolled-x .sticky-nama {
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1) !important;
+  border-right: 1px solid var(--border-focus) !important;
+  transition: box-shadow 0.2s ease, border-right 0.2s ease;
 }
 
 .premium-table tbody tr:last-child td {

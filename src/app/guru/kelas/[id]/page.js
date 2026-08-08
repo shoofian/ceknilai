@@ -362,6 +362,44 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State untuk Navigasi Panel Mobile di Modal Atur Komponen
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
 
+  // State untuk Navigasi Scroll Manual Tabel
+  const tableContainerRef = useRef(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
+
+  const handleTableScroll = () => {
+    if (tableContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+      setShowLeftScroll(scrollLeft > 5);
+      setShowRightScroll(Math.ceil(scrollLeft) < scrollWidth - clientWidth - 5);
+      
+      // Efek bayangan (freeze pane) untuk scroll horizontal
+      if (scrollLeft > 5) {
+        tableContainerRef.current.classList.add('is-scrolled-x');
+      } else {
+        tableContainerRef.current.classList.remove('is-scrolled-x');
+      }
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleTableScroll();
+      // Force check again in case of layout shifts
+      if (tableContainerRef.current) {
+         const { scrollWidth, clientWidth } = tableContainerRef.current;
+         setShowRightScroll(scrollWidth > clientWidth);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran]);
+
+  const scrollTableBy = (amount) => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  };
+
   useEffect(() => {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
@@ -4149,9 +4187,91 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
 
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
-          <div className="table-container" style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}>
-            {(() => {
-              const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
+          <div style={{ position: "relative" }}>
+            {showLeftScroll && (
+              <button
+                onClick={() => scrollTableBy(-300)}
+                style={{
+                  position: "absolute",
+                  left: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 30,
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--primary)",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                  opacity: 0.85,
+                  transition: "all 0.2s ease",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1.2rem",
+                }}
+                title="Scroll Kiri"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = 1;
+                  e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = 0.85;
+                  e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+                }}
+              >
+                ←
+              </button>
+            )}
+            
+            {showRightScroll && (
+              <button
+                onClick={() => scrollTableBy(300)}
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 30,
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--primary)",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                  opacity: 0.85,
+                  transition: "all 0.2s ease",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "1.2rem",
+                }}
+                title="Scroll Kanan"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = 1;
+                  e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = 0.85;
+                  e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+                }}
+              >
+                →
+              </button>
+            )}
+
+            <div 
+              className="table-container" 
+              ref={tableContainerRef}
+              onScroll={handleTableScroll}
+              style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}
+            >
+              {(() => {
+                const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
               return (
                 <table className="premium-table" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
@@ -4637,6 +4757,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         );
       })()}
     </div>
+  </div>
     ) : (
       <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
         Belum ada siswa dan komponen nilai di kelas ini. Silakan atur komponen nilai atau tambah siswa terlebih dahulu.
