@@ -364,7 +364,7 @@ export default function RaporPreview({ params }) {
 
         {/* Tabel Nilai */}
         <div style={{ marginBottom: "24px" }}>
-          <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>A. NILAI AKADEMIK</h3>
+          <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>A. CAPAIAN PEMBELAJARAN</h3>
           <table className="table-rapor">
             <thead>
               <tr>
