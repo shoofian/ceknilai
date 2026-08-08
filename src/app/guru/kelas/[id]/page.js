@@ -4561,13 +4561,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                             </button>
                             {/* Aksi dropdown dipindahkan ke Modal untuk mencegah terpotong oleh tabel */}
                           </div>
-                          {activeRowAction === student.nisn && (
-                              <div 
-                                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
-                                onClick={(e) => { e.stopPropagation(); setActiveRowAction(null); }}
-                              />
-                            )}
-                          </div>
                         </td>
                       </tr>
 
