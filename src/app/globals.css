@@ -656,8 +656,8 @@ input[type="date"].form-input {
 
 /* Freeze Panes Enhanced Visuals */
 .table-container.is-scrolled-x .sticky-nama {
-  box-shadow: 4px 0 10px rgba(0,0,0,0.1) !important;
-  border-right: 1px solid var(--border-focus) !important;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.12) !important;
+  border-right: 1px solid var(--border-color) !important;
   transition: box-shadow 0.2s ease, border-right 0.2s ease;
 }
 

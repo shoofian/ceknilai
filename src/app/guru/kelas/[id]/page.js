@@ -4187,80 +4187,51 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
           <div style={{ position: "relative" }}>
-            {showLeftScroll && (
-              <button
-                onClick={() => scrollTableBy(-300)}
-                style={{
-                  position: "absolute",
-                  left: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  zIndex: 30,
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--primary)",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-                  opacity: 0.85,
-                  transition: "all 0.2s ease",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "1.2rem",
-                }}
-                title="Scroll Kiri"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = 1;
-                  e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = 0.85;
-                  e.currentTarget.style.transform = "translateY(-50%) scale(1)";
-                }}
-              >
-                ←
-              </button>
-            )}
-            
-            {showRightScroll && (
-              <button
-                onClick={() => scrollTableBy(300)}
-                style={{
-                  position: "absolute",
-                  right: "10px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  zIndex: 30,
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  backgroundColor: "var(--primary)",
-                  color: "#fff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-                  opacity: 0.85,
-                  transition: "all 0.2s ease",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "1.2rem",
-                }}
-                title="Scroll Kanan"
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = 1;
-                  e.currentTarget.style.transform = "translateY(-50%) scale(1.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = 0.85;
-                  e.currentTarget.style.transform = "translateY(-50%) scale(1)";
-                }}
-              >
-                →
-              </button>
+            {(showLeftScroll || showRightScroll) && (
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "8px", paddingRight: "4px", opacity: 0.9 }}>
+                <button
+                  onClick={() => scrollTableBy(-300)}
+                  disabled={!showLeftScroll}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "20px",
+                    backgroundColor: showLeftScroll ? "var(--primary)" : "var(--bg-tertiary)",
+                    color: showLeftScroll ? "#fff" : "var(--text-muted)",
+                    border: "1px solid",
+                    borderColor: showLeftScroll ? "var(--primary)" : "var(--border-color)",
+                    cursor: showLeftScroll ? "pointer" : "not-allowed",
+                    fontSize: "0.8rem",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "all 0.2s ease",
+                    boxShadow: showLeftScroll ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                  }}
+                >
+                  ← Kiri
+                </button>
+                <button
+                  onClick={() => scrollTableBy(300)}
+                  disabled={!showRightScroll}
+                  style={{
+                    padding: "6px 12px",
+                    borderRadius: "20px",
+                    backgroundColor: showRightScroll ? "var(--primary)" : "var(--bg-tertiary)",
+                    color: showRightScroll ? "#fff" : "var(--text-muted)",
+                    border: "1px solid",
+                    borderColor: showRightScroll ? "var(--primary)" : "var(--border-color)",
+                    cursor: showRightScroll ? "pointer" : "not-allowed",
+                    fontSize: "0.8rem",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    transition: "all 0.2s ease",
+                    boxShadow: showRightScroll ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                  }}
+                >
+                  Kanan →
+                </button>
+              </div>
             )}
 
             <div 
