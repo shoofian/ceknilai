@@ -623,7 +623,8 @@ input[type="date"].form-input {
 }
 
 /* Row hover highlight - Using pseudo-element to avoid making sticky cells transparent */
-.premium-table.crosshair-highlight tbody tr:hover td::after {
+.premium-table.crosshair-highlight tbody tr:hover td::after,
+.premium-table.crosshair-highlight tbody tr:focus-within td::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -643,7 +644,8 @@ input[type="date"].form-input {
   clip-path: inset(0);
 }
 
-.premium-table.crosshair-highlight tbody td:hover::before {
+.premium-table.crosshair-highlight tbody td:hover::before,
+.premium-table.crosshair-highlight tbody td:focus-within::before {
   content: "";
   position: absolute;
   top: -5000px;
@@ -656,7 +658,8 @@ input[type="date"].form-input {
 }
 
 /* The active cell itself gets slightly darker highlight */
-.premium-table.crosshair-highlight tbody td:hover::after {
+.premium-table.crosshair-highlight tbody td:hover::after,
+.premium-table.crosshair-highlight tbody td:focus-within::after {
   background-color: rgba(59, 130, 246, 0.15);
 }
 
