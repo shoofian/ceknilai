@@ -55,6 +55,7 @@ function mapKelasFromDb(k) {
         nama: col.nama,
         bobot: col.bobot,
         isGroup: groupConfig ? !!groupConfig.isGroup : false,
+        isPresensi: groupConfig ? !!groupConfig.isPresensi : false,
         hitungMetode: groupConfig ? (groupConfig.hitungMetode || "rata-rata") : "rata-rata",
         subKolom: groupConfig ? (groupConfig.subKolom || []).map(sub => ({
           id: sub.id,
@@ -481,6 +482,11 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
               nama: sub.nama,
               bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
             }))
+          };
+        } else if (col.isPresensi) {
+          groupConfigs[col.id] = {
+            isGroup: false,
+            isPresensi: true
           };
         }
       });
