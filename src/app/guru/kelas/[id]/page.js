@@ -640,8 +640,8 @@ export default function DetailKelas({ params: paramsPromise }) {
     
     if (totalDiisi === 0) return null; // Jika belum pernah diabsen sama sekali, kembalikan null agar tampil "-"
     
-    // Perhitungan sama dengan Buku Presensi: (Hadir + Dispensasi) / Total Pertemuan
-    return ((countH + countD) / totalP) * 100;
+    // Dispensasi dianggap sama dengan tidak hadir, sehingga hanya Hadir (H) yang dihitung positif
+    return (countH / totalP) * 100;
   };
 
   const getColScore = (student, col, tempScores = null) => {
@@ -3968,7 +3968,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                         else if (status === 'D') countD++;
                       });
                       const totalP = kelas.skemaPenilaian.pertemuan.length;
-                      const persentase = totalP > 0 ? Math.round(((countH + countD) / totalP) * 100) : 0;
+                      // Dispensasi tidak dihitung sebagai hadir
+                      const persentase = totalP > 0 ? Math.round((countH / totalP) * 100) : 0;
                       return (
                         <>
                           <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.02)" }}>{countH}</td>
