@@ -362,44 +362,6 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State untuk Navigasi Panel Mobile di Modal Atur Komponen
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
 
-  // State untuk Navigasi Scroll Manual Tabel
-  const tableContainerRef = useRef(null);
-  const [showLeftScroll, setShowLeftScroll] = useState(false);
-  const [showRightScroll, setShowRightScroll] = useState(false);
-
-  const handleTableScroll = () => {
-    if (tableContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
-      setShowLeftScroll(scrollLeft > 5);
-      setShowRightScroll(Math.ceil(scrollLeft) < scrollWidth - clientWidth - 5);
-      
-      // Efek bayangan (freeze pane) untuk scroll horizontal
-      if (scrollLeft > 5) {
-        tableContainerRef.current.classList.add('is-scrolled-x');
-      } else {
-        tableContainerRef.current.classList.remove('is-scrolled-x');
-      }
-    }
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleTableScroll();
-      // Force check again in case of layout shifts
-      if (tableContainerRef.current) {
-         const { scrollWidth, clientWidth } = tableContainerRef.current;
-         setShowRightScroll(scrollWidth > clientWidth);
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran]);
-
-  const scrollTableBy = (amount) => {
-    if (tableContainerRef.current) {
-      tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
-    }
-  };
-
   useEffect(() => {
     if (kolomModalOpen && kelas) {
       setInitialKolomNilai(JSON.parse(JSON.stringify(kelas.kolomNilai)));
@@ -609,6 +571,43 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [activeRowAction, setActiveRowAction] = useState(null);
 
+  // State untuk Navigasi Scroll Manual Tabel
+  const tableContainerRef = useRef(null);
+  const [showLeftScroll, setShowLeftScroll] = useState(false);
+  const [showRightScroll, setShowRightScroll] = useState(false);
+
+  const handleTableScroll = () => {
+    if (tableContainerRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
+      setShowLeftScroll(scrollLeft > 5);
+      setShowRightScroll(Math.ceil(scrollLeft) < scrollWidth - clientWidth - 5);
+      
+      // Efek bayangan (freeze pane) untuk scroll horizontal
+      if (scrollLeft > 5) {
+        tableContainerRef.current.classList.add('is-scrolled-x');
+      } else {
+        tableContainerRef.current.classList.remove('is-scrolled-x');
+      }
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleTableScroll();
+      // Force check again in case of layout shifts
+      if (tableContainerRef.current) {
+         const { scrollWidth, clientWidth } = tableContainerRef.current;
+         setShowRightScroll(scrollWidth > clientWidth);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran]);
+
+  const scrollTableBy = (amount) => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
+    }
+  };
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
 
