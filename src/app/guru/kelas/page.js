@@ -78,6 +78,11 @@ export default function KelolaKelas() {
     return /^(10|11|12|X|XI|XII)\b/i.test(r) || r.startsWith("KELAS");
   };
 
+  const stripLevelFromRombel = (rombel) => {
+    if (!rombel) return "";
+    return rombel.replace(/^(?:KELAS\s+)?(10|11|12|X{1,3}I{0,3})\b\s*[-_]?\s*/i, "").trim();
+  };
+
   // Excel/Dapodik Upload Modal States
   const [creationMethod, setCreationMethod] = useState(null); // 'manual', 'excel', or null
   const [hoverMethod, setHoverMethod] = useState(null); // 'manual', 'excel', or null
@@ -661,7 +666,23 @@ export default function KelolaKelas() {
     setBulkForms((prev) => {
       const updated = prev.map((form) => {
         if (form.id === id) {
-          return { ...form, [field]: value };
+          const newForm = { ...form, [field]: value };
+          // Auto-fill rombelNama and tingkatan if sourceRombel is selected
+          if (field === "sourceRombel" && value) {
+            if (!newForm.rombelNama) {
+              newForm.rombelNama = stripLevelFromRombel(value);
+            }
+            if (!newForm.tingkatan) {
+              const m = value.match(/^(?:KELAS\s+)?(10|11|12|X{1,3}I{0,3})\b/i);
+              if (m) {
+                const lvl = m[1].toUpperCase();
+                if (lvl === "10" || lvl === "X") newForm.tingkatan = "10";
+                else if (lvl === "11" || lvl === "XI") newForm.tingkatan = "11";
+                else if (lvl === "12" || lvl === "XII") newForm.tingkatan = "12";
+              }
+            }
+          }
+          return newForm;
         }
         return form;
       });
@@ -1211,7 +1232,7 @@ export default function KelolaKelas() {
                           initialForms.push({
                             id: Date.now() + idx,
                             tingkatan: t,
-                            rombelNama: r,
+                            rombelNama: stripLevelFromRombel(r),
                             namaKustom: "",
                             mataPelajaran: "",
                             mataPelajaranCustom: "",
