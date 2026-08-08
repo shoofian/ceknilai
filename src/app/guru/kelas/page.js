@@ -164,7 +164,7 @@ export default function KelolaKelas() {
   }, []);
 
   useEffect(() => {
-    if (creationMethod === "manual" && !isEditing) {
+    if (creationMethod === "bank" && !isEditing) {
       const fetchBankRombels = async () => {
         setLoadingBankRombels(true);
         try {
