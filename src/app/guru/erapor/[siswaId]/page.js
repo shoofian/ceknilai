@@ -335,6 +335,32 @@ export default function RaporPreview({ params }) {
             </tr>
           </tbody>
         </table>
+
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "48px", paddingRight: "16px", paddingLeft: "16px" }}>
+          <div style={{ 
+            width: "3cm", 
+            height: "4cm", 
+            border: "1px solid #000", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            fontSize: "14px",
+            color: "#333",
+            textAlign: "center"
+          }}>
+            Pas Foto<br/>3 x 4
+          </div>
+          <div style={{ textAlign: "left", width: "35%", marginTop: "8px" }}>
+            <p style={{ marginBottom: "4px" }}>Jakarta, {new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})}</p>
+            <p>Kepala Sekolah</p>
+            <div style={{ marginTop: "70px", borderBottom: "1px solid black", display: "inline-block", width: "100%", fontWeight: "bold" }}>
+              {data.sekolah?.kepala_sekolah || "Nama Kepala Sekolah"}
+            </div>
+            <p style={{ marginTop: "4px" }}>
+              {data.sekolah?.nip_kepala_sekolah ? `NIP. ${data.sekolah.nip_kepala_sekolah}` : "NIP. -"}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* ==================== HALAMAN 3: NILAI AKADEMIK ==================== */}
