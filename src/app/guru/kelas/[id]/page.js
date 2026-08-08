@@ -3840,58 +3840,37 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {unlockedPertemuanIds.includes(p.id) ? "🔓 Buka" : "🔒 Kunci"}
                         </button>
                       </div>
-                      {p.materi && (
+                      {(p.materi || p.kegiatan || p.keterangan) && (
                         <div 
                           onClick={() => handleOpenEditPertemuan(p)}
-                          title={`Materi: ${p.materi}`} 
+                          title={`Materi: ${p.materi || '-'}\nKegiatan: ${p.kegiatan || p.keterangan || '-'}`} 
                           style={{ 
-                            fontSize: "0.68rem", 
-                            backgroundColor: "rgba(59, 130, 246, 0.08)", 
-                            color: "var(--primary)", 
-                            padding: "2px 6px", 
-                            borderRadius: "4px", 
-                            marginTop: "4px", 
+                            fontSize: "0.7rem", 
+                            backgroundColor: "var(--bg-secondary)", 
+                            border: "1px solid var(--border-color)",
+                            color: "var(--text-secondary)", 
+                            padding: "2px 8px", 
+                            borderRadius: "12px", 
                             display: "inline-flex", 
                             alignItems: "center",
                             gap: "4px",
                             cursor: "pointer",
-                            maxWidth: "110px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
                             fontWeight: "600",
-                            marginLeft: "auto",
-                            marginRight: "auto"
+                            margin: "8px auto 0",
+                            transition: "all 0.2s ease"
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--primary)";
+                            e.currentTarget.style.color = "#fff";
+                            e.currentTarget.style.borderColor = "var(--primary)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+                            e.currentTarget.style.color = "var(--text-secondary)";
+                            e.currentTarget.style.borderColor = "var(--border-color)";
                           }}
                         >
-                          {p.materi}
-                        </div>
-                      )}
-                      {(p.kegiatan || p.keterangan) && (
-                        <div 
-                          onClick={() => handleOpenEditPertemuan(p)}
-                          title={`Kegiatan: ${p.kegiatan || p.keterangan}`} 
-                          style={{ 
-                            fontSize: "0.68rem", 
-                            backgroundColor: "rgba(16, 185, 129, 0.08)", 
-                            color: "var(--success)", 
-                            padding: "2px 6px", 
-                            borderRadius: "4px", 
-                            marginTop: "4px", 
-                            display: "inline-flex", 
-                            alignItems: "center",
-                            gap: "4px",
-                            cursor: "pointer",
-                            maxWidth: "110px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            fontWeight: "600",
-                            marginLeft: "auto",
-                            marginRight: "auto"
-                          }}
-                        >
-                          {p.kegiatan || p.keterangan}
+                          👁️ Intip
                         </div>
                       )}
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
