@@ -1019,7 +1019,7 @@ export default function KelolaKelas() {
                 </div>
                 <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", margin: 0 }}>Pilih metode pembuatan kelas yang paling sesuai dengan kebutuhan Anda:</p>
                 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "8px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginTop: "8px" }}>
                   {/* Pilihan 1: Impor Excel */}
                   <div 
                     onClick={() => { setCreationMethod("excel"); setDapodikUploadError(""); }}
@@ -1041,6 +1041,30 @@ export default function KelolaKelas() {
                     <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>Impor dari Berkas Excel (atau Dapodik)</strong>
                     <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
                       <strong>Direkomendasikan untuk banyak kelas.</strong> Cukup unggah berkas excel/csv data siswa, sistem akan otomatis membaca daftar rombel dan nama siswa tanpa perlu mengetik satu-per-satu.
+                    </span>
+                  </div>
+
+                  {/* Pilihan 2: Buat Kelas Kosong (Manual) */}
+                  <div 
+                    onClick={() => { setCreationMethod("manual"); }}
+                    onMouseEnter={() => setHoverMethod("manual")}
+                    onMouseLeave={() => setHoverMethod(null)}
+                    style={{
+                      border: hoverMethod === "manual" ? "1px solid var(--primary)" : "1px solid var(--border-color)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "20px",
+                      cursor: "pointer",
+                      backgroundColor: hoverMethod === "manual" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      transition: "var(--transition)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px"
+                    }}
+                  >
+                    <span style={{ fontSize: "2rem" }}>📝</span>
+                    <strong style={{ fontSize: "1.05rem", color: "var(--primary)" }}>Buat Kelas Kosong</strong>
+                    <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                      <strong>Manual.</strong> Buat nama kelas terlebih dahulu. Siswa dapat ditambahkan satu per satu atau diimpor di menu Kelola Siswa.
                     </span>
                   </div>
 
