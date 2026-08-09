@@ -704,6 +704,28 @@ export async function deleteSiswaFromKelas(kelasId, nisn, guruUsername = null) {
   }
 }
 
+export async function deleteSiswaBulkFromKelas(kelasId, nisnArray, guruUsername = null) {
+  if (!supabase || !nisnArray || nisnArray.length === 0) return false;
+  try {
+    const kelas = await getKelasById(kelasId, guruUsername);
+    if (!kelas) return false;
+    const { error } = await supabase
+      .from('siswa')
+      .delete()
+      .eq('kelas_id', kelasId)
+      .in('nisn', nisnArray);
+
+    if (error) {
+      console.error('Error bulk deleting students:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in deleteSiswaBulkFromKelas:', err);
+    return false;
+  }
+}
+
 // === SEARCH STUDENT (SISWA PORTAL) ===
 export async function pencarianSiswa(nisn, tanggalLahir) {
   if (!supabase) return [];

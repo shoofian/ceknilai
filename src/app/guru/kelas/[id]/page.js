@@ -1341,6 +1341,34 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
+  const handleSeparateStudent = (s) => {
+    // 1. Remove from updated
+    const newUpdated = (syncPreviewData.updated || []).filter(u => u.nisnLama !== s.nisnLama);
+    
+    // 2. Add to removed (the old student)
+    const newRemoved = [...(syncPreviewData.removed || []), { nisn: s.nisnLama, nama: s.namaLama }];
+    
+    // 3. Add to added (the new student)
+    const newAdded = [...(syncPreviewData.added || []), { nisn: s.nisnBaru, nama: s.namaBaru, tanggalLahir: s.tanggalLahirBaru }];
+    
+    // Update state
+    setSyncPreviewData({
+      ...syncPreviewData,
+      updated: newUpdated,
+      removed: newRemoved,
+      added: newAdded
+    });
+    
+    // Auto check them in the new categories
+    const nextSelectedRemoved = new Set(syncSelectedRemoved);
+    nextSelectedRemoved.add(s.nisnLama);
+    setSyncSelectedRemoved(nextSelectedRemoved);
+    
+    const nextSelectedAdded = new Set(syncSelectedAdded);
+    nextSelectedAdded.add(s.nisnBaru);
+    setSyncSelectedAdded(nextSelectedAdded);
+  };
+
   const handleCommitSyncBankData = async () => {
     if (isSyncingBankData || isLocked || !syncPreviewData) return;
     setIsSyncingBankData(true);
@@ -8561,13 +8589,13 @@ export default function DetailKelas({ params: paramsPromise }) {
               {syncPreviewData.updated && syncPreviewData.updated.length > 0 && (
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <h4 style={{ margin: 0, color: "#f59e0b" }}>Pembaruan Data ({syncPreviewData.updated.length}):</h4>
+                    <h4 style={{ margin: 0, color: "#f59e0b" }}>Pembaruan Data (Merger) ({syncPreviewData.updated.length}):</h4>
                     <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                       <input 
                         type="checkbox" 
                         checked={syncSelectedUpdated.size === syncPreviewData.updated.length && syncPreviewData.updated.length > 0}
                         onChange={(e) => {
-                          if (e.target.checked) setSyncSelectedUpdated(new Set(syncPreviewData.updated.map(s => s.nisnBaru)));
+                          if (e.target.checked) setSyncSelectedUpdated(new Set(syncPreviewData.updated.map(s => s.nisnLama)));
                           else setSyncSelectedUpdated(new Set());
                         }}
                       /> Pilih Semua
@@ -8576,14 +8604,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "200px", overflowY: "auto", listStyleType: "none" }}>
                     {syncPreviewData.updated.map(s => (
                       <li key={s.nisnLama} style={{ marginBottom: "8px" }}>
-                        <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
+                        <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer", flex: 1 }}>
                           <input 
                             type="checkbox"
-                            checked={syncSelectedUpdated.has(s.nisnBaru)}
+                            checked={syncSelectedUpdated.has(s.nisnLama)}
                             onChange={(e) => {
                               const newSet = new Set(syncSelectedUpdated);
-                              if (e.target.checked) newSet.add(s.nisnBaru);
-                              else newSet.delete(s.nisnBaru);
+                              if (e.target.checked) newSet.add(s.nisnLama);
+                              else newSet.delete(s.nisnLama);
                               setSyncSelectedUpdated(newSet);
                             }}
                             style={{ marginTop: "3px" }}
@@ -8597,6 +8625,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                             </div>
                           </div>
                         </label>
+                        <button 
+                          className="btn btn-secondary"
+                          onClick={() => handleSeparateStudent(s)}
+                          style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+                          title="Batal merger (keduanya bukan orang yang sama)"
+                        >
+                          ⎇ Pisahkan
+                        </button>
                       </li>
                     ))}
                   </ul>

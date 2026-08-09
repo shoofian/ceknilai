@@ -82,8 +82,9 @@ export async function POST(request) {
           if (exS.nama && bankS.nama && normalize(exS.nama) === normalize(bankS.nama)) score++;
           if (isValidDate(exS.tanggalLahir) && isValidDate(bankS.tanggal_lahir) && normalize(exS.tanggalLahir) === normalize(bankS.tanggal_lahir)) score++;
           
-          // Match if NISN is exactly the same, OR if at least 2 other fields match
-          if (nisnMatch || score >= 2) {
+          // Match if NISN is exactly the same, OR if at least 2 other fields match, OR if Name is exactly the same (potential merge)
+          const nameMatch = exS.nama && bankS.nama && normalize(exS.nama) === normalize(bankS.nama);
+          if (nisnMatch || score >= 2 || nameMatch) {
             bestMatchIndex = i;
             break; // Stop at first valid match
           }
@@ -136,22 +137,27 @@ export async function POST(request) {
 
     if (action === 'commit' && previewData) {
       const { added = [], updated = [], removed = [] } = previewData;
-      const { deleteSiswaFromKelas } = await import('@/lib/db');
+      const { deleteSiswaBulkFromKelas } = await import('@/lib/db');
       
       let currentSiswa = kelas.siswa ? [...kelas.siswa] : [];
-      const deletePromises = [];
+      
+      // Collect all NISNs to delete in Supabase
+      const nisnsToDelete = [
+        ...removed.map(r => r.nisn),
+        ...updated.filter(u => String(u.nisnLama) !== String(u.nisnBaru)).map(u => u.nisnLama)
+      ];
 
-      // 1. Remove deleted students
+      if (nisnsToDelete.length > 0) {
+        await deleteSiswaBulkFromKelas(kelasId, nisnsToDelete, username);
+      }
+
+      // 1. Remove deleted students from array
       for (const r of removed) {
-        deletePromises.push(deleteSiswaFromKelas(kelasId, r.nisn, username));
         currentSiswa = currentSiswa.filter(s => String(s.nisn) !== String(r.nisn));
       }
       
-      // 2. Update existing students
+      // 2. Update existing students in array
       for (const u of updated) {
-        if (String(u.nisnLama) !== String(u.nisnBaru)) {
-          deletePromises.push(deleteSiswaFromKelas(kelasId, u.nisnLama, username));
-        }
         const idx = currentSiswa.findIndex(s => String(s.nisn) === String(u.nisnLama));
         if (idx !== -1) {
           currentSiswa[idx].nisn = u.nisnBaru;
@@ -159,9 +165,6 @@ export async function POST(request) {
           currentSiswa[idx].tanggalLahir = u.tanggalLahirBaru;
         }
       }
-      
-      // Wait for all DB deletes to finish concurrently
-      await Promise.all(deletePromises);
       
       // 3. Add new students
       for (const a of added) {
