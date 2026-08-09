@@ -84,8 +84,8 @@ export async function getGuru(username = null) {
     }
     const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
-      // Fallback if sekolah_id or walikelas columns do not exist
-      let fallbackQuery = supabase.from('guru').select('username, password, nama, email, is_locked, lock_message');
+      // Fallback if sekolah relationship does not exist
+      let fallbackQuery = supabase.from('guru').select('*');
       if (username) {
         fallbackQuery = fallbackQuery.ilike('username', username.trim());
       }
@@ -134,10 +134,10 @@ export async function getGuruByEmail(email) {
       .maybeSingle();
       
     if (error) {
-      // Fallback if sekolah_id or walikelas columns do not exist
+      // Fallback if sekolah relationship does not exist
       const { data: fbData, error: fbError } = await supabase
         .from('guru')
-        .select('username, password, nama, email, is_locked, lock_message')
+        .select('*')
         .ilike('email', email.trim())
         .maybeSingle();
       if (fbError) {
