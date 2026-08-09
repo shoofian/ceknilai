@@ -105,17 +105,34 @@ export default function BankDataPanel({ targetSekolahId }) {
         throw new Error("File Excel kosong atau tidak valid.");
       }
 
-      // Cari indeks kolom
-      const headers = rawData[0].map(h => String(h).toLowerCase().trim());
+      // Cari baris header (maksimal cek 20 baris pertama)
+      let headerRowIndex = -1;
+      let headers = [];
+      
+      for (let i = 0; i < Math.min(20, rawData.length); i++) {
+        const row = rawData[i] || [];
+        const rowStrs = row.map(cell => String(cell || "").toLowerCase().trim());
+        
+        const hasNisn = rowStrs.some(h => h.includes("nisn"));
+        const hasNama = rowStrs.some(h => h.includes("nama"));
+        const hasRombel = rowStrs.some(h => h.includes("rombel"));
+        
+        if (hasNisn && hasNama && hasRombel) {
+          headerRowIndex = i;
+          headers = rowStrs;
+          break;
+        }
+      }
+
+      if (headerRowIndex === -1) {
+        throw new Error("File Excel harus memiliki minimal kolom: NISN, Nama, dan Rombel.");
+      }
+
       const idxNisn = headers.findIndex(h => h.includes("nisn"));
       const idxNama = headers.findIndex(h => h.includes("nama"));
       const idxTingkatan = headers.findIndex(h => h === "tingkat" || h === "tingkatan" || h === "kelas");
       const idxRombel = headers.findIndex(h => h.includes("rombel"));
       const idxTanggalLahir = headers.findIndex(h => h.includes("tanggal lahir") || h.includes("tgl_lahir"));
-
-      if (idxNisn === -1 || idxNama === -1 || idxRombel === -1) {
-        throw new Error("File Excel harus memiliki minimal kolom: NISN, Nama, dan Rombel.");
-      }
 
       const detectTingkatan = (rombelStr) => {
         const str = String(rombelStr || "").toUpperCase().trim();
@@ -132,7 +149,7 @@ export default function BankDataPanel({ targetSekolahId }) {
       };
 
       const formattedData = [];
-      for (let i = 1; i < rawData.length; i++) {
+      for (let i = headerRowIndex + 1; i < rawData.length; i++) {
         const row = rawData[i];
         if (!row[idxNisn] || !row[idxNama]) continue;
         
