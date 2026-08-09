@@ -468,6 +468,12 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // States untuk Gabung Komponen ke Kelompok
   const [selectedForGroup, setSelectedForGroup] = useState(new Set());
+  const [syncSelectedAdded, setSyncSelectedAdded] = useState(new Set());
+  const [syncSelectedUpdated, setSyncSelectedUpdated] = useState(new Set());
+  const [syncSelectedRemoved, setSyncSelectedRemoved] = useState(new Set());
+  const [bankRombelModalOpen, setBankRombelModalOpen] = useState(false);
+  const [bankAvailableRombels, setBankAvailableRombels] = useState([]);
+  const [selectedBankRombel, setSelectedBankRombel] = useState("");
   const [mergeModalOpen, setMergeModalOpen] = useState(false);
   const [mergeGroupName, setMergeGroupName] = useState("");
   const [isMerging, setIsMerging] = useState(false);
@@ -1261,20 +1267,65 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleSyncBankData = async () => {
+  const handleSyncBankDataInit = async () => {
     if (isSyncingBankData || isLocked) return;
     setIsSyncingBankData(true);
     try {
       const response = await fetch("/api/kelas/sync-bank", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kelasId: classId, action: 'preview' })
+        body: JSON.stringify({ kelasId: classId, action: 'get-rombels' })
+      });
+      const data = await response.json();
+      if (response.ok && data.rombels) {
+        setBankAvailableRombels(data.rombels);
+        // Default selection: try to match current class tingkatan and rombel_nama if exists, else first one
+        const currentMatch = data.rombels.find(r => 
+          String(r.tingkatan) === String(kelas?.tingkatan) && 
+          String(r.rombel).toLowerCase() === String(kelas?.rombel_nama).toLowerCase()
+        );
+        if (currentMatch) {
+          setSelectedBankRombel(`${currentMatch.tingkatan}|${currentMatch.rombel}`);
+        } else if (data.rombels.length > 0) {
+          setSelectedBankRombel(`${data.rombels[0].tingkatan}|${data.rombels[0].rombel}`);
+        } else {
+          setSelectedBankRombel("");
+        }
+        setBankRombelModalOpen(true);
+      } else {
+        alert(data.error || "Gagal mendapatkan daftar rombel dari Bank Data.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi saat mencoba mengambil daftar rombel.");
+    } finally {
+      setIsSyncingBankData(false);
+    }
+  };
+
+  const handleSyncBankData = async () => {
+    if (isSyncingBankData || isLocked) return;
+    if (!selectedBankRombel) {
+      alert("Silakan pilih rombel tujuan dari Bank Data.");
+      return;
+    }
+    const [targetTingkatan, targetRombel] = selectedBankRombel.split("|");
+    setIsSyncingBankData(true);
+    try {
+      const response = await fetch("/api/kelas/sync-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kelasId: classId, action: 'preview', targetTingkatan, targetRombel })
       });
       const data = await response.json();
       if (response.ok) {
         if (data.preview) {
           setSyncPreviewData(data);
+          setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
+          setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
+          setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn)));
           setShowSyncModal(true);
+          setBankRombelModalOpen(false); // Close selection modal if preview is shown
         } else {
           alert(data.message || "Tidak ada perubahan yang perlu disinkronkan.");
         }
@@ -3809,39 +3860,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {unlockedPertemuanIds.includes(p.id) ? "🔓 Buka" : "🔒 Kunci"}
                         </button>
                       </div>
-                      {(p.materi || p.kegiatan || p.keterangan) && (
-                        <div 
-                          onClick={() => handleOpenEditPertemuan(p)}
-                          title={`Materi: ${p.materi || '-'}\nKegiatan: ${p.kegiatan || p.keterangan || '-'}`} 
-                          style={{ 
-                            fontSize: "0.7rem", 
-                            backgroundColor: "var(--bg-secondary)", 
-                            border: "1px solid var(--border-color)",
-                            color: "var(--text-secondary)", 
-                            padding: "2px 8px", 
-                            borderRadius: "12px", 
-                            display: "inline-flex", 
-                            alignItems: "center",
-                            gap: "4px",
-                            cursor: "pointer",
-                            fontWeight: "600",
-                            margin: "8px auto 0",
-                            transition: "all 0.2s ease"
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "var(--primary)";
-                            e.currentTarget.style.color = "#fff";
-                            e.currentTarget.style.borderColor = "var(--primary)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
-                            e.currentTarget.style.color = "var(--text-secondary)";
-                            e.currentTarget.style.borderColor = "var(--border-color)";
-                          }}
-                        >
-                          👁️ Intip
-                        </div>
-                      )}
+
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
                         <button onClick={() => handleOpenEditPertemuan(p)} style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Ubah</button>
                         <button onClick={() => {
@@ -6094,7 +6113,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </p>
                   <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
                     <button
-                      onClick={handleSyncBankData}
+                      onClick={handleSyncBankDataInit}
                       className={`btn btn-primary ${isSyncingBankData || isLocked ? "disabled" : ""}`}
                       style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", cursor: isSyncingBankData || isLocked ? "not-allowed" : "pointer", opacity: isSyncingBankData || isLocked ? 0.5 : 1 }}
                       disabled={isSyncingBankData || isLocked}
@@ -8414,6 +8433,58 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
 
+      {bankRombelModalOpen && (
+        <div className="modal-overlay animate-fade-in" style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", zIndex: 99999,
+          display: "flex", justifyContent: "center", alignItems: "center"
+        }}>
+          <div style={{
+            background: "var(--bg-primary)", padding: "24px",
+            borderRadius: "16px", maxWidth: "450px", width: "95%"
+          }}>
+            <h3 style={{ marginTop: 0, color: "var(--primary)" }}>Pilih Rombel Tujuan</h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "16px" }}>
+              Silakan pilih Rombel dari Bank Data yang ingin Anda gunakan sebagai referensi sinkronisasi kelas ini.
+            </p>
+            <div style={{ marginBottom: "20px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "0.85rem", fontWeight: "600" }}>Pilih Rombel:</label>
+              <select 
+                value={selectedBankRombel} 
+                onChange={e => setSelectedBankRombel(e.target.value)}
+                style={{
+                  width: "100%", padding: "10px", borderRadius: "8px",
+                  border: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)",
+                  color: "var(--text-primary)"
+                }}
+              >
+                {bankAvailableRombels.length === 0 && <option value="">Tidak ada rombel tersedia</option>}
+                {bankAvailableRombels.map(r => (
+                  <option key={`${r.tingkatan}|${r.rombel}`} value={`${r.tingkatan}|${r.rombel}`}>
+                    Kelas {r.tingkatan} - {r.rombel}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setBankRombelModalOpen(false)}
+              >
+                Batal
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleSyncBankData}
+                disabled={isSyncingBankData || !selectedBankRombel}
+              >
+                {isSyncingBankData ? "Memuat..." : "Tampilkan Pratinjau"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSyncModal && syncPreviewData && (
         <div style={{
           position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
@@ -8454,9 +8525,13 @@ export default function DetailKelas({ params: paramsPromise }) {
 
               {syncPreviewData.updated && syncPreviewData.updated.length > 0 && (
                 <div>
-                  <h4 style={{ margin: "0 0 8px 0", color: "#f59e0b" }}>Pembaruan Nama ({syncPreviewData.updated.length}):</h4>
+                  <h4 style={{ margin: "0 0 8px 0", color: "#f59e0b" }}>Pembaruan Data (Nama/NISN) ({syncPreviewData.updated.length}):</h4>
                   <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
-                    {syncPreviewData.updated.map(s => <li key={s.nisn}>{s.namaLama} ➔ {s.namaBaru}</li>)}
+                    {syncPreviewData.updated.map(s => (
+                      <li key={s.nisnLama}>
+                        {s.namaLama} ({s.nisnLama}) ➔ {s.namaBaru} ({s.nisnBaru})
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}

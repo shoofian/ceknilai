@@ -201,6 +201,19 @@ export default function ERaporDashboard() {
     reader.readAsBinaryString(file);
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = [
+      "NISN", "NIPD", "Tempat Lahir", "Tanggal Lahir", "Jenis Kelamin", 
+      "Agama", "Alamat Lengkap", "Telepon", "Nama Ayah", "Pekerjaan Ayah", 
+      "Nama Ibu", "Pekerjaan Ibu", "Nama Wali", "Pekerjaan Wali"
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "FormatBiodata");
+    XLSX.writeFile(wb, "Format_Biodata_Kosong.xlsx");
+  };
+
+
   if (loading) {
     return (
       <div className="flex min-h-[80vh] items-center justify-center">
@@ -311,7 +324,7 @@ export default function ERaporDashboard() {
               {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
               {isUploading ? "Mengimpor..." : "📥 Impor Biodata Excel"}
             </button>
-            <button className="btn btn-secondary">
+            <button className="btn btn-secondary" onClick={handleDownloadTemplate}>
               <Download size={18} /> Format Kosong
             </button>
           </div>
@@ -321,7 +334,12 @@ export default function ERaporDashboard() {
       {/* Table Section */}
       <div className="glass-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
-          <h3 style={{ fontSize: "1.2rem" }}>Daftar Siswa & Status Rapor</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+            <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Status Rapor</h3>
+            <Link href="/guru/erapor/cetak-semua" className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
+              <Printer size={16} /> Cetak Semua
+            </Link>
+          </div>
           
           <div style={{ position: "relative", width: "100%", maxWidth: "300px" }}>
             <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />

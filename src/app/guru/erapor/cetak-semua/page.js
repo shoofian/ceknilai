@@ -1,0 +1,582 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Printer, AlertTriangle, Loader2 } from 'lucide-react';
+
+export default function CetakSemuaRapor() {
+  const router = useRouter();
+
+  const [studentsData, setStudentsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [nipGuru, setNipGuru] = useState("-");
+  const [kotaCetak, setKotaCetak] = useState("Jakarta");
+  const [namaKepsek, setNamaKepsek] = useState("");
+  const [nipKepsek, setNipKepsek] = useState("");
+  const [tanggalCetak, setTanggalCetak] = useState("");
+  const [loadingMessage, setLoadingMessage] = useState("Memuat data siswa...");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setNipGuru(localStorage.getItem("rep_nipGuru") || "-");
+      setKotaCetak(localStorage.getItem("rep_kotaCetak") || "Jakarta");
+      setNamaKepsek(localStorage.getItem("rep_namaKepsek") || "");
+      setNipKepsek(localStorage.getItem("rep_nipKepsek") || "");
+      setTanggalCetak(localStorage.getItem("rep_tanggalCetak") || new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}));
+    }
+    
+    const fetchAllData = async () => {
+      try {
+        setLoadingMessage("Mengambil daftar siswa...");
+        const resList = await fetch("/api/erapor/siswa");
+        
+        if (!resList.ok) {
+           setErrorMsg("Gagal memuat daftar siswa.");
+           setLoading(false);
+           return;
+        }
+
+        const listData = await resList.json();
+        const studentsList = listData.siswa || [];
+        
+        if (studentsList.length === 0) {
+           setErrorMsg("Tidak ada data siswa.");
+           setLoading(false);
+           return;
+        }
+
+        setLoadingMessage(`Mengambil detail rapor (${studentsList.length} siswa)...`);
+        
+        const promises = studentsList.map(s => fetch(`/api/erapor/siswa/${s.nisn}`).then(res => res.json()));
+        const results = await Promise.all(promises);
+        
+        const validData = results
+          .filter(r => r.success && r.data)
+          .map(r => r.data);
+          
+        if (validData.length === 0) {
+           setErrorMsg("Gagal memuat detail rapor untuk seluruh siswa.");
+        } else {
+           setStudentsData(validData);
+        }
+      } catch (err) {
+        console.error("Gagal memuat data cetak semua", err);
+        setErrorMsg("Terjadi kesalahan sistem saat memuat data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchAllData();
+  }, []);
+
+  if (loading) return (
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", backgroundColor: "var(--bg-primary)" }}>
+      <Loader2 className="animate-spin" size={48} style={{ color: "var(--primary)", marginBottom: "16px" }} />
+      <p style={{ color: "var(--text-secondary)", fontWeight: "bold" }}>{loadingMessage}</p>
+    </div>
+  );
+
+  if (errorMsg) {
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-primary)", padding: "40px", display: "flex", justifyContent: "center" }}>
+        <div className="glass-card animate-fade-in" style={{ textAlign: "center", maxWidth: "500px", width: "100%", height: "fit-content", borderColor: "var(--danger)" }}>
+          <AlertTriangle size={64} style={{ color: "var(--danger)", margin: "0 auto 16px auto" }} />
+          <h3 style={{ fontSize: "1.5rem", color: "var(--danger)", marginBottom: "12px" }}>Gagal Memuat</h3>
+          <p style={{ color: "var(--text-secondary)", marginBottom: "32px" }}>{errorMsg}</p>
+          <Link href="/guru/erapor" className="btn btn-secondary">
+            <ArrowLeft size={18} /> Kembali
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-tertiary)", padding: "32px 0", fontFamily: "serif", color: "#000" }} className="print-bg-white print-p-0">
+      
+      {/* Tombol Navigasi (Disembunyikan saat dicetak) */}
+      <div className="no-print" style={{ maxWidth: "210mm", margin: "0 auto 24px auto", display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-body)" }}>
+        <Link href="/guru/erapor" className="btn btn-secondary" style={{ backgroundColor: "#fff" }}>
+          <ArrowLeft size={18} /> Kembali
+        </Link>
+        <button 
+          onClick={() => window.print()}
+          className="btn btn-primary"
+        >
+          <Printer size={18} /> Cetak PDF Seluruh Rapor ({studentsData.length} Siswa)
+        </button>
+      </div>
+
+      {/* CSS Khusus Print (Inline Style untuk Rapor) */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .rapor-page {
+          background-color: white;
+          width: 210mm;
+          min-height: 297mm;
+          margin: 0 auto 32px auto;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+          position: relative;
+          box-sizing: border-box;
+          page-break-after: always;
+        }
+        
+        .table-rapor {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 14px;
+        }
+        .table-rapor th, .table-rapor td {
+          border: 1px solid black;
+          padding: 8px 12px;
+        }
+        .table-rapor th {
+          background-color: #f3f4f6;
+          font-weight: bold;
+          text-align: center;
+        }
+        
+        .biodata-table td {
+          padding: 8px 0;
+          vertical-align: top;
+        }
+
+        @media print {
+          @page { size: A4 portrait; margin: 15mm; }
+          body, html { background-color: white !important; margin: 0; padding: 0; }
+          .no-print { display: none !important; }
+          .rapor-page {
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            min-height: 100% !important;
+          }
+          .print-bg-white { background-color: white !important; }
+          .print-p-0 { padding: 0 !important; }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color: black !important;
+          }
+          .page-break-inside-avoid {
+            page-break-inside: avoid;
+          }
+        }
+      `}} />
+
+      {studentsData.map((data, studentIndex) => (
+        <React.Fragment key={data.identitas.nisn || studentIndex}>
+          {/* ==================== HALAMAN 1: COVER ==================== */}
+          <div className="rapor-page" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px" }}>
+            
+            <div style={{ textAlign: "center", position: "absolute", top: "120px", width: "100%", padding: "0 80px" }}>
+              <h1 style={{ fontSize: "28px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "8px" }}>Laporan Hasil Belajar</h1>
+              <h2 style={{ fontSize: "24px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "64px" }}>(RAPOR)</h2>
+              
+              <div style={{ width: "130px", height: "130px", margin: "0 auto 64px auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <img 
+                  src={\`https://ffrucebdhhrpkuszlshy.supabase.co/storage/v1/object/public/logos/\${data.sekolah?.id}.png\`}
+                  alt="Logo Sekolah" 
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  onError={(e) => { 
+                    e.currentTarget.style.display = 'none'; 
+                    e.currentTarget.nextSibling.style.display = 'flex'; 
+                  }}
+                />
+                <div style={{ display: "none", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", border: "4px solid black", borderRadius: "50%" }}>
+                  <span style={{ fontWeight: "bold", color: "#9ca3af", fontFamily: "var(--font-body)", fontSize: "14px" }}>LOGO SEKOLAH</span>
+                </div>
+              </div>
+
+              <h3 style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "16px", textTransform: "uppercase" }}>Nama Peserta Didik:</h3>
+              <div style={{ border: "2px solid black", padding: "12px 32px", fontSize: "24px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "32px", display: "inline-block", minWidth: "300px" }}>
+                {data.identitas.nama}
+              </div>
+
+              <h3 style={{ fontSize: "18px", fontWeight: "bold", marginBottom: "8px", textTransform: "uppercase" }}>NISN / NIPD:</h3>
+              <div style={{ fontSize: "20px", fontWeight: "bold", marginBottom: "64px" }}>
+                {data.identitas.nisn} / {data.identitas.nipd}
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", position: "absolute", bottom: "80px", width: "100%" }}>
+              <h3 style={{ fontSize: "24px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "8px" }}>{data.identitas.sekolah}</h3>
+              <p style={{ fontSize: "18px" }}>{data.identitas.alamat_sekolah}</p>
+            </div>
+          </div>
+
+          {/* ==================== HALAMAN 2: IDENTITAS SEKOLAH ==================== */}
+          <div className="rapor-page" style={{ padding: "80px 64px" }}>
+            <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>IDENTITAS SEKOLAH</h1>
+            
+            <table className="biodata-table" style={{ width: "100%", fontSize: "16px", lineHeight: "1.8" }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: "250px" }}>Nama Sekolah</td>
+                  <td style={{ width: "16px" }}>:</td>
+                  <td style={{ fontWeight: "bold" }}>{data.identitas.sekolah}</td>
+                </tr>
+                <tr>
+                  <td>NPSN</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.npsn || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Alamat Sekolah</td>
+                  <td>:</td>
+                  <td>{data.identitas.alamat_sekolah}</td>
+                </tr>
+                <tr>
+                  <td>Kode Pos</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.kode_pos || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Desa/Kelurahan</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.desa_kelurahan || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Kecamatan</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.kecamatan || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Kabupaten/Kota</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.kabupaten_kota || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Provinsi</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.provinsi || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Website</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.website || "-"}</td>
+                </tr>
+                <tr>
+                  <td>Email</td>
+                  <td>:</td>
+                  <td>{data.sekolah?.email || "-"}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* ==================== HALAMAN 3: BIODATA ==================== */}
+          <div className="rapor-page" style={{ padding: "80px 64px" }}>
+            
+            <h1 style={{ fontSize: "20px", fontWeight: "bold", textAlign: "center", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "48px" }}>IDENTITAS PESERTA DIDIK</h1>
+            
+            <table className="biodata-table" style={{ width: "100%", fontSize: "16px" }}>
+              <tbody>
+                <tr>
+                  <td style={{ width: "32px", textAlign: "center" }}>1.</td>
+                  <td style={{ width: "250px" }}>Nama Peserta Didik (Lengkap)</td>
+                  <td style={{ width: "16px" }}>:</td>
+                  <td style={{ fontWeight: "bold", textTransform: "uppercase" }}>{data.identitas.nama}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>2.</td>
+                  <td>Nomor Induk Siswa Nasional (NISN)</td>
+                  <td>:</td>
+                  <td>{data.identitas.nisn}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>3.</td>
+                  <td>Nomor Induk Peserta Didik (NIPD)</td>
+                  <td>:</td>
+                  <td>{data.identitas.nipd}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>4.</td>
+                  <td>Tempat, Tanggal Lahir</td>
+                  <td>:</td>
+                  <td>{data.identitas.tempat_lahir}, {data.identitas.tanggal_lahir}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>5.</td>
+                  <td>Jenis Kelamin</td>
+                  <td>:</td>
+                  <td>{data.identitas.jenis_kelamin}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>6.</td>
+                  <td>Agama</td>
+                  <td>:</td>
+                  <td>{data.identitas.agama}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>7.</td>
+                  <td>Status dalam Keluarga</td>
+                  <td>:</td>
+                  <td>{data.identitas.status_keluarga}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>8.</td>
+                  <td>Anak ke</td>
+                  <td>:</td>
+                  <td>{data.identitas.anak_ke}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>9.</td>
+                  <td>Alamat Peserta Didik</td>
+                  <td>:</td>
+                  <td style={{ lineHeight: "1.5" }}>{data.identitas.alamat}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center" }}>10.</td>
+                  <td>Nomor Telepon Rumah/HP</td>
+                  <td>:</td>
+                  <td>{data.identitas.telepon}</td>
+                </tr>
+                <tr>
+                  <td style={{ textAlign: "center", paddingTop: "16px" }}>11.</td>
+                  <td colSpan="3" style={{ fontWeight: "bold", paddingTop: "16px" }}>Orang Tua / Wali</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td style={{ paddingLeft: "16px" }}>a. Nama Ayah</td>
+                  <td>:</td>
+                  <td>{data.identitas.nama_ayah}</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td style={{ paddingLeft: "16px" }}>b. Pekerjaan Ayah</td>
+                  <td>:</td>
+                  <td>{data.identitas.pekerjaan_ayah}</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td style={{ paddingLeft: "16px" }}>c. Nama Ibu</td>
+                  <td>:</td>
+                  <td>{data.identitas.nama_ibu}</td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td style={{ paddingLeft: "16px" }}>d. Pekerjaan Ibu</td>
+                  <td>:</td>
+                  <td>{data.identitas.pekerjaan_ibu}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "48px", paddingRight: "16px" }}>
+              <div style={{ 
+                width: "3cm", 
+                height: "4cm", 
+                border: "1px solid #000", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center",
+                fontSize: "14px",
+                color: "#333",
+                textAlign: "center"
+              }}>
+                Pas Foto<br/>3 x 4
+              </div>
+            </div>
+          </div>
+
+          {/* ==================== HALAMAN 4: NILAI AKADEMIK ==================== */}
+          <div className="rapor-page" style={{ padding: "40px 32px" }}>
+            
+            {/* Header Identitas (Kecil) */}
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", marginBottom: "24px", paddingBottom: "16px", borderBottom: "2px solid black" }}>
+              <div style={{ width: "48%" }}>
+                <table style={{ width: "100%" }}>
+                  <tbody>
+                    <tr><td style={{ width: "100px", padding: "2px 0" }}>Nama Siswa</td><td style={{ width: "10px" }}>:</td><td style={{ fontWeight: "bold" }}>{data.identitas.nama}</td></tr>
+                    <tr><td style={{ padding: "2px 0" }}>NISN / NIPD</td><td>:</td><td>{data.identitas.nisn} / {data.identitas.nipd}</td></tr>
+                    <tr><td style={{ padding: "2px 0" }}>Sekolah</td><td>:</td><td>{data.identitas.sekolah}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ width: "48%" }}>
+                <table style={{ width: "100%" }}>
+                  <tbody>
+                    <tr><td style={{ width: "100px", padding: "2px 0" }}>Kelas / Fase</td><td style={{ width: "10px" }}>:</td><td>{data.identitas.kelas} / {data.identitas.fase}</td></tr>
+                    <tr><td style={{ padding: "2px 0" }}>Semester</td><td>:</td><td>{data.identitas.semester}</td></tr>
+                    <tr><td style={{ padding: "2px 0" }}>Tahun Ajaran</td><td>:</td><td>{data.identitas.tahun_ajaran}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Tabel Nilai */}
+            <div style={{ marginBottom: "24px" }}>
+              <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>A. CAPAIAN PEMBELAJARAN</h3>
+              <table className="table-rapor">
+                <thead>
+                  <tr>
+                    <th style={{ width: "40px" }}>No</th>
+                    <th style={{ width: "180px", textAlign: "left" }}>Mata Pelajaran</th>
+                    <th style={{ width: "80px" }}>Nilai Akhir</th>
+                    <th style={{ textAlign: "left" }}>Capaian Kompetensi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.nilai.map((item, index) => (
+                    <tr key={index}>
+                      <td style={{ textAlign: "center", verticalAlign: "top" }}>{index + 1}</td>
+                      <td style={{ fontWeight: "bold", verticalAlign: "top" }}>{item.mapel}</td>
+                      <td style={{ textAlign: "center", fontWeight: "bold", fontSize: "16px", verticalAlign: "top" }}>{item.nilai}</td>
+                      <td style={{ verticalAlign: "top", lineHeight: "1.5" }}>
+                        {item.tertinggi && (
+                          <div style={{ marginBottom: "8px" }}>
+                            <span style={{ fontWeight: "bold" }}>Tercapai: </span>
+                            {item.tertinggi}
+                          </div>
+                        )}
+                        {item.terendah && (
+                          <div>
+                            <span style={{ fontWeight: "bold" }}>Perlu Peningkatan: </span>
+                            {item.terendah}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {data.nilai.length === 0 && (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>Belum ada data nilai akademik.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Catatan Perkembangan Siswa */}
+            <div className="page-break-inside-avoid" style={{ marginBottom: "24px" }}>
+              <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>B. CATATAN PERKEMBANGAN SISWA</h3>
+              <table className="table-rapor">
+                <thead>
+                  <tr>
+                    <th style={{ width: "40px" }}>No</th>
+                    <th style={{ width: "180px", textAlign: "left" }}>Mata Pelajaran</th>
+                    <th style={{ textAlign: "left" }}>Catatan Perkembangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.nilai.filter(n => n.catatan_guru).length > 0 ? (
+                    data.nilai.filter(n => n.catatan_guru).map((item, index) => (
+                      <tr key={index}>
+                        <td style={{ textAlign: "center", verticalAlign: "top" }}>{index + 1}</td>
+                        <td style={{ fontWeight: "bold", verticalAlign: "top" }}>{item.mapel}</td>
+                        <td style={{ verticalAlign: "top", lineHeight: "1.5" }}>{item.catatan_guru}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3" style={{ textAlign: "center", padding: "20px" }}>Belum ada catatan perkembangan khusus dari guru mata pelajaran.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Ekstrakurikuler */}
+            <div className="page-break-inside-avoid" style={{ marginBottom: "24px" }}>
+              <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>C. EKSTRAKURIKULER</h3>
+              <table className="table-rapor">
+                <thead>
+                  <tr>
+                    <th style={{ width: "40px" }}>No</th>
+                    <th style={{ width: "180px", textAlign: "left" }}>Kegiatan Ekstrakurikuler</th>
+                    <th style={{ width: "80px" }}>Predikat</th>
+                    <th style={{ textAlign: "left" }}>Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.ekskul.map((item, index) => (
+                    <tr key={index}>
+                      <td style={{ textAlign: "center", verticalAlign: "top" }}>{index + 1}</td>
+                      <td style={{ fontWeight: "bold", verticalAlign: "top" }}>{item.nama}</td>
+                      <td style={{ textAlign: "center", verticalAlign: "top" }}>{item.predikat}</td>
+                      <td style={{ verticalAlign: "top" }}>{item.keterangan}</td>
+                    </tr>
+                  ))}
+                  {(!data.ekskul || data.ekskul.length === 0) && (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: "center", padding: "12px", fontStyle: "italic" }}>Belum ada data ekstrakurikuler.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Absensi & Catatan */}
+            <div className="page-break-inside-avoid" style={{ display: "flex", justifyContent: "space-between", gap: "32px", marginBottom: "24px" }}>
+              <div style={{ width: "45%" }}>
+                <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>D. KETIDAKHADIRAN</h3>
+                <table className="table-rapor">
+                  <tbody>
+                    <tr>
+                      <td style={{ width: "70%" }}>Sakit</td>
+                      <td style={{ textAlign: "center", fontWeight: "bold" }}>{data.absensi.sakit} hari</td>
+                    </tr>
+                    <tr>
+                      <td>Izin</td>
+                      <td style={{ textAlign: "center", fontWeight: "bold" }}>{data.absensi.izin} hari</td>
+                    </tr>
+                    <tr>
+                      <td>Tanpa Keterangan</td>
+                      <td style={{ textAlign: "center", fontWeight: "bold" }}>{data.absensi.tanpa_keterangan} hari</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ width: "50%" }}>
+                <h3 style={{ fontWeight: "bold", marginBottom: "12px", fontSize: "15px" }}>E. CATATAN WALI KELAS</h3>
+                <div style={{ border: "1px solid black", padding: "16px", minHeight: "100px", fontStyle: "italic", lineHeight: "1.5" }}>
+                  "{data.catatan}"
+                </div>
+              </div>
+            </div>
+
+            {/* Tanda Tangan */}
+            <div className="page-break-inside-avoid" style={{ marginTop: "48px", fontSize: "14px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", textAlign: "center" }}>
+                <div style={{ width: "30%" }}>
+                  <p style={{ marginBottom: "4px" }}>Mengetahui,</p>
+                  <p>Orang Tua/Wali</p>
+                  <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%" }}></div>
+                </div>
+                <div style={{ width: "35%" }}>
+                  <p style={{ marginBottom: "4px" }}>{kotaCetak}, {tanggalCetak}</p>
+                  <p>Wali Kelas</p>
+                  <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "90%", fontWeight: "bold" }}>
+                    {data.identitas.nama_wali_kelas || "Wali Kelas, S.Pd"}
+                  </div>
+                  <p style={{ marginTop: "4px" }}>
+                    {nipGuru && nipGuru !== "-" ? \`NIP. \${nipGuru}\` : "NIP. -"}
+                  </p>
+                </div>
+              </div>
+              
+              <div style={{ display: "flex", justifyContent: "center", textAlign: "center", marginTop: "32px" }}>
+                <div style={{ width: "40%" }}>
+                  <p style={{ marginBottom: "4px" }}>Mengetahui,</p>
+                  <p>Kepala Sekolah</p>
+                  <div style={{ marginTop: "80px", borderBottom: "1px solid black", display: "inline-block", width: "80%", fontWeight: "bold" }}>
+                    {namaKepsek || data.sekolah?.kepala_sekolah || "Nama Kepala Sekolah"}
+                  </div>
+                  <p style={{ marginTop: "4px" }}>
+                    {nipKepsek ? \`NIP. \${nipKepsek}\` : (data.sekolah?.nip_kepala_sekolah ? \`NIP. \${data.sekolah.nip_kepala_sekolah}\` : "NIP. -")}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </React.Fragment>
+      ))}
+
+    </div>
+  );
+}
