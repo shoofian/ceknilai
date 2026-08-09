@@ -237,17 +237,11 @@ export default function KelolaKelas() {
       
       const data = await res.json();
       if (res.ok && data.preview) {
-        if ((data.added || []).length === 0 && (data.updated || []).length === 0 && (data.removed || []).length === 0) {
-          alert("Tidak ada perubahan. Melanjutkan ke kelas berikutnya...");
-          fetchRombelsForWizardIndex(currentWizardIndex + 1, wizardQueue);
-          setCurrentWizardIndex(currentWizardIndex + 1);
-        } else {
-          setSyncPreviewData(data);
-          setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
-          setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
-          setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn))); 
-          setWizardStep("preview");
-        }
+        setSyncPreviewData(data);
+        setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
+        setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
+        setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn))); 
+        setWizardStep("preview");
       } else {
         alert(data.error || data.message || "Gagal pratinjau sinkronisasi.");
       }
