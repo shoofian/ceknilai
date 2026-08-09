@@ -16,8 +16,13 @@ export default function BankDataPanel({ targetSekolahId }) {
   const [uploadMessage, setUploadMessage] = useState("");
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
   const [showConfirmReset, setShowConfirmReset] = useState(false);
+  const [resetTahunPelajaran, setResetTahunPelajaran] = useState("2024/2025");
   
-  const [targetTahunPelajaran, setTargetTahunPelajaran] = useState("2024/2025");
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importTahun, setImportTahun] = useState("2024/2025");
+  const [importDataPreview, setImportDataPreview] = useState(null);
+  const [importFileName, setImportFileName] = useState("");
+  const [parsingExcel, setParsingExcel] = useState(false);
   
   useEffect(() => {
     fetchBankData();
@@ -62,7 +67,7 @@ export default function BankDataPanel({ targetSekolahId }) {
     
     setIsDeletingBulk(true);
     try {
-      const res = await fetch(`/api/superadmin/bank-siswa?action=reset&sekolah_id=${targetSekolahId}&tahun_pelajaran=${encodeURIComponent(targetTahunPelajaran)}`, {
+      const res = await fetch(`/api/superadmin/bank-siswa?action=reset&sekolah_id=${targetSekolahId}&tahun_pelajaran=${encodeURIComponent(resetTahunPelajaran)}`, {
         method: "DELETE"
       });
       if (res.ok) {
@@ -82,18 +87,20 @@ export default function BankDataPanel({ targetSekolahId }) {
     }
   };
 
-  const handleFileUpload = async (e) => {
+  const handleFilePreview = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!targetSekolahId || !targetTahunPelajaran) {
-      alert("Harap pilih Sekolah dan Tahun Pelajaran terlebih dahulu sebelum mengunggah file.");
+    if (!targetSekolahId) {
+      alert("Harap pilih Sekolah terlebih dahulu di panel utama.");
       e.target.value = "";
       return;
     }
 
-    setUploading(true);
-    setUploadMessage("Memproses file...");
+    setParsingExcel(true);
+    setUploadMessage("");
+    setImportFileName(file.name);
+    setImportDataPreview(null);
 
     try {
       const data = await file.arrayBuffer();
@@ -174,22 +181,46 @@ export default function BankDataPanel({ targetSekolahId }) {
           rombel: rombelVal,
           tanggal_lahir: tglLahir,
           sekolah_id: targetSekolahId,
-          tahun_pelajaran: targetTahunPelajaran
+          tahun_pelajaran: importTahun
         });
       }
 
-      setUploadMessage(`Menyimpan ${formattedData.length} data ke server...`);
+      setImportDataPreview(formattedData);
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Terjadi kesalahan saat memproses file");
+      setImportDataPreview(null);
+    } finally {
+      setParsingExcel(false);
+      e.target.value = "";
+    }
+  };
 
+  const handleImportCommit = async () => {
+    if (!importDataPreview || importDataPreview.length === 0) return;
+    
+    setUploading(true);
+    setUploadMessage("Menyimpan ke server...");
+
+    // Update tahun pelajaran just in case it was changed after previewing
+    const finalData = importDataPreview.map(item => ({...item, tahun_pelajaran: importTahun}));
+
+    try {
       const res = await fetch("/api/superadmin/bank-siswa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: formattedData })
+        body: JSON.stringify({ data: finalData })
       });
 
       if (res.ok) {
         const resData = await res.json();
         setUploadMessage(`Berhasil menyimpan ${resData.count} data!`);
-        setTimeout(() => setUploadMessage(""), 3000);
+        setTimeout(() => {
+          setUploadMessage("");
+          setShowImportModal(false);
+          setImportDataPreview(null);
+          setImportFileName("");
+        }, 2000);
         fetchBankData();
       } else {
         const errorData = await res.json();
@@ -198,10 +229,9 @@ export default function BankDataPanel({ targetSekolahId }) {
     } catch (err) {
       console.error(err);
       setUploadMessage("");
-      alert(err.message || "Terjadi kesalahan saat memproses file");
+      alert(err.message || "Terjadi kesalahan saat menyimpan data");
     } finally {
       setUploading(false);
-      e.target.value = "";
     }
   };
 
@@ -281,41 +311,29 @@ export default function BankDataPanel({ targetSekolahId }) {
         </div>
       ) : (
       <>
-      <div style={{ background: "var(--background-secondary)", padding: "16px", borderRadius: "12px", display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div style={{ flex: "1", minWidth: "150px" }}>
-          <label style={{ fontSize: "0.8rem", fontWeight: "600", display: "block", marginBottom: "4px" }}>Tahun Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
-          <select 
-            className="form-input"
-            value={targetTahunPelajaran}
-            onChange={(e) => setTargetTahunPelajaran(e.target.value)}
-          >
-            <option value="2023/2024">2023/2024</option>
-            <option value="2024/2025">2024/2025</option>
-            <option value="2025/2026">2025/2026</option>
-            <option value="2026/2027">2026/2027</option>
-          </select>
-        </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <label className={`btn ${uploading ? 'btn-secondary' : 'btn-primary'}`} style={{ cursor: uploading ? "not-allowed" : "pointer" }}>
-            {uploading ? "⏳ Memproses..." : "📤 Impor Excel"}
-            <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} disabled={uploading} style={{ display: "none" }} />
-          </label>
-          <button 
-            className="btn btn-danger" 
-            onClick={() => {
-              if (!targetSekolahId) {
-                alert("Pilih sekolah terlebih dahulu sebelum menghapus data.");
-                return;
-              }
-              setShowConfirmReset(true);
-            }}
-            disabled={isDeletingBulk || uploading}
-          >
-            {isDeletingBulk ? "🗑️ Menghapus..." : "🗑️ Hapus Semua"}
-          </button>
-        </div>
+      <div style={{ background: "var(--background-secondary)", padding: "16px", borderRadius: "12px", display: "flex", gap: "12px", justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}>
+        <button 
+          className="btn btn-primary"
+          onClick={() => setShowImportModal(true)}
+          disabled={!targetSekolahId}
+          title={!targetSekolahId ? "Pilih sekolah terlebih dahulu" : ""}
+        >
+          📤 Impor Excel
+        </button>
+        <button 
+          className="btn btn-danger" 
+          onClick={() => {
+            if (!targetSekolahId) {
+              alert("Pilih sekolah terlebih dahulu sebelum menghapus data.");
+              return;
+            }
+            setShowConfirmReset(true);
+          }}
+          disabled={isDeletingBulk || uploading}
+        >
+          {isDeletingBulk ? "🗑️ Menghapus..." : "🗑️ Hapus Semua"}
+        </button>
       </div>
-      {uploadMessage && <p style={{ color: "var(--primary)", fontSize: "0.85rem", fontWeight: "600" }}>{uploadMessage}</p>}
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "20px" }}>Memuat data...</div>
@@ -392,14 +410,99 @@ export default function BankDataPanel({ targetSekolahId }) {
         }}>
           <div style={{
             background: "var(--bg-primary)", padding: "24px",
-            borderRadius: "16px", maxWidth: "400px", width: "90%"
+            borderRadius: "16px", maxWidth: "450px", width: "90%"
           }}>
             <h3 style={{ color: "var(--danger)", marginTop: 0 }}>⚠️ Hapus Semua Data?</h3>
-            <p>Anda yakin ingin menghapus <strong>seluruh</strong> data siswa untuk sekolah dan tahun pelajaran yang dipilih? Tindakan ini tidak dapat dibatalkan!</p>
+            <p>Tindakan ini akan menghapus <strong>seluruh</strong> data siswa secara permanen untuk sekolah dan tahun pelajaran yang Anda pilih di bawah ini!</p>
+            
+            <div style={{ marginTop: "16px", marginBottom: "20px" }}>
+              <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Pilih Tahun Pelajaran yang ingin dihapus:</label>
+              <select 
+                className="form-input"
+                value={resetTahunPelajaran}
+                onChange={(e) => setResetTahunPelajaran(e.target.value)}
+              >
+                <option value="2023/2024">2023/2024</option>
+                <option value="2024/2025">2024/2025</option>
+                <option value="2025/2026">2025/2026</option>
+                <option value="2026/2027">2026/2027</option>
+              </select>
+            </div>
+
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "20px" }}>
               <button className="btn btn-secondary" onClick={() => setShowConfirmReset(false)}>Batal</button>
               <button className="btn btn-danger" onClick={handleResetBankData} disabled={isDeletingBulk}>
                 {isDeletingBulk ? "Menghapus..." : "Ya, Hapus Semua"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showImportModal && (
+        <div className="animate-fade-in" style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1000,
+          display: "flex", justifyContent: "center", alignItems: "center", padding: "16px", backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "var(--bg-primary)", padding: "24px",
+            borderRadius: "16px", maxWidth: "500px", width: "100%",
+            boxShadow: "var(--shadow-xl)"
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ margin: 0 }}>📤 Impor Bank Data</h3>
+              <button 
+                onClick={() => { setShowImportModal(false); setImportDataPreview(null); setImportFileName(""); setUploadMessage(""); }}
+                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}
+              >✕</button>
+            </div>
+            
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Tahun Pelajaran <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select 
+                  className="form-input"
+                  value={importTahun}
+                  onChange={(e) => setImportTahun(e.target.value)}
+                >
+                  <option value="2023/2024">2023/2024</option>
+                  <option value="2024/2025">2024/2025</option>
+                  <option value="2025/2026">2025/2026</option>
+                  <option value="2026/2027">2026/2027</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Pilih File Excel (.xlsx, .xls, .csv)</label>
+                <label className="btn btn-secondary" style={{ display: "block", textAlign: "center", cursor: "pointer", padding: "12px", border: "1px dashed var(--border-color)" }}>
+                  {parsingExcel ? "⏳ Membaca..." : "📂 Klik untuk memilih file"}
+                  <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFilePreview} style={{ display: "none" }} />
+                </label>
+                {importFileName && <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "8px", textAlign: "center" }}>File: {importFileName}</p>}
+              </div>
+
+              {importDataPreview && (
+                <div style={{ background: "var(--bg-tertiary)", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
+                  <h4 style={{ margin: "0 0 8px 0", color: "var(--primary)", fontSize: "0.9rem" }}>✅ Berhasil Membaca Excel</h4>
+                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                    <li>Total Siswa: <strong>{importDataPreview.length}</strong> anak</li>
+                    <li>Total Rombel: <strong>{new Set(importDataPreview.map(d => d.rombel)).size}</strong> kelas berbeda</li>
+                  </ul>
+                </div>
+              )}
+              
+              {uploadMessage && <div style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--primary)", textAlign: "center", marginTop: "8px" }}>{uploadMessage}</div>}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+              <button className="btn btn-secondary" onClick={() => { setShowImportModal(false); setImportDataPreview(null); setImportFileName(""); setUploadMessage(""); }}>Tutup</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleImportCommit} 
+                disabled={uploading || !importDataPreview}
+              >
+                {uploading ? "Menyimpan..." : "Simpan ke Bank Data"}
               </button>
             </div>
           </div>
