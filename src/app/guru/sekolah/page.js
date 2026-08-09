@@ -24,27 +24,29 @@ export default function KonfigurasiSekolahPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("/api/profil"); // Or another endpoint to get guru profile
+        const res = await fetch("/api/auth/session");
         if (res.ok) {
-          const user = await res.json();
-          if (!user || !user.username) {
+          const data = await res.json();
+          if (!data.loggedIn || !data.user) {
             router.push("/login");
             return;
           }
           
+          const user = data.user;
           const isSA = SUPERADMIN_USERNAMES.includes(user.username.toLowerCase());
           setIsSuperadmin(isSA);
           setCurrentUserData(user);
 
           if (isSA) {
             setAuthorized(true);
-            // Wait for superadmin to search and select
-          } else if (user.is_admin_sekolah) {
+          } else if (user.is_admin_sekolah && user.sekolah_id) {
             setAuthorized(true);
-            console.log('[DEBUG Admin Sekolah]', { is_admin_sekolah: user.is_admin_sekolah, sekolah_id: user.sekolah_id, username: user.username });
-            setGlobalTargetSekolahId(user.sekolah_id ? String(user.sekolah_id) : "");
+            setGlobalTargetSekolahId(String(user.sekolah_id));
+          } else if (user.is_admin_sekolah && !user.sekolah_id) {
+            // Admin sekolah tapi belum ditautkan ke sekolah
+            setAuthorized(true);
           } else {
-            router.push("/guru"); // Not authorized
+            router.push("/guru");
           }
         } else {
           router.push("/login");
