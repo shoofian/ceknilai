@@ -135,45 +135,44 @@ export async function POST(request) {
     }
 
     if (action === 'commit' && previewData) {
-      const { added = [], updated = [], removed = [], unchanged = [] } = previewData;
+      const { added = [], updated = [], removed = [] } = previewData;
       const { deleteSiswaFromKelas } = await import('@/lib/db');
       
-      // Remove deleted students
+      let currentSiswa = kelas.siswa ? [...kelas.siswa] : [];
+
+      // 1. Remove deleted students
       for (const r of removed) {
         await deleteSiswaFromKelas(kelasId, r.nisn, username);
+        currentSiswa = currentSiswa.filter(s => String(s.nisn) !== String(r.nisn));
       }
       
-      // For updated students, if NISN changed, we must delete the old NISN record to prevent duplicates in Supabase
+      // 2. Update existing students
       for (const u of updated) {
         if (String(u.nisnLama) !== String(u.nisnBaru)) {
           await deleteSiswaFromKelas(kelasId, u.nisnLama, username);
         }
+        const idx = currentSiswa.findIndex(s => String(s.nisn) === String(u.nisnLama));
+        if (idx !== -1) {
+          currentSiswa[idx].nisn = u.nisnBaru;
+          currentSiswa[idx].nama = u.namaBaru;
+          currentSiswa[idx].tanggalLahir = u.tanggalLahirBaru;
+        }
       }
       
-      // Build the final array
-      const finalSiswa = [...unchanged];
+      // 3. Add new students
+      for (const a of added) {
+        if (!currentSiswa.some(s => String(s.nisn) === String(a.nisn))) {
+          currentSiswa.push({
+            nisn: a.nisn,
+            nama: a.nama,
+            tanggalLahir: a.tanggalLahir,
+            nilai: {},
+            catatan: ""
+          });
+        }
+      }
       
-      updated.forEach(u => {
-        finalSiswa.push({
-          nisn: u.nisnBaru,
-          nama: u.namaBaru,
-          tanggalLahir: u.tanggalLahir,
-          nilai: u.nilai,
-          catatan: u.catatan
-        });
-      });
-      
-      added.forEach(a => {
-        finalSiswa.push({
-          nisn: a.nisn,
-          nama: a.nama,
-          tanggalLahir: a.tanggalLahir,
-          nilai: {},
-          catatan: ""
-        });
-      });
-      
-      const result = await updateKelas(kelasId, { siswa: finalSiswa }, username);
+      const result = await updateKelas(kelasId, { siswa: currentSiswa }, username);
       
       if (!result) {
         return NextResponse.json({ error: 'Gagal menyimpan pembaruan sinkronisasi.' }, { status: 500 });
