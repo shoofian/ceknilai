@@ -11,7 +11,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Tidak diizinkan' }, { status: 401 });
     }
 
-    const { kelasId, action = 'commit', previewData, targetTingkatan, targetRombel } = await request.json();
+    const { kelasId, action = 'commit', previewData, targetTingkatan, targetRombel, targetTahun } = await request.json();
     if (!kelasId) {
       return NextResponse.json({ error: 'ID Kelas tidak ditemukan' }, { status: 400 });
     }
@@ -30,21 +30,23 @@ export async function POST(request) {
     const targetSekolahId = kelas.skemaPenilaian?.original_sekolah_id || guruData.sekolah_id;
 
     if (action === 'get-rombels') {
-      const bankSiswa = await getBankSiswa(targetSekolahId, kelas.tahun_ajaran || '2024/2025');
+      const bankSiswa = await getBankSiswa(targetSekolahId);
       const rombelSet = new Set();
       const rombels = [];
       bankSiswa.forEach(s => {
-        const key = `${s.tingkatan}|${s.rombel}`;
+        const tahun = s.tahun_pelajaran || '2024/2025';
+        const key = `${tahun}|${s.tingkatan}|${s.rombel}`;
         if (!rombelSet.has(key)) {
           rombelSet.add(key);
-          rombels.push({ tingkatan: s.tingkatan, rombel: s.rombel });
+          rombels.push({ tahun, tingkatan: s.tingkatan, rombel: s.rombel });
         }
       });
       return NextResponse.json({ rombels });
     }
 
     if (action === 'preview') {
-      const bankSiswa = await getBankSiswa(targetSekolahId, kelas.tahun_ajaran || '2024/2025');
+      const tahunQuery = targetTahun || kelas.tahun_ajaran || '2024/2025';
+      const bankSiswa = await getBankSiswa(targetSekolahId, tahunQuery);
       
       const filterTingkatan = targetTingkatan ? String(targetTingkatan) : String(kelas.tingkatan);
       const filterRombel = targetRombel ? String(targetRombel).toLowerCase() : String(kelas.rombel_nama).toLowerCase();

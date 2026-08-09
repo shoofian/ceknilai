@@ -1281,13 +1281,14 @@ export default function DetailKelas({ params: paramsPromise }) {
         setBankAvailableRombels(data.rombels);
         // Default selection: try to match current class tingkatan and rombel_nama if exists, else first one
         const currentMatch = data.rombels.find(r => 
+          String(r.tahun) === String(kelas?.tahun_ajaran || '2024/2025') &&
           String(r.tingkatan) === String(kelas?.tingkatan) && 
           String(r.rombel).toLowerCase() === String(kelas?.rombel_nama).toLowerCase()
         );
         if (currentMatch) {
-          setSelectedBankRombel(`${currentMatch.tingkatan}|${currentMatch.rombel}`);
+          setSelectedBankRombel(`${currentMatch.tahun}|${currentMatch.tingkatan}|${currentMatch.rombel}`);
         } else if (data.rombels.length > 0) {
-          setSelectedBankRombel(`${data.rombels[0].tingkatan}|${data.rombels[0].rombel}`);
+          setSelectedBankRombel(`${data.rombels[0].tahun}|${data.rombels[0].tingkatan}|${data.rombels[0].rombel}`);
         } else {
           setSelectedBankRombel("");
         }
@@ -1309,13 +1310,13 @@ export default function DetailKelas({ params: paramsPromise }) {
       alert("Silakan pilih rombel tujuan dari Bank Data.");
       return;
     }
-    const [targetTingkatan, targetRombel] = selectedBankRombel.split("|");
+    const [targetTahun, targetTingkatan, targetRombel] = selectedBankRombel.split("|");
     setIsSyncingBankData(true);
     try {
       const response = await fetch("/api/kelas/sync-bank", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kelasId: classId, action: 'preview', targetTingkatan, targetRombel })
+        body: JSON.stringify({ kelasId: classId, action: 'preview', targetTahun, targetTingkatan, targetRombel })
       });
       const data = await response.json();
       if (response.ok) {
@@ -8460,8 +8461,8 @@ export default function DetailKelas({ params: paramsPromise }) {
               >
                 {bankAvailableRombels.length === 0 && <option value="">Tidak ada rombel tersedia</option>}
                 {bankAvailableRombels.map(r => (
-                  <option key={`${r.tingkatan}|${r.rombel}`} value={`${r.tingkatan}|${r.rombel}`}>
-                    Kelas {r.tingkatan} - {r.rombel}
+                  <option key={`${r.tahun}|${r.tingkatan}|${r.rombel}`} value={`${r.tahun}|${r.tingkatan}|${r.rombel}`}>
+                    [{r.tahun}] Kelas {r.tingkatan} - {r.rombel}
                   </option>
                 ))}
               </select>
