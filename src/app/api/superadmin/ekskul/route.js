@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { checkAdminSekolahAuth } from '@/lib/auth';
-import { getGuru } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,8 +11,6 @@ if (supabaseUrl && supabaseKey) {
     auth: { persistSession: false }
   });
 }
-
-import { getEkskulData } from '@/lib/db';
 
 export async function GET(request) {
   try {
@@ -28,8 +25,23 @@ export async function GET(request) {
       }
     }
 
-    // if type=public, we don't strictly require superadmin/admin auth here, but we pass sekolahId
-    const data = await getEkskulData(sekolahId || null);
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase not initialized' }, { status: 500 });
+    }
+
+    let query = supabase
+      .from('master_ekskul')
+      .select('*')
+      .order('nama_ekskul', { ascending: true });
+
+    if (sekolahId) {
+      query = query.eq('sekolah_id', sekolahId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error fetching ekskul:', error);

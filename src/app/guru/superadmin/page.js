@@ -634,7 +634,6 @@ export default function SuperadminPanel() {
           >
             💳 Manajemen Pembayaran
           </button>
-          </button>
         </div>
       ) : null}
 
