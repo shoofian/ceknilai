@@ -180,24 +180,24 @@ export default function KelolaKelas() {
     setIsSyncingBankData(true);
     
     try {
-      const res = await fetch(`/api/kelas/${k.id}/import`, {
+      const res = await fetch(`/api/kelas/sync-bank`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "preview_sync_bank", targetTingkatan: k.tingkatan, targetRombel: k.rombel_nama, targetTahun: k.tahunAjaran })
+        body: JSON.stringify({ kelasId: k.id, action: "preview", targetTingkatan: k.tingkatan, targetRombel: k.rombel_nama, targetTahun: k.tahunAjaran })
       });
       
       const data = await res.json();
-      if (res.ok) {
-        if (data.added.length === 0 && data.updated.length === 0 && data.removed.length === 0) {
+      if (res.ok && data.preview) {
+        if ((data.added || []).length === 0 && (data.updated || []).length === 0 && (data.removed || []).length === 0) {
           fetchPreviewForWizardIndex(index + 1, queue);
         } else {
           setSyncPreviewData(data);
-          setSyncSelectedAdded(new Set(data.added.map(s => s.nisn)));
-          setSyncSelectedUpdated(new Set(data.updated.map(s => s.nisnLama)));
-          setSyncSelectedRemoved(new Set()); 
+          setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
+          setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
+          setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn))); 
         }
       } else {
-        alert(data.error || "Gagal pratinjau sinkronisasi.");
+        alert(data.error || data.message || "Gagal pratinjau sinkronisasi.");
         setWizardQueue([]);
         setCurrentWizardIndex(-1);
       }
