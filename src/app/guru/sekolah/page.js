@@ -41,7 +41,8 @@ export default function KonfigurasiSekolahPage() {
             // Wait for superadmin to search and select
           } else if (user.is_admin_sekolah) {
             setAuthorized(true);
-            setGlobalTargetSekolahId(user.sekolah_id || "");
+            console.log('[DEBUG Admin Sekolah]', { is_admin_sekolah: user.is_admin_sekolah, sekolah_id: user.sekolah_id, username: user.username });
+            setGlobalTargetSekolahId(user.sekolah_id ? String(user.sekolah_id) : "");
           } else {
             router.push("/guru"); // Not authorized
           }
