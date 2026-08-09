@@ -107,8 +107,12 @@ export async function POST(request) {
               nisnBaru: bankS.nisn, 
               namaLama: exS.nama, 
               namaBaru: bankS.nama, 
+              tanggalLahirLama: exS.tanggalLahir,
+              tanggalLahirBaru: bankS.tanggal_lahir,
+              nisnChanged,
+              nameChanged,
+              dobChanged,
               nilai: exS.nilai, 
-              tanggalLahir: bankS.tanggal_lahir,
               catatan: exS.catatan 
             });
           } else {

@@ -8561,7 +8561,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               {syncPreviewData.updated && syncPreviewData.updated.length > 0 && (
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    <h4 style={{ margin: 0, color: "#f59e0b" }}>Pembaruan Data (Nama/NISN) ({syncPreviewData.updated.length}):</h4>
+                    <h4 style={{ margin: 0, color: "#f59e0b" }}>Pembaruan Data ({syncPreviewData.updated.length}):</h4>
                     <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
                       <input 
                         type="checkbox" 
@@ -8573,10 +8573,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                       /> Pilih Semua
                     </label>
                   </div>
-                  <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto", listStyleType: "none" }}>
+                  <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "200px", overflowY: "auto", listStyleType: "none" }}>
                     {syncPreviewData.updated.map(s => (
-                      <li key={s.nisnLama} style={{ marginBottom: "4px" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <li key={s.nisnLama} style={{ marginBottom: "8px" }}>
+                        <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
                           <input 
                             type="checkbox"
                             checked={syncSelectedUpdated.has(s.nisnBaru)}
@@ -8586,8 +8586,16 @@ export default function DetailKelas({ params: paramsPromise }) {
                               else newSet.delete(s.nisnBaru);
                               setSyncSelectedUpdated(newSet);
                             }}
+                            style={{ marginTop: "3px" }}
                           />
-                          <span>{s.namaLama} ({s.nisnLama}) ➔ <strong>{s.namaBaru}</strong> ({s.nisnBaru})</span>
+                          <div>
+                            <span style={{ fontWeight: "600" }}>{s.namaLama} ({s.nisnLama})</span>
+                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                              {s.nameChanged && <span>• Nama: <del style={{ opacity: 0.7 }}>{s.namaLama}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.namaBaru}</span></span>}
+                              {s.nisnChanged && <span>• NISN: <del style={{ opacity: 0.7 }}>{s.nisnLama}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.nisnBaru}</span></span>}
+                              {s.dobChanged && <span>• Tgl Lahir: <del style={{ opacity: 0.7 }}>{s.tanggalLahirLama || 'kosong'}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.tanggalLahirBaru || 'kosong'}</span></span>}
+                            </div>
+                          </div>
                         </label>
                       </li>
                     ))}
