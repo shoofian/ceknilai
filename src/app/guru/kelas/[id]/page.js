@@ -3873,6 +3873,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
+                        {(p.materi || p.kegiatan) && (
+                          <div 
+                            style={{ 
+                              fontSize: "0.68rem", 
+                              color: "var(--text-secondary)", 
+                              fontWeight: "500", 
+                              maxWidth: "100px", 
+                              whiteSpace: "nowrap", 
+                              overflow: "hidden", 
+                              textOverflow: "ellipsis",
+                              marginTop: "2px",
+                              fontStyle: "italic"
+                            }} 
+                            title={p.materi || p.kegiatan}
+                          >
+                            {p.materi || p.kegiatan}
+                          </div>
+                        )}
                         <button 
                           onClick={() => togglePertemuanLock(p.id)} 
                           style={{
