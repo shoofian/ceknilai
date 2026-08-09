@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { ASPEK_PRESETS } from "@/lib/presets";
+import SyncPreviewUI from "@/components/SyncPreviewUI";
 
 export default function KelolaKelas() {
   const router = useRouter();
@@ -130,6 +131,17 @@ export default function KelolaKelas() {
   const [dupError, setDupError] = useState("");
   const [isDuplicating, setIsDuplicating] = useState(false);
 
+  // Bulk Sync Wizard States
+  const [bulkSyncSelectionOpen, setBulkSyncSelectionOpen] = useState(false);
+  const [selectedClassesForSync, setSelectedClassesForSync] = useState(new Set()); // set of kelas IDs
+  const [wizardQueue, setWizardQueue] = useState([]);
+  const [currentWizardIndex, setCurrentWizardIndex] = useState(-1);
+  const [syncPreviewData, setSyncPreviewData] = useState(null);
+  const [syncSelectedAdded, setSyncSelectedAdded] = useState(new Set());
+  const [syncSelectedUpdated, setSyncSelectedUpdated] = useState(new Set());
+  const [syncSelectedRemoved, setSyncSelectedRemoved] = useState(new Set());
+  const [isSyncingBankData, setIsSyncingBankData] = useState(false);
+
   const fetchKelas = async () => {
     try {
       const response = await fetch("/api/kelas?archived=false");
@@ -142,6 +154,125 @@ export default function KelolaKelas() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const startBulkSync = () => {
+    const selectedClasses = kelas.filter(k => selectedClassesForSync.has(k.id));
+    if (selectedClasses.length === 0) return;
+    
+    setWizardQueue(selectedClasses);
+    setCurrentWizardIndex(0);
+    setBulkSyncSelectionOpen(false);
+    fetchPreviewForWizardIndex(0, selectedClasses);
+  };
+
+  const fetchPreviewForWizardIndex = async (index, queue) => {
+    if (index >= queue.length) {
+      alert("Sinkronisasi massal selesai!");
+      setWizardQueue([]);
+      setCurrentWizardIndex(-1);
+      setSelectedClassesForSync(new Set());
+      return;
+    }
+    
+    const k = queue[index];
+    setSyncPreviewData(null);
+    setIsSyncingBankData(true);
+    
+    try {
+      const res = await fetch(`/api/kelas/${k.id}/import`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "preview_sync_bank", targetTingkatan: k.tingkatan, targetRombel: k.rombel_nama, targetTahun: k.tahunAjaran })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        if (data.added.length === 0 && data.updated.length === 0 && data.removed.length === 0) {
+          fetchPreviewForWizardIndex(index + 1, queue);
+        } else {
+          setSyncPreviewData(data);
+          setSyncSelectedAdded(new Set(data.added.map(s => s.nisn)));
+          setSyncSelectedUpdated(new Set(data.updated.map(s => s.nisnLama)));
+          setSyncSelectedRemoved(new Set()); 
+        }
+      } else {
+        alert(data.error || "Gagal pratinjau sinkronisasi.");
+        setWizardQueue([]);
+        setCurrentWizardIndex(-1);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Kesalahan koneksi.");
+      setWizardQueue([]);
+      setCurrentWizardIndex(-1);
+    } finally {
+      setIsSyncingBankData(false);
+    }
+  };
+
+  const handleCommitWizardIndex = async () => {
+    if (currentWizardIndex < 0 || currentWizardIndex >= wizardQueue.length) return;
+    
+    setIsSyncingBankData(true);
+    const k = wizardQueue[currentWizardIndex];
+    
+    try {
+      const payload = {
+        kelasId: k.id,
+        action: "commit",
+        previewData: {
+          added: syncPreviewData.added.filter(s => syncSelectedAdded.has(s.nisn)),
+          updated: syncPreviewData.updated.filter(s => syncSelectedUpdated.has(s.nisnLama)),
+          removed: syncPreviewData.removed.filter(s => syncSelectedRemoved.has(s.nisn))
+        },
+        targetTingkatan: k.tingkatan,
+        targetRombel: k.rombel_nama,
+        targetTahun: k.tahunAjaran
+      };
+      
+      const res = await fetch("/api/kelas/sync-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      
+      if (res.ok) {
+        fetchKelas();
+        setCurrentWizardIndex(currentWizardIndex + 1);
+        fetchPreviewForWizardIndex(currentWizardIndex + 1, wizardQueue);
+      } else {
+        const data = await res.json();
+        alert(data.error || "Gagal menyimpan hasil sinkronisasi.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Kesalahan koneksi saat menyimpan.");
+    } finally {
+      setIsSyncingBankData(false);
+    }
+  };
+  
+  const handleSeparateStudentWizard = (s) => {
+    setSyncPreviewData(prev => {
+      const newUpdated = prev.updated.filter(u => u.nisnLama !== s.nisnLama);
+      const newRemoved = [...prev.removed, { nisn: s.nisnLama, nama: s.namaLama }];
+      const newAdded = [...prev.added, { nisn: s.nisnBaru, nama: s.namaBaru, tanggalLahir: s.tanggalLahirBaru }];
+      
+      const nextSelectedUpdated = new Set(syncSelectedUpdated);
+      nextSelectedUpdated.delete(s.nisnLama);
+      setSyncSelectedUpdated(nextSelectedUpdated);
+      
+      const nextSelectedRemoved = new Set(syncSelectedRemoved);
+      nextSelectedRemoved.add(s.nisnLama);
+      setSyncSelectedRemoved(nextSelectedRemoved);
+      
+      const nextSelectedAdded = new Set(syncSelectedAdded);
+      nextSelectedAdded.add(s.nisnBaru);
+      setSyncSelectedAdded(nextSelectedAdded);
+      
+      return { ...prev, updated: newUpdated, removed: newRemoved, added: newAdded };
+    });
   };
 
   useEffect(() => {
@@ -863,6 +994,14 @@ export default function KelolaKelas() {
               >
                 📁 Arsip
               </Link>
+              <button 
+                onClick={() => setBulkSyncSelectionOpen(true)}
+                className="btn btn-secondary"
+                style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", padding: "6px 12px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px" }}
+                disabled={isLocked || kelas.length === 0}
+              >
+                🔄 Sinkronisasi Massal
+              </button>
               <button 
                 onClick={handleOpenAdd} 
                 className="btn btn-primary"
@@ -1990,13 +2129,13 @@ export default function KelolaKelas() {
                 })()}
               </span>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
+                <h4 style={{ margin: "0", fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
                   {confirmConfig.title.replace("⚠️", "").trim() || "Konfirmasi"}
                 </h4>
               </div>
             </div>
             
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line", maxHeight: "250px", overflowY: "auto" }}>
+            <p style={{ margin: "0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line", maxHeight: "250px", overflowY: "auto" }}>
               {confirmConfig.message}
             </p>
             
@@ -2028,6 +2167,94 @@ export default function KelolaKelas() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Bulk Sync Selection Modal */}
+      {bulkSyncSelectionOpen && (
+        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div className="modal-content" style={{ background: "var(--bg-primary)", padding: "24px", borderRadius: "16px", maxWidth: "500px", width: "95%", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+            <h3 style={{ marginTop: 0 }}>Pilih Kelas untuk Sinkronisasi Massal</h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "16px" }}>Pilih kelas-kelas yang ingin Anda sinkronkan dengan Bank Data. Anda akan memverifikasi perubahannya satu per satu.</p>
+            
+            <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px", marginBottom: "16px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", cursor: "pointer", border: "1px solid var(--border-color)" }}>
+                <input 
+                  type="checkbox"
+                  checked={selectedClassesForSync.size === kelas.length && kelas.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) setSelectedClassesForSync(new Set(kelas.map(k => k.id)));
+                    else setSelectedClassesForSync(new Set());
+                  }}
+                />
+                <strong>Pilih Semua Kelas</strong>
+              </label>
+              <hr style={{ margin: "4px 0", borderColor: "var(--border-color)", opacity: 0.5 }} />
+              {kelas.map(k => (
+                <label key={k.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", backgroundColor: selectedClassesForSync.has(k.id) ? "rgba(59,130,246,0.1)" : "transparent", borderRadius: "var(--radius-sm)", cursor: "pointer" }}>
+                  <input 
+                    type="checkbox"
+                    checked={selectedClassesForSync.has(k.id)}
+                    onChange={(e) => {
+                      const newSet = new Set(selectedClassesForSync);
+                      if (e.target.checked) newSet.add(k.id);
+                      else newSet.delete(k.id);
+                      setSelectedClassesForSync(newSet);
+                    }}
+                  />
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontSize: "0.9rem", fontWeight: "600" }}>{k.nama}</span>
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{k.mataPelajaran} • {k.tahunAjaran}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+            
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
+              <button className="btn btn-secondary" onClick={() => setBulkSyncSelectionOpen(false)}>Batal</button>
+              <button 
+                className="btn btn-primary" 
+                disabled={selectedClassesForSync.size === 0}
+                onClick={startBulkSync}
+              >
+                Mulai Sinkronisasi ({selectedClassesForSync.size})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Bulk Sync Wizard Modal */}
+      {currentWizardIndex >= 0 && currentWizardIndex < wizardQueue.length && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
+          {syncPreviewData ? (
+            <SyncPreviewUI
+              syncPreviewData={syncPreviewData}
+              syncSelectedAdded={syncSelectedAdded}
+              setSyncSelectedAdded={setSyncSelectedAdded}
+              syncSelectedUpdated={syncSelectedUpdated}
+              setSyncSelectedUpdated={setSyncSelectedUpdated}
+              syncSelectedRemoved={syncSelectedRemoved}
+              setSyncSelectedRemoved={setSyncSelectedRemoved}
+              handleSeparateStudent={handleSeparateStudentWizard}
+              onCommit={handleCommitWizardIndex}
+              onCancel={() => {
+                setWizardQueue([]);
+                setCurrentWizardIndex(-1);
+                setSyncPreviewData(null);
+              }}
+              isSyncingBankData={isSyncingBankData}
+              title={`Sinkronisasi Kelas ${currentWizardIndex + 1} dari ${wizardQueue.length}: ${wizardQueue[currentWizardIndex].nama}`}
+              commitText={currentWizardIndex + 1 < wizardQueue.length ? "Simpan & Lanjut ke Berikutnya" : "Simpan & Selesai"}
+            />
+          ) : (
+            <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <div className="modal-content" style={{ background: "var(--bg-primary)", padding: "32px", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+                <span className="spinner" style={{ width: "40px", height: "40px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></span>
+                <p>Menganalisis kelas <strong>{wizardQueue[currentWizardIndex]?.nama}</strong>...</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
