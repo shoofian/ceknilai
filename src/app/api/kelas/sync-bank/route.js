@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
-import { getKelasById, getGuru, getBankSiswa, updateKelas } from '@/lib/db';
+import { getKelasById, getGuru, getBankSiswa, updateKelas, deleteSiswaBulkFromKelas, logAktivitasGuru } from '@/lib/db';
 
 
 
@@ -137,7 +137,6 @@ export async function POST(request) {
 
     if (action === 'commit' && previewData) {
       const { added = [], updated = [], removed = [] } = previewData;
-      const { deleteSiswaBulkFromKelas } = await import('@/lib/db');
       
       let currentSiswa = kelas.siswa ? [...kelas.siswa] : [];
       
@@ -185,7 +184,6 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Gagal menyimpan pembaruan sinkronisasi.' }, { status: 500 });
       }
 
-      const { logAktivitasGuru } = await import('@/lib/db');
       await logAktivitasGuru(
         username,
         'EDIT_KELAS',
