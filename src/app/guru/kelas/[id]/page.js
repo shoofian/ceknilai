@@ -1345,13 +1345,19 @@ export default function DetailKelas({ params: paramsPromise }) {
     if (isSyncingBankData || isLocked || !syncPreviewData) return;
     setIsSyncingBankData(true);
     try {
+      const filteredPreviewData = {
+        added: (syncPreviewData.added || []).filter(s => syncSelectedAdded.has(s.nisn)),
+        updated: (syncPreviewData.updated || []).filter(s => syncSelectedUpdated.has(s.nisnBaru)),
+        removed: (syncPreviewData.removed || []).filter(s => syncSelectedRemoved.has(s.nisn)),
+      };
+
       const response = await fetch("/api/kelas/sync-bank", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           kelasId: classId, 
           action: 'commit', 
-          previewData: syncPreviewData 
+          previewData: filteredPreviewData 
         })
       });
       const data = await response.json();
@@ -8517,20 +8523,72 @@ export default function DetailKelas({ params: paramsPromise }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               {syncPreviewData.added && syncPreviewData.added.length > 0 && (
                 <div>
-                  <h4 style={{ margin: "0 0 8px 0", color: "#10b981" }}>Menambahkan ({syncPreviewData.added.length}):</h4>
-                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
-                    {syncPreviewData.added.map(s => <li key={s.nisn}>{s.nama} ({s.nisn})</li>)}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#10b981" }}>Menambahkan ({syncPreviewData.added.length}):</h4>
+                    <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                      <input 
+                        type="checkbox" 
+                        checked={syncSelectedAdded.size === syncPreviewData.added.length && syncPreviewData.added.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) setSyncSelectedAdded(new Set(syncPreviewData.added.map(s => s.nisn)));
+                          else setSyncSelectedAdded(new Set());
+                        }}
+                      /> Pilih Semua
+                    </label>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto", listStyleType: "none" }}>
+                    {syncPreviewData.added.map(s => (
+                      <li key={s.nisn} style={{ marginBottom: "4px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox"
+                            checked={syncSelectedAdded.has(s.nisn)}
+                            onChange={(e) => {
+                              const newSet = new Set(syncSelectedAdded);
+                              if (e.target.checked) newSet.add(s.nisn);
+                              else newSet.delete(s.nisn);
+                              setSyncSelectedAdded(newSet);
+                            }}
+                          />
+                          {s.nama} ({s.nisn})
+                        </label>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}
 
               {syncPreviewData.updated && syncPreviewData.updated.length > 0 && (
                 <div>
-                  <h4 style={{ margin: "0 0 8px 0", color: "#f59e0b" }}>Pembaruan Data (Nama/NISN) ({syncPreviewData.updated.length}):</h4>
-                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "#f59e0b" }}>Pembaruan Data (Nama/NISN) ({syncPreviewData.updated.length}):</h4>
+                    <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                      <input 
+                        type="checkbox" 
+                        checked={syncSelectedUpdated.size === syncPreviewData.updated.length && syncPreviewData.updated.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) setSyncSelectedUpdated(new Set(syncPreviewData.updated.map(s => s.nisnBaru)));
+                          else setSyncSelectedUpdated(new Set());
+                        }}
+                      /> Pilih Semua
+                    </label>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto", listStyleType: "none" }}>
                     {syncPreviewData.updated.map(s => (
-                      <li key={s.nisnLama}>
-                        {s.namaLama} ({s.nisnLama}) ➔ {s.namaBaru} ({s.nisnBaru})
+                      <li key={s.nisnLama} style={{ marginBottom: "4px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox"
+                            checked={syncSelectedUpdated.has(s.nisnBaru)}
+                            onChange={(e) => {
+                              const newSet = new Set(syncSelectedUpdated);
+                              if (e.target.checked) newSet.add(s.nisnBaru);
+                              else newSet.delete(s.nisnBaru);
+                              setSyncSelectedUpdated(newSet);
+                            }}
+                          />
+                          <span>{s.namaLama} ({s.nisnLama}) ➔ <strong>{s.namaBaru}</strong> ({s.nisnBaru})</span>
+                        </label>
                       </li>
                     ))}
                   </ul>
@@ -8539,9 +8597,37 @@ export default function DetailKelas({ params: paramsPromise }) {
 
               {syncPreviewData.removed && syncPreviewData.removed.length > 0 && (
                 <div>
-                  <h4 style={{ margin: "0 0 8px 0", color: "var(--danger)" }}>Menghapus ({syncPreviewData.removed.length}):</h4>
-                  <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto" }}>
-                    {syncPreviewData.removed.map(s => <li key={s.nisn}>{s.nama} ({s.nisn})</li>)}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <h4 style={{ margin: 0, color: "var(--danger)" }}>Menghapus ({syncPreviewData.removed.length}):</h4>
+                    <label style={{ fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                      <input 
+                        type="checkbox" 
+                        checked={syncSelectedRemoved.size === syncPreviewData.removed.length && syncPreviewData.removed.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) setSyncSelectedRemoved(new Set(syncPreviewData.removed.map(s => s.nisn)));
+                          else setSyncSelectedRemoved(new Set());
+                        }}
+                      /> Pilih Semua
+                    </label>
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto", listStyleType: "none" }}>
+                    {syncPreviewData.removed.map(s => (
+                      <li key={s.nisn} style={{ marginBottom: "4px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                          <input 
+                            type="checkbox"
+                            checked={syncSelectedRemoved.has(s.nisn)}
+                            onChange={(e) => {
+                              const newSet = new Set(syncSelectedRemoved);
+                              if (e.target.checked) newSet.add(s.nisn);
+                              else newSet.delete(s.nisn);
+                              setSyncSelectedRemoved(newSet);
+                            }}
+                          />
+                          {s.nama} ({s.nisn})
+                        </label>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}
