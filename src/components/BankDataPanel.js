@@ -113,9 +113,23 @@ export default function BankDataPanel({ targetSekolahId }) {
       const idxRombel = headers.findIndex(h => h.includes("rombel"));
       const idxTanggalLahir = headers.findIndex(h => h.includes("tanggal lahir") || h.includes("tgl_lahir"));
 
-      if (idxNisn === -1 || idxNama === -1 || idxTingkatan === -1 || idxRombel === -1) {
-        throw new Error("File Excel harus memiliki kolom: NISN, Nama, Tingkat, dan Rombel.");
+      if (idxNisn === -1 || idxNama === -1 || idxRombel === -1) {
+        throw new Error("File Excel harus memiliki minimal kolom: NISN, Nama, dan Rombel.");
       }
+
+      const detectTingkatan = (rombelStr) => {
+        const str = String(rombelStr || "").toUpperCase().trim();
+        const romanMatch = str.match(/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/);
+        if (romanMatch) {
+          const map = { 'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5', 'VI': '6', 'VII': '7', 'VIII': '8', 'IX': '9', 'X': '10', 'XI': '11', 'XII': '12' };
+          return map[romanMatch[1]];
+        }
+        const digitMatch = str.match(/^([1-9]|10|11|12)\b/);
+        if (digitMatch) {
+          return digitMatch[1];
+        }
+        return "Uncategorized";
+      };
 
       const formattedData = [];
       for (let i = 1; i < rawData.length; i++) {
@@ -133,11 +147,14 @@ export default function BankDataPanel({ targetSekolahId }) {
           }
         }
 
+        const rombelVal = String(row[idxRombel]).trim();
+        let tingkatanVal = idxTingkatan !== -1 && row[idxTingkatan] ? String(row[idxTingkatan]).trim() : detectTingkatan(rombelVal);
+
         formattedData.push({
           nisn: String(row[idxNisn]).trim(),
           nama: String(row[idxNama]).trim(),
-          tingkatan: String(row[idxTingkatan]).trim(),
-          rombel: String(row[idxRombel]).trim(),
+          tingkatan: tingkatanVal,
+          rombel: rombelVal,
           tanggal_lahir: tglLahir,
           sekolah_id: targetSekolahId,
           tahun_pelajaran: targetTahunPelajaran
