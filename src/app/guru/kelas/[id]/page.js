@@ -1347,7 +1347,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     try {
       const filteredPreviewData = {
         added: (syncPreviewData.added || []).filter(s => syncSelectedAdded.has(s.nisn)),
-        updated: (syncPreviewData.updated || []).filter(s => syncSelectedUpdated.has(s.nisnBaru)),
+        updated: (syncPreviewData.updated || []).filter(s => syncSelectedUpdated.has(s.nisnLama)),
         removed: (syncPreviewData.removed || []).filter(s => syncSelectedRemoved.has(s.nisn)),
       };
 

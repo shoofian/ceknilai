@@ -139,17 +139,18 @@ export async function POST(request) {
       const { deleteSiswaFromKelas } = await import('@/lib/db');
       
       let currentSiswa = kelas.siswa ? [...kelas.siswa] : [];
+      const deletePromises = [];
 
       // 1. Remove deleted students
       for (const r of removed) {
-        await deleteSiswaFromKelas(kelasId, r.nisn, username);
+        deletePromises.push(deleteSiswaFromKelas(kelasId, r.nisn, username));
         currentSiswa = currentSiswa.filter(s => String(s.nisn) !== String(r.nisn));
       }
       
       // 2. Update existing students
       for (const u of updated) {
         if (String(u.nisnLama) !== String(u.nisnBaru)) {
-          await deleteSiswaFromKelas(kelasId, u.nisnLama, username);
+          deletePromises.push(deleteSiswaFromKelas(kelasId, u.nisnLama, username));
         }
         const idx = currentSiswa.findIndex(s => String(s.nisn) === String(u.nisnLama));
         if (idx !== -1) {
@@ -158,6 +159,9 @@ export async function POST(request) {
           currentSiswa[idx].tanggalLahir = u.tanggalLahirBaru;
         }
       }
+      
+      // Wait for all DB deletes to finish concurrently
+      await Promise.all(deletePromises);
       
       // 3. Add new students
       for (const a of added) {
