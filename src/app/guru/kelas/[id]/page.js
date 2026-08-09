@@ -277,7 +277,18 @@ export default function DetailKelas({ params: paramsPromise }) {
     };
     handleResize();
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    const handleWindowBlur = () => {
+      if (document.activeElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        document.activeElement.blur();
+      }
+    };
+    window.addEventListener("blur", handleWindowBlur);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
   }, []);
 
   const formatNameForMobile = (name, isExpanded) => {
