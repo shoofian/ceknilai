@@ -140,6 +140,9 @@ export default function KelolaKelas() {
   const [syncSelectedAdded, setSyncSelectedAdded] = useState(new Set());
   const [syncSelectedUpdated, setSyncSelectedUpdated] = useState(new Set());
   const [syncSelectedRemoved, setSyncSelectedRemoved] = useState(new Set());
+  const [wizardStep, setWizardStep] = useState("select_rombel");
+  const [bankAvailableRombels, setBankAvailableRombels] = useState([]);
+  const [selectedBankRombel, setSelectedBankRombel] = useState("");
   const [isSyncingBankData, setIsSyncingBankData] = useState(false);
 
   const fetchKelas = async () => {
@@ -163,10 +166,10 @@ export default function KelolaKelas() {
     setWizardQueue(selectedClasses);
     setCurrentWizardIndex(0);
     setBulkSyncSelectionOpen(false);
-    fetchPreviewForWizardIndex(0, selectedClasses);
+    fetchRombelsForWizardIndex(0, selectedClasses);
   };
 
-  const fetchPreviewForWizardIndex = async (index, queue) => {
+  const fetchRombelsForWizardIndex = async (index, queue) => {
     if (index >= queue.length) {
       alert("Sinkronisasi massal selesai!");
       setWizardQueue([]);
@@ -177,35 +180,80 @@ export default function KelolaKelas() {
     
     const k = queue[index];
     setSyncPreviewData(null);
+    setWizardStep("select_rombel");
+    setIsSyncingBankData(true);
+    
+    try {
+      const response = await fetch("/api/kelas/sync-bank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kelasId: k.id, action: 'get-rombels' })
+      });
+      const data = await response.json();
+      if (response.ok && data.rombels) {
+        setBankAvailableRombels(data.rombels);
+        const currentMatch = data.rombels.find(r => 
+          String(r.tahun) === String(k.tahunAjaran) &&
+          String(r.tingkatan) === String(k.tingkatan) && 
+          String(r.rombel).toLowerCase() === String(k.rombel_nama).toLowerCase()
+        );
+        if (currentMatch) {
+          setSelectedBankRombel(`${currentMatch.tahun}|${currentMatch.tingkatan}|${currentMatch.rombel}`);
+        } else if (data.rombels.length > 0) {
+          setSelectedBankRombel(`${data.rombels[0].tahun}|${data.rombels[0].tingkatan}|${data.rombels[0].rombel}`);
+        } else {
+          setSelectedBankRombel("");
+        }
+      } else {
+        alert(data.error || "Gagal memuat daftar rombel bank data.");
+        setWizardQueue([]);
+        setCurrentWizardIndex(-1);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Kesalahan koneksi saat mengambil rombel bank data.");
+      setWizardQueue([]);
+      setCurrentWizardIndex(-1);
+    } finally {
+      setIsSyncingBankData(false);
+    }
+  };
+
+  const handleProceedToPreview = async () => {
+    if (!selectedBankRombel) {
+      alert("Silakan pilih rombel tujuan dari Bank Data.");
+      return;
+    }
+    const k = wizardQueue[currentWizardIndex];
+    const [targetTahun, targetTingkatan, targetRombel] = selectedBankRombel.split("|");
     setIsSyncingBankData(true);
     
     try {
       const res = await fetch(`/api/kelas/sync-bank`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kelasId: k.id, action: "preview", targetTingkatan: k.tingkatan, targetRombel: k.rombel_nama, targetTahun: k.tahunAjaran })
+        body: JSON.stringify({ kelasId: k.id, action: "preview", targetTingkatan, targetRombel, targetTahun })
       });
       
       const data = await res.json();
       if (res.ok && data.preview) {
         if ((data.added || []).length === 0 && (data.updated || []).length === 0 && (data.removed || []).length === 0) {
-          fetchPreviewForWizardIndex(index + 1, queue);
+          alert("Tidak ada perubahan. Melanjutkan ke kelas berikutnya...");
+          fetchRombelsForWizardIndex(currentWizardIndex + 1, wizardQueue);
+          setCurrentWizardIndex(currentWizardIndex + 1);
         } else {
           setSyncPreviewData(data);
           setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
           setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
           setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn))); 
+          setWizardStep("preview");
         }
       } else {
         alert(data.error || data.message || "Gagal pratinjau sinkronisasi.");
-        setWizardQueue([]);
-        setCurrentWizardIndex(-1);
       }
     } catch (err) {
       console.error(err);
       alert("Kesalahan koneksi.");
-      setWizardQueue([]);
-      setCurrentWizardIndex(-1);
     } finally {
       setIsSyncingBankData(false);
     }
@@ -240,7 +288,7 @@ export default function KelolaKelas() {
       if (res.ok) {
         fetchKelas();
         setCurrentWizardIndex(currentWizardIndex + 1);
-        fetchPreviewForWizardIndex(currentWizardIndex + 1, wizardQueue);
+        fetchRombelsForWizardIndex(currentWizardIndex + 1, wizardQueue);
       } else {
         const data = await res.json();
         alert(data.error || "Gagal menyimpan hasil sinkronisasi.");
@@ -2227,7 +2275,7 @@ export default function KelolaKelas() {
       {/* Bulk Sync Wizard Modal */}
       {currentWizardIndex >= 0 && currentWizardIndex < wizardQueue.length && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1000 }}>
-          {syncPreviewData ? (
+          {wizardStep === "preview" && syncPreviewData ? (
             <SyncPreviewUI
               syncPreviewData={syncPreviewData}
               syncSelectedAdded={syncSelectedAdded}
@@ -2238,20 +2286,73 @@ export default function KelolaKelas() {
               setSyncSelectedRemoved={setSyncSelectedRemoved}
               handleSeparateStudent={handleSeparateStudentWizard}
               onCommit={handleCommitWizardIndex}
-              onCancel={() => {
-                setWizardQueue([]);
-                setCurrentWizardIndex(-1);
-                setSyncPreviewData(null);
-              }}
+              onCancel={() => setWizardStep("select_rombel")}
               isSyncingBankData={isSyncingBankData}
               title={`Sinkronisasi Kelas ${currentWizardIndex + 1} dari ${wizardQueue.length}: ${wizardQueue[currentWizardIndex].nama}`}
               commitText={currentWizardIndex + 1 < wizardQueue.length ? "Simpan & Lanjut ke Berikutnya" : "Simpan & Selesai"}
             />
+          ) : wizardStep === "select_rombel" ? (
+            <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <div className="modal-content" style={{ background: "var(--bg-primary)", padding: "24px", borderRadius: "16px", maxWidth: "450px", width: "95%", display: "flex", flexDirection: "column" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ margin: 0, fontSize: "1.2rem" }}>Pilih Rombel ({currentWizardIndex + 1}/{wizardQueue.length})</h3>
+                  <button onClick={() => { setWizardQueue([]); setCurrentWizardIndex(-1); }} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-secondary)" }}>×</button>
+                </div>
+                
+                <div style={{ padding: "12px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", marginBottom: "16px", border: "1px solid var(--border-color)" }}>
+                  <p style={{ margin: "0 0 4px 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>Kelas Saat Ini:</p>
+                  <p style={{ margin: 0, fontWeight: "600", color: "var(--primary)" }}>{wizardQueue[currentWizardIndex].nama}</p>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: "16px" }}>
+                  <label className="form-label" style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                    Rombel di Bank Data <span style={{ color: "var(--danger)" }}>*</span>
+                  </label>
+                  {isSyncingBankData && bankAvailableRombels.length === 0 ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                      <span className="spinner" style={{ width: "16px", height: "16px", border: "2px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></span>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Memuat rombel...</span>
+                    </div>
+                  ) : bankAvailableRombels.length > 0 ? (
+                    <select
+                      className="form-input"
+                      value={selectedBankRombel}
+                      onChange={(e) => setSelectedBankRombel(e.target.value)}
+                      style={{ appearance: "auto", backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}
+                    >
+                      <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Rombel --</option>
+                      {bankAvailableRombels.map(br => (
+                        <option key={`${br.tahun}|${br.tingkatan}|${br.rombel}`} value={`${br.tahun}|${br.tingkatan}|${br.rombel}`} style={{ backgroundColor: "var(--bg-secondary)" }}>
+                          Tingkat {br.tingkatan} - {br.rombel} ({br.siswaCount} Siswa)
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div style={{ padding: "10px", backgroundColor: "var(--danger-glow)", color: "var(--danger)", borderRadius: "var(--radius-sm)", fontSize: "0.85rem", border: "1px solid rgba(239, 68, 68, 0.15)" }}>
+                      Tidak ada rombel tersedia di Bank Data untuk tahun ajaran ini.
+                    </div>
+                  )}
+                </div>
+                
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "16px" }}>
+                  <button className="btn btn-secondary" onClick={() => { setWizardQueue([]); setCurrentWizardIndex(-1); }} disabled={isSyncingBankData}>Batal</button>
+                  <button 
+                    className="btn btn-primary" 
+                    disabled={isSyncingBankData || !selectedBankRombel}
+                    onClick={handleProceedToPreview}
+                  >
+                    {isSyncingBankData && bankAvailableRombels.length > 0 ? (
+                      <><span className="btn-spinner" /> Memproses...</>
+                    ) : "Lanjut ke Pratinjau ➔"}
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center" }}>
               <div className="modal-content" style={{ background: "var(--bg-primary)", padding: "32px", borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
                 <span className="spinner" style={{ width: "40px", height: "40px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></span>
-                <p>Menganalisis kelas <strong>{wizardQueue[currentWizardIndex]?.nama}</strong>...</p>
+                <p>Memproses...</p>
               </div>
             </div>
           )}
