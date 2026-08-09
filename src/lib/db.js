@@ -1100,7 +1100,7 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, sekolah:sekolah_id(nama, npsn)');
+      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, is_admin_sekolah, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, sekolah:sekolah_id(nama, npsn)');
     if (error) {
       // Fallback
       const { data: fallbackData, error: fallbackError } = await supabase
