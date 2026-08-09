@@ -24,6 +24,7 @@ export default function ProfilGuru() {
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [isAdminSekolah, setIsAdminSekolah] = useState(false);
   const [sekolahId, setSekolahId] = useState("");
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [newSekolahNama, setNewSekolahNama] = useState("");
@@ -77,6 +78,7 @@ export default function ProfilGuru() {
           setWalikelasRombelNama(data.walikelas_rombel_nama || "");
           setWalikelasTahunAjaran(data.tahun_ajaran || "2025/2026");
           setIsLocked(!!data.is_locked);
+          setIsAdminSekolah(!!data.is_admin_sekolah);
         }
       } catch (err) {
         console.error("Gagal memuat profil", err);
@@ -288,6 +290,11 @@ export default function ProfilGuru() {
 
             <div className="form-group" style={{ position: "relative" }}>
               <label className="form-label">Asal Sekolah</label>
+              {isAdminSekolah && (
+                <p style={{ fontSize: "0.75rem", color: "var(--warning)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  🔒 Anda terdaftar sebagai Admin Sekolah. Sekolah tidak dapat diubah melalui profil.
+                </p>
+              )}
               <input
                 type="text"
                 placeholder="🔍 Cari asal sekolah (ketik nama atau NPSN)..."
@@ -310,7 +317,8 @@ export default function ProfilGuru() {
                 }}
                 onFocus={() => { if (sekolahSearchQuery.trim()) setShowSekolahDropdown(true); }}
                 onBlur={() => setTimeout(() => setShowSekolahDropdown(false), 200)}
-                disabled={isLocked}
+                disabled={isLocked || isAdminSekolah}
+                style={isAdminSekolah ? { opacity: 0.6, cursor: "not-allowed" } : {}}
               />
               {showSekolahDropdown && sekolahSearchQuery.trim().length > 0 && (
                 <div className="autocomplete-dropdown">

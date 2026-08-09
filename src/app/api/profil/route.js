@@ -45,11 +45,16 @@ export async function POST(request) {
 
     const currentGuru = await getGuru(usernameFromAuth);
 
+    // Admin Sekolah tidak boleh mengganti sekolah_id
+    const finalSekolahId = currentGuru.is_admin_sekolah 
+      ? currentGuru.sekolah_id  // Keep original
+      : (sekolah_id || null);
+
     const updatedProfile = {
       nama: nama.trim(),
       username: username.trim().toLowerCase(),
       email: email.trim(),
-      sekolah_id: sekolah_id || null,
+      sekolah_id: finalSekolahId,
       walikelas_tingkatan: walikelas_tingkatan !== undefined ? (walikelas_tingkatan !== null ? Number(walikelas_tingkatan) : null) : undefined,
       walikelas_rombel_nama: walikelas_rombel_nama !== undefined ? (walikelas_rombel_nama ? walikelas_rombel_nama.trim() : null) : undefined,
       tahun_ajaran: tahun_ajaran !== undefined ? (tahun_ajaran ? tahun_ajaran.trim() : '2025/2026') : undefined
