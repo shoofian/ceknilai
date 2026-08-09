@@ -5,6 +5,13 @@
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
+  overflow-anchor: none;
+}
+
+html, body {
+  overflow-anchor: none;
+}
+
   /* Harmonious Color Palette - Light Mode */
   --bg-primary: #f8fafc; /* Slate 50 */
   --bg-secondary: #ffffff;
@@ -590,6 +597,7 @@ input[type="date"].form-input {
   box-shadow: var(--shadow-sm);
   margin-top: 16px;
   margin-bottom: 24px;
+  overflow-anchor: none;
 }
 
 .premium-table {
