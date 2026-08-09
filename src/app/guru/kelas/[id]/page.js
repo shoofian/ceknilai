@@ -3891,31 +3891,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                             {p.materi || p.kegiatan}
                           </div>
                         )}
-                        <button 
-                          onClick={() => togglePertemuanLock(p.id)} 
-                          style={{
-                            background: unlockedPertemuanIds.includes(p.id) ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.8)",
-                            border: unlockedPertemuanIds.includes(p.id) ? "1px solid #ef4444" : "1px solid var(--border-color)",
-                            borderRadius: "4px",
-                            padding: "2px 6px",
-                            color: unlockedPertemuanIds.includes(p.id) ? "#ef4444" : "var(--text-muted)",
-                            cursor: "pointer",
-                            fontSize: "0.68rem",
-                            lineHeight: 1,
-                            marginTop: "4px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            transition: "all 0.2s"
-                          }}
-                          title={unlockedPertemuanIds.includes(p.id) ? "Klik untuk mengunci kolom ini" : "Klik untuk membuka kunci kolom ini"}
-                        >
-                          {unlockedPertemuanIds.includes(p.id) ? "🔓 Buka" : "🔒 Kunci"}
-                        </button>
                       </div>
 
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
-                        <button onClick={() => handleOpenEditPertemuan(p)} style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Ubah</button>
+                        <button onClick={() => handleOpenEditPertemuan(p)} title="Ubah Pertemuan" style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "4px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
                         <button onClick={() => {
                           triggerConfirm(
                             `Apakah Anda yakin ingin menghapus "${p.nama}"? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus secara permanen.`,
@@ -3932,7 +3911,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                               isDanger: true
                             }
                           );
-                        }} style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "2px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.7rem", fontWeight: "bold" }}>Hapus</button>
+                        }} title="Hapus Pertemuan" style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "4px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}>🗑️</button>
+                        <button 
+                          onClick={() => togglePertemuanLock(p.id)} 
+                          style={{
+                            background: unlockedPertemuanIds.includes(p.id) ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.8)",
+                            border: unlockedPertemuanIds.includes(p.id) ? "1px solid #ef4444" : "1px solid var(--border-color)",
+                            borderRadius: "4px",
+                            padding: "4px 6px",
+                            color: unlockedPertemuanIds.includes(p.id) ? "#ef4444" : "var(--text-muted)",
+                            cursor: "pointer",
+                            fontSize: "0.85rem",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            transition: "all 0.2s"
+                          }}
+                          title={unlockedPertemuanIds.includes(p.id) ? "Klik untuk mengunci kolom ini" : "Klik untuk membuka kunci kolom ini"}
+                        >
+                          {unlockedPertemuanIds.includes(p.id) ? "🔓" : "🔒"}
+                        </button>
                       </div>
                     </th>
                   ))}
