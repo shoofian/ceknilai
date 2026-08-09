@@ -1,49 +1,52 @@
 import { NextResponse } from 'next/server';
-import { checkSuperadminAuth } from '@/lib/auth';
+import { checkAdminSekolahAuth } from '@/lib/auth';
 import { getGuru } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: { persistSession: false }
-});
+let supabase = null;
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false }
+  });
+}
+
+import { getEkskulData } from '@/lib/db';
 
 export async function GET(request) {
   try {
-    const isSuperadmin = await checkSuperadminAuth();
-    if (!isSuperadmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-
     const { searchParams } = new URL(request.url);
     const sekolahId = searchParams.get('sekolah_id');
+    const type = searchParams.get('type');
 
-    let query = supabase
-      .from('master_ekskul')
-      .select('*')
-      .order('nama_ekskul', { ascending: true });
-
-    if (sekolahId) {
-      query = query.eq('sekolah_id', sekolahId);
+    if (type !== 'public') {
+      const auth = await checkAdminSekolahAuth(sekolahId);
+      if (!auth) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
-    const { data, error } = await query;
-
-    if (error) throw error;
-
+    // if type=public, we don't strictly require superadmin/admin auth here, but we pass sekolahId
+    const data = await getEkskulData(sekolahId || null);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in GET /api/superadmin/ekskul:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Error fetching ekskul:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const isSuperadmin = await checkSuperadminAuth();
-    if (!isSuperadmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-
     const body = await request.json();
+    const sekolahId = body.sekolah_id;
+
+    const auth = await checkAdminSekolahAuth(sekolahId);
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
     const { nama_ekskul, pembina, sekolah_id } = body;
 
     if (!nama_ekskul || !sekolah_id) {

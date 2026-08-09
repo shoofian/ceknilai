@@ -1,16 +1,30 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/db';
+import { checkAdminSekolahAuth } from '@/lib/auth';
+import { createClient } from '@supabase/supabase-js';
 
-export const dynamic = 'force-dynamic';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+let supabase = null;
+if (supabaseUrl && supabaseKey) {
+  supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false }
+  });
+}
 
 export async function POST(request) {
   try {
     const formData = await request.formData();
-    const file = formData.get('logo');
     const sekolahId = formData.get('sekolahId');
+    const file = formData.get('file');
 
-    if (!file || !sekolahId) {
-      return NextResponse.json({ error: 'File logo dan ID Sekolah wajib dikirim' }, { status: 400 });
+    if (!sekolahId || !file || !supabase) {
+      return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    const auth = await checkAdminSekolahAuth(sekolahId);
+    if (!auth) {
+      return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
     }
 
     const fileExt = file.name.split('.').pop();

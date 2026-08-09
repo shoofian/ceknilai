@@ -99,6 +99,7 @@ export async function getGuru(username = null) {
         ...result,
         is_locked: result.is_locked ?? false,
         lock_message: result.lock_message ?? null,
+        is_admin_sekolah: result.is_admin_sekolah ?? false,
         sekolah_id: null,
         walikelas_tingkatan: null,
         walikelas_rombel_nama: null,
@@ -111,6 +112,7 @@ export async function getGuru(username = null) {
       ...result,
       is_locked: result.is_locked ?? false,
       lock_message: result.lock_message ?? null,
+      is_admin_sekolah: result.is_admin_sekolah ?? false,
       sekolah_id: result.sekolah_id ?? null,
       walikelas_tingkatan: result.walikelas_tingkatan ?? null,
       walikelas_rombel_nama: result.walikelas_rombel_nama ?? null,
@@ -1155,8 +1157,10 @@ export async function createGuruByAdmin(guruData) {
       .insert({
         username: guruData.username.trim().toLowerCase(),
         nama: guruData.nama.trim(),
-        email: guruData.email.trim(),
-        password: hashedPassword
+        email: guruData.email ? guruData.email.trim() : null,
+        password: hashedPassword,
+        sekolah_id: guruData.sekolah_id || null,
+        is_admin_sekolah: guruData.is_admin_sekolah ?? false
       })
       .select()
       .single();
@@ -1176,7 +1180,7 @@ export async function updateGuruByAdmin(username, updatedData) {
   try {
     const payload = {
       nama: updatedData.nama.trim(),
-      email: updatedData.email.trim()
+      email: updatedData.email ? updatedData.email.trim() : null
     };
     if (updatedData.password) {
       const salt = bcrypt.genSaltSync(10);
@@ -1188,6 +1192,9 @@ export async function updateGuruByAdmin(username, updatedData) {
     }
     if (updatedData.sekolah_id !== undefined) {
       payload.sekolah_id = updatedData.sekolah_id || null;
+    }
+    if (updatedData.is_admin_sekolah !== undefined) {
+      payload.is_admin_sekolah = updatedData.is_admin_sekolah;
     }
     if (updatedData.walikelas_tingkatan !== undefined) {
       payload.walikelas_tingkatan = updatedData.walikelas_tingkatan !== null ? Number(updatedData.walikelas_tingkatan) : null;

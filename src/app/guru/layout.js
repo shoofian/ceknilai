@@ -124,11 +124,16 @@ export default function GuruLayout({ children }) {
     }
   }
 
-  if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
-    navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
-  }
+    if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
+      navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
+    }
+    
+    // Add "Konfigurasi Sekolah" for Superadmin OR Admin Sekolah
+    if (guru && (["superadmin", "shoofian"].includes(guru.username.toLowerCase()) || guru.is_admin_sekolah)) {
+      navItems.push({ name: "🏫 Konfigurasi Sekolah", path: "/guru/sekolah" });
+    }
 
-  navItems.push({
+    navItems.push({
     name: "💬 Chat Bantuan (WA)",
     path: "https://wa.me/6285157544004?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai%20Cek%20Nilai.",
     isExternal: true

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ManajemenSekolahPanel from "@/components/ManajemenSekolahPanel";
 
 export default function SuperadminPanel() {
   const [activeTab, setActiveTab] = useState("dashboard"); // default to dashboard
@@ -98,6 +97,7 @@ export default function SuperadminPanel() {
   const [formIsLocked, setFormIsLocked] = useState(false);
   const [formLockMessage, setFormLockMessage] = useState("");
   const [formSekolahId, setFormSekolahId] = useState("");
+  const [formIsAdminSekolah, setFormIsAdminSekolah] = useState(false);
   const [formWalikelasTingkatan, setFormWalikelasTingkatan] = useState("");
   const [formWalikelasRombelNama, setFormWalikelasRombelNama] = useState("");
   
@@ -181,6 +181,7 @@ export default function SuperadminPanel() {
     setFormIsLocked(false);
     setFormLockMessage("");
     setFormSekolahId("");
+    setFormIsAdminSekolah(false);
     setFormWalikelasTingkatan("");
     setFormWalikelasRombelNama("");
     setSekolahSearchQuery("");
@@ -198,6 +199,7 @@ export default function SuperadminPanel() {
     setFormIsLocked(guru.is_locked || false);
     setFormLockMessage(guru.lock_message || "");
     setFormSekolahId(guru.sekolah_id || "");
+    setFormIsAdminSekolah(guru.is_admin_sekolah || false);
     setFormWalikelasTingkatan(guru.walikelas_tingkatan || "");
     setFormWalikelasRombelNama(guru.walikelas_rombel_nama || "");
     setSekolahSearchQuery(guru.sekolah?.nama || "");
@@ -218,13 +220,15 @@ export default function SuperadminPanel() {
     }
 
     const payload = {
-      nama: formNama.trim(),
-      email: formEmail.trim(),
-      is_locked: formIsLocked,
-      lock_message: formLockMessage,
+      username: formUsername,
+      nama: formNama,
+      email: formEmail,
       sekolah_id: formSekolahId || null,
-      walikelas_tingkatan: formWalikelasTingkatan ? Number(formWalikelasTingkatan) : null,
-      walikelas_rombel_nama: formWalikelasRombelNama.trim() || null,
+      is_admin_sekolah: formIsAdminSekolah,
+      walikelas_tingkatan: formWalikelasTingkatan || null,
+      walikelas_rombel_nama: formWalikelasRombelNama || null,
+      is_locked: formIsLocked,
+      lock_message: formLockMessage || null
     };
     
     if (formPassword) {
@@ -630,12 +634,6 @@ export default function SuperadminPanel() {
           >
             💳 Manajemen Pembayaran
           </button>
-          <button
-            onClick={() => setActiveTab("sekolah")}
-            className={`btn ${activeTab === "sekolah" ? "btn-primary" : "btn-secondary"}`}
-            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
-          >
-            🏫 Konfigurasi Sekolah
           </button>
         </div>
       ) : null}
@@ -660,8 +658,7 @@ export default function SuperadminPanel() {
             { id: "logs", icon: "📋", title: "Log Aktivitas Siswa", desc: "Pantau riwayat aksi dan aktivitas belajar siswa." },
             { id: "logs_guru", icon: "👨‍🏫", title: "Log Aktivitas Guru", desc: "Pantau pengisian nilai dan aktivitas guru pengampu." },
             { id: "guru", icon: "🔑", title: "Manajemen Akun Guru", desc: "Kelola daftar guru, akses, dan pendaftaran." },
-            { id: "pembayaran", icon: "💳", title: "Manajemen Pembayaran", desc: "Kelola langganan, referral, dan status aktif akun." },
-            { id: "sekolah", icon: "🏫", title: "Konfigurasi Sekolah", desc: "Atur identitas sekolah dan pengarsipan data." }
+            { id: "pembayaran", icon: "💳", title: "Manajemen Pembayaran", desc: "Kelola langganan, referral, dan status aktif akun." }
           ].map(menu => (
             <div 
               key={menu.id}
@@ -851,9 +848,6 @@ export default function SuperadminPanel() {
               )}
             </div>
           )}
-
-          {/* TAB SEKOLAH */}
-          {activeTab === "sekolah" && <ManajemenSekolahPanel targetSekolahId={globalTargetSekolahId} />}
 
           {/* TAB 4: MANAJEMEN GURU */}
           {activeTab === "guru" && (
@@ -1332,6 +1326,21 @@ export default function SuperadminPanel() {
                   onChange={(e) => setFormPassword(e.target.value)}
                   required={!isEditing}
                 />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0, marginTop: "4px" }}>
+                <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontWeight: "700" }}>
+                  <input
+                    type="checkbox"
+                    checked={formIsAdminSekolah}
+                    onChange={(e) => setFormIsAdminSekolah(e.target.checked)}
+                    style={{ width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                  👑 Berikan akses Admin Sekolah
+                </label>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px", marginLeft: "24px" }}>
+                  Admin Sekolah dapat mengonfigurasi identitas sekolah, ekstrakurikuler, dan bank siswa untuk sekolahnya masing-masing.
+                </p>
               </div>
 
               {isEditing && (

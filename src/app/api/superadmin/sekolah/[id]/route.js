@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkSuperadminAuth } from '@/lib/auth';
+import { checkAdminSekolahAuth } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,14 +14,14 @@ if (supabaseUrl && supabaseKey) {
 
 export async function GET(request, { params }) {
   try {
-    const superadmin = await checkSuperadminAuth();
-    if (!superadmin) {
-      return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
-    }
-
     const { id } = await params;
     if (!id || !supabase) {
       return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    const auth = await checkAdminSekolahAuth(id);
+    if (!auth) {
+      return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
     }
 
     const { data, error } = await supabase.from('sekolah').select('*').eq('id', id).maybeSingle();
@@ -39,14 +39,14 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const superadmin = await checkSuperadminAuth();
-    if (!superadmin) {
-      return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
-    }
-
     const { id } = await params;
     if (!id || !supabase) {
       return NextResponse.json({ error: 'Bad Request' }, { status: 400 });
+    }
+
+    const auth = await checkAdminSekolahAuth(id);
+    if (!auth) {
+      return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 });
     }
 
     const updates = await request.json();

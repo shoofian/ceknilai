@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { checkSuperadminAuth } from '@/lib/auth';
+import { checkAdminSekolahAuth } from '@/lib/auth';
 import { getGuru, getBankSiswa, upsertBankSiswa, deleteBankSiswa, resetBankData } from '@/lib/db';
 
 export async function GET(request) {
   try {
-    const isSuperadmin = await checkSuperadminAuth();
-    if (!isSuperadmin) {
+    const { searchParams } = new URL(request.url);
+    const sekolahId = searchParams.get('sekolah_id');
+
+    const auth = await checkAdminSekolahAuth(sekolahId);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const sekolahId = searchParams.get('sekolah_id');
     const tahunPelajaran = searchParams.get('tahun_pelajaran');
 
     // Use provided sekolahId (if any), since superadmin is global
@@ -24,12 +25,14 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const isSuperadmin = await checkSuperadminAuth();
-    if (!isSuperadmin) {
+    const { data, sekolah_id: bodySekolahId } = await request.json();
+    
+    // We expect the first item to have a sekolah_id, or passed in the body
+    const targetSekolahId = bodySekolahId || (data && data.length > 0 ? data[0].sekolah_id : null);
+    const auth = await checkAdminSekolahAuth(targetSekolahId);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const { data } = await request.json();
     
     if (!data || !Array.isArray(data)) {
       return NextResponse.json({ error: 'Data harus berupa array' }, { status: 400 });
@@ -61,39 +64,34 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const isSuperadmin = await checkSuperadminAuth();
-    if (!isSuperadmin) {
+    const { searchParams } = new URL(request.url);
+    const action = searchParams.get('action');
+    const sekolahId = searchParams.get('sekolah_id');
+    
+    // Check auth for delete action
+    const auth = await checkAdminSekolahAuth(sekolahId);
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-
     if (action === 'reset') {
-      const sekolahId = searchParams.get('sekolah_id');
       const tahunPelajaran = searchParams.get('tahun_pelajaran');
-      if (!sekolahId || !tahunPelajaran) {
-        return NextResponse.json({ error: 'sekolah_id dan tahun_pelajaran diperlukan untuk reset' }, { status: 400 });
+      if (!sekolahId) {
+        return NextResponse.json({ error: 'ID Sekolah wajib untuk reset' }, { status: 400 });
       }
+      
       const success = await resetBankData(sekolahId, tahunPelajaran);
-      if (!success) {
-        return NextResponse.json({ error: 'Gagal mereset data' }, { status: 500 });
+      return NextResponse.json({ success });
+    } else {
+      // Single delete
+      const id = searchParams.get('id');
+      if (!id) {
+        return NextResponse.json({ error: 'ID required' }, { status: 400 });
       }
-      return NextResponse.json({ success: true, message: 'Bank data berhasil direset' });
+
+      const success = await deleteBankSiswa(id);
+      return NextResponse.json({ success });
     }
-
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID tidak ditemukan' }, { status: 400 });
-    }
-
-    const success = await deleteBankSiswa(id);
-    if (!success) {
-      return NextResponse.json({ error: 'Gagal menghapus data' }, { status: 400 });
-    }
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting bank siswa:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
