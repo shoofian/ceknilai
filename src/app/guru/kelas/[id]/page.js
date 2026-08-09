@@ -1394,7 +1394,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         setShowSyncModal(false);
         setSyncPreviewData(null);
         setKelolaSiswaModalOpen(false);
-        fetchKelasDetail();
+        fetchClassDetail();
       } else {
         alert(data.error || "Gagal menyimpan hasil sinkronisasi.");
       }
