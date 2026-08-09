@@ -3873,7 +3873,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
-                        {(p.materi || p.kegiatan) && (
+                        {p.materi && (
                           <div 
                             style={{ 
                               fontSize: "0.68rem", 
@@ -3886,9 +3886,27 @@ export default function DetailKelas({ params: paramsPromise }) {
                               marginTop: "2px",
                               fontStyle: "italic"
                             }} 
-                            title={p.materi || p.kegiatan}
+                            title={`Materi: ${p.materi}`}
                           >
-                            {p.materi || p.kegiatan}
+                            {p.materi}
+                          </div>
+                        )}
+                        {p.kegiatan && (
+                          <div 
+                            style={{ 
+                              fontSize: "0.68rem", 
+                              color: "var(--text-secondary)", 
+                              fontWeight: "500", 
+                              maxWidth: "100px", 
+                              whiteSpace: "nowrap", 
+                              overflow: "hidden", 
+                              textOverflow: "ellipsis",
+                              marginTop: "1px",
+                              fontStyle: "italic"
+                            }} 
+                            title={`Kegiatan: ${p.kegiatan}`}
+                          >
+                            {p.kegiatan}
                           </div>
                         )}
                       </div>
