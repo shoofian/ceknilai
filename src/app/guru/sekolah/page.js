@@ -39,6 +39,9 @@ export default function KonfigurasiSekolahPage() {
 
           if (isSA) {
             setAuthorized(true);
+            if (user.sekolah_id) {
+              setGlobalTargetSekolahId(String(user.sekolah_id));
+            }
           } else if (user.is_admin_sekolah && user.sekolah_id) {
             setAuthorized(true);
             setGlobalTargetSekolahId(String(user.sekolah_id));
