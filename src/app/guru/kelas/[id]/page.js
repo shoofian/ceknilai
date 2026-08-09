@@ -3912,8 +3912,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                       </div>
 
                       <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "8px" }}>
-                        <button onClick={() => handleOpenEditPertemuan(p)} title="Ubah Pertemuan" style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "4px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
-                        <button onClick={() => {
+                        <button onClick={(e) => { e.currentTarget.blur(); handleOpenEditPertemuan(p); }} title="Ubah Pertemuan" style={{ background: "rgba(59, 130, 246, 0.1)", borderRadius: "4px", padding: "4px 6px", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
+                        <button onClick={(e) => {
+                          e.currentTarget.blur();
                           triggerConfirm(
                             `Apakah Anda yakin ingin menghapus "${p.nama}"? Seluruh data kehadiran untuk pertemuan ini akan ikut terhapus secara permanen.`,
                             async () => {
@@ -3921,7 +3922,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                               setKelas({ ...kelas, skemaPenilaian: updatedSkema });
                               try {
                                  await fetch(`/api/kelas/${kelas.id}`, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ skemaPenilaian: updatedSkema }) });
-                              } catch(e) {}
+                              } catch(err) {}
                             },
                             {
                               title: "Hapus Pertemuan",
@@ -3931,7 +3932,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           );
                         }} title="Hapus Pertemuan" style={{ background: "rgba(239, 68, 68, 0.1)", borderRadius: "4px", padding: "4px 6px", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "0.85rem", display: "flex", alignItems: "center", justifyContent: "center" }}>🗑️</button>
                         <button 
-                          onClick={() => togglePertemuanLock(p.id)} 
+                          onClick={(e) => { e.currentTarget.blur(); togglePertemuanLock(p.id); }} 
                           style={{
                             background: unlockedPertemuanIds.includes(p.id) ? "rgba(239, 68, 68, 0.2)" : "rgba(30, 41, 59, 0.8)",
                             border: unlockedPertemuanIds.includes(p.id) ? "1px solid #ef4444" : "1px solid var(--border-color)",
