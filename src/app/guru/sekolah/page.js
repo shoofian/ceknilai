@@ -26,8 +26,8 @@ export default function KonfigurasiSekolahPage() {
       try {
         const res = await fetch("/api/profil"); // Or another endpoint to get guru profile
         if (res.ok) {
-          const { user } = await res.json();
-          if (!user) {
+          const user = await res.json();
+          if (!user || !user.username) {
             router.push("/login");
             return;
           }
