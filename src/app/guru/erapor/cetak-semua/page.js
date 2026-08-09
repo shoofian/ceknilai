@@ -178,7 +178,7 @@ export default function CetakSemuaRapor() {
               
               <div style={{ width: "130px", height: "130px", margin: "0 auto 64px auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <img 
-                  src={\`https://ffrucebdhhrpkuszlshy.supabase.co/storage/v1/object/public/logos/\${data.sekolah?.id}.png\`}
+                  src={`https://ffrucebdhhrpkuszlshy.supabase.co/storage/v1/object/public/logos/${data.sekolah?.id}.png`}
                   alt="Logo Sekolah" 
                   style={{ width: "100%", height: "100%", objectFit: "contain" }}
                   onError={(e) => { 
@@ -554,7 +554,7 @@ export default function CetakSemuaRapor() {
                     {data.identitas.nama_wali_kelas || "Wali Kelas, S.Pd"}
                   </div>
                   <p style={{ marginTop: "4px" }}>
-                    {nipGuru && nipGuru !== "-" ? \`NIP. \${nipGuru}\` : "NIP. -"}
+                    {nipGuru && nipGuru !== "-" ? `NIP. ${nipGuru}` : "NIP. -"}
                   </p>
                 </div>
               </div>
@@ -567,7 +567,7 @@ export default function CetakSemuaRapor() {
                     {namaKepsek || data.sekolah?.kepala_sekolah || "Nama Kepala Sekolah"}
                   </div>
                   <p style={{ marginTop: "4px" }}>
-                    {nipKepsek ? \`NIP. \${nipKepsek}\` : (data.sekolah?.nip_kepala_sekolah ? \`NIP. \${data.sekolah.nip_kepala_sekolah}\` : "NIP. -")}
+                    {nipKepsek ? `NIP. ${nipKepsek}` : (data.sekolah?.nip_kepala_sekolah ? `NIP. ${data.sekolah.nip_kepala_sekolah}` : "NIP. -")}
                   </p>
                 </div>
               </div>
