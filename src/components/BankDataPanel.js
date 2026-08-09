@@ -111,7 +111,7 @@ export default function BankDataPanel({ targetSekolahId }) {
       
       for (let i = 0; i < Math.min(20, rawData.length); i++) {
         const row = rawData[i] || [];
-        const rowStrs = row.map(cell => String(cell || "").toLowerCase().trim());
+        const rowStrs = Array.from({ length: row.length }, (_, j) => String(row[j] || "").toLowerCase().trim());
         
         const hasNisn = rowStrs.some(h => h.includes("nisn"));
         const hasNama = rowStrs.some(h => h.includes("nama"));
@@ -128,11 +128,11 @@ export default function BankDataPanel({ targetSekolahId }) {
         throw new Error("File Excel harus memiliki minimal kolom: NISN, Nama, dan Rombel.");
       }
 
-      const idxNisn = headers.findIndex(h => h.includes("nisn"));
-      const idxNama = headers.findIndex(h => h.includes("nama"));
-      const idxTingkatan = headers.findIndex(h => h === "tingkat" || h === "tingkatan" || h === "kelas");
-      const idxRombel = headers.findIndex(h => h.includes("rombel"));
-      const idxTanggalLahir = headers.findIndex(h => h.includes("tanggal lahir") || h.includes("tgl_lahir"));
+      const idxNisn = headers.findIndex(h => h && h.includes("nisn"));
+      const idxNama = headers.findIndex(h => h && h.includes("nama"));
+      const idxTingkatan = headers.findIndex(h => h && (h === "tingkat" || h === "tingkatan" || h === "kelas"));
+      const idxRombel = headers.findIndex(h => h && h.includes("rombel"));
+      const idxTanggalLahir = headers.findIndex(h => h && (h.includes("tanggal lahir") || h.includes("tgl_lahir")));
 
       const detectTingkatan = (rombelStr) => {
         const str = String(rombelStr || "").toUpperCase().trim();
