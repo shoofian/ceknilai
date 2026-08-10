@@ -356,7 +356,6 @@ export default function ERaporDashboard() {
       <div className="glass-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
             <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Kelengkapan Biodata</h3>
             <Link href="/guru/erapor/cetak-semua" className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
               <Printer size={16} /> Cetak Semua Rapor
