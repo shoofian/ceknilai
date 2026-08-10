@@ -485,29 +485,51 @@ export default function ERaporDashboard() {
                           <td style={{ fontWeight: "600", position: "sticky", left: "50px", backgroundColor: "inherit" }}>{siswa.nama}</td>
                           <td>
                             <div style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{siswa.nisn}</div>
-                            <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.nipd ? "var(--danger)" : "var(--text-muted)" }}>
-                              {siswa.biodata_detail?.nipd || "NIPD Kosong"}
-                            </div>
+                            {siswa.biodata_detail?.nipd ? (
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{siswa.biodata_detail.nipd}</div>
+                            ) : (
+                              <div style={{ marginTop: "4px" }}><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>NIPD Kosong</span></div>
+                            )}
                           </td>
                           <td>
-                            <div style={{ color: !siswa.biodata_detail?.tempat_lahir ? "var(--danger)" : "inherit" }}>
-                              {siswa.biodata_detail?.tempat_lahir || "Tempat Kosong"}
-                            </div>
-                            <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.tanggal_lahir ? "var(--danger)" : "var(--text-muted)" }}>
-                              {siswa.biodata_detail?.tanggal_lahir || "Tgl Kosong"}
-                            </div>
+                            {siswa.biodata_detail?.tempat_lahir ? (
+                              <div>{siswa.biodata_detail.tempat_lahir}</div>
+                            ) : (
+                              <div><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Tempat Kosong</span></div>
+                            )}
+                            {siswa.biodata_detail?.tanggal_lahir ? (
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{siswa.biodata_detail.tanggal_lahir}</div>
+                            ) : (
+                              <div style={{ marginTop: "4px" }}><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Tgl Kosong</span></div>
+                            )}
                           </td>
-                          <td style={{ color: !siswa.biodata_detail?.jenis_kelamin ? "var(--danger)" : "inherit", textAlign: "center" }}>
-                            {siswa.biodata_detail?.jenis_kelamin || "-"}
+                          <td style={{ textAlign: "center" }}>
+                            {siswa.biodata_detail?.jenis_kelamin ? (
+                              siswa.biodata_detail.jenis_kelamin
+                            ) : (
+                              <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>-</span>
+                            )}
                           </td>
-                          <td style={{ color: !siswa.biodata_detail?.agama ? "var(--danger)" : "inherit" }}>
-                            {siswa.biodata_detail?.agama || "Kosong"}
+                          <td>
+                            {siswa.biodata_detail?.agama ? (
+                              siswa.biodata_detail.agama
+                            ) : (
+                              <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Kosong</span>
+                            )}
                           </td>
-                          <td style={{ color: !siswa.biodata_detail?.alamat_lengkap ? "var(--danger)" : "inherit", fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>
-                            {siswa.biodata_detail?.alamat_lengkap || "Alamat Kosong"}
+                          <td style={{ fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>
+                            {siswa.biodata_detail?.alamat_lengkap ? (
+                              siswa.biodata_detail.alamat_lengkap
+                            ) : (
+                              <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Alamat Kosong</span>
+                            )}
                           </td>
-                          <td style={{ color: (!siswa.biodata_detail?.nama_ayah && !siswa.biodata_detail?.nama_ibu && !siswa.biodata_detail?.nama_wali) ? "var(--danger)" : "inherit" }}>
-                            {siswa.biodata_detail?.nama_ayah || siswa.biodata_detail?.nama_ibu || siswa.biodata_detail?.nama_wali || "Kosong"}
+                          <td>
+                            {(siswa.biodata_detail?.nama_ayah || siswa.biodata_detail?.nama_ibu || siswa.biodata_detail?.nama_wali) ? (
+                              siswa.biodata_detail.nama_ayah || siswa.biodata_detail.nama_ibu || siswa.biodata_detail.nama_wali
+                            ) : (
+                              <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Kosong</span>
+                            )}
                           </td>
                         </tr>
                       ))
