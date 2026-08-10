@@ -448,9 +448,9 @@ export default function ERaporDashboard() {
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto" style={{ flex: 1 }}>
+            <div className="overflow-y-auto" style={{ flex: 1, padding: "32px" }}>
               {/* Rekap Kelengkapan Data */}
-              <div style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "12px", padding: "16px", background: "var(--bg-tertiary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+              <div style={{ marginBottom: "32px", display: "flex", flexWrap: "wrap", gap: "12px", padding: "20px", background: "var(--bg-tertiary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
                 {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">Tempat Lahir: {missingStats.tempat_lahir} Kosong</span>}
                 {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tanggal Lahir: {missingStats.tanggal_lahir} Kosong</span>}
@@ -463,8 +463,8 @@ export default function ERaporDashboard() {
                 )}
               </div>
 
-              <div className="table-container" style={{ overflowX: "auto", margin: 0 }}>
-                <table className="premium-table crosshair-highlight" style={{ minWidth: "1200px" }}>
+              <div className="table-container" style={{ overflowX: "auto", margin: 0, borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                <table className="premium-table crosshair-highlight" style={{ minWidth: "1200px", margin: 0 }}>
                   <thead>
                     <tr>
                       <th style={{ width: "50px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-secondary)" }}>No</th>
