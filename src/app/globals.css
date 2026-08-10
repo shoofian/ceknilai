@@ -647,25 +647,6 @@ input[type="date"].form-input {
   clip-path: inset(0);
 }
 
-/* Crosshair column highlight using opacity to avoid layout shift (scroll jump bug) */
-.premium-table.crosshair-highlight tbody td::before {
-  content: "";
-  position: absolute;
-  top: -5000px;
-  bottom: -5000px;
-  left: 0;
-  right: 0;
-  background-color: var(--sidebar-active-bg, rgba(59, 130, 246, 0.05));
-  z-index: 4;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.premium-table.crosshair-highlight tbody td:hover::before,
-.premium-table.crosshair-highlight tbody td:focus-within::before {
-  opacity: 1;
-}
 
 
 /* The active cell itself gets slightly darker highlight */
@@ -1943,3 +1924,64 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
     display: none !important;
   }
 }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(1):hover) td:nth-child(1), .premium-table.crosshair-highlight:has(tbody td:nth-child(1):hover) th:nth-child(1) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(2):hover) td:nth-child(2), .premium-table.crosshair-highlight:has(tbody td:nth-child(2):hover) th:nth-child(2) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(3):hover) td:nth-child(3), .premium-table.crosshair-highlight:has(tbody td:nth-child(3):hover) th:nth-child(3) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(4):hover) td:nth-child(4), .premium-table.crosshair-highlight:has(tbody td:nth-child(4):hover) th:nth-child(4) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(5):hover) td:nth-child(5), .premium-table.crosshair-highlight:has(tbody td:nth-child(5):hover) th:nth-child(5) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(6):hover) td:nth-child(6), .premium-table.crosshair-highlight:has(tbody td:nth-child(6):hover) th:nth-child(6) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(7):hover) td:nth-child(7), .premium-table.crosshair-highlight:has(tbody td:nth-child(7):hover) th:nth-child(7) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(8):hover) td:nth-child(8), .premium-table.crosshair-highlight:has(tbody td:nth-child(8):hover) th:nth-child(8) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(9):hover) td:nth-child(9), .premium-table.crosshair-highlight:has(tbody td:nth-child(9):hover) th:nth-child(9) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(10):hover) td:nth-child(10), .premium-table.crosshair-highlight:has(tbody td:nth-child(10):hover) th:nth-child(10) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(11):hover) td:nth-child(11), .premium-table.crosshair-highlight:has(tbody td:nth-child(11):hover) th:nth-child(11) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(12):hover) td:nth-child(12), .premium-table.crosshair-highlight:has(tbody td:nth-child(12):hover) th:nth-child(12) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(13):hover) td:nth-child(13), .premium-table.crosshair-highlight:has(tbody td:nth-child(13):hover) th:nth-child(13) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(14):hover) td:nth-child(14), .premium-table.crosshair-highlight:has(tbody td:nth-child(14):hover) th:nth-child(14) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(15):hover) td:nth-child(15), .premium-table.crosshair-highlight:has(tbody td:nth-child(15):hover) th:nth-child(15) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(16):hover) td:nth-child(16), .premium-table.crosshair-highlight:has(tbody td:nth-child(16):hover) th:nth-child(16) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(17):hover) td:nth-child(17), .premium-table.crosshair-highlight:has(tbody td:nth-child(17):hover) th:nth-child(17) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(18):hover) td:nth-child(18), .premium-table.crosshair-highlight:has(tbody td:nth-child(18):hover) th:nth-child(18) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(19):hover) td:nth-child(19), .premium-table.crosshair-highlight:has(tbody td:nth-child(19):hover) th:nth-child(19) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(20):hover) td:nth-child(20), .premium-table.crosshair-highlight:has(tbody td:nth-child(20):hover) th:nth-child(20) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(21):hover) td:nth-child(21), .premium-table.crosshair-highlight:has(tbody td:nth-child(21):hover) th:nth-child(21) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(22):hover) td:nth-child(22), .premium-table.crosshair-highlight:has(tbody td:nth-child(22):hover) th:nth-child(22) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(23):hover) td:nth-child(23), .premium-table.crosshair-highlight:has(tbody td:nth-child(23):hover) th:nth-child(23) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(24):hover) td:nth-child(24), .premium-table.crosshair-highlight:has(tbody td:nth-child(24):hover) th:nth-child(24) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(25):hover) td:nth-child(25), .premium-table.crosshair-highlight:has(tbody td:nth-child(25):hover) th:nth-child(25) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(26):hover) td:nth-child(26), .premium-table.crosshair-highlight:has(tbody td:nth-child(26):hover) th:nth-child(26) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(27):hover) td:nth-child(27), .premium-table.crosshair-highlight:has(tbody td:nth-child(27):hover) th:nth-child(27) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(28):hover) td:nth-child(28), .premium-table.crosshair-highlight:has(tbody td:nth-child(28):hover) th:nth-child(28) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(29):hover) td:nth-child(29), .premium-table.crosshair-highlight:has(tbody td:nth-child(29):hover) th:nth-child(29) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(30):hover) td:nth-child(30), .premium-table.crosshair-highlight:has(tbody td:nth-child(30):hover) th:nth-child(30) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(31):hover) td:nth-child(31), .premium-table.crosshair-highlight:has(tbody td:nth-child(31):hover) th:nth-child(31) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(32):hover) td:nth-child(32), .premium-table.crosshair-highlight:has(tbody td:nth-child(32):hover) th:nth-child(32) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(33):hover) td:nth-child(33), .premium-table.crosshair-highlight:has(tbody td:nth-child(33):hover) th:nth-child(33) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(34):hover) td:nth-child(34), .premium-table.crosshair-highlight:has(tbody td:nth-child(34):hover) th:nth-child(34) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(35):hover) td:nth-child(35), .premium-table.crosshair-highlight:has(tbody td:nth-child(35):hover) th:nth-child(35) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(36):hover) td:nth-child(36), .premium-table.crosshair-highlight:has(tbody td:nth-child(36):hover) th:nth-child(36) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(37):hover) td:nth-child(37), .premium-table.crosshair-highlight:has(tbody td:nth-child(37):hover) th:nth-child(37) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(38):hover) td:nth-child(38), .premium-table.crosshair-highlight:has(tbody td:nth-child(38):hover) th:nth-child(38) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(39):hover) td:nth-child(39), .premium-table.crosshair-highlight:has(tbody td:nth-child(39):hover) th:nth-child(39) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(40):hover) td:nth-child(40), .premium-table.crosshair-highlight:has(tbody td:nth-child(40):hover) th:nth-child(40) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(41):hover) td:nth-child(41), .premium-table.crosshair-highlight:has(tbody td:nth-child(41):hover) th:nth-child(41) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(42):hover) td:nth-child(42), .premium-table.crosshair-highlight:has(tbody td:nth-child(42):hover) th:nth-child(42) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(43):hover) td:nth-child(43), .premium-table.crosshair-highlight:has(tbody td:nth-child(43):hover) th:nth-child(43) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(44):hover) td:nth-child(44), .premium-table.crosshair-highlight:has(tbody td:nth-child(44):hover) th:nth-child(44) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(45):hover) td:nth-child(45), .premium-table.crosshair-highlight:has(tbody td:nth-child(45):hover) th:nth-child(45) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(46):hover) td:nth-child(46), .premium-table.crosshair-highlight:has(tbody td:nth-child(46):hover) th:nth-child(46) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(47):hover) td:nth-child(47), .premium-table.crosshair-highlight:has(tbody td:nth-child(47):hover) th:nth-child(47) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(48):hover) td:nth-child(48), .premium-table.crosshair-highlight:has(tbody td:nth-child(48):hover) th:nth-child(48) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(49):hover) td:nth-child(49), .premium-table.crosshair-highlight:has(tbody td:nth-child(49):hover) th:nth-child(49) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(50):hover) td:nth-child(50), .premium-table.crosshair-highlight:has(tbody td:nth-child(50):hover) th:nth-child(50) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(51):hover) td:nth-child(51), .premium-table.crosshair-highlight:has(tbody td:nth-child(51):hover) th:nth-child(51) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(52):hover) td:nth-child(52), .premium-table.crosshair-highlight:has(tbody td:nth-child(52):hover) th:nth-child(52) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(53):hover) td:nth-child(53), .premium-table.crosshair-highlight:has(tbody td:nth-child(53):hover) th:nth-child(53) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(54):hover) td:nth-child(54), .premium-table.crosshair-highlight:has(tbody td:nth-child(54):hover) th:nth-child(54) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(55):hover) td:nth-child(55), .premium-table.crosshair-highlight:has(tbody td:nth-child(55):hover) th:nth-child(55) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(56):hover) td:nth-child(56), .premium-table.crosshair-highlight:has(tbody td:nth-child(56):hover) th:nth-child(56) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(57):hover) td:nth-child(57), .premium-table.crosshair-highlight:has(tbody td:nth-child(57):hover) th:nth-child(57) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(58):hover) td:nth-child(58), .premium-table.crosshair-highlight:has(tbody td:nth-child(58):hover) th:nth-child(58) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(59):hover) td:nth-child(59), .premium-table.crosshair-highlight:has(tbody td:nth-child(59):hover) th:nth-child(59) { background-color: rgba(59, 130, 246, 0.05); }
+.premium-table.crosshair-highlight:has(tbody td:nth-child(60):hover) td:nth-child(60), .premium-table.crosshair-highlight:has(tbody td:nth-child(60):hover) th:nth-child(60) { background-color: rgba(59, 130, 246, 0.05); }
+
