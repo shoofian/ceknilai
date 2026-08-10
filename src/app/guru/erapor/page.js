@@ -429,13 +429,13 @@ export default function ERaporDashboard() {
 
       {/* Modal Detail Biodata */}
       {showBiodataModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[var(--bg-primary)] rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-[var(--border-color)]">
-            <div className="flex items-center justify-between p-6 border-b border-[var(--border-color)]">
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">Detail Kelengkapan Biodata</h2>
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+          <div style={{ backgroundColor: "var(--bg-primary)", borderRadius: "16px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", width: "100%", maxWidth: "1152px", maxHeight: "90vh", display: "flex", flexDirection: "column", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px", borderBottom: "1px solid var(--border-color)" }}>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Detail Kelengkapan Biodata</h2>
               <button 
                 onClick={() => setShowBiodataModal(false)}
-                className="p-2 hover:bg-[var(--bg-tertiary)] rounded-xl transition-colors text-[var(--text-secondary)]"
+                style={{ padding: "8px", borderRadius: "12px", color: "var(--text-secondary)", background: "transparent", border: "none", cursor: "pointer", fontSize: "1.2rem", display: "flex", alignItems: "center", justifyContent: "center" }}
               >
                 ✕
               </button>
@@ -516,8 +516,8 @@ export default function ERaporDashboard() {
               </div>
             </div>
             
-            <div className="p-6 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] flex justify-end">
-              <button onClick={() => setShowBiodataModal(false)} className="btn btn-primary">
+            <div style={{ padding: "24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", display: "flex", justifyContent: "flex-end", borderBottomLeftRadius: "16px", borderBottomRightRadius: "16px" }}>
+              <button onClick={() => setShowBiodataModal(false)} className="btn btn-primary" style={{ padding: "8px 24px" }}>
                 Tutup
               </button>
             </div>
