@@ -647,18 +647,6 @@ input[type="date"].form-input {
   clip-path: inset(0);
 }
 
-.premium-table.crosshair-highlight tbody td:hover::before,
-.premium-table.crosshair-highlight tbody td:focus-within::before {
-  content: "";
-  position: absolute;
-  top: -5000px;
-  bottom: -5000px;
-  left: 0;
-  right: 0;
-  background-color: var(--sidebar-active-bg, rgba(59, 130, 246, 0.05));
-  z-index: 4;
-  pointer-events: none;
-}
 
 /* The active cell itself gets slightly darker highlight */
 .premium-table.crosshair-highlight tbody td:hover::after,
