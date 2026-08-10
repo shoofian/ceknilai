@@ -3717,7 +3717,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* ============= PRESENSI TAB ============= */}
       {activeTab === "presensi" && (
-        <div className="glass-card animate-fade-in" style={{ padding: "24px 0", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div className="animate-fade-in" style={{ padding: "24px 0", display: "flex", flexDirection: "column", gap: "20px" }}>
           <div style={{ padding: "0 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
             <div>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800" }}>📅 Tabel Presensi (Kehadiran)</h4>
