@@ -28,7 +28,8 @@ export default function ERaporDashboard() {
   const missingStats = React.useMemo(() => {
     let stats = {
       nipd: 0, tempat_lahir: 0, tanggal_lahir: 0, jenis_kelamin: 0, 
-      agama: 0, alamat_lengkap: 0, orang_tua: 0
+      agama: 0, alamat_lengkap: 0, status_keluarga: 0, anak_ke: 0, telepon: 0, 
+      nama_ayah: 0, pekerjaan_ayah: 0, nama_ibu: 0, pekerjaan_ibu: 0
     };
     students.forEach(s => {
       const b = s.biodata_detail || {};
@@ -38,7 +39,13 @@ export default function ERaporDashboard() {
       if (!b.jenis_kelamin) stats.jenis_kelamin++;
       if (!b.agama) stats.agama++;
       if (!b.alamat_lengkap) stats.alamat_lengkap++;
-      if (!b.nama_ayah && !b.nama_ibu && !b.nama_wali) stats.orang_tua++;
+      if (!b.status_keluarga) stats.status_keluarga++;
+      if (!b.anak_ke) stats.anak_ke++;
+      if (!b.telepon) stats.telepon++;
+      if (!b.nama_ayah) stats.nama_ayah++;
+      if (!b.pekerjaan_ayah) stats.pekerjaan_ayah++;
+      if (!b.nama_ibu) stats.nama_ibu++;
+      if (!b.pekerjaan_ibu) stats.pekerjaan_ibu++;
     });
     return stats;
   }, [students]);
@@ -451,13 +458,19 @@ export default function ERaporDashboard() {
             <div style={{ flex: 1, padding: "32px", overflowY: "auto" }}>
               {/* Rekap Kelengkapan Data */}
               <div style={{ marginBottom: "32px", display: "flex", flexWrap: "wrap", gap: "12px", padding: "20px", background: "var(--bg-tertiary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-                {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
-                {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">Tempat Lahir: {missingStats.tempat_lahir} Kosong</span>}
-                {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tanggal Lahir: {missingStats.tanggal_lahir} Kosong</span>}
-                {missingStats.jenis_kelamin > 0 && <span className="badge badge-warning">Jenis Kelamin: {missingStats.jenis_kelamin} Kosong</span>}
-                {missingStats.agama > 0 && <span className="badge badge-warning">Agama: {missingStats.agama} Kosong</span>}
-                {missingStats.alamat_lengkap > 0 && <span className="badge badge-warning">Alamat: {missingStats.alamat_lengkap} Kosong</span>}
-                {missingStats.orang_tua > 0 && <span className="badge badge-warning">Orang Tua/Wali: {missingStats.orang_tua} Kosong</span>}
+                {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd}</span>}
+                {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">T.Lahir: {missingStats.tempat_lahir}</span>}
+                {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tgl.Lahir: {missingStats.tanggal_lahir}</span>}
+                {missingStats.jenis_kelamin > 0 && <span className="badge badge-warning">JK: {missingStats.jenis_kelamin}</span>}
+                {missingStats.agama > 0 && <span className="badge badge-warning">Agama: {missingStats.agama}</span>}
+                {missingStats.status_keluarga > 0 && <span className="badge badge-warning">Status Keluarga: {missingStats.status_keluarga}</span>}
+                {missingStats.anak_ke > 0 && <span className="badge badge-warning">Anak Ke: {missingStats.anak_ke}</span>}
+                {missingStats.alamat_lengkap > 0 && <span className="badge badge-warning">Alamat: {missingStats.alamat_lengkap}</span>}
+                {missingStats.telepon > 0 && <span className="badge badge-warning">Telepon: {missingStats.telepon}</span>}
+                {missingStats.nama_ayah > 0 && <span className="badge badge-warning">Nm.Ayah: {missingStats.nama_ayah}</span>}
+                {missingStats.pekerjaan_ayah > 0 && <span className="badge badge-warning">Pkj.Ayah: {missingStats.pekerjaan_ayah}</span>}
+                {missingStats.nama_ibu > 0 && <span className="badge badge-warning">Nm.Ibu: {missingStats.nama_ibu}</span>}
+                {missingStats.pekerjaan_ibu > 0 && <span className="badge badge-warning">Pkj.Ibu: {missingStats.pekerjaan_ibu}</span>}
                 {Object.values(missingStats).every(v => v === 0) && students.length > 0 && (
                   <span className="badge badge-success">Semua Data Biodata Lengkap!</span>
                 )}
@@ -473,8 +486,11 @@ export default function ERaporDashboard() {
                       <th>Tempat/Tgl Lahir</th>
                       <th>L/P</th>
                       <th>Agama</th>
+                      <th>Status & Anak Ke</th>
                       <th style={{ minWidth: "200px" }}>Alamat Lengkap</th>
-                      <th>Ortu/Wali</th>
+                      <th>Telepon</th>
+                      <th>Data Ayah</th>
+                      <th>Data Ibu</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -517,6 +533,18 @@ export default function ERaporDashboard() {
                               <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Kosong</span>
                             )}
                           </td>
+                          <td style={{ textAlign: "center" }}>
+                            {siswa.biodata_detail?.status_keluarga ? (
+                              <div>{siswa.biodata_detail.status_keluarga}</div>
+                            ) : (
+                              <div><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Status Kosong</span></div>
+                            )}
+                            {siswa.biodata_detail?.anak_ke ? (
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Anak Ke-{siswa.biodata_detail.anak_ke}</div>
+                            ) : (
+                              <div style={{ marginTop: "4px" }}><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Ke- Kosong</span></div>
+                            )}
+                          </td>
                           <td style={{ fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>
                             {siswa.biodata_detail?.alamat_lengkap ? (
                               siswa.biodata_detail.alamat_lengkap
@@ -525,10 +553,34 @@ export default function ERaporDashboard() {
                             )}
                           </td>
                           <td>
-                            {(siswa.biodata_detail?.nama_ayah || siswa.biodata_detail?.nama_ibu || siswa.biodata_detail?.nama_wali) ? (
-                              siswa.biodata_detail.nama_ayah || siswa.biodata_detail.nama_ibu || siswa.biodata_detail.nama_wali
+                            {siswa.biodata_detail?.telepon ? (
+                              <div style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>{siswa.biodata_detail.telepon}</div>
                             ) : (
-                              <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Kosong</span>
+                              <span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Telp Kosong</span>
+                            )}
+                          </td>
+                          <td>
+                            {siswa.biodata_detail?.nama_ayah ? (
+                              <div>{siswa.biodata_detail.nama_ayah}</div>
+                            ) : (
+                              <div><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Nm Ayah Kosong</span></div>
+                            )}
+                            {siswa.biodata_detail?.pekerjaan_ayah ? (
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{siswa.biodata_detail.pekerjaan_ayah}</div>
+                            ) : (
+                              <div style={{ marginTop: "4px" }}><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Pkj Ayah Kosong</span></div>
+                            )}
+                          </td>
+                          <td>
+                            {siswa.biodata_detail?.nama_ibu ? (
+                              <div>{siswa.biodata_detail.nama_ibu}</div>
+                            ) : (
+                              <div><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Nm Ibu Kosong</span></div>
+                            )}
+                            {siswa.biodata_detail?.pekerjaan_ibu ? (
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{siswa.biodata_detail.pekerjaan_ibu}</div>
+                            ) : (
+                              <div style={{ marginTop: "4px" }}><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Pkj Ibu Kosong</span></div>
                             )}
                           </td>
                         </tr>
