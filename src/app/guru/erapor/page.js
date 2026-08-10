@@ -429,13 +429,20 @@ export default function ERaporDashboard() {
 
       {/* Modal Detail Biodata */}
       {showBiodataModal && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-          <div style={{ backgroundColor: "var(--bg-primary)", borderRadius: "16px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", width: "100%", maxWidth: "1152px", maxHeight: "90vh", display: "flex", flexDirection: "column", border: "1px solid var(--border-color)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px", borderBottom: "1px solid var(--border-color)" }}>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Detail Kelengkapan Biodata</h2>
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px", backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}>
+          <div className="glass-card" style={{ padding: 0, overflow: "hidden", width: "100%", maxWidth: "1152px", maxHeight: "90vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px", borderBottom: "1px solid var(--border-color)", background: "var(--bg-secondary)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ backgroundColor: "var(--primary-glow)", color: "var(--primary)", padding: "8px", borderRadius: "10px" }}>
+                  <FileText size={20} />
+                </div>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>Detail Kelengkapan Biodata</h2>
+              </div>
               <button 
                 onClick={() => setShowBiodataModal(false)}
-                style={{ padding: "8px", borderRadius: "12px", color: "var(--text-secondary)", background: "transparent", border: "none", cursor: "pointer", fontSize: "1.2rem", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ padding: "8px", borderRadius: "12px", color: "var(--text-secondary)", background: "transparent", border: "none", cursor: "pointer", fontSize: "1.2rem", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease" }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "transparent"}
               >
                 ✕
               </button>
@@ -443,7 +450,7 @@ export default function ERaporDashboard() {
             
             <div className="p-6 overflow-y-auto" style={{ flex: 1 }}>
               {/* Rekap Kelengkapan Data */}
-              <div style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              <div style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "12px", padding: "16px", background: "var(--bg-tertiary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
                 {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">Tempat Lahir: {missingStats.tempat_lahir} Kosong</span>}
                 {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tanggal Lahir: {missingStats.tanggal_lahir} Kosong</span>}
@@ -516,8 +523,8 @@ export default function ERaporDashboard() {
               </div>
             </div>
             
-            <div style={{ padding: "24px", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)", display: "flex", justifyContent: "flex-end", borderBottomLeftRadius: "16px", borderBottomRightRadius: "16px" }}>
-              <button onClick={() => setShowBiodataModal(false)} className="btn btn-primary" style={{ padding: "8px 24px" }}>
+            <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border-color)", background: "var(--bg-secondary)", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setShowBiodataModal(false)} className="btn btn-secondary" style={{ padding: "8px 24px", fontWeight: "600" }}>
                 Tutup
               </button>
             </div>
