@@ -266,14 +266,17 @@ export default function ERaporDashboard() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white/50 backdrop-blur-md p-6 rounded-2xl border border-gray-100 shadow-sm">
+      <div className="glass-card" style={{ padding: "24px", marginBottom: "24px", display: "flex", alignItems: "center", gap: "16px" }}>
+        <div style={{ backgroundColor: "var(--primary-glow)", padding: "16px", borderRadius: "16px", color: "var(--primary)" }}>
+          <FileText size={32} />
+        </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FileText className="text-blue-600" />
+          <h1 style={{ fontSize: "1.8rem", fontWeight: "800", margin: "0 0 8px 0", display: "flex", alignItems: "center", gap: "8px" }}>
             e-Rapor Kurikulum Merdeka
           </h1>
-          <p className="text-gray-500 mt-1">Kelola dan cetak rapor peserta didik Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}</p>
-          <p className="page-subtitle">Kelola dan cetak rapor peserta didik Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}</p>
+          <p className="page-subtitle" style={{ margin: 0 }}>
+            Kelola dan cetak rapor peserta didik Kelas {guru?.walikelas_tingkatan} {guru?.walikelas_rombel_nama}
+          </p>
         </div>
       </div>
 
@@ -322,7 +325,7 @@ export default function ERaporDashboard() {
               style={{ flex: 1 }}
             >
               {isUploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
-              {isUploading ? "Mengimpor..." : "📥 Impor Biodata Excel"}
+              {isUploading ? "Mengimpor..." : "Impor Biodata Excel"}
             </button>
             <button className="btn btn-secondary" onClick={handleDownloadTemplate}>
               <Download size={18} /> Format Kosong
