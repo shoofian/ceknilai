@@ -647,6 +647,26 @@ input[type="date"].form-input {
   clip-path: inset(0);
 }
 
+/* Crosshair column highlight using opacity to avoid layout shift (scroll jump bug) */
+.premium-table.crosshair-highlight tbody td::before {
+  content: "";
+  position: absolute;
+  top: -5000px;
+  bottom: -5000px;
+  left: 0;
+  right: 0;
+  background-color: var(--sidebar-active-bg, rgba(59, 130, 246, 0.05));
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.premium-table.crosshair-highlight tbody td:hover::before,
+.premium-table.crosshair-highlight tbody td:focus-within::before {
+  opacity: 1;
+}
+
 
 /* The active cell itself gets slightly darker highlight */
 .premium-table.crosshair-highlight tbody td:hover::after,
