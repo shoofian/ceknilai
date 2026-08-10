@@ -448,7 +448,7 @@ export default function ERaporDashboard() {
               </button>
             </div>
             
-            <div className="overflow-y-auto" style={{ flex: 1, padding: "32px" }}>
+            <div style={{ flex: 1, padding: "32px", overflowY: "auto" }}>
               {/* Rekap Kelengkapan Data */}
               <div style={{ marginBottom: "32px", display: "flex", flexWrap: "wrap", gap: "12px", padding: "20px", background: "var(--bg-tertiary)", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
                 {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
