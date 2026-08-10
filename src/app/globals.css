@@ -591,7 +591,6 @@ input[type="date"].form-input {
   margin-top: 16px;
   margin-bottom: 24px;
   overflow-anchor: none;
-  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
