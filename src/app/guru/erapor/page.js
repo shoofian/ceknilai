@@ -18,6 +18,7 @@ export default function ERaporDashboard() {
   const [authorized, setAuthorized] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [guru, setGuru] = useState(null);
+  const [showBiodataModal, setShowBiodataModal] = useState(false);
 
   const filteredStudents = students.filter(s => 
     (s.nama && s.nama.toLowerCase().includes(search.toLowerCase())) || 
@@ -356,10 +357,15 @@ export default function ERaporDashboard() {
       <div className="glass-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-            <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Kelengkapan Biodata</h3>
-            <Link href="/guru/erapor/cetak-semua" className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
-              <Printer size={16} /> Cetak Semua Rapor
-            </Link>
+            <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Status Rapor</h3>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => setShowBiodataModal(true)} className="btn btn-secondary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
+                <FileText size={16} /> Detail Kelengkapan
+              </button>
+              <Link href="/guru/erapor/cetak-semua" className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
+                <Printer size={16} /> Cetak Semua Rapor
+              </Link>
+            </div>
           </div>
           
           <div style={{ position: "relative", width: "100%", maxWidth: "300px" }}>
@@ -375,81 +381,43 @@ export default function ERaporDashboard() {
           </div>
         </div>
 
-        {/* Rekap Kelengkapan Data */}
-        <div style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
-          {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
-          {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">Tempat Lahir: {missingStats.tempat_lahir} Kosong</span>}
-          {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tanggal Lahir: {missingStats.tanggal_lahir} Kosong</span>}
-          {missingStats.jenis_kelamin > 0 && <span className="badge badge-warning">Jenis Kelamin: {missingStats.jenis_kelamin} Kosong</span>}
-          {missingStats.agama > 0 && <span className="badge badge-warning">Agama: {missingStats.agama} Kosong</span>}
-          {missingStats.alamat_lengkap > 0 && <span className="badge badge-warning">Alamat: {missingStats.alamat_lengkap} Kosong</span>}
-          {missingStats.orang_tua > 0 && <span className="badge badge-warning">Orang Tua/Wali: {missingStats.orang_tua} Kosong</span>}
-          {Object.values(missingStats).every(v => v === 0) && students.length > 0 && (
-            <span className="badge badge-success">Semua Data Biodata Lengkap!</span>
-          )}
-        </div>
-
-        <div className="table-container" style={{ overflowX: "auto" }}>
-          <table className="premium-table crosshair-highlight" style={{ minWidth: "1200px" }}>
+        <div className="table-container">
+          <table className="premium-table">
             <thead>
               <tr>
-                <th style={{ width: "50px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-secondary)" }}>No</th>
-                <th style={{ position: "sticky", left: "50px", zIndex: 10, backgroundColor: "var(--bg-secondary)", minWidth: "200px" }}>Nama Lengkap</th>
-                <th style={{ minWidth: "120px" }}>NISN / NIPD</th>
-                <th>Tempat/Tgl Lahir</th>
-                <th>L/P</th>
-                <th>Agama</th>
-                <th style={{ minWidth: "200px" }}>Alamat Lengkap</th>
-                <th>Ortu/Wali</th>
-                <th style={{ textAlign: "right", position: "sticky", right: 0, zIndex: 10, backgroundColor: "var(--bg-secondary)" }}>Aksi</th>
+                <th style={{ width: "50px" }}>No</th>
+                <th>Nama Lengkap</th>
+                <th>NISN</th>
+                <th>Status Biodata</th>
+                <th style={{ textAlign: "right" }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((siswa, idx) => (
                   <tr key={siswa.nisn || idx}>
-                    <td style={{ position: "sticky", left: 0, backgroundColor: "inherit" }}>{idx + 1}</td>
-                    <td style={{ fontWeight: "600", position: "sticky", left: "50px", backgroundColor: "inherit" }}>{siswa.nama}</td>
+                    <td>{idx + 1}</td>
+                    <td style={{ fontWeight: "600" }}>{siswa.nama}</td>
+                    <td style={{ color: "var(--text-secondary)", fontFamily: "monospace" }}>{siswa.nisn}</td>
                     <td>
-                      <div style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{siswa.nisn}</div>
-                      <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.nipd ? "var(--danger)" : "var(--text-muted)" }}>
-                        {siswa.biodata_detail?.nipd || "NIPD Kosong"}
-                      </div>
+                      <span className={`badge ${siswa.status_pengisian === "Selesai" ? "badge-success" : "badge-warning"}`}>
+                        {siswa.status_pengisian}
+                      </span>
                     </td>
-                    <td>
-                      <div style={{ color: !siswa.biodata_detail?.tempat_lahir ? "var(--danger)" : "inherit" }}>
-                        {siswa.biodata_detail?.tempat_lahir || "Tempat Kosong"}
-                      </div>
-                      <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.tanggal_lahir ? "var(--danger)" : "var(--text-muted)" }}>
-                        {siswa.biodata_detail?.tanggal_lahir || "Tgl Kosong"}
-                      </div>
-                    </td>
-                    <td style={{ color: !siswa.biodata_detail?.jenis_kelamin ? "var(--danger)" : "inherit", textAlign: "center" }}>
-                      {siswa.biodata_detail?.jenis_kelamin || "-"}
-                    </td>
-                    <td style={{ color: !siswa.biodata_detail?.agama ? "var(--danger)" : "inherit" }}>
-                      {siswa.biodata_detail?.agama || "Kosong"}
-                    </td>
-                    <td style={{ color: !siswa.biodata_detail?.alamat_lengkap ? "var(--danger)" : "inherit", fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>
-                      {siswa.biodata_detail?.alamat_lengkap || "Alamat Kosong"}
-                    </td>
-                    <td style={{ color: (!siswa.biodata_detail?.nama_ayah && !siswa.biodata_detail?.nama_ibu && !siswa.biodata_detail?.nama_wali) ? "var(--danger)" : "inherit" }}>
-                      {siswa.biodata_detail?.nama_ayah || siswa.biodata_detail?.nama_ibu || siswa.biodata_detail?.nama_wali || "Kosong"}
-                    </td>
-                    <td style={{ textAlign: "right", position: "sticky", right: 0, backgroundColor: "inherit" }}>
+                    <td style={{ textAlign: "right" }}>
                       <Link 
                         href={`/guru/erapor/${siswa.nisn}`}
                         className="btn btn-primary"
                         style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}
                       >
-                        <Printer size={16} /> Rapor
+                        <Printer size={16} /> Pratinjau Rapor
                       </Link>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                  <td colSpan="5" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
                     {search ? "Siswa tidak ditemukan." : "Belum ada data siswa di kelas ini. Hubungi Operator Sekolah."}
                   </td>
                 </tr>
@@ -458,6 +426,104 @@ export default function ERaporDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Modal Detail Biodata */}
+      {showBiodataModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[var(--bg-primary)] rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-[var(--border-color)]">
+            <div className="flex items-center justify-between p-6 border-b border-[var(--border-color)]">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">Detail Kelengkapan Biodata</h2>
+              <button 
+                onClick={() => setShowBiodataModal(false)}
+                className="p-2 hover:bg-[var(--bg-tertiary)] rounded-xl transition-colors text-[var(--text-secondary)]"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto" style={{ flex: 1 }}>
+              {/* Rekap Kelengkapan Data */}
+              <div style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
+                {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">Tempat Lahir: {missingStats.tempat_lahir} Kosong</span>}
+                {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tanggal Lahir: {missingStats.tanggal_lahir} Kosong</span>}
+                {missingStats.jenis_kelamin > 0 && <span className="badge badge-warning">Jenis Kelamin: {missingStats.jenis_kelamin} Kosong</span>}
+                {missingStats.agama > 0 && <span className="badge badge-warning">Agama: {missingStats.agama} Kosong</span>}
+                {missingStats.alamat_lengkap > 0 && <span className="badge badge-warning">Alamat: {missingStats.alamat_lengkap} Kosong</span>}
+                {missingStats.orang_tua > 0 && <span className="badge badge-warning">Orang Tua/Wali: {missingStats.orang_tua} Kosong</span>}
+                {Object.values(missingStats).every(v => v === 0) && students.length > 0 && (
+                  <span className="badge badge-success">Semua Data Biodata Lengkap!</span>
+                )}
+              </div>
+
+              <div className="table-container" style={{ overflowX: "auto", margin: 0 }}>
+                <table className="premium-table crosshair-highlight" style={{ minWidth: "1200px" }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: "50px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-secondary)" }}>No</th>
+                      <th style={{ position: "sticky", left: "50px", zIndex: 10, backgroundColor: "var(--bg-secondary)", minWidth: "200px" }}>Nama Lengkap</th>
+                      <th style={{ minWidth: "120px" }}>NISN / NIPD</th>
+                      <th>Tempat/Tgl Lahir</th>
+                      <th>L/P</th>
+                      <th>Agama</th>
+                      <th style={{ minWidth: "200px" }}>Alamat Lengkap</th>
+                      <th>Ortu/Wali</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.length > 0 ? (
+                      students.map((siswa, idx) => (
+                        <tr key={siswa.nisn || idx}>
+                          <td style={{ position: "sticky", left: 0, backgroundColor: "inherit" }}>{idx + 1}</td>
+                          <td style={{ fontWeight: "600", position: "sticky", left: "50px", backgroundColor: "inherit" }}>{siswa.nama}</td>
+                          <td>
+                            <div style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{siswa.nisn}</div>
+                            <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.nipd ? "var(--danger)" : "var(--text-muted)" }}>
+                              {siswa.biodata_detail?.nipd || "NIPD Kosong"}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ color: !siswa.biodata_detail?.tempat_lahir ? "var(--danger)" : "inherit" }}>
+                              {siswa.biodata_detail?.tempat_lahir || "Tempat Kosong"}
+                            </div>
+                            <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.tanggal_lahir ? "var(--danger)" : "var(--text-muted)" }}>
+                              {siswa.biodata_detail?.tanggal_lahir || "Tgl Kosong"}
+                            </div>
+                          </td>
+                          <td style={{ color: !siswa.biodata_detail?.jenis_kelamin ? "var(--danger)" : "inherit", textAlign: "center" }}>
+                            {siswa.biodata_detail?.jenis_kelamin || "-"}
+                          </td>
+                          <td style={{ color: !siswa.biodata_detail?.agama ? "var(--danger)" : "inherit" }}>
+                            {siswa.biodata_detail?.agama || "Kosong"}
+                          </td>
+                          <td style={{ color: !siswa.biodata_detail?.alamat_lengkap ? "var(--danger)" : "inherit", fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>
+                            {siswa.biodata_detail?.alamat_lengkap || "Alamat Kosong"}
+                          </td>
+                          <td style={{ color: (!siswa.biodata_detail?.nama_ayah && !siswa.biodata_detail?.nama_ibu && !siswa.biodata_detail?.nama_wali) ? "var(--danger)" : "inherit" }}>
+                            {siswa.biodata_detail?.nama_ayah || siswa.biodata_detail?.nama_ibu || siswa.biodata_detail?.nama_wali || "Kosong"}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                          Belum ada data siswa di kelas ini.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] flex justify-end">
+              <button onClick={() => setShowBiodataModal(false)} className="btn btn-primary">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
