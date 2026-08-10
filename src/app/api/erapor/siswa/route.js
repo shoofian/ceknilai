@@ -56,23 +56,24 @@ export async function GET(request) {
 
     const students = leger.siswa;
 
-    // 2. Ambil status biodata siswa untuk menandai 'Selesai' atau 'Belum Selesai'
+    // 2. Ambil status biodata siswa secara lengkap
     const nisnList = students.map(s => s.nisn);
     const { data: biodataList, error: errBiodata } = await supabase
       .from('biodata_siswa')
-      .select('nisn')
+      .select('*')
       .in('nisn', nisnList);
 
-    const biodataMap = new Set();
+    const biodataMap = new Map();
     if (!errBiodata && biodataList) {
-      biodataList.forEach(b => biodataMap.add(b.nisn));
+      biodataList.forEach(b => biodataMap.set(b.nisn, b));
     }
 
     // 3. Siapkan response
     const siswa = students.map(s => ({
       nisn: s.nisn,
       nama: s.nama,
-      status_pengisian: biodataMap.has(s.nisn) ? 'Selesai' : 'Belum Selesai'
+      status_pengisian: biodataMap.has(s.nisn) ? 'Selesai' : 'Belum Selesai',
+      biodata_detail: biodataMap.get(s.nisn) || null
     }));
 
     // Urutkan berdasarkan nama

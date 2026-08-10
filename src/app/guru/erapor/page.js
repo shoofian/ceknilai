@@ -24,6 +24,24 @@ export default function ERaporDashboard() {
     (s.nisn && s.nisn.includes(search))
   );
 
+  const missingStats = React.useMemo(() => {
+    let stats = {
+      nipd: 0, tempat_lahir: 0, tanggal_lahir: 0, jenis_kelamin: 0, 
+      agama: 0, alamat_lengkap: 0, orang_tua: 0
+    };
+    students.forEach(s => {
+      const b = s.biodata_detail || {};
+      if (!b.nipd) stats.nipd++;
+      if (!b.tempat_lahir) stats.tempat_lahir++;
+      if (!b.tanggal_lahir) stats.tanggal_lahir++;
+      if (!b.jenis_kelamin) stats.jenis_kelamin++;
+      if (!b.agama) stats.agama++;
+      if (!b.alamat_lengkap) stats.alamat_lengkap++;
+      if (!b.nama_ayah && !b.nama_ibu && !b.nama_wali) stats.orang_tua++;
+    });
+    return stats;
+  }, [students]);
+
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState({ message: "", type: "" }); // type: 'success' | 'error' | 'info'
@@ -338,9 +356,10 @@ export default function ERaporDashboard() {
       <div className="glass-card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-            <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Status Rapor</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+            <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Kelengkapan Biodata</h3>
             <Link href="/guru/erapor/cetak-semua" className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
-              <Printer size={16} /> Cetak Semua
+              <Printer size={16} /> Cetak Semua Rapor
             </Link>
           </div>
           
@@ -357,43 +376,81 @@ export default function ERaporDashboard() {
           </div>
         </div>
 
-        <div className="table-container">
-          <table className="premium-table">
+        {/* Rekap Kelengkapan Data */}
+        <div style={{ marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+          {missingStats.nipd > 0 && <span className="badge badge-warning">NIPD: {missingStats.nipd} Kosong</span>}
+          {missingStats.tempat_lahir > 0 && <span className="badge badge-warning">Tempat Lahir: {missingStats.tempat_lahir} Kosong</span>}
+          {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tanggal Lahir: {missingStats.tanggal_lahir} Kosong</span>}
+          {missingStats.jenis_kelamin > 0 && <span className="badge badge-warning">Jenis Kelamin: {missingStats.jenis_kelamin} Kosong</span>}
+          {missingStats.agama > 0 && <span className="badge badge-warning">Agama: {missingStats.agama} Kosong</span>}
+          {missingStats.alamat_lengkap > 0 && <span className="badge badge-warning">Alamat: {missingStats.alamat_lengkap} Kosong</span>}
+          {missingStats.orang_tua > 0 && <span className="badge badge-warning">Orang Tua/Wali: {missingStats.orang_tua} Kosong</span>}
+          {Object.values(missingStats).every(v => v === 0) && students.length > 0 && (
+            <span className="badge badge-success">Semua Data Biodata Lengkap!</span>
+          )}
+        </div>
+
+        <div className="table-container" style={{ overflowX: "auto" }}>
+          <table className="premium-table crosshair-highlight" style={{ minWidth: "1200px" }}>
             <thead>
               <tr>
-                <th style={{ width: "50px" }}>No</th>
-                <th>Nama Lengkap</th>
-                <th>NISN</th>
-                <th>Status Biodata</th>
-                <th style={{ textAlign: "right" }}>Aksi</th>
+                <th style={{ width: "50px", position: "sticky", left: 0, zIndex: 10, backgroundColor: "var(--bg-secondary)" }}>No</th>
+                <th style={{ position: "sticky", left: "50px", zIndex: 10, backgroundColor: "var(--bg-secondary)", minWidth: "200px" }}>Nama Lengkap</th>
+                <th style={{ minWidth: "120px" }}>NISN / NIPD</th>
+                <th>Tempat/Tgl Lahir</th>
+                <th>L/P</th>
+                <th>Agama</th>
+                <th style={{ minWidth: "200px" }}>Alamat Lengkap</th>
+                <th>Ortu/Wali</th>
+                <th style={{ textAlign: "right", position: "sticky", right: 0, zIndex: 10, backgroundColor: "var(--bg-secondary)" }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {filteredStudents.length > 0 ? (
                 filteredStudents.map((siswa, idx) => (
                   <tr key={siswa.nisn || idx}>
-                    <td>{idx + 1}</td>
-                    <td style={{ fontWeight: "600" }}>{siswa.nama}</td>
-                    <td style={{ color: "var(--text-secondary)", fontFamily: "monospace" }}>{siswa.nisn}</td>
+                    <td style={{ position: "sticky", left: 0, backgroundColor: "inherit" }}>{idx + 1}</td>
+                    <td style={{ fontWeight: "600", position: "sticky", left: "50px", backgroundColor: "inherit" }}>{siswa.nama}</td>
                     <td>
-                      <span className={`badge ${siswa.status_pengisian === "Selesai" ? "badge-success" : "badge-warning"}`}>
-                        {siswa.status_pengisian}
-                      </span>
+                      <div style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{siswa.nisn}</div>
+                      <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.nipd ? "var(--danger)" : "var(--text-muted)" }}>
+                        {siswa.biodata_detail?.nipd || "NIPD Kosong"}
+                      </div>
                     </td>
-                    <td style={{ textAlign: "right" }}>
+                    <td>
+                      <div style={{ color: !siswa.biodata_detail?.tempat_lahir ? "var(--danger)" : "inherit" }}>
+                        {siswa.biodata_detail?.tempat_lahir || "Tempat Kosong"}
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: !siswa.biodata_detail?.tanggal_lahir ? "var(--danger)" : "var(--text-muted)" }}>
+                        {siswa.biodata_detail?.tanggal_lahir || "Tgl Kosong"}
+                      </div>
+                    </td>
+                    <td style={{ color: !siswa.biodata_detail?.jenis_kelamin ? "var(--danger)" : "inherit", textAlign: "center" }}>
+                      {siswa.biodata_detail?.jenis_kelamin || "-"}
+                    </td>
+                    <td style={{ color: !siswa.biodata_detail?.agama ? "var(--danger)" : "inherit" }}>
+                      {siswa.biodata_detail?.agama || "Kosong"}
+                    </td>
+                    <td style={{ color: !siswa.biodata_detail?.alamat_lengkap ? "var(--danger)" : "inherit", fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>
+                      {siswa.biodata_detail?.alamat_lengkap || "Alamat Kosong"}
+                    </td>
+                    <td style={{ color: (!siswa.biodata_detail?.nama_ayah && !siswa.biodata_detail?.nama_ibu && !siswa.biodata_detail?.nama_wali) ? "var(--danger)" : "inherit" }}>
+                      {siswa.biodata_detail?.nama_ayah || siswa.biodata_detail?.nama_ibu || siswa.biodata_detail?.nama_wali || "Kosong"}
+                    </td>
+                    <td style={{ textAlign: "right", position: "sticky", right: 0, backgroundColor: "inherit" }}>
                       <Link 
                         href={`/guru/erapor/${siswa.nisn}`}
                         className="btn btn-primary"
                         style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}
                       >
-                        <Printer size={16} /> Pratinjau Rapor
+                        <Printer size={16} /> Rapor
                       </Link>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
+                  <td colSpan="9" style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)" }}>
                     {search ? "Siswa tidak ditemukan." : "Belum ada data siswa di kelas ini. Hubungi Operator Sekolah."}
                   </td>
                 </tr>
