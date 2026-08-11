@@ -235,95 +235,195 @@ export default function StudentPortal() {
       {/* Main Container */}
       <main style={{ flex: 1, padding: "40px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         
-        {/* Hero Section */}
-        <div style={{ textAlign: "center", marginBottom: "40px", maxWidth: "600px" }}>
-          <h2 style={{ fontSize: "2.5rem", fontWeight: "800", letterSpacing: "-0.04em", marginBottom: "12px", background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Portal Nilai Siswa
-          </h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: "1.6" }}>
-            Selamat datang! Masukkan Nomor Induk Siswa Nasional (NISN) dan Tanggal Lahir Anda untuk melihat riwayat nilai secara instan, transparan, dan detail.
-          </p>
-        </div>
-
-        {/* Search Card */}
-        <div className="glass-card" style={{ width: "100%", maxWidth: "480px", marginBottom: "40px" }}>
-          <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" htmlFor="nisn">NISN Siswa</label>
-              <input
-                id="nisn"
-                type="text"
-                placeholder="Contoh: 1234567890"
-                className="form-input"
-                value={nisn}
-                onChange={(e) => setNisn(e.target.value)}
-                maxLength={20}
-                required
-              />
-            </div>
-            
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" htmlFor="tgl-lahir">Tanggal Lahir</label>
-              <input
-                id="tgl-lahir"
-                type="date"
-                className="form-input"
-                value={tanggalLahir}
-                onChange={(e) => setTanggalLahir(e.target.value)}
-                required
-              />
-            </div>
-
-            <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "14px" }} disabled={loading}>
-              {loading ? (
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span className="spinner" style={{ width: "16px", height: "16px", border: "2px solid #ffffff", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
-                  Mencari Data...
-                </span>
-              ) : (
-                "🔍 Cari Nilai Saya"
-              )}
-            </button>
-          </form>
-
-          {error && (
-            <div style={{ marginTop: "20px", padding: "12px 16px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--danger)", fontSize: "0.9rem", textAlign: "center" }}>
-              {error}
-            </div>
-          )}
-
-          {/* Gabung Kelas Section */}
-          <div style={{ marginTop: "28px", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "24px" }}>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px", fontWeight: "500" }}>
-              Diminta guru mendaftar mandiri?
-            </p>
-            <button 
-              onClick={() => setJoinModalOpen(true)}
-              className="btn btn-secondary" 
-              style={{ padding: "8px 20px", fontSize: "0.9rem", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-color)" }}
-            >
-              🔗 Gabung ke Kelas dengan Kode
-            </button>
-          </div>
+        {/* Split Hero Layout */}
+        <div className="portal-hero-container">
           
-          {/* Promo Section */}
-          <div style={{ marginTop: "16px", textAlign: "center" }}>
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px", fontWeight: "600" }}>
-              Tertarik menggunakan sistem ini di sekolah/kelas Anda?
+          {/* Left Column: Branding, Value Prop & Stepper */}
+          <div className="portal-info-panel">
+            <span style={{ display: "inline-block", width: "max-content", padding: "6px 12px", borderRadius: "99px", background: "var(--success-glow)", border: "1px solid rgba(16, 185, 129, 0.2)", fontSize: "0.78rem", fontWeight: "700", color: "var(--success)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
+              ⚡ Cek Nilai Instan
+            </span>
+            <h2 style={{ fontSize: "2.8rem", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              Pantau Hasil Belajar Kamu Secara Transparan
+            </h2>
+            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: "1.6" }}>
+              Selamat datang di portal CekNilai. Masukkan NISN dan Tanggal Lahir untuk memantau nilai rapot, rekapitulasi kehadiran, serta melakukan simulasi kelulusan.
             </p>
-            <a 
-              href="https://wa.me/6285157544004"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn" 
-              style={{ padding: "8px 20px", fontSize: "0.9rem", borderRadius: "var(--radius-lg)", border: "none", backgroundColor: "#25D366", color: "#fff", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
-              </svg>
-              Hubungi Kami via WhatsApp
-            </a>
+
+            {/* Stepper Steps */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "20px" }} className="portal-steps-list">
+              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>1</div>
+                <div>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Input Identitas Siswa</h4>
+                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Masukkan NISN resmi dan tanggal lahir kamu sesuai dengan data sekolah.</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>2</div>
+                <div>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Lihat Transparansi & Detail Nilai</h4>
+                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Akses nilai harian, tugas, ujian, serta kehadiran dari presensi secara rinci.</p>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>3</div>
+                <div>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Simulasi & Cetak PDF</h4>
+                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Gunakan simulator nilai target untuk kelulusan dan unduh rincian rapor.</p>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Right Column: Search Card Form */}
+          <div className="portal-form-panel">
+            <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "30px", border: "1px solid var(--border-color)" }}>
+              <div style={{ marginBottom: "24px", textAlign: "center" }}>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Cari Nilas Siswa</h3>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "4px" }}>Isi form di bawah untuk mengakses nilai rapot.</p>
+              </div>
+
+              <form onSubmit={handleSearch} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" htmlFor="nisn" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "6px" }}>NISN Siswa</label>
+                  <div style={{ position: "relative" }}>
+                    <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2.5 3 6 3s6-1 6-3v-5"/></svg>
+                    </span>
+                    <input
+                      id="nisn"
+                      type="text"
+                      placeholder="Contoh: 1234567890"
+                      className="form-input"
+                      style={{ paddingLeft: "42px" }}
+                      value={nisn}
+                      onChange={(e) => setNisn(e.target.value)}
+                      maxLength={20}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" htmlFor="tgl-lahir" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "6px" }}>Tanggal Lahir</label>
+                  <div style={{ position: "relative" }}>
+                    <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </span>
+                    <input
+                      id="tgl-lahir"
+                      type="date"
+                      className="form-input"
+                      style={{ paddingLeft: "42px" }}
+                      value={tanggalLahir}
+                      onChange={(e) => setTanggalLahir(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ 
+                    width: "100%", 
+                    padding: "14px", 
+                    marginTop: "6px",
+                    fontWeight: "800",
+                    fontSize: "0.95rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    boxShadow: "0 4px 12px var(--primary-glow)"
+                  }} 
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner" style={{ width: "16px", height: "16px", border: "2px solid #ffffff", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+                      Mencari Data...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Cari Nilai Saya
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {error && (
+                <div style={{ marginTop: "16px", padding: "10px 14px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--danger)", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }} className="animate-fade-in">
+                  <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Gabung Kelas Section */}
+              <div style={{ marginTop: "24px", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "20px" }}>
+                <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "10px", fontWeight: "600" }}>
+                  Diminta guru mendaftar mandiri?
+                </p>
+                <button 
+                  onClick={() => setJoinModalOpen(true)}
+                  className="btn btn-secondary btn-join-class" 
+                  style={{ 
+                    width: "100%",
+                    padding: "10px 16px", 
+                    fontSize: "0.85rem", 
+                    fontWeight: "700",
+                    borderRadius: "var(--radius-sm)", 
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-secondary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    cursor: "pointer",
+                    transition: "var(--transition)"
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  Gabung Kelas via Kode
+                </button>
+              </div>
+              
+              {/* Promo Section WhatsApp */}
+              <div style={{ marginTop: "16px", textAlign: "center" }}>
+                <a 
+                  href="https://wa.me/6285157544004"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-whatsapp-portal" 
+                  style={{ 
+                    width: "100%",
+                    padding: "10px 16px", 
+                    fontSize: "0.85rem", 
+                    borderRadius: "var(--radius-sm)", 
+                    border: "none", 
+                    backgroundColor: "#25D366", 
+                    color: "#fff", 
+                    fontWeight: "700", 
+                    display: "inline-flex", 
+                    alignItems: "center", 
+                    justifyContent: "center",
+                    gap: "8px", 
+                    textDecoration: "none",
+                    transition: "var(--transition)",
+                    boxShadow: "0 4px 10px rgba(37, 211, 102, 0.2)"
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
+                  </svg>
+                  Gunakan di Sekolah Anda
+                </a>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Search Results */}
@@ -1728,6 +1828,53 @@ export default function StudentPortal() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .portal-hero-container {
+          display: flex;
+          width: 100%;
+          max-width: 960px;
+          gap: 48px;
+          align-items: center;
+          margin: 20px auto 40px auto;
+        }
+        .portal-info-panel {
+          flex: 1.1;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .portal-form-panel {
+          flex: 0.9;
+          width: 100%;
+          max-width: 440px;
+        }
+        .btn-join-class:hover {
+          background-color: var(--bg-tertiary) !important;
+          color: var(--primary) !important;
+          border-color: var(--primary) !important;
+        }
+        .btn-whatsapp-portal:hover {
+          background-color: #128C7E !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 14px rgba(37, 211, 102, 0.3) !important;
+        }
+        @media (max-width: 900px) {
+          .portal-hero-container {
+            flex-direction: column;
+            gap: 36px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+          }
+          .portal-info-panel {
+            text-align: center;
+            align-items: center;
+          }
+          .portal-steps-list {
+            display: none !important;
+          }
+          .portal-form-panel {
+            max-width: 100%;
+          }
         }
       `}</style>
     </>

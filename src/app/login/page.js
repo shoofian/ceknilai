@@ -15,8 +15,6 @@ export default function LoginGuru() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-
   // Cek apakah guru sudah login sebelumnya, jika ya langsung arahkan ke /guru
   useEffect(() => {
     const checkSession = async () => {
@@ -34,52 +32,6 @@ export default function LoginGuru() {
     };
     checkSession();
   }, [router]);
-
-  // Load Google Identity Services script (Temporarily Hidden)
-  // useEffect(() => {
-  //   const script = document.createElement("script");
-  //   script.src = "https://accounts.google.com/gsi/client";
-  //   script.async = true;
-  //   script.defer = true;
-  //   document.body.appendChild(script);
-  // 
-  //   return () => {
-  //     document.body.removeChild(script);
-  //   };
-  // }, []);
-
-  // Google Sign-In Callback setup (Temporarily Hidden)
-  // useEffect(() => {
-  //   window.handleGoogleCallback = async (response) => {
-  //     try {
-  //       setLoading(true);
-  //       setError("");
-  //       
-  //       const res = await fetch("/api/auth/google", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({ credential: response.credential }),
-  //       });
-  //       
-  //       const data = await res.json();
-  //       if (!res.ok) {
-  //         throw new Error(data.error || "Gagal masuk dengan Google");
-  //       }
-  //       
-  //       router.push("/guru/kelas");
-  //     } catch (err) {
-  //       setError(err.message || "Gagal masuk menggunakan akun Google Anda.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  // 
-  //   return () => {
-  //     delete window.handleGoogleCallback;
-  //   };
-  // }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -148,280 +100,414 @@ export default function LoginGuru() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-primary)" }} className="animate-fade-in">
-      
-      {/* Top navbar with back option */}
-      <header className="header" style={{ borderBottom: "none", backgroundColor: "transparent" }}>
-        <Link href="/" className="btn btn-secondary" style={{ padding: "8px 16px", fontSize: "0.85rem" }}>
-          ⬅️ Kembali ke Portal Siswa
-        </Link>
-      </header>
+    <div style={{ minHeight: "100vh", display: "flex", backgroundColor: "var(--bg-primary)" }} className="animate-fade-in">
+      {/* Outer split wrapper */}
+      <div style={{ display: "flex", width: "100%", minHeight: "100vh" }}>
+        
+        {/* Left pane: Branding & Stats - Hidden on mobile, visible on desktop */}
+        <div 
+          className="login-brand-side"
+          style={{ 
+            flex: 1, 
+            background: "linear-gradient(135deg, var(--primary), var(--primary-hover), #1d4ed8)",
+            padding: "48px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
+          {/* Background decorative glowing circles */}
+          <div style={{ position: "absolute", width: "300px", height: "300px", borderRadius: "50%", background: "rgba(255,255,255,0.08)", top: "-50px", left: "-50px", filter: "blur(40px)" }} />
+          <div style={{ position: "absolute", width: "400px", height: "400px", borderRadius: "50%", background: "rgba(255,255,255,0.05)", bottom: "-100px", right: "-100px", filter: "blur(60px)" }} />
 
-      {/* Main login card container */}
-      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-        <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", display: "flex", flexDirection: "column", gap: "20px" }}>
-          
-          {/* Logo & Header */}
-          <div style={{ textAlign: "center" }}>
-            <div
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, var(--primary), var(--primary-hover))",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "800",
-                color: "#ffffff",
-                fontSize: "1.6rem",
-                margin: "0 auto 12px auto",
-                boxShadow: "0 8px 16px var(--primary-glow)",
-                fontFamily: "var(--font-heading)"
-              }}
-            >
+          {/* Top Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", zIndex: 2 }}>
+            <div style={{ width: "44px", height: "44px", borderRadius: "12px", backgroundColor: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", color: "var(--primary)", fontSize: "1.4rem", fontFamily: "var(--font-heading)" }}>
               N
             </div>
-            <h2 style={{ fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>
-              {mode === "login" ? "Masuk Sebagai Guru" : "Daftar Akun Guru Baru"}
-            </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "0.82rem", marginTop: "4px" }}>
-              Kelola kelas, siswa, kolom nilai, dan unduh laporan.
-            </p>
+            <div>
+              <span style={{ fontSize: "1.4rem", fontWeight: "800", color: "#ffffff", letterSpacing: "-0.03em" }}>CekNilai</span>
+              <span style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontWeight: "600" }}>Area Pendidik</span>
+            </div>
           </div>
 
-          {/* Tab Switcher */}
-          <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)" }}>
-            <button
-              type="button"
-              onClick={() => { setMode("login"); setError(""); }}
-              style={{
-                flex: 1,
-                padding: "8px 0 10px 0",
-                background: "none",
-                border: "none",
-                borderBottom: mode === "login" ? "3px solid var(--primary)" : "none",
-                fontWeight: mode === "login" ? "800" : "500",
-                color: mode === "login" ? "var(--text-primary)" : "var(--text-secondary)",
-                cursor: "pointer",
-                fontSize: "0.9rem"
-              }}
-            >
-              🔐 Masuk
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode("register"); setError(""); }}
-              style={{
-                flex: 1,
-                padding: "8px 0 10px 0",
-                background: "none",
-                border: "none",
-                borderBottom: mode === "register" ? "3px solid var(--primary)" : "none",
-                fontWeight: mode === "register" ? "800" : "500",
-                color: mode === "register" ? "var(--text-primary)" : "var(--text-secondary)",
-                cursor: "pointer",
-                fontSize: "0.9rem"
-              }}
-            >
-              📝 Buat Akun
-            </button>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={mode === "login" ? handleLogin : handleRegister} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Middle Pitch Content */}
+          <div style={{ zIndex: 2, color: "#ffffff", maxWidth: "480px", margin: "auto 0" }}>
+            <span style={{ display: "inline-block", padding: "6px 12px", borderRadius: "99px", background: "rgba(255,255,255,0.15)", fontSize: "0.78rem", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "16px" }}>
+              Panel Manajemen Nilai
+            </span>
+            <h1 style={{ fontSize: "2.8rem", fontWeight: "800", lineHeight: 1.15, letterSpacing: "-0.04em", marginBottom: "24px" }}>
+              Mudahkan Penginputan & Transparansi Nilai Siswa
+            </h1>
             
-            {mode === "register" && (
-              <>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" htmlFor="nama">Nama Lengkap</label>
-                  <input
-                    id="nama"
-                    type="text"
-                    placeholder="Masukkan nama lengkap Anda"
-                    className="form-input"
-                    value={nama}
-                    onChange={(e) => setNama(e.target.value)}
-                    required
-                  />
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
                 </div>
-                
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" htmlFor="email">Email</label>
-                  <input
-                    id="email"
-                    type="email"
-                    placeholder="nama@sekolah.sch.id"
-                    className="form-input"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                <div>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "700", marginBottom: "4px" }}>Analisis Nilai Real-time</h3>
+                  <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.75)", lineHeight: "1.4" }}>Pantau sebaran nilai kelas, hitung rata-rata otomatis, dan predikat secara presisi.</p>
                 </div>
-              </>
-            )}
+              </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" htmlFor="username">Username</label>
-              <input
-                id="username"
-                type="text"
-                placeholder="Masukkan username unik"
-                className="form-input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                required
-              />
-            </div>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "700", marginBottom: "4px" }}>Presensi Terintegrasi</h3>
+                  <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.75)", lineHeight: "1.4" }}>Nilai kehadiran otomatis terhitung masuk ke komponen bobot nilai siswa.</p>
+                </div>
+              </div>
 
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label" htmlFor="password">Password</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="form-input"
-                  style={{ paddingRight: "45px" }}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute",
-                    right: "12px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "1.1rem",
-                    padding: "4px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                  title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-                >
-                  {showPassword ? "👁️" : "🙈"}
-                </button>
+              <div style={{ display: "flex", gap: "16px" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "700", marginBottom: "4px" }}>Ekspor Mudah & Cepat</h3>
+                  <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.75)", lineHeight: "1.4" }}>Cetak rapor PDF siswa, bagikan grafik capaian belajar, atau ekspor ke format e-Rapor.</p>
+                </div>
               </div>
             </div>
-
-            {error && (
-              <div style={{ padding: "10px 14px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--danger)", fontSize: "0.82rem", textAlign: "center" }}>
-                ❌ {error}
-              </div>
-            )}
-
-            <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "12px", marginTop: "4px" }} disabled={loading}>
-              {loading ? (
-                <span style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center" }}>
-                  <span className="spinner" style={{ width: "16px", height: "16px", border: "2px solid #ffffff", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
-                  Memproses...
-                </span>
-              ) : (
-                mode === "login" ? "🔐 Masuk Sekarang" : "📝 Selesaikan Pendaftaran"
-              )}
-            </button>
-          </form>
-
-          {/* Google Login Component (Temporarily Hidden) */}
-          {/* 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "8px 0" }}>
-            <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-color)" }} />
-            <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "600" }}>ATAU</span>
-            <div style={{ flex: 1, height: "1px", backgroundColor: "var(--border-color)" }} />
           </div>
 
-          {googleClientId ? (
-            <>
-              <div 
-                id="g_id_onload"
-                data-client_id={googleClientId}
-                data-context="signin"
-                data-ux_mode="popup"
-                data-callback="handleGoogleCallback"
-                data-auto_prompt="false"
-              />
-              <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                <div 
-                  className="g_id_signin"
-                  data-type="standard"
-                  data-shape="rectangular"
-                  data-theme="outline"
-                  data-text="signin_with"
-                  data-size="large"
-                  data-logo_alignment="left"
-                  data-width="380"
-                />
-              </div>
-            </>
-          ) : (
-            <button 
-              type="button" 
-              onClick={() => alert("Google Sign-In belum dikonfigurasi di server. Silakan atur NEXT_PUBLIC_GOOGLE_CLIENT_ID di file .env Anda.")}
-              className="btn"
+          {/* Bottom Footer */}
+          <div style={{ zIndex: 2, fontSize: "0.8rem", color: "rgba(255,255,255,0.6)" }}>
+            © {new Date().getFullYear()} CekNilai Team. Hak cipta dilindungi.
+          </div>
+        </div>
+
+        {/* Right pane: Login/Register Form */}
+        <div 
+          style={{ 
+            flex: "1.1", 
+            display: "flex", 
+            flexDirection: "column", 
+            justifyContent: "space-between",
+            padding: "40px 24px",
+            overflowY: "auto",
+            backgroundColor: "var(--bg-primary)"
+          }}
+        >
+          {/* Header Action: Back to Home */}
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Link 
+              href="/" 
+              className="btn-back-portal"
               style={{ 
-                width: "100%", 
-                padding: "10px 14px", 
-                border: "1px solid var(--border-color)", 
-                backgroundColor: "transparent", 
-                color: "var(--text-primary)", 
-                fontWeight: "600",
-                fontSize: "0.85rem",
-                display: "flex", 
+                display: "inline-flex", 
                 alignItems: "center", 
-                justifyContent: "center", 
-                gap: "10px",
-                cursor: "pointer",
-                borderRadius: "var(--radius-md)"
+                gap: "8px", 
+                padding: "8px 16px", 
+                fontSize: "0.82rem", 
+                fontWeight: "700",
+                color: "var(--text-secondary)",
+                borderRadius: "99px",
+                border: "1px solid var(--border-color)",
+                backgroundColor: "var(--bg-secondary)",
+                textDecoration: "none",
+                transition: "var(--transition)"
               }}
             >
-              <svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 48 48">
-                <g>
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-                  <path fill="#4285F4" d="M46.5 24c0-1.63-.15-3.2-.43-4.75H24v9h12.75c-.55 2.37-1.93 4.39-3.99 5.76l6.23 4.83C42.66 35.12 46.5 30.12 46.5 24z"></path>
-                  <path fill="#FBBC05" d="M10.54 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.98-6.19z"></path>
-                  <path fill="#34A853" d="M24 46c5.94 0 11.27-1.97 15.03-5.33l-6.23-4.83c-2.07 1.42-4.71 2.27-7.8 2.27-6.26 0-11.57-4.22-13.46-9.91l-7.98 6.19C6.51 42.62 14.62 46 24 46z"></path>
-                  <path fill="none" d="M0 0h48v48H0z"></path>
-                </g>
-              </svg>
-              Masuk dengan Google
-            </button>
-          )}
-          */}
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+              Kembali ke Portal Siswa
+            </Link>
+          </div>
 
-          {/* Promo Section */}
-          <div style={{ marginTop: "8px", textAlign: "center", borderTop: "1px dashed var(--border-color)", paddingTop: "16px" }}>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginBottom: "8px", fontWeight: "600" }}>
-              Tertarik menggunakan sistem ini di sekolah/kelas Anda?
+          {/* Form wrapper */}
+          <div style={{ width: "100%", maxWidth: "400px", margin: "auto" }}>
+            
+            {/* Branding for Mobile view only */}
+            <div className="login-logo-mobile" style={{ display: "none", alignItems: "center", gap: "10px", marginBottom: "28px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "linear-gradient(135deg, var(--primary), var(--primary-hover))", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", color: "#ffffff", fontSize: "1.1rem" }}>
+                N
+              </div>
+              <span style={{ fontSize: "1.2rem", fontWeight: "800", letterSpacing: "-0.03em" }}>CekNilai</span>
+            </div>
+
+            {/* Header Text */}
+            <div style={{ marginBottom: "28px" }}>
+              <h2 style={{ fontSize: "1.85rem", fontWeight: "800", letterSpacing: "-0.03em", color: "var(--text-primary)", marginBottom: "6px" }}>
+                {mode === "login" ? "Selamat datang kembali" : "Mulai perjalanan Anda"}
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem" }}>
+                {mode === "login" ? "Silakan masuk untuk mengelola nilai siswa Anda." : "Buat akun guru baru secara cepat dan gratis."}
+              </p>
+            </div>
+
+            {/* Modern Tab Switcher */}
+            <div 
+              style={{ 
+                display: "flex", 
+                backgroundColor: "var(--bg-tertiary)", 
+                padding: "4px", 
+                borderRadius: "var(--radius-sm)", 
+                marginBottom: "28px",
+                position: "relative"
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => { setMode("login"); setError(""); }}
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  background: mode === "login" ? "var(--bg-secondary)" : "none",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: mode === "login" ? "800" : "600",
+                  color: mode === "login" ? "var(--primary)" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  boxShadow: mode === "login" ? "var(--shadow-sm)" : "none",
+                  transition: "var(--transition)"
+                }}
+              >
+                🔐 Masuk
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode("register"); setError(""); }}
+                style={{
+                  flex: 1,
+                  padding: "8px 0",
+                  background: mode === "register" ? "var(--bg-secondary)" : "none",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontWeight: mode === "register" ? "800" : "600",
+                  color: mode === "register" ? "var(--primary)" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  boxShadow: mode === "register" ? "var(--shadow-sm)" : "none",
+                  transition: "var(--transition)"
+                }}
+              >
+                📝 Buat Akun
+              </button>
+            </div>
+
+            {/* Form Fields */}
+            <form onSubmit={mode === "login" ? handleLogin : handleRegister} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {mode === "register" && (
+                <>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="nama" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "6px" }}>Nama Lengkap</label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      </span>
+                      <input
+                        id="nama"
+                        type="text"
+                        placeholder="Nama lengkap beserta gelar"
+                        className="form-input"
+                        style={{ paddingLeft: "42px" }}
+                        value={nama}
+                        onChange={(e) => setNama(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="email" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "6px" }}>Alamat Email</label>
+                    <div style={{ position: "relative" }}>
+                      <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                      </span>
+                      <input
+                        id="email"
+                        type="email"
+                        placeholder="contoh@sekolah.sch.id"
+                        className="form-input"
+                        style={{ paddingLeft: "42px" }}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" htmlFor="username" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "6px" }}>Username</label>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </span>
+                  <input
+                    id="username"
+                    type="text"
+                    placeholder="Masukkan username"
+                    className="form-input"
+                    style={{ paddingLeft: "42px" }}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                  <label className="form-label" htmlFor="password" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: 0 }}>Password</label>
+                  {mode === "login" && (
+                    <span 
+                      style={{ fontSize: "0.75rem", color: "var(--text-muted)", cursor: "not-allowed" }}
+                      onClick={() => alert("Lupa password? Silakan hubungi operator sekolah/admin.")}
+                    >
+                      Lupa password?
+                    </span>
+                  )}
+                </div>
+                <div style={{ position: "relative" }}>
+                  <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", display: "flex" }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                  </span>
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Minimal 6 karakter"
+                    className="form-input"
+                    style={{ paddingLeft: "42px", paddingRight: "45px" }}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: "absolute",
+                      right: "12px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--text-muted)",
+                      padding: "4px"
+                    }}
+                    title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  >
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div style={{ padding: "10px 14px", borderRadius: "var(--radius-sm)", backgroundColor: "var(--danger-glow)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "var(--danger)", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "8px" }} className="animate-fade-in">
+                  <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                style={{ 
+                  width: "100%", 
+                  padding: "14px", 
+                  marginTop: "6px",
+                  fontSize: "0.95rem",
+                  fontWeight: "800",
+                  borderRadius: "var(--radius-sm)",
+                  boxShadow: "0 4px 12px var(--primary-glow)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
+                }} 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner" style={{ width: "18px", height: "18px", border: "2.5px solid #ffffff", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
+                    Mengautentikasi...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                    {mode === "login" ? "Masuk ke Dashboard" : "Daftar Sekarang"}
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Bottom WhatsApp CTA & Promo */}
+          <div style={{ marginTop: "32px", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "24px" }}>
+            <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "12px", fontWeight: "600" }}>
+              Ingin mengimplementasikan sistem ini di sekolah Anda?
             </p>
             <a 
               href="https://wa.me/6285157544004"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn" 
-              style={{ padding: "6px 16px", fontSize: "0.8rem", borderRadius: "var(--radius-lg)", border: "none", backgroundColor: "#25D366", color: "#fff", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}
+              className="btn btn-whatsapp-login" 
+              style={{ 
+                padding: "8px 20px", 
+                fontSize: "0.82rem", 
+                borderRadius: "var(--radius-lg)", 
+                border: "none", 
+                backgroundColor: "#25D366", 
+                color: "#fff", 
+                fontWeight: "700", 
+                display: "inline-flex", 
+                alignItems: "center", 
+                gap: "8px", 
+                textDecoration: "none",
+                transition: "var(--transition)",
+                boxShadow: "0 4px 10px rgba(37, 211, 102, 0.25)"
+              }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232"/>
               </svg>
-              Hubungi Kami via WhatsApp
+              Konsultasi WhatsApp
             </a>
           </div>
         </div>
-      </main>
+
+      </div>
 
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .btn-back-portal:hover {
+          background-color: var(--bg-tertiary) !important;
+          color: var(--primary) !important;
+          border-color: var(--primary) !important;
+        }
+        .btn-whatsapp-login:hover {
+          background-color: #128C7E !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 14px rgba(37, 211, 102, 0.35) !important;
+        }
+        @media (max-width: 900px) {
+          .login-brand-side {
+            display: none !important;
+          }
+          .login-logo-mobile {
+            display: flex !important;
+          }
         }
       `}</style>
     </div>
