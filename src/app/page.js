@@ -689,40 +689,36 @@ export default function StudentPortal() {
                         </div>
                       )}
 
-                      {/* Button Container for Actions */}
-                      <div className="no-print" data-html2canvas-ignore="true" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", marginBottom: "30px", marginTop: "10px" }}>
+                      {/* Compact Action Toolbar */}
+                      <div className="no-print" data-html2canvas-ignore="true" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "24px", marginTop: "8px", padding: "8px 4px", borderTop: "1px solid var(--border-color)", borderBottom: "1px solid var(--border-color)" }}>
                         {(!res.isLengkap || res.jumlahAspekTerisi < res.totalAspekCount) && (
                           <button
                             onClick={() => setIsSimulatorOpen(true)}
-                            className="btn btn-primary"
-                            style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", boxShadow: "0 4px 14px rgba(59, 130, 246, 0.4)", flex: "1 1 auto" }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "7px 12px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "8px", border: "1px solid rgba(59,130,246,0.25)", background: "rgba(59,130,246,0.08)", color: "var(--primary)", cursor: "pointer", whiteSpace: "nowrap", transition: "var(--transition)" }}
                           >
-                            ✨ Buka Kalkulator Estimasi Target
+                            ✨ Simulasi
                           </button>
                         )}
                         {res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
                           <button
                             onClick={() => setIsPresensiOpen(true)}
-                            className="btn btn-secondary"
-                            style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", borderColor: "rgba(59, 130, 246, 0.4)", boxShadow: "0 4px 14px rgba(59, 130, 246, 0.2)", flex: "1 1 auto" }}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "7px 12px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "8px", border: "1px solid rgba(99,102,241,0.25)", background: "rgba(99,102,241,0.08)", color: "#6366f1", cursor: "pointer", whiteSpace: "nowrap", transition: "var(--transition)" }}
                           >
-                            📅 Cek Rekap Presensi
+                            📅 Presensi
                           </button>
                         )}
                         <button
                           onClick={() => handleDownloadImage(res.kelasId)}
                           disabled={isGenerating}
-                          className="btn btn-secondary"
-                          style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", borderColor: "rgba(16, 185, 129, 0.4)", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.2)", flex: "1 1 auto", opacity: isGenerating ? 0.7 : 1, cursor: isGenerating ? "wait" : "pointer" }}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "7px 12px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "8px", border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.08)", color: "#10b981", cursor: isGenerating ? "wait" : "pointer", whiteSpace: "nowrap", opacity: isGenerating ? 0.6 : 1, transition: "var(--transition)" }}
                         >
-                          {isGenerating ? "📸 Memproses..." : "📸 Bagikan Hasil"}
+                          {isGenerating ? "⏳ ..." : "📸 Bagikan"}
                         </button>
                         <button
                           onClick={handlePrintKHS}
-                          className="btn btn-secondary"
-                          style={{ padding: "12px 24px", fontSize: "0.9rem", borderRadius: "99px", backgroundColor: "rgba(99, 102, 241, 0.1)", color: "#6366f1", borderColor: "rgba(99, 102, 241, 0.4)", boxShadow: "0 4px 14px rgba(99, 102, 241, 0.2)", flex: "1 1 auto" }}
+                          style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "7px 12px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "8px", border: "1px solid rgba(245,158,11,0.25)", background: "rgba(245,158,11,0.08)", color: "#d97706", cursor: "pointer", whiteSpace: "nowrap", transition: "var(--transition)" }}
                         >
-                          🖨️ Cetak Rapor PDF
+                          🖨️ Cetak
                         </button>
                       </div>
                       
