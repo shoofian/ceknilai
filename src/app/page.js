@@ -814,9 +814,10 @@ export default function StudentPortal() {
                             {res.detailNilai.map((col) => (
                               <>
                                 {/* Baris komponen utama / grup */}
-                                <tr key={col.kolomId} style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: "none" } : {}}>
+                                <tr key={col.kolomId} style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: "none" } : col.isPresensi ? { backgroundColor: "rgba(16,185,129,0.06)" } : {}}>
                                   <td style={{ fontWeight: col.isGroup ? "800" : "600" }}>
                                     {col.isGroup && <span style={{ fontSize: "0.7rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid var(--primary)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>GRUP</span>}
+                                    {col.isPresensi && <span style={{ fontSize: "0.7rem", backgroundColor: "rgba(16,185,129,0.1)", color: "var(--success)", border: "1px solid var(--success)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>📅 PRESENSI</span>}
                                     {col.namaKolom}
                                   </td>
                                   <td>{col.bobot}%</td>
@@ -833,6 +834,9 @@ export default function StudentPortal() {
                                     {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli}
                                     {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && col.hitungMetode !== "persentase" && (
                                       <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>(rata-rata)</span>
+                                    )}
+                                    {col.isPresensi && col.nilaiAsli !== null && col.nilaiAsli !== "-" && (
+                                      <span style={{ fontSize: "0.7rem", color: "var(--success)", fontWeight: "500", marginLeft: "4px" }}>(dari presensi)</span>
                                     )}
                                   </td>
                                 </tr>

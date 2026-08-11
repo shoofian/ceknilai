@@ -792,13 +792,33 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       kolomNilai.forEach(col => {
         const groupConfig = skema.kolomAspekGroup?.[col.id];
         const isGroup = groupConfig ? !!groupConfig.isGroup : false;
+        const isPresensi = groupConfig ? !!groupConfig.isPresensi : false;
         const hitungMetode = groupConfig ? (groupConfig.hitungMetode || "rata-rata") : "rata-rata";
         const subKolom = groupConfig ? (groupConfig.subKolom || []) : [];
 
         let scoreVal = null;
         let isFilled = false;
 
-        if (isGroup && subKolom.length > 0) {
+        if (isPresensi) {
+          // Kolom terintegrasi presensi: hitung otomatis dari persentase kehadiran
+          const pertemuanList = skema.pertemuan || [];
+          const totalP = pertemuanList.length;
+          if (totalP > 0) {
+            let countH = 0;
+            let totalDiisi = 0;
+            pertemuanList.forEach(p => {
+              const val = nilaiObj[`_presensi_${p.id}`];
+              if (val) {
+                totalDiisi++;
+                if (val === 'H') countH++;
+              }
+            });
+            if (totalDiisi > 0) {
+              scoreVal = (countH / totalP) * 100;
+              isFilled = true;
+            }
+          }
+        } else if (isGroup && subKolom.length > 0) {
           let subTotal = 0;
           let subFilledWeight = 0;
           let subFilledCount = 0;
@@ -883,6 +903,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
           kontribusi: displayKontribusi,
           isTersembunyi: isHidden,
           isGroup: isGroup && subKolom.length > 0,
+          isPresensi,
           hitungMetode,
           subDetail,
         });
@@ -932,8 +953,28 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
               const colHitungMetode = colGroupConfig ? (colGroupConfig.hitungMetode || "rata-rata") : "rata-rata";
               const colSubKolom = colGroupConfig ? (colGroupConfig.subKolom || []) : [];
 
+              const colIsPresensi = colGroupConfig ? !!colGroupConfig.isPresensi : false;
+
               let v = null;
-              if (colIsGroup && colSubKolom.length > 0) {
+              if (colIsPresensi) {
+                // Kolom terintegrasi presensi: hitung dari data kehadiran siswa
+                const pertemuanListAvg = skema.pertemuan || [];
+                const totalPAvg = pertemuanListAvg.length;
+                if (totalPAvg > 0) {
+                  let cH = 0, cDiisi = 0;
+                  const ssNilai = ss.nilai || {};
+                  pertemuanListAvg.forEach(p => {
+                    const sv = ssNilai[`_presensi_${p.id}`];
+                    if (sv) {
+                      cDiisi++;
+                      if (sv === 'H') cH++;
+                    }
+                  });
+                  if (cDiisi > 0) {
+                    v = (cH / totalPAvg) * 100;
+                  }
+                }
+              } else if (colIsGroup && colSubKolom.length > 0) {
                 let subTotal = 0, subFilledCount = 0, subFilledWeight = 0;
                 colSubKolom.forEach(sub => {
                   const sc = (ss.nilai || {})[sub.id];
