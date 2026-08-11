@@ -148,7 +148,7 @@ export default function LoginGuru() {
         
         <div className="portal-hero-container">
           
-          {/* Left Column: Branding text */}
+          {/* Left Column: Branding */}
           <div className="portal-info-panel">
             <span style={{ display: "inline-block", width: "max-content", padding: "6px 12px", borderRadius: "99px", background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", fontSize: "0.78rem", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
               🔑 Area Pendidik
@@ -156,34 +156,6 @@ export default function LoginGuru() {
             <h2 style={{ fontSize: "2.8rem", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Kelola Kelas dan Skema Penilaian Anda
             </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: "1.6" }}>
-              Masuk atau daftarkan akun guru Anda untuk mulai mengelola kelas, menginput nilai, mengintegrasikan presensi harian, dan mencetak laporan rapor secara instan.
-            </p>
-
-            {/* Stepper Steps */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "20px" }} className="portal-steps-list">
-              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>1</div>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Atur Skema Penilaian</h4>
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Tentukan KKM, bobot komponen nilai, dan kolom presensi kehadiran kelas Anda.</p>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>2</div>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Input Nilai & Kehadiran</h4>
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Input nilai secara fleksibel atau hubungkan otomatis dengan rekapan absensi siswa.</p>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>3</div>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Publikasikan & Ekspor</h4>
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Buka akses pencarian nilai bagi siswa dan cetak leger / e-Rapor dengan satu klik.</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Column: Card Form */}

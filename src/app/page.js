@@ -238,7 +238,7 @@ export default function StudentPortal() {
         {/* Split Hero Layout */}
         <div className="portal-hero-container">
           
-          {/* Left Column: Branding, Value Prop & Stepper */}
+          {/* Left Column: Branding */}
           <div className="portal-info-panel">
             <span style={{ display: "inline-block", width: "max-content", padding: "6px 12px", borderRadius: "99px", background: "var(--success-glow)", border: "1px solid rgba(16, 185, 129, 0.2)", fontSize: "0.78rem", fontWeight: "700", color: "var(--success)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
               ⚡ Cek Nilai Instan
@@ -246,34 +246,6 @@ export default function StudentPortal() {
             <h2 style={{ fontSize: "2.8rem", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Pantau Hasil Belajar Kamu Secara Transparan
             </h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", lineHeight: "1.6" }}>
-              Selamat datang di portal CekNilai. Masukkan NISN dan Tanggal Lahir untuk memantau nilai rapot, rekapitulasi kehadiran, serta melakukan simulasi kelulusan.
-            </p>
-
-            {/* Stepper Steps */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "20px" }} className="portal-steps-list">
-              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>1</div>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Input Identitas Siswa</h4>
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Masukkan NISN resmi dan tanggal lahir kamu sesuai dengan data sekolah.</p>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>2</div>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Lihat Transparansi & Detail Nilai</h4>
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Akses nilai harian, tugas, ujian, serta kehadiran dari presensi secara rinci.</p>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                <div style={{ width: "28px", height: "28px", borderRadius: "50%", backgroundColor: "var(--primary-glow)", color: "var(--primary)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "0.85rem", flexShrink: 0 }}>3</div>
-                <div>
-                  <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-primary)", marginBottom: "2px" }}>Simulasi & Cetak PDF</h4>
-                  <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)" }}>Gunakan simulator nilai target untuk kelulusan dan unduh rincian rapor.</p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Right Column: Search Card Form */}
