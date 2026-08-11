@@ -677,10 +677,12 @@ export default function StudentPortal() {
 
                       {/* Summary Score Grid / Simulator Grid */}
                       {!res.isNilaiAkhirGenerated ? (
-                        <div style={{ background: "var(--warning-glow)", padding: "24px", borderRadius: "var(--radius-md)", border: "1px dashed rgba(245, 158, 11, 0.4)", marginBottom: "30px", textAlign: "center" }}>
-                          <span style={{ fontSize: "2rem" }}>🔒</span>
-                          <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--warning)", marginTop: "8px", marginBottom: "4px" }}>Nilai Akhir Sedang Diproses</h3>
-                          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Guru belum merilis Nilai Akhir resmi untuk kelas ini. Namun Anda dapat menggunakan <strong>Kalkulator Simulasi</strong> di bawah untuk memprediksi nilai target Anda!</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", borderRadius: "8px", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", marginBottom: "20px" }}>
+                          <span style={{ fontSize: "1.1rem", lineHeight: 1 }}>🔒</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--warning)" }}>Nilai Akhir belum dirilis</span>
+                            <span style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginLeft: "6px" }}>— gunakan Simulasi untuk estimasi</span>
+                          </div>
                         </div>
                       ) : (
                         <div className="grid-cols-1" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "30px" }}>
