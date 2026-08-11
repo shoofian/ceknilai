@@ -409,149 +409,189 @@ export default function StudentPortal() {
                   </div>
                 )}
 
-                {filteredResults.length > 0 ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px", marginTop: "10px" }}>
-                    {filteredResults.map((res, index) => {
-                      const gradients = [
-                        "linear-gradient(135deg, #3b82f6, #1d4ed8)", // Blue
-                        "linear-gradient(135deg, #10b981, #047857)", // Emerald
-                        "linear-gradient(135deg, #8b5cf6, #5b21b6)", // Purple
-                        "linear-gradient(135deg, #f59e0b, #b45309)", // Amber
-                        "linear-gradient(135deg, #ec4899, #be185d)", // Pink
-                      ];
-                      const cardGradient = gradients[index % gradients.length];
-                      
-                      return (
-                        <div
-                          key={res.kelasId}
-                          className="glass-card animate-fade-in"
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            padding: 0,
-                            overflow: "hidden",
-                            border: "1px solid var(--border-color)",
-                            cursor: "pointer",
-                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                          }}
-                          onClick={() => { setActiveClassId(res.kelasId); setSimulationScores({}); }}
-                        >
-                          {/* Accent Header */}
-                          <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
-                            <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff" }}>{res.namaKelas}</h4>
-                            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
-                              {res.tingkatan && (
-                                <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.25)", color: "#ffffff", fontWeight: "700" }}>
-                                  🎓 Kelas {res.tingkatan}
-                                </span>
-                              )}
-                              <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
-                                📚 TA: {res.tahunAjaran}
+                {(() => {
+                  const activeResults = filteredResults.filter(r => !r.archived);
+                  const archivedResults = filteredResults.filter(r => r.archived);
+
+                  const renderClassCard = (res, index, isArchived = false) => {
+                    const gradients = isArchived ? [
+                      "linear-gradient(135deg, #64748b, #475569)",
+                      "linear-gradient(135deg, #6b7280, #4b5563)",
+                      "linear-gradient(135deg, #78716c, #57534e)",
+                    ] : [
+                      "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                      "linear-gradient(135deg, #10b981, #047857)",
+                      "linear-gradient(135deg, #8b5cf6, #5b21b6)",
+                      "linear-gradient(135deg, #f59e0b, #b45309)",
+                      "linear-gradient(135deg, #ec4899, #be185d)",
+                    ];
+                    const cardGradient = gradients[index % gradients.length];
+                    
+                    return (
+                      <div
+                        key={res.kelasId}
+                        className="glass-card animate-fade-in"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          padding: 0,
+                          overflow: "hidden",
+                          border: "1px solid var(--border-color)",
+                          cursor: "pointer",
+                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          opacity: isArchived ? 0.85 : 1,
+                        }}
+                        onClick={() => { setActiveClassId(res.kelasId); setSimulationScores({}); }}
+                      >
+                        {/* Accent Header */}
+                        <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
+                          <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff" }}>{res.namaKelas}</h4>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
+                            {res.tingkatan && (
+                              <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.25)", color: "#ffffff", fontWeight: "700" }}>
+                                🎓 Kelas {res.tingkatan}
                               </span>
-                              <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
-                                ⏱️ Sem. {res.semester || "Ganjil"}
-                              </span>
-                              <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", fontWeight: "600" }}>
-                                💻 {res.mataPelajaran || "Informatika"}
-                              </span>
+                            )}
+                            <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
+                              📚 TA: {res.tahunAjaran}
+                            </span>
+                            <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.2)", color: "#ffffff", fontWeight: "600" }}>
+                              ⏱️ Sem. {res.semester || "Ganjil"}
+                            </span>
+                            <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.15)", color: "#ffffff", fontWeight: "600" }}>
+                              💻 {res.mataPelajaran || "Informatika"}
+                            </span>
+                          </div>
+                          {res.archived ? (
+                            <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "rgba(0,0,0,0.3)", color: "#ffffff", fontSize: "0.65rem", fontWeight: "700", border: "1px solid rgba(255,255,255,0.2)" }}>ARSIP</span>
+                          ) : (
+                            <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "var(--success)", color: "#fff", fontSize: "0.65rem", fontWeight: "800", padding: "4px 8px", boxShadow: "0 2px 10px rgba(16, 185, 129, 0.5)", border: "1px solid rgba(255,255,255,0.2)" }}>🟢 AKTIF</span>
+                          )}
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Guru Pengampu</span>
+                              <p style={{ fontSize: "0.88rem", fontWeight: "700", color: "var(--text-primary)", marginTop: "2px" }}>{res.guruNama}</p>
                             </div>
-                            {res.archived ? (
-                              <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "rgba(0,0,0,0.3)", color: "#ffffff", fontSize: "0.65rem", fontWeight: "700", border: "1px solid rgba(255,255,255,0.2)" }}>ARSIP</span>
-                            ) : (
-                              <span className="badge" style={{ position: "absolute", top: "16px", right: "16px", backgroundColor: "var(--success)", color: "#fff", fontSize: "0.65rem", fontWeight: "800", padding: "4px 8px", boxShadow: "0 2px 10px rgba(16, 185, 129, 0.5)", border: "1px solid rgba(255,255,255,0.2)" }}>🟢 AKTIF</span>
+                            
+                            {/* Predikat Circle */}
+                            {res.isNilaiAkhirGenerated && (
+                              <div
+                                style={{
+                                  width: "42px",
+                                  height: "42px",
+                                  borderRadius: "50%",
+                                  backgroundColor: res.predikat === "A" || res.predikat === "B" ? "var(--success-glow)" : res.predikat === "C" ? "var(--warning-glow)" : "var(--danger-glow)",
+                                  border: `1.5px solid ${res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"}`,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  fontSize: "1.1rem",
+                                  fontWeight: "800",
+                                  color: res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"
+                                }}
+                              >
+                                {res.predikat}
+                              </div>
                             )}
                           </div>
 
-                          {/* Content */}
-                          <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div>
-                                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Guru Pengampu</span>
-                                <p style={{ fontSize: "0.88rem", fontWeight: "700", color: "var(--text-primary)", marginTop: "2px" }}>{res.guruNama}</p>
-                              </div>
-                              
-                              {/* Predikat Circle */}
-                              {res.isNilaiAkhirGenerated && (
-                                <div
-                                  style={{
-                                    width: "42px",
-                                    height: "42px",
-                                    borderRadius: "50%",
-                                    backgroundColor: res.predikat === "A" || res.predikat === "B" ? "var(--success-glow)" : res.predikat === "C" ? "var(--warning-glow)" : "var(--danger-glow)",
-                                    border: `1.5px solid ${res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"}`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "1.1rem",
-                                    fontWeight: "800",
-                                    color: res.predikat === "A" || res.predikat === "B" ? "var(--success)" : res.predikat === "C" ? "var(--warning)" : "var(--danger)"
-                                  }}
-                                >
-                                  {res.predikat}
-                                </div>
-                              )}
-                            </div>
-
-                            <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div>
-                                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Nilai Akhir</span>
-                                {res.isNilaiAkhirGenerated ? (
-                                  <p style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>{res.nilaiAkhir.toFixed(2)}</p>
-                                ) : (
-                                  <p style={{ fontSize: "1rem", fontWeight: "700", color: "var(--text-muted)", margin: 0 }}>🔒 Menunggu</p>
-                                )}
-                              </div>
-                              
+                          <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                              <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Nilai Akhir</span>
                               {res.isNilaiAkhirGenerated ? (
-                                <span
-                                  className={`badge ${res.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`}
-                                  style={{ fontSize: "0.72rem", padding: "5px 10px", borderRadius: "6px" }}
-                                >
-                                  {res.statusKelulusan}
-                                </span>
-                              ) : null}
+                                <p style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>{res.nilaiAkhir.toFixed(2)}</p>
+                              ) : (
+                                <p style={{ fontSize: "1rem", fontWeight: "700", color: "var(--text-muted)", margin: 0 }}>🔒 Menunggu</p>
+                              )}
                             </div>
-
-                            {/* Progress */}
-                            <div style={{ width: "100%", height: "6px", backgroundColor: "var(--bg-tertiary)", borderRadius: "99px", overflow: "hidden", marginTop: "4px" }}>
-                              <div style={{ width: `${Math.min(res.nilaiAkhir, 100)}%`, height: "100%", backgroundColor: res.nilaiAkhir >= res.kkm ? "var(--success)" : "var(--danger)", borderRadius: "99px" }}></div>
-                            </div>
-
-                            {/* Progress Komponen Terisi */}
-                            {res.totalAspekCount > 0 && (
-                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                                <span>Progres Komponen Terisi:</span>
-                                <span style={{ fontWeight: "700", color: res.jumlahAspekTerisi === res.totalAspekCount ? "var(--success)" : "var(--text-secondary)" }}>
-                                  {res.jumlahAspekTerisi} / {res.totalAspekCount} ({res.totalBobotTerisi}% Bobot)
-                                </span>
-                              </div>
-                            )}
+                            
+                            {res.isNilaiAkhirGenerated ? (
+                              <span
+                                className={`badge ${res.statusKelulusan === "LULUS" ? "badge-success" : "badge-danger"}`}
+                                style={{ fontSize: "0.72rem", padding: "5px 10px", borderRadius: "6px" }}
+                              >
+                                {res.statusKelulusan}
+                              </span>
+                            ) : null}
                           </div>
 
-                          {/* Card Action Link */}
-                          <div 
-                            style={{ 
-                              borderTop: "1px solid var(--border-color)", 
-                              padding: "12px 24px", 
-                              backgroundColor: "var(--bg-secondary)", 
-                              display: "flex", 
-                              justifyContent: "space-between", 
-                              alignItems: "center" 
-                            }}
-                          >
-                            <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--primary)" }}>Buka Rincian Nilai</span>
-                            <span style={{ fontSize: "0.95rem", color: "var(--primary)" }}>➔</span>
+                          {/* Progress */}
+                          <div style={{ width: "100%", height: "6px", backgroundColor: "var(--bg-tertiary)", borderRadius: "99px", overflow: "hidden", marginTop: "4px" }}>
+                            <div style={{ width: `${Math.min(res.nilaiAkhir, 100)}%`, height: "100%", backgroundColor: res.nilaiAkhir >= res.kkm ? "var(--success)" : "var(--danger)", borderRadius: "99px" }}></div>
+                          </div>
+
+                          {/* Progress Komponen Terisi */}
+                          {res.totalAspekCount > 0 && (
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                              <span>Progres Komponen Terisi:</span>
+                              <span style={{ fontWeight: "700", color: res.jumlahAspekTerisi === res.totalAspekCount ? "var(--success)" : "var(--text-secondary)" }}>
+                                {res.jumlahAspekTerisi} / {res.totalAspekCount} ({res.totalBobotTerisi}% Bobot)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card Action Link */}
+                        <div 
+                          style={{ 
+                            borderTop: "1px solid var(--border-color)", 
+                            padding: "12px 24px", 
+                            backgroundColor: "var(--bg-secondary)", 
+                            display: "flex", 
+                            justifyContent: "space-between", 
+                            alignItems: "center" 
+                          }}
+                        >
+                          <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--primary)" }}>Buka Rincian Nilai</span>
+                          <span style={{ fontSize: "0.95rem", color: "var(--primary)" }}>➔</span>
+                        </div>
+                      </div>
+                    );
+                  };
+
+                  if (filteredResults.length === 0) {
+                    return (
+                      <div style={{ padding: "60px 20px", textAlign: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)" }}>
+                        <h3 style={{ fontSize: "1.25rem", color: "var(--text-secondary)", marginBottom: "8px" }}>Pencarian Tidak Ditemukan</h3>
+                        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Tidak ada kelas yang cocok dengan filter pencarian Anda.</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      {/* Kelas Aktif */}
+                      {activeResults.length > 0 && (
+                        <div style={{ marginTop: "10px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                            <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)" }}>🟢 Kelas Aktif</span>
+                            <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "3px 10px", borderRadius: "99px", backgroundColor: "rgba(16,185,129,0.12)", color: "var(--success)", border: "1px solid rgba(16,185,129,0.25)" }}>{activeResults.length}</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                            {activeResults.map((res, index) => renderClassCard(res, index, false))}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div style={{ padding: "60px 20px", textAlign: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px dashed var(--border-color)" }}>
-                    <h3 style={{ fontSize: "1.25rem", color: "var(--text-secondary)", marginBottom: "8px" }}>Pencarian Tidak Ditemukan</h3>
-                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Tidak ada kelas yang cocok dengan filter pencarian Anda.</p>
-                  </div>
-                )}
+                      )}
+
+                      {/* Kelas Arsip */}
+                      {archivedResults.length > 0 && (
+                        <div style={{ marginTop: activeResults.length > 0 ? "36px" : "10px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px", paddingTop: activeResults.length > 0 ? "20px" : "0", borderTop: activeResults.length > 0 ? "1px dashed var(--border-color)" : "none" }}>
+                            <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--text-secondary)" }}>📦 Kelas Arsip</span>
+                            <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "3px 10px", borderRadius: "99px", backgroundColor: "var(--bg-tertiary)", color: "var(--text-muted)", border: "1px solid var(--border-color)" }}>{archivedResults.length}</span>
+                          </div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                            {archivedResults.map((res, index) => renderClassCard(res, index, true))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </>
             ) : (
               /* DETAIL CLASS VIEW WITH BACK BUTTON */
