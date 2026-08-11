@@ -908,6 +908,84 @@ export default function StudentPortal() {
                       )}
 
 
+                      {/* Attendance Recap Card */}
+                      {res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
+                        <div 
+                          className="glass-card animate-fade-in" 
+                          style={{ 
+                            padding: "20px", 
+                            borderRadius: "var(--radius-md)", 
+                            border: "1px solid var(--border-color)", 
+                            backgroundColor: "var(--bg-secondary)", 
+                            marginBottom: "24px",
+                            boxShadow: "var(--shadow-sm)"
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                            <span style={{ fontSize: "1.2rem" }}>📊</span>
+                            <h5 style={{ fontSize: "0.95rem", fontWeight: "800", color: "var(--text-primary)", margin: 0, fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                              Rekapan Presensi & Kehadiran
+                            </h5>
+                          </div>
+
+                          <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
+                            {/* Left Side: Large Percentage Circle */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "16px", minWidth: "220px", flex: 1 }}>
+                              <div 
+                                style={{ 
+                                  width: "64px", 
+                                  height: "64px", 
+                                  borderRadius: "50%", 
+                                  background: "var(--success-glow)", 
+                                  border: "2px solid var(--success)",
+                                  display: "flex", 
+                                  flexDirection: "column",
+                                  alignItems: "center", 
+                                  justifyContent: "center",
+                                  flexShrink: 0
+                                }}
+                              >
+                                <span style={{ fontSize: "1.15rem", fontWeight: "800", color: "var(--success)", lineHeight: 1 }}>
+                                  {res.rekapPresensi.persentase}%
+                                </span>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Kehadiran Siswa</span>
+                                <div style={{ width: "100%", height: "6px", backgroundColor: "var(--bg-tertiary)", borderRadius: "99px", overflow: "hidden", marginTop: "4px", marginBottom: "4px" }}>
+                                  <div style={{ width: `${res.rekapPresensi.persentase}%`, height: "100%", backgroundColor: "var(--success)", borderRadius: "99px" }} />
+                                </div>
+                                <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: "600" }}>
+                                  Hadir {res.rekapPresensi.summary.H} dari {res.rekapPresensi.totalPertemuan} pertemuan
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Right Side: Grid of Details */}
+                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", flex: 1.2 }}>
+                              <div style={{ flex: 1, minWidth: "60px", background: "var(--bg-tertiary)", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid var(--border-color)" }}>
+                                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Izin</div>
+                                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--warning)", marginTop: "2px" }}>{res.rekapPresensi.summary.I || 0}</div>
+                              </div>
+                              <div style={{ flex: 1, minWidth: "60px", background: "var(--bg-tertiary)", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid var(--border-color)" }}>
+                                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Sakit</div>
+                                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#3b82f6", marginTop: "2px" }}>{res.rekapPresensi.summary.S || 0}</div>
+                              </div>
+                              {res.rekapPresensi.summary.D > 0 && (
+                                <div style={{ flex: 1, minWidth: "60px", background: "var(--bg-tertiary)", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid var(--border-color)" }}>
+                                  <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Dispen</div>
+                                  <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#8b5cf6", marginTop: "2px" }}>{res.rekapPresensi.summary.D}</div>
+                                </div>
+                              )}
+                              <div style={{ flex: 1, minWidth: "60px", background: "var(--bg-tertiary)", padding: "10px", borderRadius: "8px", textAlign: "center", border: "1px solid var(--border-color)" }}>
+                                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Alfa</div>
+                                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--danger)", marginTop: "2px" }}>{res.rekapPresensi.summary.A || 0}</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+
                       {/* Detailed Grades Table */}
                       <h5 style={{ fontSize: "1.1rem", fontWeight: "600", marginBottom: "12px", fontFamily: "var(--font-heading)" }}>Rincian Komponen Nilai</h5>
                       
