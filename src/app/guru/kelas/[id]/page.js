@@ -956,7 +956,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     });
 
     const totalPossible = kelas.siswa.length * totalP;
-    const avgAttendance = totalPossible > 0 ? Math.round(((totalH + totalD) / totalPossible) * 100) : 0;
+    const avgAttendance = totalPossible > 0 ? Math.round((totalH / totalPossible) * 100) : 0;
 
     return { totalH, totalI, totalS, totalA, totalD, avgAttendance, totalPertemuan: totalP };
   }, [kelas]);

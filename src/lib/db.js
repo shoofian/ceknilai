@@ -1041,14 +1041,13 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         });
       });
 
-      const attCount = totalH + totalS + totalI + totalA + totalD;
-      const attTotal = (totalH * 100) + (totalS * 50) + (totalI * 50) + (totalA * 0) + (totalD * 100);
-      const avgAttendance = attCount > 0 ? Math.round(attTotal / attCount) : 0;
+      const totalPertemuan = pertemuanList.length;
+      const avgAttendance = totalPertemuan > 0 ? Math.round((totalH / totalPertemuan) * 100) : 0;
 
       const rekapPresensi = {
         digunakan: !!presensiConfig.digunakan,
         bobot: presensiConfig.bobot || 0,
-        totalPertemuan: pertemuanList.length,
+        totalPertemuan,
         summary: { H: totalH, I: totalI, S: totalS, A: totalA, D: totalD },
         persentase: avgAttendance,
         detail: daftarHadir
@@ -1631,9 +1630,8 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
               attSummary[val]++;
             }
           });
-          let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
-          let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
-          const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+          const totalPertemuan = pertemuanList.length;
+          const attAvg = totalPertemuan > 0 ? ((attSummary.H / totalPertemuan) * 100) : 0;
           totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
         }
         
