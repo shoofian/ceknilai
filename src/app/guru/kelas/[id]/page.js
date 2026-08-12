@@ -1741,6 +1741,36 @@ export default function DetailKelas({ params: paramsPromise }) {
     setActiveAspectId(newId);
   };
 
+  const handleMoveSubAspect = (subId, direction) => {
+    if (!activeAspectId) return;
+    const isNew = newAspects.some(a => a.id === activeAspectId);
+    const activeAspect = isNew 
+      ? newAspects.find(a => a.id === activeAspectId)
+      : kelas.kolomNilai.find(c => c.id === activeAspectId);
+      
+    if (!activeAspect) return;
+    const subList = [...(activeAspect.subKolom || [])];
+    const index = subList.findIndex(s => s.id === subId);
+    if (index === -1) return;
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= subList.length) return;
+
+    // Swap elements
+    const temp = subList[index];
+    subList[index] = subList[targetIndex];
+    subList[targetIndex] = temp;
+
+    if (isNew) {
+      handleNewAspectChange(activeAspect.id, 'subKolom', subList);
+    } else {
+      const newCols = kelas.kolomNilai.map(c => 
+        c.id === activeAspect.id ? { ...c, subKolom: subList } : c
+      );
+      setKelas({ ...kelas, kolomNilai: newCols });
+    }
+  };
+
   const handleToggleGroupType = (col, nextIsGroup) => {
     // Jika centang dihilangkan dan ada sub-komponen di dalamnya
     if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
@@ -7495,6 +7525,40 @@ export default function DetailKelas({ params: paramsPromise }) {
                                         style={{ padding: "6px 8px", fontSize: "0.85rem", width: "55px", textAlign: "center" }}
                                       />
                                     )}
+
+                                    {/* Arrow Buttons to move up/down */}
+                                    <div style={{ display: "flex", gap: "2px", marginLeft: "4px" }}>
+                                      <button
+                                        disabled={sIdx === 0}
+                                        onClick={() => handleMoveSubAspect(sub.id, 'up')}
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          color: sIdx === 0 ? "var(--text-muted)" : "var(--text-primary)",
+                                          cursor: sIdx === 0 ? "not-allowed" : "pointer",
+                                          fontSize: "0.85rem",
+                                          padding: "4px"
+                                        }}
+                                        title="Pindahkan Ke Atas"
+                                      >
+                                        ▲
+                                      </button>
+                                      <button
+                                        disabled={sIdx === (activeAspect.subKolom || []).length - 1}
+                                        onClick={() => handleMoveSubAspect(sub.id, 'down')}
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          color: sIdx === (activeAspect.subKolom || []).length - 1 ? "var(--text-muted)" : "var(--text-primary)",
+                                          cursor: sIdx === (activeAspect.subKolom || []).length - 1 ? "not-allowed" : "pointer",
+                                          fontSize: "0.85rem",
+                                          padding: "4px"
+                                        }}
+                                        title="Pindahkan Ke Bawah"
+                                      >
+                                        ▼
+                                      </button>
+                                    </div>
 
                                     <button
                                       onClick={() => {
