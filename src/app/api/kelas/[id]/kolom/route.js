@@ -151,22 +151,62 @@ export async function PATCH(request, { params }) {
       return cleanCol;
     });
 
-    await updateKelas(id, { kolomNilai: cleanedKolom, skemaPenilaian }, username);
+    // Deteksi kolom yang terhapus
+    const incomingIds = new Set(cleanedKolom.map(c => c.id));
+    const deletedColumns = (kelas.kolomNilai || []).filter(c => !incomingIds.has(c.id));
 
-    // Inisialisasi nilai null untuk semua sub-kolom baru
+    // Deteksi sub-kolom yang terhapus
+    const deletedSubIds = [];
+    (kelas.kolomNilai || []).forEach(oldCol => {
+      if (oldCol.isGroup && oldCol.subKolom) {
+        const incomingCol = cleanedKolom.find(c => c.id === oldCol.id);
+        if (incomingCol && incomingCol.isGroup && incomingCol.subKolom) {
+          const currentSubIds = new Set(incomingCol.subKolom.map(s => s.id));
+          oldCol.subKolom.forEach(oldSub => {
+            if (!currentSubIds.has(oldSub.id)) {
+              deletedSubIds.push(oldSub.id);
+            }
+          });
+        } else {
+          // Seluruh kelompok dihapus atau berubah menjadi single
+          oldCol.subKolom.forEach(oldSub => {
+            deletedSubIds.push(oldSub.id);
+          });
+        }
+      }
+    });
+
+    // Perbarui nilai siswa di memori terlebih dahulu
     if (kelas.siswa && kelas.siswa.length > 0) {
-      const { createClient } = await import('@supabase/supabase-js');
-      const sb = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        { auth: { persistSession: false } }
-      );
-
-      const updatePromises = [];
-      for (const siswa of kelas.siswa) {
+      kelas.siswa.forEach(siswa => {
         let updatedNilai = { ...(siswa.nilai || {}) };
         let changed = false;
 
+        // 1. Hapus nilai untuk kolom & sub-kolom yang didelete
+        deletedColumns.forEach(col => {
+          if (col.isGroup && col.subKolom) {
+            col.subKolom.forEach(sub => {
+              if (updatedNilai[sub.id] !== undefined) {
+                delete updatedNilai[sub.id];
+                changed = true;
+              }
+            });
+          } else {
+            if (updatedNilai[col.id] !== undefined) {
+              delete updatedNilai[col.id];
+              changed = true;
+            }
+          }
+        });
+
+        deletedSubIds.forEach(subId => {
+          if (updatedNilai[subId] !== undefined) {
+            delete updatedNilai[subId];
+            changed = true;
+          }
+        });
+
+        // 2. Inisialisasi nilai untuk kolom & sub-kolom baru
         cleanedKolom.forEach(col => {
           if (col.isGroup && col.subKolom) {
             col.subKolom.forEach(sub => {
@@ -184,18 +224,17 @@ export async function PATCH(request, { params }) {
         });
 
         if (changed) {
-          updatePromises.push(
-            sb.from('siswa')
-              .update({ nilai: updatedNilai })
-              .eq('kelas_id', id)
-              .eq('nisn', siswa.nisn)
-          );
+          siswa.nilai = updatedNilai;
         }
-      }
-      if (updatePromises.length > 0) {
-        await Promise.all(updatePromises);
-      }
+      });
     }
+
+    // Panggil updateKelas sekali untuk menyimpan kolom, skema, dan semua siswa sekaligus dalam satu query upsert massal!
+    await updateKelas(id, { 
+      kolomNilai: cleanedKolom, 
+      skemaPenilaian,
+      siswa: kelas.siswa
+    }, username);
 
     // Log teacher activity
     const { logAktivitasGuru } = await import('@/lib/db');

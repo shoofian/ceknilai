@@ -384,7 +384,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         setActiveAspectId(kelas.kolomNilai[0].id);
         setNewAspects([]);
       } else {
-        const newId = `new-aspect-${Date.now()}`;
+        const newId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
         setNewAspects([{ id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] }]);
         setActiveAspectId(newId);
         setMobileActiveView("detail"); // Tampilkan form jika belum ada komponen sama sekali
@@ -1735,7 +1735,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const handleAddBlankAspect = () => {
-    const newId = `new-aspect-${Date.now()}`;
+    const newId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     const newAspect = { id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] };
     setNewAspects(prev => [...prev, newAspect]);
     setActiveAspectId(newId);
@@ -2347,57 +2347,48 @@ export default function DetailKelas({ params: paramsPromise }) {
 
     setIsSavingBobot(true);
     try {
-      // Execute local delete queue first
-      for (const colId of deletedKolomIds) {
-        const resDelete = await fetch(`/api/kelas/${classId}/kolom?id=${colId}`, {
-          method: "DELETE",
-        });
-        if (!resDelete.ok) {
-          const deleteData = await resDelete.json();
-          throw new Error(deleteData.error || `Gagal menghapus komponen ${colId}`);
-        }
-      }
-
-      // Buat aspek-aspek baru terlebih dahulu
+      // Dapatkan daftar komponen akhir (komponen lama yang tidak dihapus + komponen baru yang valid)
+      const existingRemainingCols = kelas.kolomNilai.filter(col => !deletedKolomIds.includes(col.id));
       const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
-      let updatedKolomNilai = [...kelas.kolomNilai]; // Salin state lama
-      let updatedTpConfig = { ...(kelas.skemaPenilaian?.tpConfig || {}) };
+      
+      const updatedKolomNilai = [...existingRemainingCols, ...validNewAspects];
+      const kolomToSave = updatedKolomNilai.map(col => ({ ...col, bobot: Number(col.bobot) || 0 }));
 
+      // Konfigurasi TP baru & bersihkan TP dari komponen yang dihapus
+      let updatedTpConfig = { ...(kelas.skemaPenilaian?.tpConfig || {}) };
+      const idsToDelete = deletedKolomIds || [];
+      idsToDelete.forEach(id => {
+        delete updatedTpConfig[id];
+        const oldCol = kelas.kolomNilai.find(c => c.id === id);
+        if (oldCol && oldCol.isGroup && oldCol.subKolom) {
+          oldCol.subKolom.forEach(sub => {
+            delete updatedTpConfig[sub.id];
+          });
+        }
+      });
+
+      // Tambahkan TP komponen & sub-komponen baru
       for (const aspect of validNewAspects) {
-        const res = await fetch(`/api/kelas/${classId}/kolom`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nama: aspect.nama.trim(), bobot: Number(aspect.bobot) || 0, isGroup: aspect.isGroup, hitungMetode: aspect.hitungMetode || 'rata-rata', subKolom: aspect.subKolom, isPresensi: aspect.isPresensi }),
-        });
-        if (!res.ok) {
-           const data = await res.json();
-           throw new Error(data.error || "Gagal membuat komponen baru");
-        }
-        const data = await res.json();
-        const permanentId = data.kolom.id;
-        updatedKolomNilai.push(data.kolom); // Masukkan komponen yang baru dibuat ke daftar sinkronisasi
         if (aspect.tp) {
-          updatedTpConfig[permanentId] = aspect.tp;
+          updatedTpConfig[aspect.id] = aspect.tp;
         }
-        // Map sub-komponen TPs from temp IDs to backend-generated permanent IDs
-        if (aspect.isGroup && data.kolom.subKolom && aspect.subKolom) {
-          data.kolom.subKolom.forEach((sub, i) => {
-            const tempSub = aspect.subKolom[i];
-            if (tempSub && tempSub.tp) {
-              updatedTpConfig[sub.id] = tempSub.tp;
+        if (aspect.isGroup && aspect.subKolom) {
+          aspect.subKolom.forEach(sub => {
+            if (sub.tp) {
+              updatedTpConfig[sub.id] = sub.tp;
             }
           });
         }
       }
 
-      // Perbarui seluruh konfigurasi secara massal — konversi bobot ke Number sebelum dikirim
-      const kolomToSave = updatedKolomNilai.map(col => ({ ...col, bobot: Number(col.bobot) || 0 }));
       // Validasi urutan KKM sebelum menyimpan
       if (gradeA < gradeB || gradeB < gradeC || gradeC < gradeD) {
         alert('Gagal menyimpan: Pastikan urutan nilai KKM adalah A ≥ B ≥ C ≥ D.');
+        setIsSavingBobot(false);
         return;
       }
 
+      // Kirim satu permintaan PATCH untuk melakukan semua perubahan (tambah, hapus, update) secara sekaligus di database
       const response = await fetch(`/api/kelas/${classId}/kolom`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
