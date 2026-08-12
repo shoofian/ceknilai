@@ -1608,9 +1608,60 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
         // Save highest and lowest TP descriptions
         if (highestColId !== null && lowestColId !== null) {
           const tpConfig = k.skemaPenilaian?.tpConfig || {};
+          
+          let tertinggiTp = "";
+          const highestCol = k.kolomNilai.find(col => col.id === highestColId);
+          if (highestCol && highestCol.isGroup && highestCol.subKolom && highestCol.subKolom.length > 0) {
+            let maxSubScore = -1;
+            let bestSubId = null;
+            highestCol.subKolom.forEach(sub => {
+              const val = s.nilai?.[sub.id];
+              if (val !== undefined && val !== null && val !== "") {
+                const num = Number(val);
+                if (num > maxSubScore) {
+                  maxSubScore = num;
+                  bestSubId = sub.id;
+                }
+              }
+            });
+            if (bestSubId && tpConfig[bestSubId]) {
+              tertinggiTp = tpConfig[bestSubId];
+            } else {
+              tertinggiTp = tpConfig[highestColId] || "";
+            }
+          } else {
+            tertinggiTp = tpConfig[highestColId] || "";
+          }
+
+          let terendahTp = "";
+          if (highestColId !== lowestColId) {
+            const lowestCol = k.kolomNilai.find(col => col.id === lowestColId);
+            if (lowestCol && lowestCol.isGroup && lowestCol.subKolom && lowestCol.subKolom.length > 0) {
+              let minSubScore = 101;
+              let worstSubId = null;
+              lowestCol.subKolom.forEach(sub => {
+                const val = s.nilai?.[sub.id];
+                if (val !== undefined && val !== null && val !== "") {
+                  const num = Number(val);
+                  if (num < minSubScore) {
+                    minSubScore = num;
+                    worstSubId = sub.id;
+                  }
+                }
+              });
+              if (worstSubId && tpConfig[worstSubId]) {
+                terendahTp = tpConfig[worstSubId];
+              } else {
+                terendahTp = tpConfig[lowestColId] || "";
+              }
+            } else {
+              terendahTp = tpConfig[lowestColId] || "";
+            }
+          }
+
           studentsMap[s.nisn].tpMapel[k.mataPelajaran] = {
-            tertinggi: tpConfig[highestColId] || "",
-            terendah: highestColId !== lowestColId ? (tpConfig[lowestColId] || "") : ""
+            tertinggi: tertinggiTp,
+            terendah: terendahTp
           };
         } else {
           studentsMap[s.nisn].tpMapel[k.mataPelajaran] = { tertinggi: "", terendah: "" };

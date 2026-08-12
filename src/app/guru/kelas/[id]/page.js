@@ -2379,6 +2379,15 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (aspect.tp) {
           updatedTpConfig[permanentId] = aspect.tp;
         }
+        // Map sub-komponen TPs from temp IDs to backend-generated permanent IDs
+        if (aspect.isGroup && data.kolom.subKolom && aspect.subKolom) {
+          data.kolom.subKolom.forEach((sub, i) => {
+            const tempSub = aspect.subKolom[i];
+            if (tempSub && tempSub.tp) {
+              updatedTpConfig[sub.id] = tempSub.tp;
+            }
+          });
+        }
       }
 
       // Perbarui seluruh konfigurasi secara massal — konversi bobot ke Number sebelum dikirim
@@ -7251,36 +7260,38 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </div>
                       </div>
 
-                      {/* TP/KD Description Field */}
-                      <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
-                        <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          📖 Deskripsi TP / KD / Indikator Penilaian <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal" }}>(Opsional)</span>
-                        </label>
-                        <textarea
-                          className="form-input"
-                          placeholder="Contoh: TP 1: Memahami konsep algoritma pemrograman dasar, tipe data, dan instruksi kondisional..."
-                          value={isNew ? (activeAspect.tp || "") : (kelas.skemaPenilaian?.tpConfig?.[activeAspect.id] || "")}
-                          onChange={(e) => {
-                            if (isNew) {
-                              handleNewAspectChange(activeAspect.id, 'tp', e.target.value);
-                            } else {
-                              const currentTp = kelas.skemaPenilaian?.tpConfig || {};
-                              setKelas({
-                                ...kelas,
-                                skemaPenilaian: {
-                                  ...(kelas.skemaPenilaian || {}),
-                                  tpConfig: {
-                                    ...currentTp,
-                                    [activeAspect.id]: e.target.value
+                      {/* TP/KD Description Field (Only for Single aspects) */}
+                      {!activeAspect.isGroup && (
+                        <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
+                          <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            📖 Deskripsi TP / KD / Indikator Penilaian <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal" }}>(Opsional)</span>
+                          </label>
+                          <textarea
+                            className="form-input"
+                            placeholder="Contoh: TP 1: Memahami konsep algoritma pemrograman dasar, tipe data, dan instruksi kondisional..."
+                            value={isNew ? (activeAspect.tp || "") : (kelas.skemaPenilaian?.tpConfig?.[activeAspect.id] || "")}
+                            onChange={(e) => {
+                              if (isNew) {
+                                handleNewAspectChange(activeAspect.id, 'tp', e.target.value);
+                              } else {
+                                const currentTp = kelas.skemaPenilaian?.tpConfig || {};
+                                setKelas({
+                                  ...kelas,
+                                  skemaPenilaian: {
+                                    ...(kelas.skemaPenilaian || {}),
+                                    tpConfig: {
+                                      ...currentTp,
+                                      [activeAspect.id]: e.target.value
+                                    }
                                   }
-                                }
-                              });
-                            }
-                          }}
-                          rows={2}
-                          style={{ padding: "10px 14px", fontSize: "0.85rem", resize: "vertical" }}
-                        />
-                      </div>
+                                });
+                              }
+                            }}
+                            rows={2}
+                            style={{ padding: "10px 14px", fontSize: "0.85rem", resize: "vertical" }}
+                          />
+                        </div>
+                      )}
 
                       {/* Tipe Komponen Selector (Single vs Group) */}
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -7451,80 +7462,110 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                             <div className="sub-aspect-list">
                               {(activeAspect.subKolom || []).map((sub, sIdx) => (
-                                <div key={sub.id} className="sub-aspect-row">
-                                  <input
-                                    type="text"
-                                    className="form-input"
-                                    placeholder="Contoh: Tugas 1, Kuis 1, KD 3.1..."
-                                    value={sub.nama}
-                                    onChange={(e) => {
-                                      if (isNew) {
-                                        const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
-                                        handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
-                                      } else {
-                                        const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
-                                        setKelas({ ...kelas, kolomNilai: newCols });
-                                      }
-                                    }}
-                                    style={{ padding: "6px 12px", fontSize: "0.85rem", flex: 1 }}
-                                  />
-
-                                  {activeAspect.hitungMetode === "persentase" && (
+                                <div key={sub.id} className="sub-aspect-row" style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: "6px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
                                     <input
                                       type="text"
-                                      inputMode="numeric"
-                                      pattern="[0-9]*"
                                       className="form-input"
-                                      placeholder="%"
-                                      value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                      placeholder="Contoh: Tugas 1, Kuis 1, KD 3.1..."
+                                      value={sub.nama}
                                       onChange={(e) => {
-                                        if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
-                                          const val = e.target.value === "" ? null : Number(e.target.value);
-                                          if (isNew) {
-                                            const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
-                                            handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
-                                          } else {
-                                            const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
-                                            setKelas({ ...kelas, kolomNilai: newCols });
-                                          }
+                                        if (isNew) {
+                                          const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s);
+                                          handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                        } else {
+                                          const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, nama: e.target.value } : s) } : c);
+                                          setKelas({ ...kelas, kolomNilai: newCols });
                                         }
                                       }}
-                                      style={{ padding: "6px 8px", fontSize: "0.85rem", width: "55px", textAlign: "center" }}
+                                      style={{ padding: "6px 12px", fontSize: "0.85rem", flex: 1 }}
                                     />
-                                  )}
 
-
-
-                                  <button
-                                    onClick={() => {
-                                      if (isNew) {
-                                        const newSub = activeAspect.subKolom.filter(s => s.id !== sub.id);
-                                        handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
-                                      } else {
-                                        const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
-                                        if (hasData) {
-                                          if (!confirm(`⚠️ PERINGATAN!\nsub-komponen "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-komponen ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
-                                            return;
+                                    {activeAspect.hitungMetode === "persentase" && (
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        className="form-input"
+                                        placeholder="%"
+                                        value={sub.bobot !== null && sub.bobot !== undefined ? sub.bobot : ""}
+                                        onChange={(e) => {
+                                          if (e.target.value === "" || /^\d*$/.test(e.target.value)) {
+                                            const val = e.target.value === "" ? null : Number(e.target.value);
+                                            if (isNew) {
+                                              const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s);
+                                              handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                            } else {
+                                              const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.map(s => s.id === sub.id ? { ...s, bobot: val } : s) } : c);
+                                              setKelas({ ...kelas, kolomNilai: newCols });
+                                            }
                                           }
+                                        }}
+                                        style={{ padding: "6px 8px", fontSize: "0.85rem", width: "55px", textAlign: "center" }}
+                                      />
+                                    )}
+
+                                    <button
+                                      onClick={() => {
+                                        if (isNew) {
+                                          const newSub = activeAspect.subKolom.filter(s => s.id !== sub.id);
+                                          handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
                                         } else {
-                                          if (!confirm(`Hapus sub-komponen ${sub.nama}?`)) return;
+                                          const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
+                                          if (hasData) {
+                                            if (!confirm(`⚠️ PERINGATAN!\nsub-komponen "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-komponen ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
+                                              return;
+                                            }
+                                          } else {
+                                            if (!confirm(`Hapus sub-komponen ${sub.nama}?`)) return;
+                                          }
+                                          const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
+                                          setKelas({ ...kelas, kolomNilai: newCols });
                                         }
-                                        const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
-                                        setKelas({ ...kelas, kolomNilai: newCols });
-                                      }
-                                    }}
-                                    style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1rem", padding: "4px" }}
-                                    title="Hapus sub-komponen"
-                                  >
-                                    ✖
-                                  </button>
+                                      }}
+                                      style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1rem", padding: "4px" }}
+                                      title="Hapus sub-komponen"
+                                    >
+                                      ✖
+                                    </button>
+                                  </div>
+
+                                  {/* TP Input Row */}
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", width: "100%", paddingLeft: "2px" }}>
+                                    <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>📖 TP:</span>
+                                    <input
+                                      type="text"
+                                      className="form-input"
+                                      placeholder="Deskripsi TP untuk sub-komponen ini (Opsional)"
+                                      value={isNew ? (sub.tp || "") : (kelas.skemaPenilaian?.tpConfig?.[sub.id] || "")}
+                                      onChange={(e) => {
+                                        if (isNew) {
+                                          const newSub = activeAspect.subKolom.map(s => s.id === sub.id ? { ...s, tp: e.target.value } : s);
+                                          handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
+                                        } else {
+                                          const currentTp = kelas.skemaPenilaian?.tpConfig || {};
+                                          setKelas({
+                                            ...kelas,
+                                            skemaPenilaian: {
+                                              ...(kelas.skemaPenilaian || {}),
+                                              tpConfig: {
+                                                ...currentTp,
+                                                [sub.id]: e.target.value
+                                              }
+                                            }
+                                          });
+                                        }
+                                      }}
+                                      style={{ padding: "4px 8px", fontSize: "0.78rem", flex: 1 }}
+                                    />
+                                  </div>
                                 </div>
                               ))}
                             </div>
 
                             <button
                               onClick={() => {
-                                const newSubObj = { id: `sub-new-${Date.now()}-${Math.random()}`, nama: "", bobot: "" };
+                                const newSubObj = { id: `${activeAspect.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`, nama: "", bobot: "", tp: "" };
                                 if (isNew) {
                                   const newSub = [...(activeAspect.subKolom || []), newSubObj];
                                   handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
@@ -8352,11 +8393,17 @@ export default function DetailKelas({ params: paramsPromise }) {
                       {col.isGroup && col.subDetail?.map((sub) => {
                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= skema.kkm;
                         const subKet = sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas";
+                        const subTp = skema.tpConfig?.[sub.subId];
                         return (
                           <tr key={sub.subId} className="khs-sub-row">
                             <td></td>
                             <td style={{ fontStyle: "italic" }}>
                               ↳ {sub.nama}
+                              {subTp && (
+                                <div style={{ fontSize: "0.72rem", fontStyle: "italic", fontWeight: "normal", color: "#4b5563", marginTop: "1px", paddingLeft: "12px" }}>
+                                  {subTp}
+                                </div>
+                              )}
                             </td>
                             <td style={{ textAlign: "center" }}>{skema.kkm}</td>
                             <td style={{ textAlign: "center" }}>

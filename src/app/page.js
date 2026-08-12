@@ -1169,11 +1169,17 @@ export default function StudentPortal() {
                                       {col.isGroup && col.subDetail?.map((sub) => {
                                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= res.kkm;
                                         const subKet = sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas";
+                                        const subTp = res.skemaPenilaian?.tpConfig?.[sub.subId] || res.skema?.tpConfig?.[sub.subId];
                                         return (
                                           <tr key={sub.subId} className="khs-sub-row">
                                             <td></td>
                                             <td style={{ fontStyle: "italic" }}>
                                               ↳ {sub.nama}
+                                              {subTp && (
+                                                <div style={{ fontSize: "0.72rem", fontStyle: "italic", fontWeight: "normal", color: "#4b5563", marginTop: "1px", paddingLeft: "12px" }}>
+                                                  {subTp}
+                                                </div>
+                                              )}
                                             </td>
                                             <td style={{ textAlign: "center" }}>{res.kkm}</td>
                                             <td style={{ textAlign: "center" }}>
