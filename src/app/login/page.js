@@ -156,6 +156,10 @@ export default function LoginGuru() {
             <h2 style={{ fontSize: "2.8rem", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Kelola Kelas dan Skema Penilaian Anda
             </h2>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
+              <span>Powered by</span>
+              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>Memofy Studio</span>
+            </div>
           </div>
 
           {/* Right Column: Card Form */}
