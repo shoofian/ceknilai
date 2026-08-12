@@ -1870,25 +1870,39 @@ export default function DetailKelas({ params: paramsPromise }) {
           }
         });
 
-        if (aspectsToAdd.length > 0) {
-          const updatedCols = [...kelas.kolomNilai, ...aspectsToAdd];
-          
-          // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
-          const sourceOrderMap = new Map();
-          sourceClass.kolomNilai.forEach((col, idx) => {
-            sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
-          });
-          
-          updatedCols.sort((a, b) => {
-            const aName = a.nama.trim().toLowerCase();
-            const bName = b.nama.trim().toLowerCase();
-            const aIdx = sourceOrderMap.has(aName) ? sourceOrderMap.get(aName) : 999999;
-            const bIdx = sourceOrderMap.has(bName) ? sourceOrderMap.get(bName) : 999999;
-            return aIdx - bIdx;
-          });
+        const updatedCols = [...kelas.kolomNilai, ...aspectsToAdd];
+        
+        // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
+        const originalTargetOrderMap = new Map();
+        kelas.kolomNilai.forEach((col, idx) => {
+          originalTargetOrderMap.set(col.id, idx);
+        });
 
-          setKelas({ ...kelas, kolomNilai: updatedCols });
-          setNewAspects([]); // Bersihkan newAspects jika ada komponen yang disalin
+        const sourceOrderMap = new Map();
+        sourceClass.kolomNilai.forEach((col, idx) => {
+          sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
+        });
+        
+        updatedCols.sort((a, b) => {
+          const aName = a.nama.trim().toLowerCase();
+          const bName = b.nama.trim().toLowerCase();
+          const aInSource = sourceOrderMap.has(aName);
+          const bInSource = sourceOrderMap.has(bName);
+
+          if (aInSource && bInSource) {
+            return sourceOrderMap.get(aName) - sourceOrderMap.get(bName);
+          }
+          if (aInSource) return -1;
+          if (bInSource) return 1;
+
+          const aOrigIdx = originalTargetOrderMap.has(a.id) ? originalTargetOrderMap.get(a.id) : 999999;
+          const bOrigIdx = originalTargetOrderMap.has(b.id) ? originalTargetOrderMap.get(b.id) : 999999;
+          return aOrigIdx - bOrigIdx;
+        });
+
+        setKelas({ ...kelas, kolomNilai: updatedCols });
+        setNewAspects([]); // Bersihkan newAspects jika ada komponen yang disalin
+        if (aspectsToAdd.length > 0) {
           setActiveAspectId(aspectsToAdd[0].id); // Pilih komponen pertama yang baru disalin
         }
 
@@ -1989,6 +2003,34 @@ export default function DetailKelas({ params: paramsPromise }) {
               });
 
               const updatedKolomNilai = [...(fullTargetClass.kolomNilai || []), ...aspectsToAdd];
+              
+              // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
+              const originalTargetOrderMap = new Map();
+              (fullTargetClass.kolomNilai || []).forEach((col, idx) => {
+                originalTargetOrderMap.set(col.id, idx);
+              });
+
+              const sourceOrderMap = new Map();
+              currentAspects.forEach((col, idx) => {
+                sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
+              });
+
+              updatedKolomNilai.sort((a, b) => {
+                const aName = a.nama.trim().toLowerCase();
+                const bName = b.nama.trim().toLowerCase();
+                const aInSource = sourceOrderMap.has(aName);
+                const bInSource = sourceOrderMap.has(bName);
+
+                if (aInSource && bInSource) {
+                  return sourceOrderMap.get(aName) - sourceOrderMap.get(bName);
+                }
+                if (aInSource) return -1;
+                if (bInSource) return 1;
+
+                const aOrigIdx = originalTargetOrderMap.has(a.id) ? originalTargetOrderMap.get(a.id) : 999999;
+                const bOrigIdx = originalTargetOrderMap.has(b.id) ? originalTargetOrderMap.get(b.id) : 999999;
+                return aOrigIdx - bOrigIdx;
+              });
               
               // Kirim update ke API kelas target
               const resPatch = await fetch(`/api/kelas/${targetClass.id}/kolom`, {
