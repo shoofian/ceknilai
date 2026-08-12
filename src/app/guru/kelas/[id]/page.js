@@ -4197,10 +4197,10 @@ export default function DetailKelas({ params: paramsPromise }) {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", padding: "0 24px", marginTop: "10px" }}>
             <div style={{ display: "flex", gap: "20px", fontSize: "0.85rem", color: "var(--text-secondary)", flexWrap: "wrap" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--success)" }}></div> Hadir (100)</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (50)</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (50)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#3b82f6" }}></div> Sakit (0)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--warning)" }}></div> Izin (0)</span>
               <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "var(--danger)" }}></div> Alpha (0)</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (100)</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600" }}><div style={{ width: "16px", height: "16px", borderRadius: "4px", backgroundColor: "#8b5cf6" }}></div> Dispensasi (0)</span>
             </div>
           </div>
         </div>
@@ -7281,38 +7281,36 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </div>
                       </div>
 
-                      {/* TP/KD Description Field (Only for Single aspects) */}
-                      {!activeAspect.isGroup && (
-                        <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
-                          <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            📖 Deskripsi TP / KD / Indikator Penilaian <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal" }}>(Opsional)</span>
-                          </label>
-                          <textarea
-                            className="form-input"
-                            placeholder="Contoh: TP 1: Memahami konsep algoritma pemrograman dasar, tipe data, dan instruksi kondisional..."
-                            value={isNew ? (activeAspect.tp || "") : (kelas.skemaPenilaian?.tpConfig?.[activeAspect.id] || "")}
-                            onChange={(e) => {
-                              if (isNew) {
-                                handleNewAspectChange(activeAspect.id, 'tp', e.target.value);
-                              } else {
-                                const currentTp = kelas.skemaPenilaian?.tpConfig || {};
-                                setKelas({
-                                  ...kelas,
-                                  skemaPenilaian: {
-                                    ...(kelas.skemaPenilaian || {}),
-                                    tpConfig: {
-                                      ...currentTp,
-                                      [activeAspect.id]: e.target.value
-                                    }
+                      {/* TP/KD Description Field */}
+                      <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "12px" }}>
+                        <label className="form-label" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          📖 Deskripsi TP / KD / Indikator Penilaian <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "normal" }}>(Opsional)</span>
+                        </label>
+                        <textarea
+                          className="form-input"
+                          placeholder="Contoh: TP 1: Memahami konsep algoritma pemrograman dasar, tipe data, dan instruksi kondisional..."
+                          value={isNew ? (activeAspect.tp || "") : (kelas.skemaPenilaian?.tpConfig?.[activeAspect.id] || "")}
+                          onChange={(e) => {
+                            if (isNew) {
+                              handleNewAspectChange(activeAspect.id, 'tp', e.target.value);
+                            } else {
+                              const currentTp = kelas.skemaPenilaian?.tpConfig || {};
+                              setKelas({
+                                ...kelas,
+                                skemaPenilaian: {
+                                  ...(kelas.skemaPenilaian || {}),
+                                  tpConfig: {
+                                    ...currentTp,
+                                    [activeAspect.id]: e.target.value
                                   }
-                                });
-                              }
-                            }}
-                            rows={2}
-                            style={{ padding: "10px 14px", fontSize: "0.85rem", resize: "vertical" }}
-                          />
-                        </div>
-                      )}
+                                }
+                              });
+                            }
+                          }}
+                          rows={2}
+                          style={{ padding: "10px 14px", fontSize: "0.85rem", resize: "vertical" }}
+                        />
+                      </div>
 
                       {/* Tipe Komponen Selector (Single vs Group) */}
                       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>

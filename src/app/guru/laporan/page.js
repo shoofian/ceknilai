@@ -288,10 +288,8 @@ export default function CetakLaporan() {
       });
 
       if (presensiConfig.digunakan && presensiConfig.bobot > 0 && pertemuanList.length > 0) {
-        let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
-        let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
-        
-        const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+        const totalPertemuan = pertemuanList.length;
+        const attAvg = totalPertemuan > 0 ? ((attSummary.H / totalPertemuan) * 100) : 0;
         total += attAvg * (presensiConfig.bobot / 100);
       }
 
@@ -699,7 +697,7 @@ export default function CetakLaporan() {
                       const d = report.attSummary?.D || 0;
                       const a = report.attSummary?.A || 0;
                       const total = h + i + s + d + a;
-                      const percentage = total > 0 ? Math.round(((h + d) / total) * 100) : 100;
+                      const percentage = total > 0 ? Math.round((h / total) * 100) : 100;
                       
                       return (
                         <tr key={report.nisn}>

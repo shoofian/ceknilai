@@ -515,9 +515,8 @@ export default function WaliKelasDashboard() {
                     attSummary[val]++;
                   }
                 });
-                let attCount = attSummary.H + attSummary.S + attSummary.I + attSummary.A + attSummary.D;
-                let attTotal = (attSummary.H * 100) + (attSummary.S * 50) + (attSummary.I * 50) + (attSummary.A * 0) + (attSummary.D * 100);
-                const attAvg = attCount > 0 ? (attTotal / attCount) : 0;
+                const totalPertemuan = pertemuanList.length;
+                const attAvg = totalPertemuan > 0 ? ((attSummary.H / totalPertemuan) * 100) : 0;
                 totalPresensiScore = attAvg * (presensiConfig.bobot / 100);
               }
               

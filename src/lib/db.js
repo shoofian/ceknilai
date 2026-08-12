@@ -1498,7 +1498,7 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
         });
       });
       const totalEntries = attClass.H + attClass.I + attClass.S + attClass.A + attClass.D;
-      const percentHadir = totalEntries > 0 ? Number((((attClass.H + attClass.D) / totalEntries) * 100).toFixed(1)) : 0;
+      const percentHadir = totalEntries > 0 ? Number(((attClass.H / totalEntries) * 100).toFixed(1)) : 0;
 
       return {
         id: k.id,
