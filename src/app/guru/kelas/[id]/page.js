@@ -4384,7 +4384,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <table className="premium-table crosshair-highlight" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
                         <input
                           type="checkbox"
                           checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -4392,43 +4392,43 @@ export default function DetailKelas({ params: paramsPromise }) {
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
                         />
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
                         No
                       </th>
-                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }} onClick={() => handleSort('nisn')}>
+                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", backgroundColor: "var(--bg-tertiary)" }} onClick={() => handleSort('nisn')}>
                         NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
-                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: 0, top: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
                         Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Tanggal Lahir</th>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", backgroundColor: "var(--bg-tertiary)" }}>Tanggal Lahir</th>
                       
                       {/* Dynamic Headers based on columns */}
                       {kelas.kolomNilai.map(col => {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
-                            <th key={col.id} colSpan={col.subKolom.length} style={{ textAlign: "center", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21, borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
+                            <th key={col.id} colSpan={col.subKolom.length} style={{ textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
                               {col.nama} ({col.bobot}%)
                             </th>
                           );
                         }
                         return (
-                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "100px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>
+                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)" }}>
                             {col.nama} ({col.bobot}%)
                           </th>
                         );
                       })}
-
+ 
                       {/* Optional Dedicated Column for Star Bonus */}
                       {kelas.skemaPenilaian?.enableBonusStars && (
-                        <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "95px", minWidth: "95px", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 21 }}>
+                        <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "95px", minWidth: "95px", backgroundColor: "var(--bg-tertiary)" }}>
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                             <span style={{ fontWeight: "700", color: "#d97706" }}>⭐ Bonus</span>
                           </div>
                         </th>
                       )}
-
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 21 }} onClick={() => handleSort('finalScore')}>
+ 
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('finalScore')}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
                           <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
                           <button 
@@ -4450,14 +4450,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                           </button>
                         </div>
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "180px", minWidth: "180px", position: "sticky", top: 0, backgroundColor: "var(--bg-tertiary)", zIndex: 21 }}>Aksi</th>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", width: "180px", minWidth: "180px", backgroundColor: "var(--bg-tertiary)" }}>Aksi</th>
                     </tr>
                     {hasGroups && (
                       <tr>
                         {kelas.kolomNilai.map(col => {
                           if (col.isGroup && col.subKolom?.length > 0) {
                             return col.subKolom.map(sub => (
-                              <th key={sub.id} style={{ textAlign: "center", minWidth: "80px", position: "sticky", top: "45px", backgroundColor: "var(--bg-tertiary)", zIndex: 21, fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                              <th key={sub.id} style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600" }}>
                                 {sub.nama}
                               </th>
                             ));
