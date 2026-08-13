@@ -207,8 +207,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const togglePertemuanLock = (pertemuanId) => {
     setUnlockedPertemuanIds(prev => 
       prev.includes(pertemuanId) 
-        ? prev.filter(id => id !== pertemuanId) 
-        : [...prev, pertemuanId]
+        ? [] 
+        : [pertemuanId]
     );
   };
 
@@ -1264,7 +1264,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (classRes.ok) {
           setKelas({ ...kelas, siswa: updatedSiswa, skemaPenilaian: updatedSkema });
           // Otomatis buka kunci pertemuan baru agar guru bisa langsung mengisi
-          setUnlockedPertemuanIds(prev => [...prev, newPertemuanId]);
+          setUnlockedPertemuanIds([newPertemuanId]);
           setPertemuanModalOpen(false);
         } else {
           alert("Gagal menambahkan pertemuan.");
@@ -3950,7 +3950,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </th>
                   <th className="sticky-nama" style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "2px 0 5px rgba(0,0,0,0.05)" }}>Nama Siswa</th>
                   {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map((p, idx) => (
-                    <th key={p.id} style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "relative" }}>
+                    <th key={p.id} style={{ 
+                      minWidth: "90px", 
+                      textAlign: "center", 
+                      backgroundColor: "var(--bg-tertiary)", 
+                      position: "relative",
+                      opacity: unlockedPertemuanIds.length > 0 && !unlockedPertemuanIds.includes(p.id) ? 0.35 : 1,
+                      transition: "opacity 0.2s ease"
+                    }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
                         <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)" }} title={p.nama}>
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
@@ -4039,12 +4046,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                   )}
                   {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
                     <>
-                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--success)" }}>H</th>
-                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--warning)" }}>I</th>
-                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#3b82f6" }}>S</th>
-                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--danger)" }}>A</th>
-                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#8b5cf6" }}>D</th>
-                      <th style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-secondary)", color: "var(--primary)", fontWeight: "800" }}>% Hadir</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--success)", opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}>H</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--warning)", opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}>I</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#3b82f6", opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}>S</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "var(--danger)", opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}>A</th>
+                      <th style={{ minWidth: "60px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", color: "#8b5cf6", opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}>D</th>
+                      <th style={{ minWidth: "90px", textAlign: "center", backgroundColor: "var(--bg-secondary)", color: "var(--primary)", fontWeight: "800", opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}>% Hadir</th>
                     </>
                   )}
                 </tr>
@@ -4082,8 +4089,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                     {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map(p => {
                       const val = siswa.nilai[`_presensi_${p.id}`] || "";
                       const isUnlocked = unlockedPertemuanIds.includes(p.id);
+                      const isDimmed = unlockedPertemuanIds.length > 0 && !isUnlocked;
                       return (
-                        <td key={p.id} style={{ textAlign: "center", padding: "6px" }}>
+                        <td key={p.id} style={{ 
+                          textAlign: "center", 
+                          padding: "6px",
+                          opacity: isDimmed ? 0.35 : 1,
+                          transition: "opacity 0.2s ease"
+                        }}>
                           <button 
                             onClick={() => {
                               if (!isUnlocked) {
@@ -4140,14 +4153,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                       const totalP = kelas.skemaPenilaian.pertemuan.length;
                       // Dispensasi tidak dihitung sebagai hadir
                       const persentase = totalP > 0 ? Math.round((countH / totalP) * 100) : 0;
+                      const summaryOpacity = unlockedPertemuanIds.length > 0 ? 0.35 : 1;
                       return (
                         <>
-                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.02)" }}>{countH}</td>
-                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.02)" }}>{countI}</td>
-                          <td style={{ textAlign: "center", fontWeight: "700", color: "#3b82f6", backgroundColor: "rgba(59, 130, 246, 0.02)" }}>{countS}</td>
-                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--danger)", backgroundColor: "rgba(239, 68, 68, 0.02)" }}>{countA}</td>
-                          <td style={{ textAlign: "center", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.02)" }}>{countD}</td>
-                          <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.05)", fontSize: "1rem" }}>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--success)", backgroundColor: "rgba(16, 185, 129, 0.02)", opacity: summaryOpacity, transition: "opacity 0.2s ease" }}>{countH}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--warning)", backgroundColor: "rgba(245, 158, 11, 0.02)", opacity: summaryOpacity, transition: "opacity 0.2s ease" }}>{countI}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "#3b82f6", backgroundColor: "rgba(59, 130, 246, 0.02)", opacity: summaryOpacity, transition: "opacity 0.2s ease" }}>{countS}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "var(--danger)", backgroundColor: "rgba(239, 68, 68, 0.02)", opacity: summaryOpacity, transition: "opacity 0.2s ease" }}>{countA}</td>
+                          <td style={{ textAlign: "center", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.02)", opacity: summaryOpacity, transition: "opacity 0.2s ease" }}>{countD}</td>
+                          <td style={{ textAlign: "center", fontWeight: "800", color: "var(--primary)", backgroundColor: "rgba(59, 130, 246, 0.05)", fontSize: "1rem", opacity: summaryOpacity, transition: "opacity 0.2s ease" }}>
                             {persentase}%
                           </td>
                         </>
@@ -4161,8 +4175,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <td colSpan={3} style={{ textAlign: "right", fontWeight: "700", padding: "10px 16px", color: "var(--text-secondary)", fontSize: "0.8rem" }}>
                     Status Kunci:
                   </td>
-                  {(kelas.skemaPenilaian?.pertemuan || []).map(p => (
-                    <td key={p.id} style={{ textAlign: "center", padding: "8px" }}>
+                  {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map(p => (
+                    <td key={p.id} style={{ 
+                      textAlign: "center", 
+                      padding: "8px",
+                      opacity: unlockedPertemuanIds.length > 0 && !unlockedPertemuanIds.includes(p.id) ? 0.35 : 1,
+                      transition: "opacity 0.2s ease"
+                    }}>
                       <button 
                         onClick={() => togglePertemuanLock(p.id)} 
                         style={{
@@ -4188,7 +4207,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </td>
                   ))}
                   {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
-                    <td colSpan={6}></td>
+                    <td colSpan={6} style={{ opacity: unlockedPertemuanIds.length > 0 ? 0.35 : 1, transition: "opacity 0.2s ease" }}></td>
                   )}
                 </tr>
               </tfoot>
