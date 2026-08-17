@@ -1074,7 +1074,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
 
       // Hitung Rekap Presensi Siswa
       const presensiConfig = skema.presensi || { digunakan: false, bobot: 0 };
-      const pertemuanList = skema.pertemuan || [];
+      const pertemuanList = [...(skema.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
       
       let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalD = 0;
       const daftarHadir = [];
