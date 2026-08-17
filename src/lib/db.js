@@ -26,6 +26,46 @@ export function normalizeRombelNama(str) {
   return clean.trim();
 }
 
+// Helper to sort kolomNilai stably, preserving any custom order stored in skema_penilaian
+export function sortKolomNilai(kolomNilaiArray, skemaPenilaian) {
+  const kolomOrder = skemaPenilaian?.kolomOrder;
+  if (Array.isArray(kolomOrder) && kolomOrder.length > 0) {
+    const orderMap = new Map();
+    kolomOrder.forEach((id, idx) => {
+      orderMap.set(id, idx);
+    });
+    
+    return [...kolomNilaiArray].sort((a, b) => {
+      const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
+      const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
+      if (idxA !== idxB) {
+        return idxA - idxB;
+      }
+      const partsA = (a.id || '').split('-');
+      const partsB = (b.id || '').split('-');
+      const timeA = parseInt(partsA[1]) || 0;
+      const timeB = parseInt(partsB[1]) || 0;
+      if (timeA !== timeB) return timeA - timeB;
+      const indexA = parseInt(partsA[2]) || 0;
+      const indexB = parseInt(partsB[2]) || 0;
+      if (indexA !== indexB) return indexA - indexB;
+      return (a.id || '').localeCompare(b.id || '');
+    });
+  }
+  
+  return [...kolomNilaiArray].sort((a, b) => {
+    const partsA = (a.id || '').split('-');
+    const partsB = (b.id || '').split('-');
+    const timeA = parseInt(partsA[1]) || 0;
+    const timeB = parseInt(partsB[1]) || 0;
+    if (timeA !== timeB) return timeA - timeB;
+    const indexA = parseInt(partsA[2]) || 0;
+    const indexB = parseInt(partsB[2]) || 0;
+    if (indexA !== indexB) return indexA - indexB;
+    return (a.id || '').localeCompare(b.id || '');
+  });
+}
+
 // Mapper to map snake_case DB schema to camelCase expected by the app
 function mapKelasFromDb(k) {
   if (!k) return null;
@@ -49,17 +89,7 @@ function mapKelasFromDb(k) {
       enableBonusStars: false,
       ...(k.skema_penilaian || {})
     },
-    kolomNilai: [...(k.kolom_nilai || [])].sort((a, b) => {
-      const partsA = (a.id || '').split('-');
-      const partsB = (b.id || '').split('-');
-      const timeA = parseInt(partsA[1]) || 0;
-      const timeB = parseInt(partsB[1]) || 0;
-      if (timeA !== timeB) return timeA - timeB;
-      const indexA = parseInt(partsA[2]) || 0;
-      const indexB = parseInt(partsB[2]) || 0;
-      if (indexA !== indexB) return indexA - indexB;
-      return (a.id || '').localeCompare(b.id || '');
-    }).map(col => {
+    kolomNilai: sortKolomNilai(k.kolom_nilai || [], k.skema_penilaian).map(col => {
       const groupConfig = k.skema_penilaian?.kolomAspekGroup?.[col.id];
       return {
         id: col.id,
@@ -506,10 +536,12 @@ export async function updateKelas(id, updatedFields, guruUsername = null) {
         }
       });
       currentSkema.kolomAspekGroup = groupConfigs;
+      currentSkema.kolomOrder = updatedFields.kolomNilai.map(col => col.id);
       updates.skema_penilaian = currentSkema;
     } else if (updatedFields.skemaPenilaian !== undefined) {
-      // Pastikan kolomAspekGroup lama dipertahankan saat skemaPenilaian diperbarui
+      // Pastikan kolomAspekGroup & kolomOrder lama dipertahankan saat skemaPenilaian diperbarui
       currentSkema.kolomAspekGroup = currentKelas.skemaPenilaian?.kolomAspekGroup || {};
+      currentSkema.kolomOrder = currentKelas.skemaPenilaian?.kolomOrder || [];
       updates.skema_penilaian = currentSkema;
     }
 
