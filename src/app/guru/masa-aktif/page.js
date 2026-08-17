@@ -6,6 +6,7 @@ export default function MasaAktifPage() {
   const [data, setData] = useState({
     premiumUntil: null,
     isFirstPaymentClaimed: false,
+    hasPendingPayment: false,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -199,20 +200,52 @@ export default function MasaAktifPage() {
               <span style={{ fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                 s/d {new Date(data.premiumUntil).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
               </span>
+              {data.hasPendingPayment && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  fontSize: '0.78rem', 
+                  fontWeight: '700', 
+                  color: 'var(--warning)',
+                  backgroundColor: 'var(--warning-glow)',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(234, 179, 8, 0.2)'
+                }}>
+                  ⏳ Konfirmasi pembayaran pending verifikasi admin
+                </span>
+              )}
             </div>
           ) : (
-            <span style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              fontSize: '0.85rem', 
-              fontWeight: '800', 
-              color: 'var(--text-muted)',
-              backgroundColor: 'var(--bg-tertiary)',
-              padding: '6px 12px',
-              borderRadius: '20px'
-            }}>
-              ● BELUM AKTIF
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                fontSize: '0.85rem', 
+                fontWeight: '800', 
+                color: 'var(--text-muted)',
+                backgroundColor: 'var(--bg-tertiary)',
+                padding: '6px 12px',
+                borderRadius: '20px'
+              }}>
+                ● BELUM AKTIF
+              </span>
+              {data.hasPendingPayment && (
+                <span style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  fontSize: '0.78rem', 
+                  fontWeight: '700', 
+                  color: 'var(--warning)',
+                  backgroundColor: 'var(--warning-glow)',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(234, 179, 8, 0.2)'
+                }}>
+                  ⏳ Konfirmasi pembayaran pending verifikasi admin
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>

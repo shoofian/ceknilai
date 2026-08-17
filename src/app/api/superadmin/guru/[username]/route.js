@@ -55,20 +55,44 @@ export async function POST(request, { params }) {
 
     const { username } = await params;
 
-    // 1. Find the latest PAYMENT_PENDING log for this teacher
-    const { data: pendingLogs, error: logError } = await supabase
-      .from('log_aktivitas_guru')
-      .select('*')
-      .eq('guru_username', username)
-      .eq('aksi', 'PAYMENT_PENDING')
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (logError || !pendingLogs || pendingLogs.length === 0) {
-      return NextResponse.json({ error: 'Tidak ditemukan pengajuan pembayaran yang menunggu verifikasi.' }, { status: 404 });
+    // Parse logId from body if provided
+    let logId = null;
+    try {
+      const body = await request.json();
+      logId = body.logId;
+    } catch (e) {
+      // Body might be empty or invalid
     }
 
-    const pendingLog = pendingLogs[0];
+    // 1. Find the PAYMENT_PENDING log
+    let pendingLog;
+    if (logId) {
+      const { data: specificLogs, error: logError } = await supabase
+        .from('log_aktivitas_guru')
+        .select('*')
+        .eq('id', logId)
+        .eq('guru_username', username)
+        .eq('aksi', 'PAYMENT_PENDING')
+        .limit(1);
+
+      if (logError || !specificLogs || specificLogs.length === 0) {
+        return NextResponse.json({ error: 'Pengajuan pembayaran spesifik tidak ditemukan.' }, { status: 404 });
+      }
+      pendingLog = specificLogs[0];
+    } else {
+      const { data: pendingLogs, error: logError } = await supabase
+        .from('log_aktivitas_guru')
+        .select('*')
+        .eq('guru_username', username)
+        .eq('aksi', 'PAYMENT_PENDING')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (logError || !pendingLogs || pendingLogs.length === 0) {
+        return NextResponse.json({ error: 'Tidak ditemukan pengajuan pembayaran yang menunggu verifikasi.' }, { status: 404 });
+      }
+      pendingLog = pendingLogs[0];
+    }
     const detail = pendingLog.detail || '';
 
     // Parse paket from detail: "PAKET:TAHUNAN | BUKTI:... | REFERRAL:username"
@@ -78,10 +102,30 @@ export async function POST(request, { params }) {
     const referralCode = referralMatch ? referralMatch[1] : null;
     const pointsToAward = paket === 'tahunan' ? 100 : 10;
 
-    // 2. Unlock the teacher account
+    // 2. Unlock the teacher account and update premium_until
+    const guruObj = await getGuru(username);
+    if (!guruObj) {
+      return NextResponse.json({ error: 'Data guru tidak ditemukan.' }, { status: 404 });
+    }
+
+    const currentPremiumUntil = guruObj.premium_until ? new Date(guruObj.premium_until) : null;
+    const now = new Date();
+    const daysToAdd = paket === 'tahunan' ? 365 : 30;
+    let newPremiumUntil;
+
+    if (!currentPremiumUntil || now > currentPremiumUntil) {
+      newPremiumUntil = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    } else {
+      newPremiumUntil = new Date(currentPremiumUntil.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    }
+
     const { error: unlockError } = await supabase
       .from('guru')
-      .update({ is_locked: false, lock_message: '' })
+      .update({ 
+        is_locked: false, 
+        lock_message: '', 
+        premium_until: newPremiumUntil.toISOString() 
+      })
       .eq('username', username);
 
     if (unlockError) {

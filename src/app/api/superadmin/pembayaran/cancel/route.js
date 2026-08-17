@@ -110,6 +110,10 @@ export async function POST(request) {
       console.error('Error recording cancellation log:', cancelLogErr);
     }
 
+    // 7. Recalculate premium_until
+    const { recalculatePremiumUntil } = await import('@/lib/db');
+    await recalculatePremiumUntil(targetUsername);
+
     return NextResponse.json({ 
       success: true, 
       message: `Berhasil membatalkan transaksi. Akun @${targetUsername} kembali dikunci dan poin referral ditarik kembali.` 

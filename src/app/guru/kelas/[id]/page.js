@@ -344,6 +344,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [applySelectedClassIds, setApplySelectedClassIds] = useState([]);
   const [applySearchQuery, setApplySearchQuery] = useState("");
   const [isApplyingToOther, setIsApplyingToOther] = useState(false);
+  const [applyMode, setApplyMode] = useState("add"); // "add" | "replace"
 
   // States untuk Katrol Nilai Baru
   const [katrolModalOpen, setKatrolModalOpen] = useState(false);
@@ -1992,8 +1993,12 @@ export default function DetailKelas({ params: paramsPromise }) {
     const selectedTargetClasses = availableClasses.filter(c => applySelectedClassIds.includes(c.id));
     const targetNames = selectedTargetClasses.map(c => c.nama).join(", ");
 
+    const confirmationMsg = applyMode === "add"
+      ? `Apakah Anda yakin ingin menerapkan komponen & bobot dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\n*Komponen baru yang belum ada di kelas tujuan akan ditambahkan. Komponen yang sudah ada dengan nama yang sama tetap dipertahaman.`
+      : `⚠️ PERINGATAN: Apakah Anda yakin ingin menggantikan seluruh komponen penilaian di ${applySelectedClassIds.length} kelas berikut dengan konfigurasi kelas "${kelas.nama}"?\n\n- ${targetNames}\n\n*Seluruh komponen lama di kelas tujuan akan dihapus dan diganti sepenuhnya.`;
+
     triggerConfirm(
-      `Apakah Anda yakin ingin menerapkan komponen & bobot dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\n*Komponen baru yang belum ada di kelas tujuan akan ditambahkan. Komponen yang sudah ada dengan nama yang sama tetap dipertahankan.`,
+      confirmationMsg,
       async () => {
         setIsApplyingToOther(true);
         let successCount = 0;
@@ -2010,57 +2015,77 @@ export default function DetailKelas({ params: paramsPromise }) {
               if (!resTarget.ok) throw new Error("Gagal mengambil data kelas target");
               const fullTargetClass = await resTarget.json();
 
-              const existingNames = new Set(
-                (fullTargetClass.kolomNilai || []).map(col => col.nama.trim().toLowerCase())
-              );
+              let updatedKolomNilai = [];
 
-              const aspectsToAdd = [];
-              currentAspects.forEach(col => {
-                const trimmedName = col.nama.trim();
-                if (!existingNames.has(trimmedName.toLowerCase())) {
-                  const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
-                  aspectsToAdd.push({
+              if (applyMode === "replace") {
+                // Gantikan seluruhnya: petakan komponen dari kelas asal dengan ID baru untuk kelas tujuan
+                updatedKolomNilai = currentAspects.map((col, i) => {
+                  const newColId = 'col-' + Date.now() + '-' + i + '-' + Math.random().toString(36).substr(2, 5);
+                  return {
                     ...col,
                     id: newColId,
                     bobot: Number(col.bobot) || 0,
-                    subKolom: col.subKolom ? col.subKolom.map((sub, i) => ({
+                    subKolom: col.subKolom ? col.subKolom.map((sub, j) => ({
                       ...sub,
-                      id: `${newColId}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                      id: `${newColId}-sub-${Date.now()}-${j}-${Math.random().toString(36).substr(2, 4)}`,
                       bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
                     })) : []
-                  });
-                }
-              });
+                  };
+                });
+              } else {
+                // Tambahkan komponen yang belum ada (sifatnya menambah)
+                const existingNames = new Set(
+                  (fullTargetClass.kolomNilai || []).map(col => col.nama.trim().toLowerCase())
+                );
 
-              const updatedKolomNilai = [...(fullTargetClass.kolomNilai || []), ...aspectsToAdd];
-              
-              // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
-              const originalTargetOrderMap = new Map();
-              (fullTargetClass.kolomNilai || []).forEach((col, idx) => {
-                originalTargetOrderMap.set(col.id, idx);
-              });
+                const aspectsToAdd = [];
+                currentAspects.forEach(col => {
+                  const trimmedName = col.nama.trim();
+                  if (!existingNames.has(trimmedName.toLowerCase())) {
+                    const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+                    aspectsToAdd.push({
+                      ...col,
+                      id: newColId,
+                      bobot: Number(col.bobot) || 0,
+                      subKolom: col.subKolom ? col.subKolom.map((sub, i) => ({
+                        ...sub,
+                        id: `${newColId}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                        bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+                      })) : []
+                    });
+                  }
+                });
 
-              const sourceOrderMap = new Map();
-              currentAspects.forEach((col, idx) => {
-                sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
-              });
+                updatedKolomNilai = [...(fullTargetClass.kolomNilai || []), ...aspectsToAdd];
+                
+                // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
+                const originalTargetOrderMap = new Map();
+                (fullTargetClass.kolomNilai || []).forEach((col, idx) => {
+                  originalTargetOrderMap.set(col.id, idx);
+                });
 
-              updatedKolomNilai.sort((a, b) => {
-                const aName = a.nama.trim().toLowerCase();
-                const bName = b.nama.trim().toLowerCase();
-                const aInSource = sourceOrderMap.has(aName);
-                const bInSource = sourceOrderMap.has(bName);
+                const sourceOrderMap = new Map();
+                currentAspects.forEach((col, idx) => {
+                  sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
+                });
 
-                if (aInSource && bInSource) {
-                  return sourceOrderMap.get(aName) - sourceOrderMap.get(bName);
-                }
-                if (aInSource) return -1;
-                if (bInSource) return 1;
+                updatedKolomNilai.sort((a, b) => {
+                  const aName = a.nama.trim().toLowerCase();
+                  const bName = b.nama.trim().toLowerCase();
+                  const aInSource = sourceOrderMap.has(aName);
+                  const bInSource = sourceOrderMap.has(bName);
 
-                const aOrigIdx = originalTargetOrderMap.has(a.id) ? originalTargetOrderMap.get(a.id) : 999999;
-                const bOrigIdx = originalTargetOrderMap.has(b.id) ? originalTargetOrderMap.get(b.id) : 999999;
-                return aOrigIdx - bOrigIdx;
-              });
+                  if (aInSource && bInSource) {
+                    return sourceOrderMap.get(aName) - sourceOrderMap.get(bName);
+                  }
+                  if (aInSource) return -1;
+                  if (bInSource) return 1;
+
+                  const aOrigIdx = originalTargetOrderMap.has(a.id) ? originalTargetOrderMap.get(a.id) : 999999;
+                  const bOrigIdx = originalTargetOrderMap.has(b.id) ? originalTargetOrderMap.get(b.id) : 999999;
+                  return aOrigIdx - bOrigIdx;
+                });
+              }
               
               // Kirim update ke API kelas target
               const resPatch = await fetch(`/api/kelas/${targetClass.id}/kolom`, {
@@ -5808,9 +5833,40 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
             </div>
 
+            {/* Pilihan Mode Penerapan */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "4px" }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-secondary)" }}>Metode Penerapan</span>
+              <div style={{ display: "flex", gap: "16px", marginTop: "4px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", cursor: "pointer", fontWeight: applyMode === "add" ? "700" : "500", color: applyMode === "add" ? "var(--primary)" : "var(--text-secondary)" }}>
+                  <input 
+                    type="radio" 
+                    name="applyMode" 
+                    value="add" 
+                    checked={applyMode === "add"} 
+                    onChange={() => setApplyMode("add")}
+                    style={{ accentColor: "var(--primary)", cursor: "pointer" }}
+                  />
+                  ➕ Tambahkan Komponen (Gabung)
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", cursor: "pointer", fontWeight: applyMode === "replace" ? "700" : "500", color: applyMode === "replace" ? "var(--warning)" : "var(--text-secondary)" }}>
+                  <input 
+                    type="radio" 
+                    name="applyMode" 
+                    value="replace" 
+                    checked={applyMode === "replace"} 
+                    onChange={() => setApplyMode("replace")}
+                    style={{ accentColor: "var(--primary)", cursor: "pointer" }}
+                  />
+                  🔄 Gantikan Seluruhnya (Override)
+                </label>
+              </div>
+            </div>
+
             {/* Note & Footer Buttons */}
             <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.4 }}>
-              *Komponen baru akan ditambahkan tanpa menghapus komponen yang sudah ada di kelas tujuan.
+              {applyMode === "add" 
+                ? "*Komponen baru akan ditambahkan tanpa menghapus komponen yang sudah ada di kelas tujuan." 
+                : "*Peringatan: Seluruh komponen lama di kelas tujuan akan dihapus dan digantikan dengan konfigurasi kelas ini."}
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px" }}>

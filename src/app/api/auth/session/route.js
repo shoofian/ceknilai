@@ -26,6 +26,11 @@ export async function GET() {
     }
     
     const { password: _, ...guruData } = guru;
+    const isExpired = guruData.premium_until ? new Date() > new Date(guruData.premium_until) : false;
+    if (isExpired && !guruData.is_locked) {
+      guruData.is_locked = true;
+      guruData.lock_message = "Masa aktif premium Anda telah berakhir. Silakan lakukan aktivasi/perpanjangan paket di menu Masa Aktif.";
+    }
     return NextResponse.json({ loggedIn: true, user: guruData });
   } catch (error) {
     console.error('Error in session API:', error);

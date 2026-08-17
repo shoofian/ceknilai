@@ -311,12 +311,14 @@ export default function SuperadminPanel() {
     return balance;
   };
 
-  const handleApprovePayment = async (username) => {
+  const handleApprovePayment = async (logId, username) => {
     if (confirm(`Setujui konfirmasi pembayaran dan aktifkan akun guru @${username}?`)) {
       try {
         // Use POST to trigger unlock + auto referral points crediting
         const res = await fetch(`/api/superadmin/guru/${username}`, {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logId })
         });
 
         if (res.ok) {
@@ -982,7 +984,7 @@ export default function SuperadminPanel() {
                                   {isLocked ? "🔒 Akun Terkunci" : "✅ Akun Aktif (Menunggu Verifikasi)"}
                                 </span>
                                 <div style={{ display: "flex", gap: "6px" }}>
-                                  <button onClick={() => handleApprovePayment(log.username)} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
+                                  <button onClick={() => handleApprovePayment(log.id, log.username)} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
                                     ✅ Verifikasi & Kreditkan Poin
                                   </button>
                                   <button onClick={() => handleLockGuru(log.username)} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }}>

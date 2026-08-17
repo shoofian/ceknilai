@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS guru (
   nama text NOT NULL,
   email text NOT NULL,
   is_locked boolean DEFAULT false,
-  lock_message text DEFAULT NULL
+  lock_message text DEFAULT NULL,
+  premium_until timestamp with time zone DEFAULT NULL
 );
 
 -- 2. Tabel Kelas
@@ -61,6 +62,7 @@ CREATE TABLE IF NOT EXISTS log_aktivitas_guru (
 -- =========================================================================
 -- ALTER TABLE guru ADD COLUMN IF NOT EXISTS is_locked boolean DEFAULT false;
 -- ALTER TABLE guru ADD COLUMN IF NOT EXISTS lock_message text DEFAULT NULL;
+-- ALTER TABLE guru ADD COLUMN IF NOT EXISTS premium_until timestamp with time zone DEFAULT NULL;
 
 -- MIGRATION: WALI KELAS & MULTI-SEKOLAH (SOLUSI A)
 CREATE TABLE IF NOT EXISTS sekolah (

@@ -81,6 +81,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Gagal memproses penukaran poin' }, { status: 500 });
     }
 
+    // Recalculate premiumUntil
+    const { recalculatePremiumUntil } = await import('@/lib/db');
+    await recalculatePremiumUntil(username);
+
     return NextResponse.json({
       success: true,
       message: `Berhasil menukarkan ${reward.price} poin dengan "${reward.name}". Permintaan Anda telah dicatat dan akan segera diproses oleh admin!`,

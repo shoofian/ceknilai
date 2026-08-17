@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { cache } from 'react';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -75,7 +76,7 @@ function mapKelasFromDb(k) {
 }
 
 // === GURU PROFILE ===
-export async function getGuru(username = null) {
+export const getGuru = cache(async function getGuru(username = null) {
   if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' };
   try {
     let query = supabase.from('guru').select('*, sekolah:sekolah_id(nama, npsn)');
@@ -104,7 +105,8 @@ export async function getGuru(username = null) {
         walikelas_tingkatan: null,
         walikelas_rombel_nama: null,
         tahun_ajaran: '2025/2026',
-        sekolah: null
+        sekolah: null,
+        premium_until: result.premium_until ?? null
       };
     }
     const result = data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
@@ -117,12 +119,13 @@ export async function getGuru(username = null) {
       walikelas_tingkatan: result.walikelas_tingkatan ?? null,
       walikelas_rombel_nama: result.walikelas_rombel_nama ?? null,
       tahun_ajaran: result.tahun_ajaran ?? '2025/2026',
-      sekolah: result.sekolah ?? null
+      sekolah: result.sekolah ?? null,
+      premium_until: result.premium_until ?? null
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
   }
-}
+});
 
 export async function getGuruByEmail(email) {
   if (!supabase) return null;
@@ -1140,9 +1143,9 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, is_admin_sekolah, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, sekolah:sekolah_id(nama, npsn)');
+      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, is_admin_sekolah, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, premium_until, sekolah:sekolah_id(nama, npsn)');
     if (error) {
-      // Fallback
+      // Fallback without premium_until
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('guru')
         .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, sekolah:sekolah_id(nama, npsn)');
@@ -1155,7 +1158,7 @@ export async function getAllGurus() {
           console.log('Error fetching all gurus (fallback 2):', fallbackError2);
           return [];
         }
-        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026', sekolah: null }));
+        return fallbackData2.map(g => ({ ...g, is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026', sekolah: null, premium_until: null }));
       }
       return fallbackData.map(g => ({
         ...g,
@@ -1165,7 +1168,8 @@ export async function getAllGurus() {
         walikelas_tingkatan: g.walikelas_tingkatan ?? null,
         walikelas_rombel_nama: g.walikelas_rombel_nama ?? null,
         tahun_ajaran: '2025/2026',
-        sekolah: g.sekolah ?? null
+        sekolah: g.sekolah ?? null,
+        premium_until: null
       }));
     }
     return data.map(g => ({
@@ -1176,7 +1180,8 @@ export async function getAllGurus() {
       walikelas_tingkatan: g.walikelas_tingkatan ?? null,
       walikelas_rombel_nama: g.walikelas_rombel_nama ?? null,
       tahun_ajaran: g.tahun_ajaran ?? '2025/2026',
-      sekolah: g.sekolah ?? null
+      sekolah: g.sekolah ?? null,
+      premium_until: g.premium_until ?? null
     }));
   } catch (err) {
     console.error('Unexpected error in getAllGurus:', err);
@@ -1200,7 +1205,8 @@ export async function createGuruByAdmin(guruData) {
         email: guruData.email ? guruData.email.trim() : null,
         password: hashedPassword,
         sekolah_id: guruData.sekolah_id || null,
-        is_admin_sekolah: guruData.is_admin_sekolah ?? false
+        is_admin_sekolah: guruData.is_admin_sekolah ?? false,
+        premium_until: guruData.premium_until || null
       })
       .select()
       .single();
@@ -1235,6 +1241,9 @@ export async function updateGuruByAdmin(username, updatedData) {
     }
     if (updatedData.is_admin_sekolah !== undefined) {
       payload.is_admin_sekolah = updatedData.is_admin_sekolah;
+    }
+    if (updatedData.premium_until !== undefined) {
+      payload.premium_until = updatedData.premium_until || null;
     }
     if (updatedData.walikelas_tingkatan !== undefined) {
       payload.walikelas_tingkatan = updatedData.walikelas_tingkatan !== null ? Number(updatedData.walikelas_tingkatan) : null;
@@ -1300,6 +1309,69 @@ export async function migrateGuruPassword(username, plainPassword) {
   }
 }
 
+export async function recalculatePremiumUntil(username) {
+  if (!supabase) return null;
+  try {
+    // Fetch logs
+    const { data: logs, error } = await supabase
+      .from('log_aktivitas_guru')
+      .select('aksi, detail, created_at')
+      .eq('guru_username', username)
+      .in('aksi', ['REFERRAL_POINTS', 'REDEEM_POINTS', 'PAYMENT_APPROVED'])
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching logs for premium recalculation:', error);
+      return null;
+    }
+
+    let premiumUntil = null;
+
+    if (logs && logs.length > 0) {
+      for (const log of logs) {
+        let daysToAdd = 0;
+        if (log.aksi === 'PAYMENT_APPROVED') {
+          const isYearly = log.detail.toUpperCase().includes('PAKET:TAHUNAN');
+          const isMonthly = log.detail.toUpperCase().includes('PAKET:BULANAN');
+          if (isYearly) daysToAdd = 365;
+          else if (isMonthly) daysToAdd = 30;
+        } else if (log.aksi === 'REDEEM_POINTS') {
+          const isYearly = log.detail.includes('Gratis 1 Tahun Premium');
+          const isMonthly = log.detail.includes('Gratis 1 Bulan Premium');
+          if (isYearly) daysToAdd = 365;
+          else if (isMonthly) daysToAdd = 30;
+        }
+
+        if (daysToAdd > 0) {
+          const txDate = new Date(log.created_at);
+          if (!premiumUntil || txDate > premiumUntil) {
+            premiumUntil = new Date(txDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+          } else {
+            premiumUntil = new Date(premiumUntil.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+          }
+        }
+      }
+    }
+
+    const premiumUntilStr = premiumUntil ? premiumUntil.toISOString() : null;
+
+    // Update the guru record with the new premium_until
+    const { error: updateError } = await supabase
+      .from('guru')
+      .update({ premium_until: premiumUntilStr })
+      .eq('username', username);
+
+    if (updateError) {
+      console.error('Error updating premium_until in database:', updateError);
+    }
+
+    return premiumUntilStr;
+  } catch (err) {
+    console.error('Error in recalculatePremiumUntil:', err);
+    return null;
+  }
+}
+
 export async function isGuruLocked(username) {
   if (!username) return false;
   const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];
@@ -1308,7 +1380,18 @@ export async function isGuruLocked(username) {
   }
   try {
     const guru = await getGuru(username);
-    return !!(guru && guru.is_locked);
+    if (!guru) return false;
+    
+    // Akun dikunci jika flag is_locked bernilai true
+    if (guru.is_locked) return true;
+    
+    // Atau jika premium_until kadaluarsa (jika ada nilainya)
+    if (guru.premium_until) {
+      const isExpired = new Date() > new Date(guru.premium_until);
+      return isExpired;
+    }
+    
+    return false;
   } catch (err) {
     console.error('Error checking lock status:', err);
     return false;
@@ -1323,10 +1406,26 @@ export async function getGuruLockStatus(username) {
   }
   try {
     const guru = await getGuru(username);
-    return {
-      isLocked: !!(guru && guru.is_locked),
-      lockMessage: guru ? guru.lock_message : null
-    };
+    if (!guru) return { isLocked: false, lockMessage: null };
+    
+    if (guru.is_locked) {
+      return {
+        isLocked: true,
+        lockMessage: guru.lock_message || "Akun Anda sementara dikunci oleh superadmin."
+      };
+    }
+    
+    if (guru.premium_until) {
+      const isExpired = new Date() > new Date(guru.premium_until);
+      if (isExpired) {
+        return {
+          isLocked: true,
+          lockMessage: "Masa aktif premium Anda telah berakhir. Silakan lakukan aktivasi/perpanjangan paket di menu Masa Aktif."
+        };
+      }
+    }
+    
+    return { isLocked: false, lockMessage: null };
   } catch (err) {
     console.error('Error getting lock status:', err);
     return { isLocked: false, lockMessage: null };

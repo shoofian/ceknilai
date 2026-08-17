@@ -43,6 +43,11 @@ export async function POST(request) {
       await logAktivitasGuru(guru.username, 'LOGIN', 'Melakukan login ke sistem');
 
       const { password: _, ...guruData } = guru;
+      const isExpired = guruData.premium_until ? new Date() > new Date(guruData.premium_until) : false;
+      if (isExpired && !guruData.is_locked) {
+        guruData.is_locked = true;
+        guruData.lock_message = "Masa aktif premium Anda telah berakhir. Silakan lakukan aktivasi/perpanjangan paket di menu Masa Aktif.";
+      }
       return NextResponse.json({ success: true, user: guruData });
     }
     
