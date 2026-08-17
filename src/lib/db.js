@@ -49,7 +49,17 @@ function mapKelasFromDb(k) {
       enableBonusStars: false,
       ...(k.skema_penilaian || {})
     },
-    kolomNilai: (k.kolom_nilai || []).map(col => {
+    kolomNilai: [...(k.kolom_nilai || [])].sort((a, b) => {
+      const partsA = (a.id || '').split('-');
+      const partsB = (b.id || '').split('-');
+      const timeA = parseInt(partsA[1]) || 0;
+      const timeB = parseInt(partsB[1]) || 0;
+      if (timeA !== timeB) return timeA - timeB;
+      const indexA = parseInt(partsA[2]) || 0;
+      const indexB = parseInt(partsB[2]) || 0;
+      if (indexA !== indexB) return indexA - indexB;
+      return (a.id || '').localeCompare(b.id || '');
+    }).map(col => {
       const groupConfig = k.skema_penilaian?.kolomAspekGroup?.[col.id];
       return {
         id: col.id,
@@ -785,7 +795,17 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       let jumlahAspekTerisi = 0;
       const detailNilai = [];
 
-      const kolomNilai = k.kolom_nilai || [];
+      const kolomNilai = [...(k.kolom_nilai || [])].sort((a, b) => {
+        const partsA = (a.id || '').split('-');
+        const partsB = (b.id || '').split('-');
+        const timeA = parseInt(partsA[1]) || 0;
+        const timeB = parseInt(partsB[1]) || 0;
+        if (timeA !== timeB) return timeA - timeB;
+        const indexA = parseInt(partsA[2]) || 0;
+        const indexB = parseInt(partsB[2]) || 0;
+        if (indexA !== indexB) return indexA - indexB;
+        return (a.id || '').localeCompare(b.id || '');
+      });
       const nilaiObj = s.nilai || {};
 
       // Ambil skema penilaian kustom dari kelas atau gunakan default
