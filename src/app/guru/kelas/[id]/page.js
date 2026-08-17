@@ -5744,7 +5744,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
 
             {/* Search & Toggle All */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1, minHeight: 0 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
                 <input 
                   type="text" 
@@ -5776,7 +5776,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               </div>
 
               {/* Class List Multi-select */}
-              <div style={{ maxHeight: "240px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "8px" }}>
+              <div style={{ flex: 1, maxHeight: "240px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "8px", minHeight: 0 }}>
                 {fetchingClasses ? (
                   <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
                     <span className="spinner" style={{ width: "24px", height: "24px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
