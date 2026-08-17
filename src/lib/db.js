@@ -844,6 +844,18 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const skema = k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "" };
       const hiddenAspek = Array.isArray(skema.hiddenAspek) ? skema.hiddenAspek : [];
 
+      // Ambil seluruh data nilai siswa di kelas ini untuk perbandingan & hitung rata-rata
+      let allSiswa = [];
+      try {
+        const { data } = await supabase
+          .from('siswa')
+          .select('nilai')
+          .eq('kelas_id', k.id);
+        if (data) allSiswa = data;
+      } catch (err) {
+        console.error("Gagal mengambil data siswa kelas untuk perbandingan:", err);
+      }
+
       kolomNilai.forEach(col => {
         const groupConfig = skema.kolomAspekGroup?.[col.id];
         const isGroup = groupConfig ? !!groupConfig.isGroup : false;
@@ -927,6 +939,35 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         }
         totalBobot += col.bobot;
 
+        // Cek apakah nilai komponen ini sudah terisi untuk mayoritas siswa di kelasnya (> 50%)
+        let isMayoritasSudah = false;
+        if (!isFilled) {
+          let filledCountInClass = 0;
+          allSiswa.forEach(ss => {
+            const ssNilai = ss.nilai || {};
+            if (isPresensi) {
+              const pertemuanList = skema.pertemuan || [];
+              const hasPresensi = pertemuanList.some(p => {
+                const val = ssNilai[`_presensi_${p.id}`];
+                return val !== undefined && val !== null && val !== "";
+              });
+              if (hasPresensi) filledCountInClass++;
+            } else if (isGroup && subKolom.length > 0) {
+              const hasGroupValue = subKolom.some(sub => {
+                const sc = ssNilai[sub.id];
+                return sc !== undefined && sc !== null && sc !== "";
+              });
+              if (hasGroupValue) filledCountInClass++;
+            } else {
+              const rawVal = ssNilai[col.id];
+              const hasVal = rawVal !== undefined && rawVal !== null && rawVal !== "";
+              if (hasVal) filledCountInClass++;
+            }
+          });
+          const filledPercentage = allSiswa.length > 0 ? (filledCountInClass / allSiswa.length) : 0;
+          isMayoritasSudah = filledPercentage > 0.5;
+        }
+
         const isHidden = hiddenAspek.includes(col.id);
         let displayScore = isFilled ? Number(score.toFixed(2)) : "-";
         let displayKontribusi = isFilled ? Number(kontribusi.toFixed(2)) : "-";
@@ -942,11 +983,25 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         const subDetail = (isGroup && subKolom.length > 0) ? subKolom.map(sub => {
           const sc = nilaiObj[sub.id];
           const isSFilled = sc !== undefined && sc !== null && sc !== "";
+          
+          let subFilledCount = 0;
+          if (!isSFilled) {
+            allSiswa.forEach(ss => {
+              const ssNilai = ss.nilai || {};
+              const val = ssNilai[sub.id];
+              if (val !== undefined && val !== null && val !== "") {
+                subFilledCount++;
+              }
+            });
+          }
+          const subFilledPercentage = allSiswa.length > 0 ? (subFilledCount / allSiswa.length) : 0;
+          
           return {
             subId: sub.id,
             nama: sub.nama,
             bobot: sub.bobot,
             nilaiAsli: isSFilled ? Number(sc) : null,
+            isMayoritasSudah: !isSFilled && (subFilledPercentage > 0.5),
           };
         }) : [];
 
@@ -961,6 +1016,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
           isPresensi,
           hitungMetode,
           subDetail,
+          isMayoritasSudah,
         });
       });
 
@@ -990,11 +1046,6 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       // Hitung Rata-Rata Kelas
       let rataRataKelas = "-";
       try {
-        const { data: allSiswa } = await supabase
-          .from('siswa')
-          .select('nilai')
-          .eq('kelas_id', k.id);
-        
         if (allSiswa && allSiswa.length > 0) {
           let totalClassScore = 0;
           let validStudentCount = 0;

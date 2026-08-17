@@ -1019,15 +1019,23 @@ export default function StudentPortal() {
                                   <td>{col.bobot}%</td>
                                   <td style={{
                                     fontWeight: "700",
-                                    color: col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-"
-                                      ? "var(--text-muted)"
-                                      : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
-                                        ? "var(--success)"
-                                        : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
-                                          ? "var(--danger)"
-                                          : "var(--text-primary)"
+                                    color: col.isMayoritasSudah
+                                      ? "var(--warning, #d97706)"
+                                      : col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-"
+                                        ? "var(--text-muted)"
+                                        : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                          ? "var(--success)"
+                                          : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
+                                            ? "var(--danger)"
+                                            : "var(--text-primary)"
                                   }}>
-                                    {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli}
+                                    {col.isMayoritasSudah ? (
+                                      <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                        Belum Diisi (Kelas Sudah) ⚠️
+                                      </span>
+                                    ) : (
+                                      col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli
+                                    )}
                                     {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && col.hitungMetode !== "persentase" && (
                                       <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>(rata-rata)</span>
                                     )}
@@ -1049,13 +1057,21 @@ export default function StudentPortal() {
                                     <td style={{
                                       fontWeight: "700",
                                       fontSize: "0.88rem",
-                                      color: sub.nilaiAsli === null
-                                        ? "var(--text-muted)"
-                                        : sub.nilaiAsli >= res.kkm
-                                          ? "var(--success)"
-                                          : "var(--danger)"
+                                      color: sub.isMayoritasSudah
+                                        ? "var(--warning, #d97706)"
+                                        : sub.nilaiAsli === null
+                                          ? "var(--text-muted)"
+                                          : sub.nilaiAsli >= res.kkm
+                                            ? "var(--success)"
+                                            : "var(--danger)"
                                     }}>
-                                      {sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli}
+                                      {sub.isMayoritasSudah ? (
+                                        <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk sub-komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                          Belum Diisi (Kelas Sudah) ⚠️
+                                        </span>
+                                      ) : (
+                                        sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli
+                                      )}
                                     </td>
                                   </tr>
                                 ))}
@@ -1142,9 +1158,11 @@ export default function StudentPortal() {
                               <tbody>
                                 {res.detailNilai.map((col, idx) => {
                                   const isTuntas = col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm);
-                                  const ketText = col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" 
-                                    ? "Belum Diisi" 
-                                    : isTuntas ? "Tuntas" : "Belum Tuntas";
+                                  const ketText = col.isMayoritasSudah
+                                    ? "Belum Diisi (Kelas Sudah)"
+                                    : (col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" 
+                                       ? "Belum Diisi" 
+                                       : isTuntas ? "Tuntas" : "Belum Tuntas");
                                     
                                   return (
                                     <Fragment key={col.kolomId}>
@@ -1164,7 +1182,7 @@ export default function StudentPortal() {
                                         <td style={{ textAlign: "center", fontWeight: "bold" }}>
                                           {col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "—" : col.nilaiAsli}
                                         </td>
-                                        <td style={{ textAlign: "center", fontWeight: "bold", color: isTuntas ? "#15803d" : "#b91c1c" }}>
+                                        <td style={{ textAlign: "center", fontWeight: "bold", color: col.isMayoritasSudah ? "#d97706" : isTuntas ? "#15803d" : "#b91c1c" }}>
                                           {ketText}
                                         </td>
                                       </tr>
@@ -1172,7 +1190,9 @@ export default function StudentPortal() {
                                       {/* Baris sub-komponen jika merupakan Grup */}
                                       {col.isGroup && col.subDetail?.map((sub) => {
                                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= res.kkm;
-                                        const subKet = sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas";
+                                        const subKet = sub.isMayoritasSudah
+                                          ? "Belum Diisi (Kelas Sudah)"
+                                          : (sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas");
                                         const subTp = res.skemaPenilaian?.tpConfig?.[sub.subId] || res.skema?.tpConfig?.[sub.subId];
                                         return (
                                           <tr key={sub.subId} className="khs-sub-row">
@@ -1189,7 +1209,7 @@ export default function StudentPortal() {
                                             <td style={{ textAlign: "center" }}>
                                               {sub.nilaiAsli === null ? "—" : sub.nilaiAsli}
                                             </td>
-                                            <td style={{ textAlign: "center", fontSize: "0.85em", color: subTuntas ? "#15803d" : "#b91c1c" }}>
+                                            <td style={{ textAlign: "center", fontSize: "0.85em", color: sub.isMayoritasSudah ? "#d97706" : subTuntas ? "#15803d" : "#b91c1c" }}>
                                               {subKet}
                                             </td>
                                           </tr>
