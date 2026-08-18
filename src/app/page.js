@@ -1031,7 +1031,7 @@ export default function StudentPortal() {
                                   }}>
                                     {col.isMayoritasSudah ? (
                                       <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                        Belum Diisi (Kelas Sudah) ⚠️
+                                        Kosong (Mayoritas Kelas Sudah Dinilai) ⚠️
                                       </span>
                                     ) : (
                                       col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli
@@ -1067,7 +1067,7 @@ export default function StudentPortal() {
                                     }}>
                                       {sub.isMayoritasSudah ? (
                                         <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk sub-komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                          Belum Diisi (Kelas Sudah) ⚠️
+                                          Kosong (Mayoritas Kelas Sudah Dinilai) ⚠️
                                         </span>
                                       ) : (
                                         sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli
@@ -1159,7 +1159,7 @@ export default function StudentPortal() {
                                 {res.detailNilai.map((col, idx) => {
                                   const isTuntas = col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm);
                                   const ketText = col.isMayoritasSudah
-                                    ? "Belum Diisi (Kelas Sudah)"
+                                    ? "Kosong (Mayoritas Kelas Sudah Dinilai)"
                                     : (col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" 
                                        ? "Belum Diisi" 
                                        : isTuntas ? "Tuntas" : "Belum Tuntas");
@@ -1191,7 +1191,7 @@ export default function StudentPortal() {
                                       {col.isGroup && col.subDetail?.map((sub) => {
                                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= res.kkm;
                                         const subKet = sub.isMayoritasSudah
-                                          ? "Belum Diisi (Kelas Sudah)"
+                                          ? "Kosong (Mayoritas Kelas Sudah Dinilai)"
                                           : (sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas");
                                         const subTp = res.skemaPenilaian?.tpConfig?.[sub.subId] || res.skema?.tpConfig?.[sub.subId];
                                         return (
