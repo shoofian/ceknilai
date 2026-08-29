@@ -233,7 +233,7 @@ export default function StudentPortal() {
       </nav>
 
       {/* Main Container */}
-      <main style={{ flex: 1, padding: "40px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <main style={{ flex: 1, padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         
         {/* Split Hero Layout */}
         <div className="portal-hero-container">
@@ -243,7 +243,7 @@ export default function StudentPortal() {
             <span style={{ display: "inline-block", width: "max-content", padding: "6px 12px", borderRadius: "99px", background: "var(--success-glow)", border: "1px solid rgba(16, 185, 129, 0.2)", fontSize: "0.78rem", fontWeight: "700", color: "var(--success)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
               ⚡ Cek Nilai Instan
             </span>
-            <h2 style={{ fontSize: "2.8rem", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.8rem)", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Pantau Hasil Belajar Kamu Secara Transparan
             </h2>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
@@ -254,7 +254,7 @@ export default function StudentPortal() {
 
           {/* Right Column: Search Card Form */}
           <div className="portal-form-panel">
-            <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "30px", border: "1px solid var(--border-color)" }}>
+            <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "24px", border: "1px solid var(--border-color)" }}>
               <div style={{ marginBottom: "24px", textAlign: "center" }}>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Cari Nilai Siswa</h3>
                 <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "4px" }}>Isi form di bawah untuk mengakses nilai rapot.</p>
@@ -433,14 +433,14 @@ export default function StudentPortal() {
                       />
                     </div>
                     
-                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "10px", width: "100%" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                         <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tahun Pelajaran</label>
                         <select
                           className="form-input"
                           value={selectedTahunAjaran}
                           onChange={(e) => setSelectedTahunAjaran(e.target.value)}
-                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "130px" }}
+                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content" }}
                         >
                           {tahunAjaranOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
@@ -452,7 +452,7 @@ export default function StudentPortal() {
                           className="form-input"
                           value={selectedSemester}
                           onChange={(e) => setSelectedSemester(e.target.value)}
-                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "110px" }}
+                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content" }}
                         >
                           {semesterOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
@@ -464,7 +464,7 @@ export default function StudentPortal() {
                           className="form-input"
                           value={selectedMataPelajaran}
                           onChange={(e) => setSelectedMataPelajaran(e.target.value)}
-                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "150px" }}
+                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content" }}
                         >
                           {mataPelajaranOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
@@ -476,7 +476,7 @@ export default function StudentPortal() {
                           className="form-input"
                           value={selectedTingkatan}
                           onChange={(e) => setSelectedTingkatan(e.target.value)}
-                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content", minWidth: "120px" }}
+                          style={{ padding: "6px 12px", fontSize: "0.82rem", borderRadius: "var(--radius-sm)", width: "max-content" }}
                         >
                           {tingkatanOptions.map(opt => <option key={opt} value={opt}>{opt === "Semua" ? "Semua" : `Kelas ${opt}`}</option>)}
                         </select>
@@ -521,7 +521,7 @@ export default function StudentPortal() {
                       >
                         {/* Accent Header */}
                         <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
-                          <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff" }}>{res.namaKelas}</h4>
+                          <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff", paddingRight: "80px" }}>{res.namaKelas}</h4>
                           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
                             {res.tingkatan && (
                               <span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(255,255,255,0.25)", color: "#ffffff", fontWeight: "700" }}>
@@ -1383,7 +1383,7 @@ export default function StudentPortal() {
                             </div>
                             
                             {/* Attendance Summary Cards */}
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "6px", textAlign: "center" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "8px", textAlign: "center" }}>
                               <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
                                 <div style={{ fontSize: "0.65rem", color: "var(--success)", fontWeight: "800" }}>HADIR</div>
                                 <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--success)" }}>{res.rekapPresensi.summary.H}</div>
@@ -1779,10 +1779,7 @@ export default function StudentPortal() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="no-print" style={{ borderTop: "1px solid var(--border-color)", padding: "20px", textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", backgroundColor: "var(--bg-secondary)" }}>
-        <p>&copy; {new Date().getFullYear()} CekNilai - Sistem Penilaian Online. Dikembangkan menggunakan Next.js & Vanilla CSS.</p>
-      </footer>
+
       </div>
 
       {/* Modal Preview Gambar (Global to Portal) */}

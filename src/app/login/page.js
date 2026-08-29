@@ -144,7 +144,7 @@ export default function LoginGuru() {
       </nav>
 
       {/* Main Content Area (uses identical layout as student page) */}
-      <main style={{ flex: 1, padding: "40px 20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <main style={{ flex: 1, padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         
         <div className="portal-hero-container">
           
@@ -153,7 +153,7 @@ export default function LoginGuru() {
             <span style={{ display: "inline-block", width: "max-content", padding: "6px 12px", borderRadius: "99px", background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", fontSize: "0.78rem", fontWeight: "700", color: "var(--primary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>
               🔑 Area Pendidik
             </span>
-            <h2 style={{ fontSize: "2.8rem", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.8rem)", fontWeight: "800", letterSpacing: "-0.04em", lineHeight: 1.15, background: "linear-gradient(135deg, var(--text-primary) 30%, var(--primary))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
               Kelola Kelas dan Skema Penilaian Anda
             </h2>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
@@ -164,7 +164,7 @@ export default function LoginGuru() {
 
           {/* Right Column: Card Form */}
           <div className="portal-form-panel">
-            <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "30px", border: "1px solid var(--border-color)" }}>
+            <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "24px", border: "1px solid var(--border-color)" }}>
               
               <div style={{ marginBottom: "24px", textAlign: "center" }}>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>
@@ -322,17 +322,18 @@ export default function LoginGuru() {
                       onClick={() => setShowPassword(!showPassword)}
                       style={{
                         position: "absolute",
-                        right: "12px",
+                        right: "8px",
                         top: "50%",
                         transform: "translateY(-50%)",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
+                        width: "40px",
+                        height: "40px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: "var(--text-muted)",
-                        padding: "4px"
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "var(--text-muted)"
                       }}
                       title={showPassword ? "Sembunyikan password" : "Tampilkan password"}
                     >
@@ -425,10 +426,7 @@ export default function LoginGuru() {
 
       </main>
 
-      {/* Footer */}
-      <footer className="footer no-print" style={{ marginTop: "auto" }}>
-        <p>&copy; {new Date().getFullYear()} CekNilai - Sistem Penilaian Online. Dikembangkan menggunakan Next.js & Vanilla CSS.</p>
-      </footer>
+
 
       <style jsx global>{`
         @keyframes spin {
