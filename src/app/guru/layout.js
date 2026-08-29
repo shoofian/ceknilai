@@ -530,6 +530,37 @@ export default function GuruLayout({ children }) {
 
         {/* Children Render */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          {/* Trial Ends Banner */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)",
+              border: "1px solid rgba(245, 158, 11, 0.3)",
+              borderRadius: "12px",
+              padding: "16px 20px",
+              marginBottom: "20px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "16px",
+              boxShadow: "0 4px 12px rgba(245, 158, 11, 0.05)"
+            }}
+          >
+            <div style={{ fontSize: "24px" }}>⏳</div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: "0 0 6px 0", fontSize: "1rem", color: "#d97706", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                Pemberitahuan Masa Uji Coba Gratis
+              </h4>
+              <p style={{ margin: "0 0 10px 0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+                Saat ini Anda sedang menggunakan <strong>akses gratis uji coba</strong> yang berlaku hingga <strong>31 Agustus 2026</strong>. 
+                Setelah tanggal tersebut, fitur pembuatan kelas dan pengisian nilai akan dibatasi. 
+                Silakan lakukan aktivasi akun untuk terus menikmati seluruh fitur tanpa batas.
+              </p>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <Link href="/guru/masa-aktif" className="btn btn-primary" style={{ padding: "6px 12px", fontSize: "0.8rem", backgroundColor: "#d97706", borderColor: "#d97706" }}>
+                  💳 Cara Pembayaran & Aktivasi
+                </Link>
+              </div>
+            </div>
+          </div>
           {guru?.is_locked && (
             <div 
               style={{ 
