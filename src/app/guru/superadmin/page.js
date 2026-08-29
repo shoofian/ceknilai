@@ -362,12 +362,34 @@ export default function SuperadminPanel() {
         });
 
         if (res.ok) {
-          const data = await res.json();
-          alert(data.message || "Transaksi berhasil dibatalkan.");
+          alert("Pembayaran berhasil dibatalkan.");
           fetchData();
         } else {
           const data = await res.json();
-          alert(data.error || "Gagal membatalkan transaksi.");
+          alert(data.error || "Gagal membatalkan pembayaran.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Terjadi kesalahan koneksi server.");
+      }
+    }
+  };
+
+  const handleDeletePendingPayment = async (logId, username) => {
+    if (confirm(`Apakah Anda yakin ingin MENGHAPUS PERMANEN riwayat pembayaran pending ini untuk @${username}?\nGuru akan dapat mengunggah ulang bukti transfernya dari awal.`)) {
+      try {
+        const res = await fetch("/api/superadmin/pembayaran/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logId })
+        });
+
+        if (res.ok) {
+          alert("Riwayat pembayaran pending berhasil dihapus.");
+          fetchData();
+        } else {
+          const data = await res.json();
+          alert(data.error || "Gagal menghapus pembayaran.");
         }
       } catch (err) {
         console.error(err);
@@ -997,12 +1019,12 @@ export default function SuperadminPanel() {
                 <div className="glass-card" style={{ padding: "24px" }}>
                   <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>💳 Konfirmasi Pembayaran</h4>
                   <div style={{ overflowY: "auto", maxHeight: "350px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {teacherLogs.filter(l => l.aksi === "PAYMENT_PENDING").length === 0 ? (
+                    {financeLogs.filter(l => l.aksi === "PAYMENT_PENDING").length === 0 ? (
                       <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
                         Belum ada konfirmasi pembayaran yang menunggu verifikasi.
                       </div>
                     ) : (
-                      teacherLogs
+                      financeLogs
                         .filter(l => l.aksi === "PAYMENT_PENDING")
                         .map(log => {
                           const isLocked = gurus.find(g => g.username.toLowerCase() === log.username.toLowerCase())?.is_locked;
@@ -1028,11 +1050,11 @@ export default function SuperadminPanel() {
                               <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
                                 <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
                                   <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "rgba(234,179,8,0.15)" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "#eab308" : "var(--primary)" }}>
-                                    {paket === "TAHUNAN" ? "👑 Paket Tahunan" : "📦 Paket Bulanan"}
+                                    {paket === "TAHUNAN" ? "🎫 Paket Tahunan" : "🎟 Paket Bulanan"}
                                   </span>
                                   {referralCode && (
                                     <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: "rgba(16,185,129,0.1)", color: "var(--success)" }}>
-                                      🔗 Kode Referral: @{referralCode}
+                                      🏷 Kode Referral: @{referralCode}
                                     </span>
                                   )}
                                 </div>
@@ -1045,12 +1067,15 @@ export default function SuperadminPanel() {
                                 <span style={{ fontSize: "0.75rem", fontWeight: "600", color: isLocked ? "var(--danger)" : "var(--success)" }}>
                                   {isLocked ? "🔒 Akun Terkunci" : "✅ Akun Aktif (Menunggu Verifikasi)"}
                                 </span>
-                                <div style={{ display: "flex", gap: "6px" }}>
+                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" }}>
                                   <button onClick={() => handleApprovePayment(log.id, log.username)} className="btn btn-primary" style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
-                                    ✅ Verifikasi & Kreditkan Poin
+                                    ✅ Verifikasi
                                   </button>
-                                  <button onClick={() => handleLockGuru(log.username)} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }}>
-                                    🔒 Tolak
+                                  <button onClick={() => handleLockGuru(log.username)} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--warning)", borderColor: "rgba(245, 158, 11, 0.15)" }}>
+                                    🔒 Tolak/Kunci
+                                  </button>
+                                  <button onClick={() => handleDeletePendingPayment(log.id, log.username)} className="btn btn-secondary" style={{ padding: "4px 10px", fontSize: "0.75rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.15)" }}>
+                                    🗑️ Hapus
                                   </button>
                                 </div>
                               </div>
@@ -1065,15 +1090,14 @@ export default function SuperadminPanel() {
                 <div className="glass-card" style={{ padding: "24px" }}>
                   <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>🎁 Permintaan Penukaran Poin</h4>
                   <div style={{ overflowY: "auto", maxHeight: "350px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {teacherLogs.filter(l => l.aksi === "REDEEM_POINTS").length === 0 ? (
+                    {financeLogs.filter(l => l.aksi === "REDEEM_POINTS").length === 0 ? (
                       <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
                         Belum ada permintaan penukaran poin.
                       </div>
                     ) : (
-                      teacherLogs
-                        .filter(l => l.aksi === "REDEEM_POINTS")
+                      financeLogs`n                          .filter(l => l.aksi === "REDEEM_POINTS")
                         .map(log => {
-                          const isProcessed = teacherLogs.some(
+                          const isProcessed = financeLogs.some(
                             x => x.username.toLowerCase() === log.username.toLowerCase() && 
                             x.detail.includes("PROSES_SELESAI") && 
                             x.detail.includes(log.detail.split('|')[1]?.trim() || "")
@@ -1113,7 +1137,7 @@ export default function SuperadminPanel() {
               <div className="glass-card" style={{ padding: "24px" }}>
                 <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>✅ Transaksi Terverifikasi</h4>
                 <div style={{ overflowY: "auto", maxHeight: "250px" }}>
-                  {teacherLogs.filter(l => l.aksi === "PAYMENT_APPROVED").length === 0 ? (
+                  {financeLogs.filter(l => l.aksi === "PAYMENT_APPROVED").length === 0 ? (
                     <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
                       Belum ada transaksi terverifikasi.
                     </div>
@@ -1129,8 +1153,7 @@ export default function SuperadminPanel() {
                         </tr>
                       </thead>
                       <tbody>
-                        {teacherLogs
-                          .filter(l => l.aksi === "PAYMENT_APPROVED")
+                        {financeLogs`n                            .filter(l => l.aksi === "PAYMENT_APPROVED")
                           .map(log => {
                             const detail = log.detail || '';
                             const paketMatch = detail.match(/PAKET:(BULANAN|TAHUNAN)/);
@@ -1805,3 +1828,4 @@ export default function SuperadminPanel() {
     </>
   );
 }
+
