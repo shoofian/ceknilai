@@ -1095,7 +1095,8 @@ export default function SuperadminPanel() {
                         Belum ada permintaan penukaran poin.
                       </div>
                     ) : (
-                      financeLogs`n                          .filter(l => l.aksi === "REDEEM_POINTS")
+                      financeLogs
+                          .filter(l => l.aksi === "REDEEM_POINTS")
                         .map(log => {
                           const isProcessed = financeLogs.some(
                             x => x.username.toLowerCase() === log.username.toLowerCase() && 
@@ -1153,7 +1154,8 @@ export default function SuperadminPanel() {
                         </tr>
                       </thead>
                       <tbody>
-                        {financeLogs`n                            .filter(l => l.aksi === "PAYMENT_APPROVED")
+                        {financeLogs
+                            .filter(l => l.aksi === "PAYMENT_APPROVED")
                           .map(log => {
                             const detail = log.detail || '';
                             const paketMatch = detail.match(/PAKET:(BULANAN|TAHUNAN)/);
@@ -1828,4 +1830,5 @@ export default function SuperadminPanel() {
     </>
   );
 }
+
 
