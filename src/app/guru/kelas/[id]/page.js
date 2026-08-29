@@ -4351,7 +4351,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
           <div style={{ position: "relative" }}>
             {(showLeftScroll || showRightScroll) && (
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "8px", paddingRight: "4px", opacity: 0.9 }}>
+              <div className="hide-on-mobile" style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "8px", paddingRight: "4px", opacity: 0.9 }}>
                 <button
                   onClick={() => scrollTableBy(-300)}
                   disabled={!showLeftScroll}

@@ -1071,16 +1071,16 @@ export default function KelolaKelas() {
               style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}
             >
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                  <span className="card-click-indicator hide-on-mobile" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
-                    Kelola ➔
-                  </span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
+                  <h3 style={{ fontSize: "1.4rem", fontWeight: "900", lineHeight: "1.2", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
+                    {k.nama}
+                  </h3>
                   
-                  <div style={{ position: "relative", marginLeft: "auto" }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ position: "relative", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActiveDropdownId(activeDropdownId === k.id ? null : k.id)} 
                       className="btn-dots"
-                      style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "1.2rem", cursor: "pointer", padding: "4px 8px", borderRadius: "4px", display: "flex", alignItems: "center", transition: "background 0.2s" }}
+                      style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "1.4rem", cursor: "pointer", padding: "0px 4px", borderRadius: "4px", display: "flex", alignItems: "center", transition: "background 0.2s" }}
                       title="Menu Kelas"
                     >
                       ⋮
@@ -1096,7 +1096,7 @@ export default function KelolaKelas() {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "12px" }}>
+                <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "8px" }}>
                   {k.tingkatan && (
                     <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
                       🎓 Kelas {k.tingkatan}
@@ -1112,8 +1112,6 @@ export default function KelolaKelas() {
                     💻 {k.mataPelajaran}
                   </span>
                 </div>
-                
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "800", lineHeight: "1.3" }}>{k.nama}</h3>
                 
                 <div className="hide-on-mobile" style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode Kelas:</span>
