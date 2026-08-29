@@ -1011,9 +1011,9 @@ export default function KelolaKelas() {
       ) : kelas.length > 0 ? (
         <>
           {/* Filter Bar & Actions */}
-          <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", gap: "16px", flexWrap: "wrap", padding: "12px 16px", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan:</label>
+          <div className="glass-card" style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "nowrap", padding: "12px 16px", alignItems: "center", overflowX: "auto", whiteSpace: "nowrap", scrollbarWidth: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+              <label className="hide-on-mobile" style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)" }}>Tingkatan:</label>
               <select
                 className="form-input"
                 value={filterTingkatan}
@@ -1027,30 +1027,32 @@ export default function KelolaKelas() {
               </select>
             </div>
             
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
               <Link 
                 href="/guru/arsip" 
                 className="btn btn-outline"
-                style={{ padding: "6px 12px", fontSize: "0.8rem", color: "var(--text-secondary)", borderColor: "var(--border-color)", borderStyle: "dashed" }}
+                style={{ padding: "6px 10px", fontSize: "0.8rem", color: "var(--text-secondary)", borderColor: "var(--border-color)", borderStyle: "dashed" }}
                 title="Lihat Kelas yang Diarsipkan"
               >
-                📁 Arsip
+                📁 <span className="hide-on-mobile">Arsip</span>
               </Link>
               <button 
                 onClick={() => setBulkSyncSelectionOpen(true)}
                 className="btn btn-secondary"
-                style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", padding: "6px 12px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", padding: "6px 10px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px" }}
                 disabled={isLocked || kelas.length === 0}
+                title="Sinkronisasi Massal"
               >
-                🔄 Sinkronisasi Massal
+                🔄 <span className="hide-on-mobile">Sinkronisasi Massal</span>
               </button>
               <button 
                 onClick={handleOpenAdd} 
                 className="btn btn-primary"
-                style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", padding: "6px 12px", fontSize: "0.85rem" }}
+                style={{ opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", padding: "6px 10px", fontSize: "0.85rem" }}
                 disabled={isLocked}
+                title="Tambah Kelas"
               >
-                ➕ Tambah Kelas
+                ➕ <span className="hide-on-mobile">Tambah Kelas</span>
               </button>
             </div>
           </div>
@@ -1070,11 +1072,11 @@ export default function KelolaKelas() {
             >
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                  <span className="card-click-indicator" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
+                  <span className="card-click-indicator hide-on-mobile" style={{ fontSize: "0.75rem", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "4px", fontWeight: "600", transition: "color 0.2s, transform 0.2s" }}>
                     Kelola ➔
                   </span>
                   
-                  <div style={{ position: "relative" }} onClick={(e) => e.stopPropagation()}>
+                  <div style={{ position: "relative", marginLeft: "auto" }} onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActiveDropdownId(activeDropdownId === k.id ? null : k.id)} 
                       className="btn-dots"
@@ -1100,10 +1102,10 @@ export default function KelolaKelas() {
                       🎓 Kelas {k.tingkatan}
                     </span>
                   )}
-                  <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
+                  <span className="badge badge-primary hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
                     📚 {k.tahunAjaran}
                   </span>
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                  <span className="badge hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
                     ⏱️ Semester {k.semester || "Ganjil"}
                   </span>
                   <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
@@ -1113,7 +1115,7 @@ export default function KelolaKelas() {
                 
                 <h3 style={{ fontSize: "1.25rem", fontWeight: "800", lineHeight: "1.3" }}>{k.nama}</h3>
                 
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
+                <div className="hide-on-mobile" style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode Kelas:</span>
                   <code style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)", fontWeight: "700" }}>{k.id}</code>
                   <button 
@@ -1149,11 +1151,11 @@ export default function KelolaKelas() {
               {/* Action buttons */}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", fontWeight: "700" }}>
-                    📊 Kelola Nilai
+                  <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "8px", fontSize: "0.85rem", fontWeight: "700" }} title="Kelola Nilai">
+                    📊 <span className="hide-on-mobile">Kelola Nilai</span>
                   </Link>
-                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "10px", fontSize: "0.85rem", backgroundColor: "#10b981", color: "#ffffff", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
-                    ⚡ Presensi
+                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "8px", fontSize: "0.85rem", backgroundColor: "#10b981", color: "#ffffff", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }} title="Presensi">
+                    ⚡ <span className="hide-on-mobile">Presensi</span>
                   </Link>
                 </div>
               </div>
