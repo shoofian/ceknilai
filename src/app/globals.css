@@ -1905,15 +1905,62 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
 
 @media (max-width: 640px) {
   .grid-kelas {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
   .grid-kelas .glass-card {
-    padding: 14px;
-    gap: 12px !important;
+    padding: 10px;
+    gap: 8px !important;
   }
   .grid-kelas h3 {
-    font-size: 1.1rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .grid-kelas .badge {
+    font-size: 0.6rem !important;
+    padding: 2px 4px !important;
+  }
+  .grid-kelas .card-click-indicator {
+    font-size: 0.6rem !important;
+  }
+  .grid-kelas .btn-dots {
+    font-size: 1rem !important;
+    padding: 2px 4px !important;
+  }
+  /* The badges container */
+  .grid-kelas .glass-card > div:first-child > div:nth-child(2) {
+    gap: 2px !important;
+    margin-bottom: 6px !important;
+  }
+  /* The kode kelas container */
+  .grid-kelas .glass-card > div:first-child > div:nth-child(4) {
+    margin-top: 2px !important;
+    flex-wrap: wrap;
+    gap: 2px !important;
+  }
+  .grid-kelas .glass-card > div:first-child > div:nth-child(4) span,
+  .grid-kelas .glass-card > div:first-child > div:nth-child(4) code {
+    font-size: 0.65rem !important;
+  }
+  /* The Siswa & Komponen stats */
+  .grid-kelas .glass-card > div:first-child > div:nth-child(5) {
+    gap: 8px !important;
+    margin-top: 6px !important;
+    padding-top: 6px !important;
+  }
+  .grid-kelas .glass-card > div:first-child > div:nth-child(5) > div > span {
+    font-size: 0.9rem !important;
+  }
+  .grid-kelas .glass-card > div:first-child > div:nth-child(5) > div > div > div:first-child {
+    font-size: 0.8rem !important;
+  }
+  .grid-kelas .glass-card > div:first-child > div:nth-child(5) > div > div > div:last-child {
+    font-size: 0.55rem !important;
+  }
+  .grid-kelas .btn {
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
   }
 }
 
