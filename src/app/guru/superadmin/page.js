@@ -1413,6 +1413,56 @@ export default function SuperadminPanel() {
                     </table>
                   </div>
                 </div>
+
+                {/* Section: Histori Distribusi & Penyesuaian Poin */}
+                <div className="glass-card" style={{ padding: "24px" }}>
+                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>🪙 Histori Distribusi & Penyesuaian Poin</h4>
+                  <div style={{ overflowX: "auto", maxHeight: "300px" }}>
+                    <table className="premium-table" style={{ width: "100%" }}>
+                      <thead>
+                        <tr>
+                          <th>Waktu</th>
+                          <th>Tipe Penyesuaian</th>
+                          <th>Guru</th>
+                          <th>Keterangan</th>
+                          <th style={{ textAlign: "right" }}>Nominal Poin</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {financeLogs
+                          .filter(l => l.aksi === "REFERRAL_POINTS" || l.aksi === "REDEEM_POINTS")
+                          .map((log) => {
+                            const date = new Date(log.timestamp).toLocaleString('id-ID');
+                            const matchPts = log.detail.match(/POINTS:([+-]?\d+)/);
+                            const nominalPoin = matchPts ? parseInt(matchPts[1], 10) : 0;
+                            const isPositive = nominalPoin > 0;
+                            
+                            // Ekstrak Keterangan dengan menghapus tag POINTS:... |
+                            const detailDesc = log.detail.replace(/POINTS:[+-]?\d+\s*\|\s*/, '');
+
+                            return (
+                              <tr key={log.id}>
+                                <td>{date}</td>
+                                <td>
+                                  <span style={{ padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", backgroundColor: isPositive ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: isPositive ? "var(--success)" : "var(--danger)" }}>
+                                    {isPositive ? "INCOME (POIN)" : "EXPENSE (POIN)"}
+                                  </span>
+                                </td>
+                                <td><strong>{log.namaGuru}</strong><br /><span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>@{log.username}</span></td>
+                                <td style={{ fontSize: "0.85rem", maxWidth: "300px", whiteSpace: "normal" }}>{detailDesc}</td>
+                                <td style={{ textAlign: "right", fontWeight: "bold", color: isPositive ? "var(--success)" : "var(--danger)" }}>
+                                  {isPositive ? "+" : ""}{nominalPoin} Poin
+                                </td>
+                              </tr>
+                            );
+                        })}
+                        {financeLogs.filter(l => l.aksi === "REFERRAL_POINTS" || l.aksi === "REDEEM_POINTS").length === 0 && (
+                          <tr><td colSpan="5" style={{ textAlign: "center", color: "var(--text-muted)" }}>Belum ada histori poin yang dicatat</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </>
