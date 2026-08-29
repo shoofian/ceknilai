@@ -2031,3 +2031,180 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
 .premium-table.crosshair-highlight:has(tbody td:nth-child(59):hover) td:nth-child(59), .premium-table.crosshair-highlight:has(tbody td:nth-child(59):hover) th:nth-child(59) { background-color: rgba(59, 130, 246, 0.05); }
 .premium-table.crosshair-highlight:has(tbody td:nth-child(60):hover) td:nth-child(60), .premium-table.crosshair-highlight:has(tbody td:nth-child(60):hover) th:nth-child(60) { background-color: rgba(59, 130, 246, 0.05); }
 
+
+
+/* Bottom Navigation (Mobile) */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  z-index: 90;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary);
+}
+
+.bottom-nav-item .icon {
+  font-size: 1.3rem;
+  margin-bottom: 2px;
+  transition: transform 0.2s ease;
+}
+
+.bottom-nav-item.active .icon {
+  transform: translateY(-2px);
+}
+
+.bottom-nav-item .label {
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: flex;
+  }
+  .app-container .main-content {
+    padding-bottom: 70px !important; /* Space for bottom nav */
+  }
+  .hide-on-desktop {
+    display: flex !important;
+  }
+}
+@media (min-width: 769px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
+}
+
+
+
+/* Responsive Table as Cards for Mobile */
+@media (max-width: 768px) {
+  .table-responsive-card {
+    border: none !important;
+    background: transparent !important;
+  }
+  .table-responsive-card table,
+  .table-responsive-card thead,
+  .table-responsive-card tbody,
+  .table-responsive-card tr,
+  .table-responsive-card th,
+  .table-responsive-card td {
+    display: block;
+    width: 100%;
+  }
+  
+  .table-responsive-card thead tr {
+    display: none;
+  }
+
+  .table-responsive-card tbody tr {
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-tertiary);
+    padding: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .table-responsive-card tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center;
+    text-align: right !important;
+    padding: 8px 4px !important;
+    border-bottom: 1px dashed var(--border-color) !important;
+    min-height: 40px;
+  }
+
+  .table-responsive-card tbody td:last-child {
+    border-bottom: none !important;
+  }
+
+  .table-responsive-card tbody td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    text-align: left;
+    color: var(--text-secondary);
+    margin-right: 16px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  
+  .table-responsive-card .hide-on-mobile-table {
+    display: none !important;
+  }
+}
+
+
+
+/* Bottom Sheet Modals for Mobile */
+@media (max-width: 768px) {
+  /* Overlay containers */
+  .modal-overlay,
+  div[style*="position: fixed"][style*="background-color: rgba(0, 0, 0, 0"],
+  div[style*="position: fixed"][style*="background-color: rgba(15, 23, 42"] {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  /* The Modal Content */
+  .modal-overlay > .glass-card,
+  .modal-overlay > div,
+  div[style*="position: fixed"][style*="background-color: rgba"] > .glass-card,
+  div[style*="position: fixed"][style*="background-color: rgba"] > div[style*="max-width"],
+  div[style*="position: fixed"][style*="background-color: rgba"] > div[style*="width: 100%"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 85vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
+    animation: slideUpBottomSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    overflow-y: auto !important;
+    padding-bottom: env(safe-area-inset-bottom, 20px) !important;
+  }
+  
+  /* Exclude things that are not bottom sheets */
+  .bottom-nav {
+    animation: none !important;
+    border-radius: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+}
+
+@keyframes slideUpBottomSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+

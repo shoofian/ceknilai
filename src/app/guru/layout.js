@@ -560,6 +560,22 @@ export default function GuruLayout({ children }) {
         </div>
       </div>
 
+      {/* Bottom Navigation (Mobile Only) */}
+      <nav className="bottom-nav hide-on-desktop no-print">
+        <Link href="/guru" className={`bottom-nav-item ${pathname === '/guru' ? 'active' : ''}`}>
+          <span className="icon">🏠</span>
+          <span className="label">Dasbor</span>
+        </Link>
+        <Link href="/guru/kelas" className={`bottom-nav-item ${pathname.startsWith('/guru/kelas') ? 'active' : ''}`}>
+          <span className="icon">📚</span>
+          <span className="label">Kelas</span>
+        </Link>
+        <button onClick={() => setSidebarOpen(true)} className="bottom-nav-item">
+          <span className="icon">☰</span>
+          <span className="label">Menu</span>
+        </button>
+      </nav>
+
       <style jsx global>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

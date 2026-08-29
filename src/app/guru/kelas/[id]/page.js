@@ -3545,7 +3545,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </p>
                 </div>
                 <div className="table-container" style={{ margin: 0, borderRadius: 0, borderLeft: "none", borderRight: "none" }}>
-                  <table className="premium-table" style={{ width: "100%" }}>
+                  <table className="premium-table table-responsive-card" style={{ width: "100%" }}>
                     <thead>
                       <tr>
                         <th style={{ width: "60px", textAlign: "center" }}>Rank</th>
@@ -3559,14 +3559,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <tbody>
                       {analyticsData.ranked.map((s) => (
                         <tr key={s.nisn} style={{ backgroundColor: s.rank === 1 ? "rgba(234,179,8,0.06)" : s.rank === 2 ? "rgba(148,163,184,0.05)" : s.rank === 3 ? "rgba(180,83,9,0.05)" : "" }}>
-                          <td style={{ textAlign: "center" }}>
+                          <td data-label="Rank" style={{ textAlign: "center" }}>
                             <span style={{ fontWeight: "900", fontSize: "1.1rem", color: s.rank === 1 ? "#eab308" : s.rank === 2 ? "#94a3b8" : s.rank === 3 ? "#b45309" : "var(--text-muted)" }}>
                               {s.rank === 1 ? "🥇" : s.rank === 2 ? "🥈" : s.rank === 3 ? "🥉" : `#${s.rank}`}
                             </span>
                           </td>
-                          <td style={{ fontWeight: "700" }}>{s.nama}</td>
-                          <td style={{ textAlign: "center", fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
-                          <td style={{ textAlign: "center" }}>
+                          <td data-label="Nama Siswa" style={{ fontWeight: "700" }}>{s.nama}</td>
+                          <td data-label="NISN" style={{ textAlign: "center", fontFamily: "monospace", fontSize: "0.85rem" }}>{s.nisn}</td>
+                          <td data-label="Nilai Akhir" style={{ textAlign: "center" }}>
                             {s.complete ? (
                               <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
                                 <span style={{ fontWeight: "800", fontSize: "1.1rem", color: s.finalScore >= analyticsData.kkmVal ? "var(--success)" : "var(--danger)" }}>{s.finalScore}</span>
@@ -3588,12 +3588,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                               <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", fontStyle: "italic" }}>Belum Lengkap</span>
                             )}
                           </td>
-                          <td style={{ textAlign: "center" }}>
+                          <td data-label="Predikat" style={{ textAlign: "center" }}>
                             <span className={`badge ${s.predikat === (kelas.skemaPenilaian?.statusA || "A") || s.predikat === (kelas.skemaPenilaian?.statusB || "B") ? "badge-success" : s.predikat === (kelas.skemaPenilaian?.statusC || "C") ? "badge-warning" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>
                               {s.predikat}
                             </span>
                           </td>
-                          <td style={{ textAlign: "center" }}>
+                          <td data-label="Status" style={{ textAlign: "center" }}>
                             {s.complete ? (
                               <span className={`badge ${s.lulus ? "badge-success" : "badge-danger"}`} style={{ fontSize: "0.7rem" }}>{s.lulus ? "LULUS" : "TIDAK LULUS"}</span>
                             ) : (
@@ -4406,7 +4406,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               {(() => {
                 const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
               return (
-                <table className="premium-table crosshair-highlight" style={{ width: "100%", minWidth: "800px" }}>
+                <table className="premium-table crosshair-highlight table-responsive-card" style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
@@ -4504,7 +4504,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr style={{ backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                        <td style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                        <td data-label="Pilih" style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
                           <input
                             type="checkbox"
                             checked={selectedNisns.includes(student.nisn)}
@@ -4512,13 +4512,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                             style={{ cursor: "pointer", width: "16px", height: "16px" }}
                           />
                         </td>
-                        <td style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                        <td data-label="No" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
                           {idx + 1}
                         </td>
-                        <td className="mobile-hide" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
+                        <td data-label="NISN" className="mobile-hide" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
                           {student.nisn}
                         </td>
                         <td 
+                          data-label="Nama Siswa"
                           className={`sticky-nama ${isNamaColumnExpanded ? 'expanded-active' : ''}`}
                           onClick={toggleNamaExpand}
                           title="Klik untuk melihat nama lengkap"
@@ -4528,7 +4529,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
                           </div>
                         </td>
-                        <td style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        <td data-label="Tgl Lahir" style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
                           {student.tanggalLahir}
                         </td>
 
@@ -4541,7 +4542,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                             const currentStatus = saveStatus[cellKey] || "idle";
 
                             return (
-                              <td key={sub.id} style={{ textAlign: "center", position: "relative" }}>
+                              <td data-label={sub.nama || col.nama} key={sub.id} style={{ textAlign: "center", position: "relative" }}>
                                 <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
                                   {sub.isPresensi ? (
                                     <div 
@@ -4649,7 +4650,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                         {/* Optional Dedicated Cell for Star Bonus (Bonus Keaktifan) */}
                         {kelas.skemaPenilaian?.enableBonusStars && (
-                          <td style={{ textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.03)", padding: "6px 8px" }}>
+                          <td data-label="Keaktifan (+)" style={{ textAlign: "center", backgroundColor: "rgba(245, 158, 11, 0.03)", padding: "6px 8px" }}>
                             <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", justifyContent: "center" }}>
                               {getStudentTotalStars(student) > 0 && (
                                 <button
@@ -4703,6 +4704,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                         {/* Weighted Final Score */}
                         <td 
+                          data-label="Nilai Akhir"
                           onClick={() => {
                             if (kelas.isNilaiAkhirGenerated && !kelas.archived && !isLocked) {
                               setKatrolSiswa(student);
@@ -4764,7 +4766,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </td>
 
                         {/* Row actions */}
-                        <td style={{ textAlign: "center" }}>
+                        <td data-label="Aksi" style={{ textAlign: "center" }}>
                           <div style={{ position: "relative", display: "inline-flex", justifyContent: "center" }}>
                             <button 
                               onClick={(e) => { 
