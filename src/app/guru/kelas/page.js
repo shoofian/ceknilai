@@ -1151,11 +1151,13 @@ export default function KelolaKelas() {
               {/* Action buttons */}
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                  <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "8px", fontSize: "0.85rem", fontWeight: "700" }} title="Kelola Nilai">
-                    📊 <span className="hide-on-mobile">Kelola Nilai</span>
+                  <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "8px", fontSize: "0.8rem", fontWeight: "700", display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }} title="Kelola Nilai">
+                    <span>📊</span>
+                    <span style={{ fontSize: "0.65rem" }}>Nilai</span>
                   </Link>
-                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "8px", fontSize: "0.85rem", backgroundColor: "#10b981", color: "#ffffff", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }} title="Presensi">
-                    ⚡ <span className="hide-on-mobile">Presensi</span>
+                  <Link href={`/guru/kelas/${k.id}?action=quick-attendance`} className="btn" style={{ justifyContent: "center", padding: "8px", fontSize: "0.8rem", backgroundColor: "#10b981", color: "#ffffff", border: "none", fontWeight: "700", display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }} title="Presensi">
+                    <span>⚡</span>
+                    <span style={{ fontSize: "0.65rem" }}>Presensi</span>
                   </Link>
                 </div>
               </div>
