@@ -302,7 +302,7 @@ export default function HadiahReferralPage() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>🎁 Hadiah & Referral</h2>
+          <h2 className="page-title" style={{ margin: 0 }}>🎁 Hadiah & Referral</h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '2px', margin: 0 }}>
             Bagikan kode referral dan tukarkan poin dengan hadiah fisik atau tema kustom.
           </p>

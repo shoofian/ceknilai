@@ -207,7 +207,7 @@ export default function GuruDashboard() {
                     <Link href={`/guru/kelas/${kelas.id}`} className="btn btn-primary recent-card-btn" style={{ padding: "8px 12px", fontSize: "0.75rem", fontWeight: "700", textDecoration: "none" }}>
                       📊 Kelola
                     </Link>
-                    <Link href={`/guru/kelas/${kelas.id}?action=quick-attendance`} className="btn" style={{ padding: "8px 12px", fontSize: "0.75rem", backgroundColor: "#10b981", color: "#ffffff", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
+                    <Link href={`/guru/kelas/${kelas.id}?action=quick-attendance`} className="btn" style={{ padding: "8px 12px", fontSize: "0.75rem", backgroundColor: "var(--success)", color: "white", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
                       ⚡ Presensi
                     </Link>
                   </div>

@@ -256,7 +256,7 @@ export default function StudentPortal() {
           <div className="portal-form-panel">
             <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "30px", border: "1px solid var(--border-color)" }}>
               <div style={{ marginBottom: "24px", textAlign: "center" }}>
-                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Cari Nilas Siswa</h3>
+                <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Cari Nilai Siswa</h3>
                 <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "4px" }}>Isi form di bawah untuk mengakses nilai rapot.</p>
               </div>
 

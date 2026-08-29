@@ -684,7 +684,7 @@ export default function SuperadminPanel() {
 
       {/* Tabs */}
       {viewMode === 'tabs' ? (
-        <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", overflowX: "auto", whiteSpace: "nowrap" }}>
+        <div style={{ display: "flex", gap: "10px", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", overflowX: "auto", whiteSpace: "nowrap", WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 3%, black 97%, transparent 100%)", maskImage: "linear-gradient(90deg, transparent 0%, black 3%, black 97%, transparent 100%)" }}>
           <button
             onClick={() => setActiveTab("logs")}
             className={`btn ${activeTab === "logs" ? "btn-primary" : "btn-secondary"}`}
@@ -1049,7 +1049,7 @@ export default function SuperadminPanel() {
                               {/* Parsed payment info */}
                               <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
                                 <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
-                                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "rgba(234,179,8,0.15)" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "#eab308" : "var(--primary)" }}>
+                                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "var(--warning-glow, rgba(234,179,8,0.15))" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "var(--warning)" : "var(--primary)" }}>
                                     {paket === "TAHUNAN" ? "🎫 Paket Tahunan" : "🎟 Paket Bulanan"}
                                   </span>
                                   {referralCode && (
@@ -1170,7 +1170,7 @@ export default function SuperadminPanel() {
                                 </td>
                                 <td style={{ fontWeight: "700" }}>{log.namaGuru} (@{log.username})</td>
                                 <td>
-                                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "rgba(234,179,8,0.15)" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "#eab308" : "var(--primary)" }}>
+                                  <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "2px 8px", borderRadius: "6px", backgroundColor: paket === "TAHUNAN" ? "var(--warning-glow, rgba(234,179,8,0.15))" : "rgba(99,102,241,0.1)", color: paket === "TAHUNAN" ? "var(--warning)" : "var(--primary)" }}>
                                     {paket === "TAHUNAN" ? "👑 Tahunan" : "📦 Bulanan"}
                                   </span>
                                 </td>

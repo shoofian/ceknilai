@@ -124,7 +124,7 @@ export default function MasaAktifPage() {
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Header */}
       <div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>👑 Masa Aktif Premium</h2>
+        <h2 className="page-title">👑 Masa Aktif Premium</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '2px', margin: 0 }}>
           Kelola paket langganan dan status aktivasi akun Anda.
         </p>

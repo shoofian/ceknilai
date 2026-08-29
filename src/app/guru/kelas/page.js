@@ -1098,7 +1098,7 @@ export default function KelolaKelas() {
 
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "8px" }}>
                   {k.tingkatan && (
-                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(139, 92, 246, 0.1)", color: "#8b5cf6", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
                       🎓 Kelas {k.tingkatan}
                     </span>
                   )}
@@ -1236,7 +1236,7 @@ export default function KelolaKelas() {
                       borderRadius: "var(--radius-md)",
                       padding: "20px",
                       cursor: "pointer",
-                      backgroundColor: hoverMethod === "excel" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      backgroundColor: hoverMethod === "excel" ? "var(--primary-glow)" : "var(--bg-secondary)",
                       transition: "var(--transition)",
                       display: "flex",
                       flexDirection: "column",
@@ -1260,7 +1260,7 @@ export default function KelolaKelas() {
                       borderRadius: "var(--radius-md)",
                       padding: "20px",
                       cursor: "pointer",
-                      backgroundColor: hoverMethod === "manual" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      backgroundColor: hoverMethod === "manual" ? "var(--primary-glow)" : "var(--bg-secondary)",
                       transition: "var(--transition)",
                       display: "flex",
                       flexDirection: "column",
@@ -1284,7 +1284,7 @@ export default function KelolaKelas() {
                       borderRadius: "var(--radius-md)",
                       padding: "20px",
                       cursor: "pointer",
-                      backgroundColor: hoverMethod === "bank" ? "rgba(59,130,246,0.08)" : "var(--bg-secondary)",
+                      backgroundColor: hoverMethod === "bank" ? "var(--primary-glow)" : "var(--bg-secondary)",
                       transition: "var(--transition)",
                       display: "flex",
                       flexDirection: "column",
@@ -1487,7 +1487,7 @@ export default function KelolaKelas() {
                     border: dragActive ? "2px dashed var(--primary)" : "2px dashed var(--border-color)",
                     borderRadius: "var(--radius-sm)",
                     padding: "40px 20px",
-                    backgroundColor: dragActive ? "rgba(59,130,246,0.08)" : "rgba(59,130,246,0.02)",
+                    backgroundColor: dragActive ? "var(--primary-glow)" : "rgba(59,130,246,0.02)",
                     cursor: "pointer",
                     textAlign: "center",
                     transition: "var(--transition)"
