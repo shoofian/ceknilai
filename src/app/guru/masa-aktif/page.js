@@ -340,7 +340,7 @@ export default function MasaAktifPage() {
                     type="button"
                     onClick={() => { navigator.clipboard.writeText(bank.value); setCopiedBank(bank.value); setTimeout(() => setCopiedBank(''), 2000); }}
                     className={`btn ${copiedBank === bank.value ? 'btn-success' : 'btn-secondary'}`}
-                    style={{ padding: '2px 6px', fontSize: '0.65rem' }}
+                    style={{ padding: '6px 10px', fontSize: '0.75rem', minHeight: '32px' }}
                   >
                     {copiedBank === bank.value ? '✓' : 'Salin'}
                   </button>
@@ -477,7 +477,7 @@ export default function MasaAktifPage() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="form-row-mobile-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label" style={{ fontSize: '0.78rem' }}>Bank Asal <span style={{ color: 'var(--danger)' }}>*</span></label>
                   <select

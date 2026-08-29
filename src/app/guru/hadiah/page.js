@@ -451,7 +451,7 @@ export default function HadiahReferralPage() {
           </div>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <div className="theme-chips-scroll" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {/* Default theme button */}
           <button
             onClick={() => applyTheme('default')}

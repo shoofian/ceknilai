@@ -796,7 +796,7 @@ input[type="date"].form-input {
     font-size: 1.5rem;
   }
   
-  .btn {
+  .btn-block-mobile {
     width: 100%;
     justify-content: center;
   }
@@ -1792,7 +1792,7 @@ input[type="date"].form-input {
   }
   .form-input {
     padding: 10px 12px;
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
   input[type="date"].form-input {
     max-width: 100%;
@@ -1961,6 +1961,13 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
   .grid-kelas .btn {
     padding: 8px 6px !important;
     font-size: 0.75rem !important;
+  }
+}
+
+@media (max-width: 440px) {
+  .grid-kelas {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
@@ -2208,3 +2215,29 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
   }
 }
 
+/* Mobile Touch Target Improvements */
+@media (max-width: 768px) {
+  .btn-touch {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .theme-chips-scroll {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .theme-chips-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .form-row-mobile-stack {
+    grid-template-columns: 1fr !important;
+  }
+}

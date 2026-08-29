@@ -14,6 +14,7 @@ export default function GuruLayout({ children }) {
   const [isPopup, setIsPopup] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [kelasViewMode, setKelasViewMode] = useState('tabs');
+  const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -531,36 +532,54 @@ export default function GuruLayout({ children }) {
         {/* Children Render */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           {/* Trial Ends Banner */}
-          <div
-            style={{
-              background: "linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)",
-              border: "1px solid rgba(245, 158, 11, 0.3)",
-              borderRadius: "12px",
-              padding: "16px 20px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "flex-start",
-              gap: "16px",
-              boxShadow: "0 4px 12px rgba(245, 158, 11, 0.05)"
-            }}
-          >
-            <div style={{ fontSize: "24px" }}>⏳</div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ margin: "0 0 6px 0", fontSize: "1rem", color: "#d97706", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
-                Pemberitahuan Masa Uji Coba Gratis
-              </h4>
-              <p style={{ margin: "0 0 10px 0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                Saat ini Anda sedang menggunakan <strong>akses gratis uji coba</strong> yang berlaku hingga <strong>31 Agustus 2026</strong>. 
-                Setelah tanggal tersebut, fitur pembuatan kelas dan pengisian nilai akan dibatasi. 
-                Silakan lakukan aktivasi akun untuk terus menikmati seluruh fitur tanpa batas.
-              </p>
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <Link href="/guru/masa-aktif" className="btn btn-primary" style={{ padding: "6px 12px", fontSize: "0.8rem", backgroundColor: "#d97706", borderColor: "#d97706" }}>
-                  💳 Cara Pembayaran & Aktivasi
-                </Link>
+          {!trialBannerDismissed && (
+            <div
+              className="trial-banner"
+              style={{
+                background: "linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%)",
+                border: "1px solid rgba(245, 158, 11, 0.3)",
+                borderRadius: "12px",
+                padding: "12px 16px",
+                marginBottom: "16px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                boxShadow: "0 4px 12px rgba(245, 158, 11, 0.05)",
+                position: "relative"
+              }}
+            >
+              <div style={{ fontSize: "20px", flexShrink: 0 }}>⏳</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: "700", fontSize: "0.85rem", color: "#d97706", marginBottom: "2px" }}>
+                  Uji Coba Gratis berakhir <strong>31 Agustus 2026</strong>
+                </div>
+                <p className="hide-on-mobile" style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                  Setelah tanggal tersebut, fitur pembuatan kelas dan pengisian nilai akan dibatasi. Silakan lakukan aktivasi akun.
+                </p>
               </div>
+              <Link href="/guru/masa-aktif" className="btn btn-primary" style={{ padding: "6px 12px", fontSize: "0.78rem", backgroundColor: "#d97706", borderColor: "#d97706", whiteSpace: "nowrap", flexShrink: 0 }}>
+                💳 Aktivasi
+              </Link>
+              <button
+                onClick={() => setTrialBannerDismissed(true)}
+                style={{
+                  position: "absolute",
+                  top: "4px",
+                  right: "6px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                  color: "var(--text-muted)",
+                  padding: "4px",
+                  lineHeight: 1
+                }}
+                aria-label="Tutup pemberitahuan"
+              >
+                ✕
+              </button>
             </div>
-          </div>
+          )}
           {guru?.is_locked && (
             <div 
               style={{ 
