@@ -77,6 +77,7 @@ export default function SuperadminPanel() {
   const [logs, setLogs] = useState([]);
   const [gurus, setGurus] = useState([]);
   const [teacherLogs, setTeacherLogs] = useState([]);
+  const [financeLogs, setFinanceLogs] = useState([]);
 
   // Search/Filter States
   const [searchLogQuery, setSearchLogQuery] = useState("");
@@ -164,6 +165,13 @@ export default function SuperadminPanel() {
       if (resTeacherLogs.ok) {
         const dataTeacherLogs = await resTeacherLogs.json();
         setTeacherLogs(dataTeacherLogs);
+      }
+
+      // Fetch Finance Logs
+      const resFinanceLogs = await fetch("/api/superadmin/finance");
+      if (resFinanceLogs.ok) {
+        const dataFinanceLogs = await resFinanceLogs.json();
+        setFinanceLogs(dataFinanceLogs);
       }
     } catch (err) {
       console.error("Gagal mengambil data superadmin", err);
@@ -299,7 +307,7 @@ export default function SuperadminPanel() {
 
   const calculateGuruPoints = (username) => {
     let balance = 0;
-    const logsForGuru = teacherLogs.filter(l => l.username?.toLowerCase() === username.toLowerCase());
+    const logsForGuru = financeLogs.filter(l => l.username?.toLowerCase() === username.toLowerCase());
     for (const log of logsForGuru) {
       if (log.aksi === 'REFERRAL_POINTS' || log.aksi === 'REDEEM_POINTS') {
         const match = log.detail.match(/POINTS:([+-]?\d+)/);
@@ -635,6 +643,13 @@ export default function SuperadminPanel() {
             style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
           >
             💳 Manajemen Pembayaran
+          </button>
+          <button
+            onClick={() => setActiveTab("laporan")}
+            className={`btn ${activeTab === "laporan" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", flexShrink: 0 }}
+          >
+            📈 Laporan Keuangan
           </button>
         </div>
       ) : null}
@@ -1149,11 +1164,103 @@ export default function SuperadminPanel() {
                 </div>
               </div>
 
-            </div>
-          )}
-        </>
-      )}
-      </div>
+            {activeTab === "laporan" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+                  <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--success)" }}>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Total Uang Masuk (Gross)</h4>
+                    <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
+                      Rp {
+                        financeLogs
+                          .filter(l => l.aksi === "PAYMENT_APPROVED")
+                          .reduce((sum, l) => sum + (l.detail.includes("PAKET:TAHUNAN") ? 149000 : (l.detail.includes("PAKET:BULANAN") ? 15000 : 0)), 0)
+                          .toLocaleString('id-ID')
+                      }
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--danger)" }}>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Total Uang Keluar (Redeem Tunai)</h4>
+                    <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
+                      Rp {
+                        financeLogs
+                          .filter(l => l.aksi === "REDEEM_POINTS" && l.detail.includes("PROSES_SELESAI") && l.detail.toLowerCase().includes("tunai"))
+                          .reduce((sum, l) => sum + 1000000, 0)
+                          .toLocaleString('id-ID')
+                      }
+                    </div>
+                  </div>
+
+                  <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--primary)" }}>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Total Poin Guru Beredar</h4>
+                    <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
+                      {
+                        financeLogs
+                          .filter(l => l.aksi === "REFERRAL_POINTS" || l.aksi === "REDEEM_POINTS")
+                          .reduce((sum, l) => {
+                            const m = l.detail.match(/POINTS:([+-]?\d+)/);
+                            return sum + (m ? parseInt(m[1], 10) : 0);
+                          }, 0)
+                          .toLocaleString('id-ID')
+                      } <span style={{ fontSize: "1rem" }}>Poin</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="glass-card" style={{ padding: "24px" }}>
+                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>📜 Histori Transaksi Finansial (Uang Masuk & Keluar)</h4>
+                  <div style={{ overflowX: "auto", maxHeight: "400px" }}>
+                    <table className="premium-table" style={{ width: "100%" }}>
+                      <thead>
+                        <tr>
+                          <th>Waktu</th>
+                          <th>Tipe</th>
+                          <th>Guru</th>
+                          <th>Detail / Keterangan</th>
+                          <th style={{ textAlign: "right" }}>Nominal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {financeLogs
+                          .filter(l => l.aksi === "PAYMENT_APPROVED" || (l.aksi === "REDEEM_POINTS" && l.detail.includes("PROSES_SELESAI") && l.detail.toLowerCase().includes("tunai")))
+                          .map((log) => {
+                            const date = new Date(log.timestamp).toLocaleString('id-ID');
+                            const isIncome = log.aksi === "PAYMENT_APPROVED";
+                            let nominal = 0;
+                            if (isIncome) {
+                              nominal = log.detail.includes("PAKET:TAHUNAN") ? 149000 : (log.detail.includes("PAKET:BULANAN") ? 15000 : 0);
+                            } else {
+                              nominal = -1000000;
+                            }
+
+                            return (
+                              <tr key={log.id}>
+                                <td>{date}</td>
+                                <td>
+                                  <span style={{ padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", backgroundColor: isIncome ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: isIncome ? "var(--success)" : "var(--danger)" }}>
+                                    {isIncome ? "INCOME" : "EXPENSE"}
+                                  </span>
+                                </td>
+                                <td><strong>{log.namaGuru}</strong><br /><span style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>@{log.username}</span></td>
+                                <td style={{ fontSize: "0.85rem", maxWidth: "300px", whiteSpace: "normal" }}>{log.detail}</td>
+                                <td style={{ textAlign: "right", fontWeight: "bold", color: isIncome ? "var(--success)" : "var(--danger)" }}>
+                                  {isIncome ? "+" : ""}Rp {Math.abs(nominal).toLocaleString('id-ID')}
+                                </td>
+                              </tr>
+                            );
+                        })}
+                        {financeLogs.filter(l => l.aksi === "PAYMENT_APPROVED" || (l.aksi === "REDEEM_POINTS" && l.detail.includes("PROSES_SELESAI") && l.detail.toLowerCase().includes("tunai"))).length === 0 && (
+                          <tr><td colSpan="5" style={{ textAlign: "center", color: "var(--text-muted)" }}>Tidak ada data finansial</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+        </div>
 
       {/* CRUD Guru Modal */}
       {modalOpen && (
