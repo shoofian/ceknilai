@@ -21,7 +21,7 @@ export async function GET() {
     const { data: logs, error } = await supabase
       .from('log_aktivitas_guru')
       .select('id, guru_username, aksi, detail, created_at, guru(nama)')
-      .in('aksi', ['PAYMENT_APPROVED', 'REFERRAL_POINTS', 'REDEEM_POINTS'])
+      .in('aksi', ['PAYMENT_APPROVED', 'REFERRAL_POINTS', 'REDEEM_POINTS', 'BIAYA_OPERASIONAL'])
       .order('created_at', { ascending: false });
 
     if (error) {

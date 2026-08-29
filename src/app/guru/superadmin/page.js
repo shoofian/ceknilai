@@ -114,6 +114,14 @@ export default function SuperadminPanel() {
   const [pointsReason, setPointsReason] = useState("");
   const [savingPoints, setSavingPoints] = useState(false);
 
+  // Operational Cost States
+  const [opexModalOpen, setOpexModalOpen] = useState(false);
+  const [opexCategory, setOpexCategory] = useState("Server & Hosting");
+  const [opexAmount, setOpexAmount] = useState("");
+  const [opexDate, setOpexDate] = useState("");
+  const [opexDesc, setOpexDesc] = useState("");
+  const [savingOpex, setSavingOpex] = useState(false);
+
   const router = useRouter();
   const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
 
@@ -419,6 +427,45 @@ export default function SuperadminPanel() {
         console.error(err);
         alert("Terjadi kesalahan.");
       }
+    }
+  };
+
+  const handleOpexSubmit = async (e) => {
+    e.preventDefault();
+    if (!opexAmount || !opexDesc.trim() || !opexDate) {
+      alert("Harap isi semua field.");
+      return;
+    }
+
+    setSavingOpex(true);
+    try {
+      const res = await fetch("/api/superadmin/finance/operasional", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: opexCategory,
+          amount: opexAmount,
+          date: opexDate,
+          description: opexDesc.trim()
+        })
+      });
+
+      if (res.ok) {
+        setOpexModalOpen(false);
+        setOpexAmount("");
+        setOpexDesc("");
+        setOpexDate("");
+        alert("Biaya operasional berhasil dicatat.");
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Gagal menyimpan biaya operasional.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan.");
+    } finally {
+      setSavingOpex(false);
     }
   };
 
@@ -1171,7 +1218,7 @@ export default function SuperadminPanel() {
               <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
                   <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--success)" }}>
-                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Total Uang Masuk (Gross)</h4>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Pendapatan Kotor (Gross)</h4>
                     <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
                       Rp {
                         financeLogs
@@ -1183,7 +1230,7 @@ export default function SuperadminPanel() {
                   </div>
                   
                   <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--danger)" }}>
-                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Total Uang Keluar (Redeem Tunai)</h4>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Biaya Mitra (Redeem Guru)</h4>
                     <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
                       Rp {
                         financeLogs
@@ -1194,25 +1241,49 @@ export default function SuperadminPanel() {
                     </div>
                   </div>
 
-                  <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--primary)" }}>
-                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Total Poin Guru Beredar</h4>
+                  <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--warning)" }}>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Biaya Operasional</h4>
                     <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
-                      {
+                      Rp {
                         financeLogs
-                          .filter(l => l.aksi === "REFERRAL_POINTS" || l.aksi === "REDEEM_POINTS")
+                          .filter(l => l.aksi === "BIAYA_OPERASIONAL")
                           .reduce((sum, l) => {
-                            const m = l.detail.match(/POINTS:([+-]?\d+)/);
-                            return sum + (m ? parseInt(m[1], 10) : 0);
+                            const match = l.detail.match(/NOMINAL:(\d+)/);
+                            return sum + (match ? parseInt(match[1], 10) : 0);
                           }, 0)
                           .toLocaleString('id-ID')
-                      } <span style={{ fontSize: "1rem" }}>Poin</span>
+                      }
+                    </div>
+                  </div>
+
+                  <div className="glass-card" style={{ padding: "24px", textAlign: "center", borderTop: "4px solid var(--primary)" }}>
+                    <h4 style={{ margin: "0 0 8px 0", color: "var(--text-secondary)", fontSize: "0.9rem" }}>Laba Bersih (Net Profit)</h4>
+                    <div style={{ fontSize: "2rem", fontWeight: "900", color: "var(--text-primary)" }}>
+                      Rp {
+                        (() => {
+                          const gross = financeLogs
+                            .filter(l => l.aksi === "PAYMENT_APPROVED")
+                            .reduce((sum, l) => sum + (l.detail.includes("PAKET:TAHUNAN") ? 149000 : (l.detail.includes("PAKET:BULANAN") ? 15000 : 0)), 0);
+                          const mitra = financeLogs
+                            .filter(l => l.aksi === "REDEEM_POINTS" && l.detail.includes("PROSES_SELESAI") && l.detail.toLowerCase().includes("tunai"))
+                            .reduce((sum, l) => sum + 1000000, 0);
+                          const opex = financeLogs
+                            .filter(l => l.aksi === "BIAYA_OPERASIONAL")
+                            .reduce((sum, l) => {
+                              const match = l.detail.match(/NOMINAL:(\d+)/);
+                              return sum + (match ? parseInt(match[1], 10) : 0);
+                            }, 0);
+                          return (gross - mitra - opex).toLocaleString('id-ID');
+                        })()
+                      }
                     </div>
                   </div>
                 </div>
 
+                {/* Section: Transaksi Sistem (Uang Masuk / Keluar Guru) */}
                 <div className="glass-card" style={{ padding: "24px" }}>
-                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>📜 Histori Transaksi Finansial (Uang Masuk & Keluar)</h4>
-                  <div style={{ overflowX: "auto", maxHeight: "400px" }}>
+                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>📜 Histori Transaksi Sistem (Uang Masuk & Keluar)</h4>
+                  <div style={{ overflowX: "auto", maxHeight: "300px" }}>
                     <table className="premium-table" style={{ width: "100%" }}>
                       <thead>
                         <tr>
@@ -1254,6 +1325,64 @@ export default function SuperadminPanel() {
                         })}
                         {financeLogs.filter(l => l.aksi === "PAYMENT_APPROVED" || (l.aksi === "REDEEM_POINTS" && l.detail.includes("PROSES_SELESAI") && l.detail.toLowerCase().includes("tunai"))).length === 0 && (
                           <tr><td colSpan="5" style={{ textAlign: "center", color: "var(--text-muted)" }}>Tidak ada data finansial</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Section: Biaya Operasional (Manual) */}
+                <div className="glass-card" style={{ padding: "24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+                    <h4 style={{ margin: 0, fontWeight: "800" }}>🏢 Biaya Operasional Manual</h4>
+                    <button onClick={() => setOpexModalOpen(true)} className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem" }}>
+                      ➕ Tambah Pengeluaran
+                    </button>
+                  </div>
+                  <div style={{ overflowX: "auto", maxHeight: "300px" }}>
+                    <table className="premium-table" style={{ width: "100%" }}>
+                      <thead>
+                        <tr>
+                          <th>Waktu Input</th>
+                          <th>Tanggal Opex</th>
+                          <th>Kategori</th>
+                          <th>Keterangan</th>
+                          <th style={{ textAlign: "right" }}>Nominal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {financeLogs
+                          .filter(l => l.aksi === "BIAYA_OPERASIONAL")
+                          .map((log) => {
+                            const dateInput = new Date(log.timestamp).toLocaleString('id-ID');
+                            const matchCategory = log.detail.match(/KATEGORI:(.*?)\s*\|/);
+                            const matchDate = log.detail.match(/TANGGAL:(.*?)\s*\|/);
+                            const matchAmount = log.detail.match(/NOMINAL:(\d+)/);
+                            const matchDesc = log.detail.match(/KETERANGAN:(.*)/);
+
+                            const category = matchCategory ? matchCategory[1].trim() : "-";
+                            const dateOpex = matchDate ? matchDate[1].trim() : "-";
+                            const amount = matchAmount ? parseInt(matchAmount[1], 10) : 0;
+                            const desc = matchDesc ? matchDesc[1].trim() : "-";
+
+                            return (
+                              <tr key={log.id}>
+                                <td>{dateInput}</td>
+                                <td style={{ fontWeight: "600" }}>{dateOpex}</td>
+                                <td>
+                                  <span style={{ padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem", fontWeight: "bold", backgroundColor: "var(--bg-tertiary)", color: "var(--text-primary)" }}>
+                                    {category}
+                                  </span>
+                                </td>
+                                <td style={{ fontSize: "0.85rem", maxWidth: "300px", whiteSpace: "normal" }}>{desc}</td>
+                                <td style={{ textAlign: "right", fontWeight: "bold", color: "var(--danger)" }}>
+                                  -Rp {amount.toLocaleString('id-ID')}
+                                </td>
+                              </tr>
+                            );
+                        })}
+                        {financeLogs.filter(l => l.aksi === "BIAYA_OPERASIONAL").length === 0 && (
+                          <tr><td colSpan="5" style={{ textAlign: "center", color: "var(--text-muted)" }}>Belum ada pengeluaran operasional manual yang dicatat</td></tr>
                         )}
                       </tbody>
                     </table>
@@ -1513,6 +1642,87 @@ export default function SuperadminPanel() {
                   ) : (
                     "Buat Akun"
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Opex Modal */}
+      {opexModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card modal-content-scroll" style={{ width: "100%", maxWidth: "400px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "800", marginBottom: "16px" }}>
+              🏢 Tambah Pengeluaran (Opex)
+            </h3>
+            
+            <form onSubmit={handleOpexSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Kategori Biaya</label>
+                <select className="form-input" value={opexCategory} onChange={(e) => setOpexCategory(e.target.value)} required>
+                  <option value="Server & Hosting">Server & Hosting</option>
+                  <option value="Iklan & Marketing">Iklan & Marketing</option>
+                  <option value="Langganan AI">Langganan AI</option>
+                  <option value="Operasional Lainnya">Operasional Lainnya</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Tanggal Pengeluaran</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={opexDate}
+                  onChange={(e) => setOpexDate(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Nominal (Rp)</label>
+                <input
+                  type="number"
+                  placeholder="Contoh: 150000"
+                  className="form-input"
+                  value={opexAmount}
+                  onChange={(e) => setOpexAmount(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Keterangan Tambahan</label>
+                <textarea
+                  placeholder="Contoh: Biaya server Vultr Agustus 2026"
+                  className="form-input"
+                  value={opexDesc}
+                  onChange={(e) => setOpexDesc(e.target.value)}
+                  rows={2}
+                  required
+                  style={{ resize: "none" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button type="button" onClick={() => setOpexModalOpen(false)} className="btn btn-secondary" disabled={savingOpex}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={savingOpex}>
+                  {savingOpex ? "Menyimpan..." : "Simpan Pengeluaran"}
                 </button>
               </div>
             </form>
