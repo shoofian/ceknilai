@@ -14,7 +14,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Semua kolom wajib diisi' }, { status: 400 });
     }
 
-    const detailString = KATEGORI: | TANGGAL: | NOMINAL: | KETERANGAN:;
+    const detailString = 'KATEGORI:' + category + ' | TANGGAL:' + date + ' | NOMINAL:' + amount + ' | KETERANGAN:' + description;
     
     // Using superadmin username to log the operational cost
     const result = await logAktivitasGuru(superadmin, 'BIAYA_OPERASIONAL', detailString);
