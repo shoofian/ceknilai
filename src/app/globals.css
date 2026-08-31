@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   /* Font Family */
@@ -1970,8 +1970,25 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
 
 @media (max-width: 440px) {
   .grid-kelas {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .grid-kelas .glass-card {
+    padding: 10px;
+  }
+  .grid-kelas h3 {
+    font-size: 0.8rem !important;
+  }
+  .grid-kelas .badge {
+    font-size: 0.55rem !important;
+    padding: 2px 4px !important;
+  }
+  .grid-kelas .card-click-indicator {
+    display: none; /* Sembunyikan teks 'Klik untuk masuk' agar tidak terlalu penuh */
+  }
+  .grid-kelas .btn {
+    padding: 6px 4px !important;
+    font-size: 0.65rem !important;
   }
 }
 
