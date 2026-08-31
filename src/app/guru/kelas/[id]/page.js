@@ -7034,6 +7034,34 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button onClick={handleCloseKolomModal} style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1, padding: "4px" }}>✕</button>
             </div>
 
+            {kelas?.skemaPenilaian?.presensi?.digunakan && (
+              <div style={{ padding: "12px", backgroundColor: "rgba(239, 68, 68, 0.1)", borderBottom: "1px solid #ef4444", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <div>
+                  <strong style={{ color: "#ef4444", fontSize: "0.9rem", display: "block" }}>⚠️ Komponen Presensi Versi Lama Terdeteksi ({kelas.skemaPenilaian.presensi.bobot}%)</strong>
+                  <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Sistem presensi lama ini membuat total bobot berlebih dan fiturnya telah diganti. Hapus untuk mereset bobot.</span>
+                </div>
+                <button 
+                  onClick={async () => {
+                    if(!confirm("Hapus komponen presensi lama? (Sangat disarankan)")) return;
+                    const updatedSkema = { ...kelas.skemaPenilaian, presensi: { digunakan: false, bobot: 0 } };
+                    setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                    try {
+                      await fetch(`/api/kelas/${classId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ skemaPenilaian: updatedSkema })
+                      });
+                    } catch(e) {
+                      console.error("Gagal menghapus komponen presensi lama", e);
+                    }
+                  }}
+                  className="btn" style={{ padding: "6px 12px", fontSize: "0.75rem", backgroundColor: "#ef4444", color: "white", border: "none" }}
+                >
+                  Hapus Komponen Lama
+                </button>
+              </div>
+            )}
+
             <div className="aspect-modal-container">
               {/* --- PANEL KIRI: DAFTAR ASPEK --- */}
               <div className={`aspect-sidebar-panel ${mobileActiveView === "list" ? "show-mobile" : "hide-mobile"}`}>
