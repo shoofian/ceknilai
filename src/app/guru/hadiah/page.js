@@ -535,7 +535,7 @@ export default function HadiahReferralPage() {
             🎨 Tema Tampilan
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+          <div className="theme-grid">
             {themeRewards.map((theme) => {
               const unlocked = isThemeUnlocked(theme.id);
               const isActive = (activeTheme === theme.id && !trialTheme);
