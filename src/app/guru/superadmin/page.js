@@ -783,27 +783,28 @@ export default function SuperadminPanel() {
 
       {/* Dashboard Cards Content */}
       {activeTab === 'dashboard' && viewMode === 'dashboard' && (
-        <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px", marginTop: "12px" }}>
+        <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px", marginTop: "12px" }}>
           {[
-            { id: "logs", icon: "📋", title: "Log Aktivitas Siswa", desc: "Pantau riwayat aksi dan aktivitas belajar siswa." },
-            { id: "logs_guru", icon: "👨‍🏫", title: "Log Aktivitas Guru", desc: "Pantau pengisian nilai dan aktivitas guru pengampu." },
-            { id: "guru", icon: "🔑", title: "Manajemen Akun Guru", desc: "Kelola daftar guru, akses, dan pendaftaran." },
-            { id: "pembayaran", icon: "💳", title: "Manajemen Pembayaran", desc: "Kelola langganan, referral, dan status aktif akun." }
+            { id: "logs", icon: "📋", title: "Log Siswa", desc: "Aksi belajar siswa" },
+            { id: "logs_guru", icon: "👨‍🏫", title: "Log Guru", desc: "Aktivitas pengampu" },
+            { id: "guru", icon: "🔑", title: "Akun Guru", desc: "Manajemen akun" },
+            { id: "pembayaran", icon: "💳", title: "Pembayaran", desc: "Kelola langganan" },
+            { id: "laporan", icon: "📈", title: "Laporan", desc: "Laporan keuangan" }
           ].map(menu => (
             <div 
               key={menu.id}
               onClick={() => setActiveTab(menu.id)}
               className="glass-card"
-              style={{ padding: "24px", cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", gap: "16px", border: "1px solid var(--border-color)" }}
-              onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.transform = "none"; }}
+              style={{ padding: "16px 12px", cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "10px", border: "1px solid var(--border-color)" }}
+              onMouseOver={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 8px 16px rgba(0,0,0,0.1)"; }}
+              onMouseOut={(e) => { e.currentTarget.style.borderColor = "var(--border-color)"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
             >
-              <div style={{ fontSize: "2.5rem", backgroundColor: "var(--bg-secondary)", width: "64px", height: "64px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: "1.8rem", backgroundColor: "var(--bg-secondary)", width: "48px", height: "48px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {menu.icon}
               </div>
               <div>
-                <h4 style={{ margin: "0 0 6px", fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)", lineHeight: "1.2" }}>{menu.title}</h4>
-                <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-muted)", lineHeight: "1.4" }}>{menu.desc}</p>
+                <h4 style={{ margin: "0 0 4px", fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)", lineHeight: "1.2" }}>{menu.title}</h4>
+                <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--text-muted)", lineHeight: "1.3" }}>{menu.desc}</p>
               </div>
             </div>
           ))}
