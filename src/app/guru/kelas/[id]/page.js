@@ -2489,7 +2489,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // === HELPER UNTUK MENCEGAH AKSI SAAT TERKUNCI ===
   const handleLockedAction = () => {
     if (kelas?.archived) {
-      triggerConfirm("Kelas ini sudah diarsipkan. Anda tidak dapat mengubah datanya.", null, { title: "Akses Ditolak", cancelText: "Tutup", isAlert: true });
+      triggerConfirm("Kelas ini sudah diarsipkan. Anda tidak dapat mengubah datanya.", null, { title: "Akses Ditolak", confirmText: "Tutup", isAlert: true });
       return true;
     }
     if (isLocked) {
@@ -2498,7 +2498,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         title: "⚠️ Akses Terkunci",
         message: guruProfile?.lock_message || "Masa aktif premium/trial Anda telah habis. Silakan perpanjang lisensi Anda untuk mengedit data ini.",
         isAlert: true,
-        cancelText: "Tutup",
+        confirmText: "Tutup",
         onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
       });
       return true;
@@ -8334,7 +8334,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       {/* ===== GLOBAL CUSTOM CONFIRMATION MODAL ===== */}
       {confirmConfig.isOpen && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
           <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
               <span style={{ fontSize: "2rem", lineHeight: "1" }}>
