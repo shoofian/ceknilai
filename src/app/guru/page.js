@@ -193,21 +193,28 @@ export default function GuruDashboard() {
                     backgroundColor: "var(--bg-tertiary)",
                     border: "1px solid var(--border-color)",
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
+                    flexDirection: "column"
                   }}
                 >
-                  <div>
-                    <h5 style={{ fontSize: "0.95rem", fontWeight: "700" }}>{kelas.nama}</h5>
-                    <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginTop: "4px" }}>
-                      Mata Pelajaran: {kelas.mataPelajaran || 'Informatika'} &bull; TA: {kelas.tahunAjaran} ({kelas.semester || "Ganjil"}) &bull; {kelas.siswa.length} Siswa
+                  <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                      <h5 style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
+                        {kelas.nama}
+                      </h5>
+                      <span style={{ fontSize: "0.7rem", fontWeight: "700", backgroundColor: "var(--primary-glow)", color: "var(--primary)", padding: "2px 8px", borderRadius: "10px", flexShrink: 0 }}>
+                        {kelas.siswa.length} Siswa
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "6px", margin: "6px 0 0 0", lineHeight: 1.4 }}>
+                      <strong style={{ color: "var(--text-secondary)" }}>{kelas.mataPelajaran || 'Informatika'}</strong> &bull; TA: {kelas.tahunAjaran} ({kelas.semester || "Ganjil"})
                     </p>
                   </div>
-                  <div style={{ display: "flex", gap: "6px" }} onClick={(e) => e.stopPropagation()}>
-                    <Link href={`/guru/kelas/${kelas.id}`} className="btn btn-primary recent-card-btn" style={{ padding: "8px 12px", fontSize: "0.75rem", fontWeight: "700", textDecoration: "none" }}>
+                  
+                  <div style={{ display: "flex", gap: "8px", marginTop: "12px", width: "100%" }} onClick={(e) => e.stopPropagation()}>
+                    <Link href={`/guru/kelas/${kelas.id}`} className="btn btn-primary recent-card-btn" style={{ flex: 1, justifyContent: "center", padding: "8px 12px", fontSize: "0.8rem", fontWeight: "700", textDecoration: "none" }}>
                       📊 Kelola
                     </Link>
-                    <Link href={`/guru/kelas/${kelas.id}?action=quick-attendance`} className="btn" style={{ padding: "8px 12px", fontSize: "0.75rem", backgroundColor: "var(--success)", color: "white", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "2px", textDecoration: "none" }}>
+                    <Link href={`/guru/kelas/${kelas.id}?action=quick-attendance`} className="btn" style={{ flex: 1, justifyContent: "center", padding: "8px 12px", fontSize: "0.8rem", backgroundColor: "var(--success)", color: "white", border: "none", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
                       ⚡ Presensi
                     </Link>
                   </div>

@@ -1086,7 +1086,7 @@ export default function KelolaKelas() {
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
-                  <h3 style={{ fontSize: "1.4rem", fontWeight: "900", lineHeight: "1.2", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
+                  <h3 style={{ fontSize: "clamp(1.1rem, 4vw, 1.4rem)", fontWeight: "900", lineHeight: "1.2", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
                     {k.nama}
                   </h3>
                   
@@ -1112,23 +1112,23 @@ export default function KelolaKelas() {
 
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "8px" }}>
                   {k.tingkatan && (
-                    <span className="badge hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
-                      🎓 Kelas {k.tingkatan}
+                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                      🎓 KLS {k.tingkatan}
                     </span>
                   )}
-                  <span className="badge badge-primary hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
+                  <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
                     📚 {k.tahunAjaran}
                   </span>
-                  <span className="badge hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
-                    ⏱️ Semester {k.semester || "Ganjil"}
+                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                    ⏱️ {k.semester || "Ganjil"}
                   </span>
                   <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "4px", fontWeight: "700" }}>
                     💻 {k.mataPelajaran}
                   </span>
                 </div>
                 
-                <div className="hide-on-mobile" style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode Kelas:</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode:</span>
                   <code style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)", fontWeight: "700" }}>{k.id}</code>
                   <button 
                     onClick={() => {
