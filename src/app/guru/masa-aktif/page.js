@@ -94,28 +94,98 @@ export default function MasaAktifPage() {
         successText += ` Catatan kode referral: ${json.referralError}`;
       }
 
-      // Auto download receipt
-      const receiptContent = `BUKTI KONFIRMASI PEMBAYARAN CEKNILAI.ID
----------------------------------------
-Nama Pengirim : ${namaGuru.trim()}
-Bank Pengirim : ${namaBank.trim()}
-Nomor Rekening: ${nomorRekening.trim()}
-Paket Dipilih : ${paket.toUpperCase()} (${harga})
-Tanggal Transfer: ${tanggalTransfer}
-${referralInput.trim() ? `Kode Referral : ${referralInput.trim()}\n` : ''}---------------------------------------
-Status: Menunggu Verifikasi Admin
-(Akses masa tenggang 24 jam telah diberikan)
-Mohon simpan struk ini sebagai bukti konfirmasi Anda.
-`;
-      const blob = new Blob([receiptContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
+      // Auto download receipt as IMAGE (Canvas)
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = referralInput.trim() ? 480 : 450;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Border
+      ctx.strokeStyle = '#cccccc';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+
+      // Helper to draw dashed line
+      const drawDashedLine = (yPos) => {
+        ctx.beginPath();
+        ctx.setLineDash([6, 4]);
+        ctx.moveTo(20, yPos);
+        ctx.lineTo(380, yPos);
+        ctx.strokeStyle = '#999999';
+        ctx.stroke();
+        ctx.setLineDash([]);
+      };
+
+      // Header
+      ctx.fillStyle = '#1e293b';
+      ctx.textAlign = 'center';
+      ctx.font = '900 24px "Courier New", Courier, monospace';
+      ctx.fillText('CEKNILAI.ID', 200, 45);
+      
+      ctx.font = 'bold 15px "Courier New", Courier, monospace';
+      ctx.fillText('BUKTI KONFIRMASI PEMBAYARAN', 200, 75);
+      
+      let y = 100;
+      drawDashedLine(y);
+      y += 30;
+
+      // Body (Left aligned)
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#334155';
+      const drawRow = (label, value) => {
+        ctx.font = 'bold 14px "Courier New", Courier, monospace';
+        ctx.fillText(label, 20, y);
+        ctx.font = '14px "Courier New", Courier, monospace';
+        
+        let displayValue = value;
+        if (displayValue.length > 22) {
+          displayValue = displayValue.substring(0, 20) + '...';
+        }
+        ctx.fillText(displayValue, 150, y);
+        y += 30;
+      };
+
+      drawRow('TANGGAL', tanggalTransfer.replace('T', ' '));
+      drawRow('NAMA', namaGuru.trim());
+      drawRow('BANK ASAL', namaBank.trim());
+      drawRow('NO. REKENING', nomorRekening.trim());
+      drawRow('PAKET', paket.toUpperCase());
+      drawRow('NOMINAL', harga);
+      if (referralInput.trim()) {
+        drawRow('REFERRAL', referralInput.trim());
+      }
+
+      drawDashedLine(y);
+      y += 30;
+
+      // Footer
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 14px "Courier New", Courier, monospace';
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText('Status: Menunggu Verifikasi', 200, y);
+      y += 22;
+      ctx.font = 'bold 12px "Courier New", Courier, monospace';
+      ctx.fillStyle = '#b45309'; // Dark warning color
+      ctx.fillText('(Akses 24 jam telah diberikan)', 200, y);
+      y += 30;
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px "Courier New", Courier, monospace';
+      ctx.fillText('Mohon simpan struk ini sebagai', 200, y);
+      y += 18;
+      ctx.fillText('bukti konfirmasi Anda.', 200, y);
+
+      // Export and Download
+      const imgUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
-      a.href = url;
-      a.download = `Struk_Pembayaran_CekNilai_${namaGuru.trim().replace(/\s+/g, '_')}.txt`;
+      a.href = imgUrl;
+      a.download = `Struk_CekNilai_${namaGuru.trim().replace(/\s+/g, '_')}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
 
       setSuccessMsg(successText);
       setNamaGuru('');
