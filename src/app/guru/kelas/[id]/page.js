@@ -2497,9 +2497,13 @@ export default function DetailKelas({ params: paramsPromise }) {
         isOpen: true,
         title: "⚠️ Akses Terkunci",
         message: guruProfile?.lock_message || "Masa aktif premium/trial Anda telah habis. Silakan perpanjang lisensi Anda untuk mengedit data ini.",
-        isAlert: true,
-        confirmText: "Tutup",
-        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+        isAlert: false,
+        cancelText: "Tutup",
+        confirmText: "🚀 Perpanjang Sekarang",
+        onConfirm: () => {
+          setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+          router.push('/guru/masa-aktif');
+        }
       });
       return true;
     }

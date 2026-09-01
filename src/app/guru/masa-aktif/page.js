@@ -13,7 +13,7 @@ export default function MasaAktifPage() {
   const [successMsg, setSuccessMsg] = useState('');
   
   // Form states
-  const [paket, setPaket] = useState('bulanan');
+  const [paket, setPaket] = useState('tahunan');
   const [namaGuru, setNamaGuru] = useState('');
   const [namaBank, setNamaBank] = useState('');
   const [nomorRekening, setNomorRekening] = useState('');
@@ -93,6 +93,28 @@ export default function MasaAktifPage() {
       } else if (referralInput.trim() !== '' && json.referralError) {
         successText += ` Catatan kode referral: ${json.referralError}`;
       }
+
+      // Auto download receipt
+      const receiptContent = `BUKTI KONFIRMASI PEMBAYARAN CEKNILAI.ID
+---------------------------------------
+Nama Pengirim : ${namaGuru.trim()}
+Bank Pengirim : ${namaBank.trim()}
+Nomor Rekening: ${nomorRekening.trim()}
+Paket Dipilih : ${paket.toUpperCase()} (${harga})
+Tanggal Transfer: ${tanggalTransfer}
+${referralInput.trim() ? `Kode Referral : ${referralInput.trim()}\n` : ''}---------------------------------------
+Status: Menunggu Verifikasi Admin
+Mohon simpan struk ini sebagai bukti konfirmasi Anda.
+`;
+      const blob = new Blob([receiptContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Struk_Pembayaran_CekNilai_${namaGuru.trim().replace(/\s+/g, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
       setSuccessMsg(successText);
       setNamaGuru('');
@@ -335,6 +357,7 @@ export default function MasaAktifPage() {
                   <div>
                     <span style={{ fontWeight: '700', fontSize: '0.75rem' }}>{bank.label}: </span>
                     <span style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: '800' }}>{bank.value}</span>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '2px' }}>a.n. Wahyu Shofian</div>
                   </div>
                   <button
                     type="button"
