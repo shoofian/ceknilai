@@ -1061,16 +1061,30 @@ export default function KelolaKelas() {
           {kelas.filter(k => filterTingkatan === "Semua" || String(k.tingkatan) === filterTingkatan).map((k) => (
             <div 
               key={k.id} 
-              className="glass-card animate-fade-in clickable-class-card" 
+              className="glass-card animate-fade-in clickable-class-card school-card" 
               onClick={(e) => {
                 if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select') || e.target.closest('input')) {
                   return;
                 }
                 router.push(`/guru/kelas/${k.id}`);
               }}
-              style={{ display: "flex", flexDirection: "column", gap: "20px", borderBottom: "4px solid var(--primary)" }}
+              style={{ 
+                display: "flex", 
+                flexDirection: "column", 
+                gap: "20px", 
+                borderBottom: "4px solid var(--primary)",
+                position: "relative",
+                overflow: "hidden",
+                backgroundImage: "radial-gradient(var(--border-color) 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+                backgroundPosition: "-10px -10px"
+              }}
             >
-              <div>
+              {/* School Watermark */}
+              <div style={{ position: "absolute", bottom: "-10px", right: "10px", fontSize: "80px", opacity: 0.04, pointerEvents: "none", zIndex: 0 }}>
+                🏫
+              </div>
+              <div style={{ position: "relative", zIndex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
                   <h3 style={{ fontSize: "1.4rem", fontWeight: "900", lineHeight: "1.2", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
                     {k.nama}
@@ -1098,7 +1112,7 @@ export default function KelolaKelas() {
 
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "8px" }}>
                   {k.tingkatan && (
-                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                    <span className="badge hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
                       🎓 Kelas {k.tingkatan}
                     </span>
                   )}
@@ -1108,7 +1122,7 @@ export default function KelolaKelas() {
                   <span className="badge hide-on-mobile" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
                     ⏱️ Semester {k.semester || "Ganjil"}
                   </span>
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(59,130,246,0.15)" }}>
+                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "4px", fontWeight: "700" }}>
                     💻 {k.mataPelajaran}
                   </span>
                 </div>
@@ -1128,26 +1142,20 @@ export default function KelolaKelas() {
                   </button>
                 </div>
                 
-                <div style={{ display: "flex", gap: "16px", marginTop: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "12px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontSize: "1.1rem" }}>👨‍🎓</span>
-                    <div>
-                      <div style={{ fontSize: "0.9rem", fontWeight: "700" }}>{k.siswa.length}</div>
-                      <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Siswa</div>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span style={{ fontSize: "1.1rem" }}>🏷️</span>
-                    <div>
-                      <div style={{ fontSize: "0.9rem", fontWeight: "700" }}>{k.kolomNilai.length}</div>
-                      <div style={{ fontSize: "0.65rem", color: "var(--text-secondary)", textTransform: "uppercase" }}>Komponen</div>
-                    </div>
-                  </div>
+                {/* Compact Stats for Mobile & Desktop */}
+                <div style={{ display: "flex", gap: "12px", marginTop: "12px", borderTop: "1px dashed var(--border-color)", paddingTop: "12px", color: "var(--text-secondary)", fontSize: "0.8rem", fontWeight: "600" }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    👨‍🎓 {k.siswa.length} Siswa
+                  </span>
+                  <span style={{ color: "var(--border-color)" }}>|</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    🏷️ {k.kolomNilai.length} Komponen
+                  </span>
                 </div>
               </div>
 
               {/* Action buttons */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "auto", position: "relative", zIndex: 1 }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                   <Link href={`/guru/kelas/${k.id}`} className="btn btn-primary" style={{ justifyContent: "center", padding: "8px", fontSize: "0.8rem", fontWeight: "700", display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }} title="Kelola Nilai">
                     <span>📊</span>
