@@ -558,7 +558,7 @@ export default function HadiahReferralPage() {
                   }}
                 >
                   {/* Mini UI Teaser Banner */}
-                  <div style={{
+                  <div className="theme-card-teaser" style={{
                     height: '60px',
                     background: theme.bgGradient,
                     padding: '10px 12px',
@@ -569,12 +569,12 @@ export default function HadiahReferralPage() {
                     borderBottom: `1px solid ${theme.color}25`
                   }}>
                     {/* Header Teaser */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="theme-card-teaser-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="theme-card-teaser-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: theme.color, boxShadow: `0 0 6px ${theme.color}` }} />
                         <span style={{ fontSize: '0.65rem', fontWeight: '800', color: theme.textColor || 'var(--text-primary)', opacity: 0.95 }}>{theme.accentLabel}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div className="theme-card-teaser-price" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <span style={{ fontSize: '0.6rem', fontWeight: '800', color: theme.textColor || theme.color, backgroundColor: 'rgba(255,255,255,0.25)', padding: '2px 6px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
                           {theme.price} POIN
                         </span>
@@ -587,7 +587,7 @@ export default function HadiahReferralPage() {
                     </div>
 
                     {/* Mini Action Mockup */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div className="theme-card-teaser-mockup" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <div style={{ backgroundColor: theme.color, color: '#ffffff', fontSize: '0.55rem', fontWeight: '800', padding: '2px 8px', borderRadius: '4px' }}>
                         Aksen Utama
                       </div>
@@ -596,10 +596,10 @@ export default function HadiahReferralPage() {
                   </div>
 
                   {/* Card Body */}
-                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
+                  <div className="theme-card-body" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div className="theme-card-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="theme-card-title-text" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ fontSize: '1.1rem' }}>{theme.icon}</span>
                           <span style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{theme.name}</span>
                         </div>
@@ -623,7 +623,7 @@ export default function HadiahReferralPage() {
                           ?
                         </button>
                       </div>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4, height: '2.8em', overflow: 'hidden' }}>
+                      <p className="theme-card-desc" style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '4px 0 0 0', lineHeight: 1.4, height: '2.8em', overflow: 'hidden' }}>
                         {theme.desc}
                       </p>
                     </div>
@@ -632,7 +632,7 @@ export default function HadiahReferralPage() {
                     {unlocked ? (
                       <button
                         onClick={() => applyTheme(theme.id)}
-                        className={`btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
+                        className={`theme-card-btn-single btn ${isActive ? 'btn-success' : 'btn-secondary'}`}
                         style={{
                           padding: '6px',
                           fontSize: '0.75rem',
@@ -643,7 +643,7 @@ export default function HadiahReferralPage() {
                         {isActive ? '✓ Terpasang' : 'Gunakan Tema'}
                       </button>
                     ) : (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                      <div className="theme-card-btn-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                         <button
                           onClick={() => startThemeTrial(theme)}
                           className="btn btn-secondary"

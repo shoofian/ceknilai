@@ -2291,20 +2291,25 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
 
 
 
+@media (max-width: 768px) {
+}
+
 .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
 @media (max-width: 768px) {
   .theme-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .theme-grid > div { border-radius: 8px !important; }
-  .theme-grid > div > div:first-child { height: 40px !important; padding: 6px !important; }
-  .theme-grid > div > div:first-child > div:nth-child(1) { flex-direction: column; align-items: flex-start !important; gap: 0 !important; }
-  .theme-grid > div > div:first-child > div:nth-child(1) span { font-size: 0.5rem !important; }
-  .theme-grid > div > div:first-child > div:nth-child(2) { display: none !important; }
-  .theme-grid > div > div:last-child { padding: 6px !important; gap: 6px !important; }
-  .theme-grid > div > div:last-child > div:first-child { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-  .theme-grid > div > div:last-child > div:first-child > div { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-  .theme-grid > div > div:last-child > div:first-child > div span { font-size: 0.65rem !important; line-height: 1.1; }
-  .theme-grid > div > div:last-child > div:first-child > button { position: absolute; top: 4px; right: 4px; width: 14px; height: 14px; font-size: 0.5rem !important; }
-  .theme-grid > div > div:last-child > div:first-child p { display: none !important; }
-  .theme-grid > div > div:last-child > div:last-child { grid-template-columns: 1fr !important; display: flex; flex-direction: column; gap: 4px; }
-  .theme-grid > div > div:last-child button { padding: 4px !important; font-size: 0.55rem !important; }
+  .theme-card-teaser { height: 40px !important; padding: 6px !important; }
+  .theme-card-teaser-header { flex-direction: column; align-items: flex-start !important; gap: 0 !important; }
+  .theme-card-teaser-title span { font-size: 0.5rem !important; }
+  .theme-card-teaser-price span { font-size: 0.5rem !important; }
+  .theme-card-teaser-mockup { display: none !important; }
+  .theme-card-body { padding: 6px !important; gap: 6px !important; }
+  .theme-card-title-row { flex-direction: column; align-items: flex-start !important; gap: 2px !important; position: relative; }
+  .theme-card-title-text { flex-direction: column; align-items: flex-start !important; gap: 2px !important; }
+  .theme-card-title-text span:last-child { font-size: 0.65rem !important; line-height: 1.1; }
+  .theme-card-title-row button { position: absolute; top: -2px; right: -2px; width: 14px !important; height: 14px !important; font-size: 0.5rem !important; }
+  .theme-card-desc { display: none !important; }
+  .theme-card-btn-group { grid-template-columns: 1fr !important; display: flex !important; flex-direction: column !important; gap: 4px !important; }
+  .theme-card-btn-group button { padding: 4px !important; font-size: 0.55rem !important; }
+  .theme-card-btn-single { padding: 4px !important; font-size: 0.55rem !important; }
 }
