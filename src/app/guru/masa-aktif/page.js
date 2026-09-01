@@ -415,6 +415,7 @@ export default function MasaAktifPage() {
                 <div style={{ position: 'absolute', top: '0', left: '0', backgroundColor: '#eab308', color: '#000', fontSize: '0.45rem', fontWeight: '800', padding: '1px 4px', borderRadius: '10px 0 4px 0' }}>HEMAT 30%</div>
                 <div style={{ fontWeight: '800', fontSize: '0.82rem', marginTop: '2px' }}>Tahunan</div>
                 <div style={{ fontSize: '0.95rem', fontWeight: '800', color: '#eab308', marginTop: '2px' }}>Rp 159.000</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '4px' }}>(setara Rp 13.250 / bulan)</div>
               </div>
             </div>
           </div>

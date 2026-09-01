@@ -122,6 +122,13 @@ export default function SuperadminPanel() {
   const [opexDesc, setOpexDesc] = useState("");
   const [savingOpex, setSavingOpex] = useState(false);
 
+  // Manual Payment States
+  const [manualPaymentModalOpen, setManualPaymentModalOpen] = useState(false);
+  const [manualPaymentUsername, setManualPaymentUsername] = useState("");
+  const [manualPaymentPaket, setManualPaymentPaket] = useState("BULANAN");
+  const [manualPaymentReferral, setManualPaymentReferral] = useState("");
+  const [savingManualPayment, setSavingManualPayment] = useState(false);
+
   const router = useRouter();
   const SUPERADMIN_USERNAMES = ["superadmin", "shoofian"];
 
@@ -525,6 +532,44 @@ export default function SuperadminPanel() {
       alert("Terjadi kesalahan koneksi server.");
     } finally {
       setSavingPoints(false);
+    }
+  };
+
+  const handleManualPaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!manualPaymentUsername.trim() || !manualPaymentPaket) {
+      alert("Username dan paket harus diisi.");
+      return;
+    }
+
+    setSavingManualPayment(true);
+    try {
+      const res = await fetch("/api/superadmin/pembayaran/manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: manualPaymentUsername.trim(),
+          paket: manualPaymentPaket,
+          referralCode: manualPaymentReferral.trim() || null
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setManualPaymentModalOpen(false);
+        setManualPaymentUsername("");
+        setManualPaymentPaket("BULANAN");
+        setManualPaymentReferral("");
+        alert(data.message || "Pembayaran manual berhasil diverifikasi.");
+        fetchData();
+      } else {
+        alert(data.error || "Gagal memverifikasi pembayaran.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan koneksi server.");
+    } finally {
+      setSavingManualPayment(false);
     }
   };
 
@@ -1017,7 +1062,12 @@ export default function SuperadminPanel() {
                 
                 {/* 1. Konfirmasi Pembayaran */}
                 <div className="glass-card" style={{ padding: "24px" }}>
-                  <h4 style={{ margin: "0 0 16px 0", fontWeight: "800" }}>💳 Konfirmasi Pembayaran</h4>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <h4 style={{ margin: 0, fontWeight: "800" }}>💳 Konfirmasi Pembayaran</h4>
+                    <button onClick={() => setManualPaymentModalOpen(true)} className="btn btn-primary" style={{ padding: "6px 12px", fontSize: "0.85rem" }}>
+                      + Konfirmasi Manual (WA)
+                    </button>
+                  </div>
                   <div style={{ overflowY: "auto", maxHeight: "350px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     {financeLogs.filter(l => l.aksi === "PAYMENT_PENDING").length === 0 ? (
                       <div style={{ textAlign: "center", padding: "20px", color: "var(--text-muted)", fontSize: "0.85rem" }}>
@@ -1248,7 +1298,7 @@ export default function SuperadminPanel() {
                       Rp {
                         financeLogs
                           .filter(l => l.aksi === "PAYMENT_APPROVED")
-                          .reduce((sum, l) => sum + (l.detail.includes("PAKET:TAHUNAN") ? 149000 : (l.detail.includes("PAKET:BULANAN") ? 15000 : 0)), 0)
+                          .reduce((sum, l) => sum + (l.detail.includes("PAKET:TAHUNAN") ? 159000 : (l.detail.includes("PAKET:BULANAN") ? 19000 : 0)), 0)
                           .toLocaleString('id-ID')
                       }
                     </div>
@@ -1288,7 +1338,7 @@ export default function SuperadminPanel() {
                         (() => {
                           const gross = financeLogs
                             .filter(l => l.aksi === "PAYMENT_APPROVED")
-                            .reduce((sum, l) => sum + (l.detail.includes("PAKET:TAHUNAN") ? 149000 : (l.detail.includes("PAKET:BULANAN") ? 15000 : 0)), 0);
+                            .reduce((sum, l) => sum + (l.detail.includes("PAKET:TAHUNAN") ? 159000 : (l.detail.includes("PAKET:BULANAN") ? 19000 : 0)), 0);
                           const mitra = financeLogs
                             .filter(l => l.aksi === "REDEEM_POINTS" && l.detail.includes("PROSES_SELESAI") && l.detail.toLowerCase().includes("tunai"))
                             .reduce((sum, l) => sum + 1000000, 0);
@@ -1327,7 +1377,7 @@ export default function SuperadminPanel() {
                             const isIncome = log.aksi === "PAYMENT_APPROVED";
                             let nominal = 0;
                             if (isIncome) {
-                              nominal = log.detail.includes("PAKET:TAHUNAN") ? 149000 : (log.detail.includes("PAKET:BULANAN") ? 15000 : 0);
+                              nominal = log.detail.includes("PAKET:TAHUNAN") ? 159000 : (log.detail.includes("PAKET:BULANAN") ? 19000 : 0);
                             } else {
                               nominal = -1000000;
                             }
@@ -1861,6 +1911,83 @@ export default function SuperadminPanel() {
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={savingPoints}>
                   {savingPoints ? "Menyimpan..." : "Simpan Poin"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Payment Confirmation Modal */}
+      {manualPaymentModalOpen && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card modal-content-scroll" style={{ width: "100%", maxWidth: "450px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <h3 style={{ fontSize: "1.3rem", fontWeight: "800", marginBottom: "16px" }}>
+              💬 Konfirmasi Manual via WA
+            </h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "16px" }}>
+              Gunakan form ini jika guru mengonfirmasi pembayaran langsung melalui WhatsApp tanpa melalui sistem <strong>Konfirmasi Pembayaran</strong>.
+            </p>
+
+            <form onSubmit={handleManualPaymentSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Username Guru <span style={{ color: "var(--danger)" }}>*</span></label>
+                <input
+                  type="text"
+                  placeholder="Contoh: agus_setiawan"
+                  className="form-input"
+                  value={manualPaymentUsername}
+                  onChange={(e) => setManualPaymentUsername(e.target.value.toLowerCase())}
+                  required
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Paket Langganan <span style={{ color: "var(--danger)" }}>*</span></label>
+                <select
+                  className="form-input"
+                  value={manualPaymentPaket}
+                  onChange={(e) => setManualPaymentPaket(e.target.value)}
+                  required
+                >
+                  <option value="BULANAN">Paket Bulanan (1 Bulan)</option>
+                  <option value="TAHUNAN">Paket Tahunan (1 Tahun)</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Kode Referral (Opsional)</label>
+                <input
+                  type="text"
+                  placeholder="Username referral jika ada..."
+                  className="form-input"
+                  value={manualPaymentReferral}
+                  onChange={(e) => setManualPaymentReferral(e.target.value.toLowerCase())}
+                />
+                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                  Jika diisi, poin referral akan ditambahkan ke guru bersangkutan.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "10px" }}>
+                <button type="button" onClick={() => setManualPaymentModalOpen(false)} className="btn btn-secondary" disabled={savingManualPayment}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={savingManualPayment}>
+                  {savingManualPayment ? "Menyimpan..." : "✅ Verifikasi"}
                 </button>
               </div>
             </form>
