@@ -1142,15 +1142,26 @@ export default function KelolaKelas() {
                   </button>
                 </div>
                 
-                {/* Compact Stats for Mobile & Desktop */}
-                <div style={{ display: "flex", gap: "10px", marginTop: "10px", borderTop: "1px dashed var(--border-color)", paddingTop: "10px", color: "var(--text-secondary)", fontSize: "0.65rem", fontWeight: "600" }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    👨‍🎓 {k.siswa.length} Siswa
-                  </span>
-                  <span style={{ color: "var(--border-color)" }}>|</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    🏷️ {k.kolomNilai.length} Komponen
-                  </span>
+                {/* Elegant Stats Block */}
+                <div style={{ 
+                  display: "flex", 
+                  justifyContent: "space-around", 
+                  alignItems: "center", 
+                  backgroundColor: "var(--bg-secondary)", 
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-sm)", 
+                  padding: "8px 0", 
+                  marginTop: "12px" 
+                }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", flex: 1 }}>
+                    <span style={{ fontSize: "1rem", fontWeight: "800", color: "var(--primary)", lineHeight: 1 }}>{k.siswa.length}</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: "700" }}>Siswa</span>
+                  </div>
+                  <div style={{ width: "1px", height: "24px", backgroundColor: "var(--border-color)" }} />
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", flex: 1 }}>
+                    <span style={{ fontSize: "1rem", fontWeight: "800", color: "var(--text-primary)", lineHeight: 1 }}>{k.kolomNilai.length}</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: "700" }}>Komponen</span>
+                  </div>
                 </div>
               </div>
 
