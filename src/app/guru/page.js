@@ -198,7 +198,17 @@ export default function GuruDashboard() {
                 >
                   <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
-                      <h5 style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)", margin: 0, lineHeight: 1.2 }}>
+                      <h5 style={{ 
+                        fontSize: "clamp(1.2rem, 4vw, 1.35rem)", 
+                        fontWeight: "900", 
+                        margin: 0, 
+                        lineHeight: 1.2,
+                        letterSpacing: "-0.02em",
+                        background: "linear-gradient(90deg, var(--primary), #8b5cf6)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        display: "inline-block"
+                      }}>
                         {kelas.nama}
                       </h5>
                       <span style={{ fontSize: "0.7rem", fontWeight: "700", backgroundColor: "var(--primary-glow)", color: "var(--primary)", padding: "2px 8px", borderRadius: "10px", flexShrink: 0 }}>

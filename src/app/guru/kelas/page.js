@@ -1086,7 +1086,17 @@ export default function KelolaKelas() {
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
-                  <h3 style={{ fontSize: "clamp(1.25rem, 5vw, 1.6rem)", fontWeight: "900", lineHeight: "1.15", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
+                  <h3 style={{ 
+                    fontSize: "clamp(1.35rem, 5vw, 1.7rem)", 
+                    fontWeight: "900", 
+                    lineHeight: "1.15", 
+                    margin: 0, 
+                    letterSpacing: "-0.03em",
+                    background: "linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    wordBreak: "break-word" 
+                  }}>
                     {k.nama}
                   </h3>
                   
