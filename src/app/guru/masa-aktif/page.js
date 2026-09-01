@@ -104,6 +104,7 @@ Paket Dipilih : ${paket.toUpperCase()} (${harga})
 Tanggal Transfer: ${tanggalTransfer}
 ${referralInput.trim() ? `Kode Referral : ${referralInput.trim()}\n` : ''}---------------------------------------
 Status: Menunggu Verifikasi Admin
+(Akses masa tenggang 24 jam telah diberikan)
 Mohon simpan struk ini sebagai bukti konfirmasi Anda.
 `;
       const blob = new Blob([receiptContent], { type: 'text/plain' });
@@ -582,7 +583,12 @@ Mohon simpan struk ini sebagai bukti konfirmasi Anda.
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <div style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid var(--warning)', borderRadius: '8px', padding: '10px', marginTop: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                <strong>Pemberitahuan:</strong> Setelah menekan kirim, Anda akan mendapatkan <strong>akses masa tenggang 24 jam</strong> secara instan agar bisa langsung menggunakan aplikasi sambil menunggu Superadmin memverifikasi pembayaran Anda.
+                <div style={{ marginTop: '4px', color: 'var(--danger)', fontWeight: 'bold' }}>Jika bukti pembayaran terindikasi fiktif/palsu, akun Anda akan diblokir.</div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
                 <button
                   type="button"
                   onClick={() => setPaymentModalOpen(false)}

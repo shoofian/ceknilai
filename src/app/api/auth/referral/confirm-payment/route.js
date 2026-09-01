@@ -74,16 +74,23 @@ export async function POST(request) {
       `PAKET:${paket.toUpperCase()} | BUKTI:${bukti}${referralInfo}`
     );
 
-    // Optimistic unlock: give access immediately while Superadmin verifies payment
+    // Optimistic unlock: give access immediately (Masa Tenggang 24 Jam) while Superadmin verifies payment
     // If payment turns out to be invalid, Superadmin can re-lock the account manually
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
     await supabase
       .from('guru')
-      .update({ is_locked: false, lock_message: '' })
+      .update({ 
+        is_locked: false, 
+        lock_message: '',
+        premium_until: tomorrow.toISOString()
+      })
       .eq('username', username);
 
     return NextResponse.json({
       success: true,
-      message: 'Konfirmasi pembayaran berhasil dikirim! Akun Anda kini sudah aktif. Poin referral akan dikreditkan setelah pembayaran diverifikasi admin.',
+      message: 'Konfirmasi pembayaran berhasil dikirim! Akses sementara (masa tenggang) 24 jam telah diberikan sambil menunggu verifikasi admin. Poin referral akan dikreditkan setelah verifikasi selesai.',
       referralQueued: referralValid,
       referralError: referralError || null
     });
