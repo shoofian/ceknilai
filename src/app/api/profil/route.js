@@ -18,7 +18,15 @@ export async function GET() {
     }
     
     const { password: _, ...guruData } = guru;
-    const isExpired = guruData.premium_until ? new Date() > new Date(guruData.premium_until) : false;
+    
+    let isExpired = false;
+    if (guruData.premium_until) {
+      isExpired = new Date() > new Date(guruData.premium_until);
+    } else {
+      const globalTrialEnd = new Date('2026-08-31T23:59:59+07:00');
+      isExpired = new Date() > globalTrialEnd;
+    }
+
     if (isExpired && !guruData.is_locked) {
       guruData.is_locked = true;
       guruData.lock_message = "Masa aktif premium Anda telah berakhir. Silakan lakukan aktivasi/perpanjangan paket di menu Masa Aktif.";

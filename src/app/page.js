@@ -255,7 +255,7 @@ export default function StudentPortal() {
           {/* Right Column: Search Card Form */}
           <div className="portal-form-panel">
             <div className="glass-card shadow-lg animate-fade-in" style={{ width: "100%", padding: "24px", border: "1px solid var(--border-color)" }}>
-              <div style={{ marginBottom: "24px", textAlign: "center" }}>
+              <div style={{ marginBottom: "16px", textAlign: "center" }}>
                 <h3 style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.02em" }}>Cari Nilai Siswa</h3>
                 <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "4px" }}>Isi form di bawah untuk mengakses nilai rapot.</p>
               </div>
@@ -407,7 +407,7 @@ export default function StudentPortal() {
           <div id="search-results" style={{ width: "100%", maxWidth: "900px" }} className="animate-fade-in">
             
             {/* Header pencarian */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
               <h3 style={{ fontSize: "1.5rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>
                 <span>📊 Hasil Pencarian Nilai</span>
               </h3>
@@ -421,7 +421,7 @@ export default function StudentPortal() {
               <>
                 {/* Filter Bar */}
                 {results.length > 1 && (
-                  <div className="glass-card" style={{ display: "flex", gap: "16px", flexWrap: "wrap", padding: "16px", alignItems: "center", marginBottom: "24px" }}>
+                  <div className="glass-card" style={{ display: "flex", gap: "16px", flexWrap: "wrap", padding: "16px", alignItems: "center", marginBottom: "16px" }}>
                     <div style={{ flex: 1, minWidth: "200px", margin: 0 }}>
                       <input
                         type="text"
@@ -520,7 +520,7 @@ export default function StudentPortal() {
                         onClick={() => { setActiveClassId(res.kelasId); setSimulationScores({}); }}
                       >
                         {/* Accent Header */}
-                        <div style={{ background: cardGradient, padding: "20px 24px", color: "#ffffff", position: "relative" }}>
+                        <div style={{ background: cardGradient, padding: "12px 16px", color: "#ffffff", position: "relative" }}>
                           <h4 style={{ fontSize: "1.35rem", fontWeight: "800", margin: 0, color: "#ffffff", paddingRight: "80px" }}>{res.namaKelas}</h4>
                           <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "6px" }}>
                             {res.tingkatan && (
@@ -546,7 +546,7 @@ export default function StudentPortal() {
                         </div>
 
                         {/* Content */}
-                        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
+                        <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: "14px", flex: 1 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <div>
                               <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Guru Pengampu</span>
@@ -615,7 +615,7 @@ export default function StudentPortal() {
                         <div 
                           style={{ 
                             borderTop: "1px solid var(--border-color)", 
-                            padding: "12px 24px", 
+                            padding: "12px 16px", 
                             backgroundColor: "var(--bg-secondary)", 
                             display: "flex", 
                             justifyContent: "space-between", 
@@ -647,7 +647,7 @@ export default function StudentPortal() {
                             <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--text-primary)" }}>🟢 Kelas Aktif</span>
                             <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "3px 10px", borderRadius: "99px", backgroundColor: "rgba(16,185,129,0.12)", color: "var(--success)", border: "1px solid rgba(16,185,129,0.25)" }}>{activeResults.length}</span>
                           </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
                             {activeResults.map((res, index) => renderClassCard(res, index, false))}
                           </div>
                         </div>
@@ -660,7 +660,7 @@ export default function StudentPortal() {
                             <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "var(--text-secondary)" }}>📦 Kelas Arsip</span>
                             <span style={{ fontSize: "0.72rem", fontWeight: "700", padding: "3px 10px", borderRadius: "99px", backgroundColor: "var(--bg-tertiary)", color: "var(--text-muted)", border: "1px solid var(--border-color)" }}>{archivedResults.length}</span>
                           </div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "24px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "12px" }}>
                             {archivedResults.map((res, index) => renderClassCard(res, index, true))}
                           </div>
                         </div>
@@ -731,7 +731,7 @@ export default function StudentPortal() {
                       
                       <div className="no-print">
                         {/* Class Title Header */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "24px", paddingBottom: "16px", borderBottom: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", marginBottom: "16px", paddingBottom: "16px", borderBottom: "1px solid var(--border-color)" }}>
                           <div>
                           <h4 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{res.namaKelas}</h4>
                           <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginTop: "4px" }}>
@@ -761,7 +761,7 @@ export default function StudentPortal() {
                           </div>
                         </div>
                       ) : (
-                        <div className="grid-cols-1" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "20px", marginBottom: "30px" }}>
+                        <div className="grid-cols-1" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "16px" }}>
                           <div style={{ background: "var(--bg-tertiary)", padding: "20px", borderRadius: "var(--radius-md)", textAlign: "center", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                             <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>Nilai Akhir Resmi</span>
                             <h3 style={{ fontSize: "3rem", fontWeight: "800", color: "var(--primary)", marginTop: "6px", marginBottom: 0, lineHeight: 1.1 }}>{res.nilaiAkhir}</h3>
@@ -798,7 +798,7 @@ export default function StudentPortal() {
 
                       {/* Info Bonus Keaktifan */}
                       {res.skema?.enableBonusStars && res.bonusStars > 0 && (
-                        <div style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "var(--radius-sm)", padding: "12px 16px", marginBottom: "24px", display: "flex", alignItems: "center", gap: "12px", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.05)" }}>
+                        <div style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", borderRadius: "var(--radius-sm)", padding: "12px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "12px", boxShadow: "0 4px 14px rgba(16, 185, 129, 0.05)" }}>
                           <span style={{ fontSize: "1.8rem" }}>⭐</span>
                           <div>
                             <h5 style={{ margin: "0 0 4px 0", fontSize: "0.95rem", fontWeight: "800", color: "var(--success)" }}>Apresiasi Keaktifan: +{res.bonusStars} Poin Bonus!</h5>
@@ -853,8 +853,8 @@ export default function StudentPortal() {
                             border: "1px solid rgba(245, 158, 11, 0.25)",
                             borderLeft: "6px solid var(--warning)", 
                             borderRadius: "var(--radius-md)", 
-                            padding: "20px 24px", 
-                            marginBottom: "30px", 
+                            padding: "12px 16px", 
+                            marginBottom: "16px", 
                             boxShadow: "var(--shadow-md), 0 8px 24px -10px rgba(245, 158, 11, 0.2)",
                             display: "flex", 
                             flexDirection: "column", 
@@ -925,7 +925,7 @@ export default function StudentPortal() {
                             borderRadius: "var(--radius-md)", 
                             border: "1px solid var(--border-color)", 
                             backgroundColor: "var(--bg-secondary)", 
-                            marginBottom: "24px",
+                            marginBottom: "16px",
                             boxShadow: "var(--shadow-sm)"
                           }}
                         >
@@ -936,7 +936,7 @@ export default function StudentPortal() {
                             </h5>
                           </div>
 
-                          <div style={{ display: "flex", gap: "24px", alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
                             {/* Left Side: Large Percentage Circle */}
                             <div style={{ display: "flex", alignItems: "center", gap: "16px", minWidth: "220px", flex: 1 }}>
                               <div 
@@ -1330,7 +1330,7 @@ export default function StudentPortal() {
                       {/* Simulator Modal Pop-up */}
                       {isSimulatorOpen && (
                         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
-                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", backgroundColor: "var(--bg-primary)" }}>
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)" }}>
                             <button onClick={() => setIsSimulatorOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
                             
                             <div style={{ textAlign: "center" }}>
@@ -1373,7 +1373,7 @@ export default function StudentPortal() {
                       {/* Attendance Recap Modal Pop-up */}
                       {isPresensiOpen && res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
                         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
-                          <div className="glass-card" style={{ width: "90%", maxWidth: "600px", padding: "30px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflow: "hidden" }}>
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "600px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflow: "hidden" }}>
                             <button onClick={() => setIsPresensiOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", zIndex: 10 }}>✕</button>
                             
                             <div style={{ textAlign: "center" }}>
@@ -1464,7 +1464,7 @@ export default function StudentPortal() {
                       <div id={`export-dashboard-${res.kelasId}`} style={{
                         position: "absolute", left: "-9999px", top: 0, width: "1000px", minHeight: "1250px", height: "auto",
                         backgroundColor: "#0f172a", padding: "60px 70px", 
-                        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "24px",
+                        boxSizing: "border-box", display: "flex", flexDirection: "column", gap: "12px",
                         color: "#f8fafc", fontFamily: "sans-serif"
                       }}>
                         
@@ -1497,7 +1497,7 @@ export default function StudentPortal() {
                         {/* SECTION 2: Data Kelas */}
                         <div style={{ backgroundColor: "#1e293b", padding: "30px", borderRadius: "20px", border: "1px solid #334155" }}>
                           <p style={{ color: "#38bdf8", fontSize: "1.1rem", margin: "0 0 16px 0", fontWeight: "800", letterSpacing: "1px", textTransform: "uppercase" }}>2. Data Kelas</p>
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
                             <div>
                               <p style={{ color: "#94a3b8", fontSize: "1rem", margin: "0 0 4px 0", fontWeight: "600" }}>NAMA KELAS</p>
                               <p style={{ fontSize: "1.5rem", fontWeight: "700", margin: 0, color: "#f8fafc" }}>{res.namaKelas}</p>
@@ -1523,10 +1523,10 @@ export default function StudentPortal() {
                             <p style={{ fontSize: "1.2rem", fontWeight: "700", color: "#e2e8f0", margin: "10px 0 0 0" }}>Standar KKM: {res.kkm}</p>
                           </div>
                           
-                          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+                          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                             {res.isNilaiAkhirGenerated && (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "10px" }}>
-                                <span style={{ backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)", color: res.nilaiAkhir >= res.kkm ? "#34d399" : "#fb7185", padding: "12px 24px", borderRadius: "99px", fontSize: "1.4rem", fontWeight: "800" }}>
+                                <span style={{ backgroundColor: res.nilaiAkhir >= res.kkm ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)", color: res.nilaiAkhir >= res.kkm ? "#34d399" : "#fb7185", padding: "12px 16px", borderRadius: "99px", fontSize: "1.4rem", fontWeight: "800" }}>
                                   {res.statusKelulusan}
                                 </span>
                                 <div style={{ width: "90px", height: "90px", borderRadius: "50%", backgroundColor: res.predikat === 'A' || res.predikat === 'B' ? '#10b981' : res.predikat === 'C' ? '#f59e0b' : '#f43f5e', color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3.5rem", fontWeight: "900", boxShadow: "0 10px 20px rgba(0,0,0,0.3)" }}>
@@ -1785,7 +1785,7 @@ export default function StudentPortal() {
       {/* Modal Preview Gambar (Global to Portal) */}
       {generatedImage && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, backdropFilter: "blur(8px)", padding: "20px" }} className="animate-fade-in">
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px", alignItems: "center", width: "100%", maxWidth: "450px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center", width: "100%", maxWidth: "450px" }}>
             
             <div style={{ position: "relative", width: "100%", maxHeight: "75vh", overflow: "auto", borderRadius: "16px", boxShadow: "0 20px 50px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "center" }}>
               <img src={generatedImage.url} alt="Pratinjau Rapor" style={{ width: "100%", objectFit: "contain" }} />

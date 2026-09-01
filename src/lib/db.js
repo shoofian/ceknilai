@@ -146,7 +146,8 @@ export const getGuru = cache(async function getGuru(username = null) {
         walikelas_rombel_nama: null,
         tahun_ajaran: '2025/2026',
         sekolah: null,
-        premium_until: result.premium_until ?? null
+        premium_until: result.premium_until ?? null,
+        created_at: result.created_at ?? null
       };
     }
     const result = data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
@@ -160,7 +161,8 @@ export const getGuru = cache(async function getGuru(username = null) {
       walikelas_rombel_nama: result.walikelas_rombel_nama ?? null,
       tahun_ajaran: result.tahun_ajaran ?? '2025/2026',
       sekolah: result.sekolah ?? null,
-      premium_until: result.premium_until ?? null
+      premium_until: result.premium_until ?? null,
+      created_at: result.created_at ?? null
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
@@ -1246,12 +1248,12 @@ export async function getAllGurus() {
   try {
     const { data, error } = await supabase
       .from('guru')
-      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, is_admin_sekolah, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, premium_until, sekolah:sekolah_id(nama, npsn)');
+      .select('username, nama, email, password, is_locked, lock_message, sekolah_id, is_admin_sekolah, walikelas_tingkatan, walikelas_rombel_nama, tahun_ajaran, premium_until, created_at, sekolah:sekolah_id(nama, npsn)');
     if (error) {
       // Fallback without premium_until
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('guru')
-        .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, sekolah:sekolah_id(nama, npsn)');
+        .select('username, nama, email, password, is_locked, lock_message, sekolah_id, walikelas_tingkatan, walikelas_rombel_nama, created_at, sekolah:sekolah_id(nama, npsn)');
       if (fallbackError) {
         // Fallback level 2
         const { data: fallbackData2, error: fallbackError2 } = await supabase
@@ -1494,7 +1496,9 @@ export async function isGuruLocked(username) {
       return isExpired;
     }
     
-    return false;
+    // Fallback if premium_until is null: masa trial global s.d 31 Agustus 2026
+    const globalTrialEnd = new Date('2026-08-31T23:59:59+07:00');
+    return new Date() > globalTrialEnd;
   } catch (err) {
     console.error('Error checking lock status:', err);
     return false;
@@ -1521,10 +1525,12 @@ export async function getGuruLockStatus(username) {
     if (guru.premium_until) {
       const isExpired = new Date() > new Date(guru.premium_until);
       if (isExpired) {
-        return {
-          isLocked: true,
-          lockMessage: "Masa aktif premium Anda telah berakhir. Silakan lakukan aktivasi/perpanjangan paket di menu Masa Aktif."
-        };
+        return { isLocked: true, lockMessage: "Masa aktif premium Anda telah berakhir. Silakan perpanjang." };
+      }
+    } else {
+      const globalTrialEnd = new Date('2026-08-31T23:59:59+07:00');
+      if (new Date() > globalTrialEnd) {
+        return { isLocked: true, lockMessage: "Masa aktif premium Anda telah berakhir. Silakan perpanjang." };
       }
     }
     
