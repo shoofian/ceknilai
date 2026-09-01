@@ -683,49 +683,6 @@ export default function SuperadminPanel() {
           )}
         </div>
       </div>
-         {/* View Mode Toggle */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-        <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
-          <button
-            onClick={() => handleViewModeChange('dashboard')}
-            style={{
-              padding: "6px 12px",
-              fontSize: "0.8rem",
-              borderRadius: "var(--radius-xs)",
-              border: "none",
-              fontWeight: viewMode === 'dashboard' ? "700" : "500",
-              backgroundColor: viewMode === 'dashboard' ? "var(--bg-primary)" : "transparent",
-              color: viewMode === 'dashboard' ? "var(--primary)" : "var(--text-muted)",
-              boxShadow: viewMode === 'dashboard' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            🗂️ Dasbor
-          </button>
-          <button
-            onClick={() => handleViewModeChange('tabs')}
-            style={{
-              padding: "6px 12px",
-              fontSize: "0.8rem",
-              borderRadius: "var(--radius-xs)",
-              border: "none",
-              fontWeight: viewMode === 'tabs' ? "700" : "500",
-              backgroundColor: viewMode === 'tabs' ? "var(--bg-primary)" : "transparent",
-              color: viewMode === 'tabs' ? "var(--primary)" : "var(--text-muted)",
-              boxShadow: viewMode === 'tabs' ? "0 2px 4px rgba(0,0,0,0.1)" : "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
-          >
-            📑 Tab
-          </button>
-        </div>
-      </div>
 
       {/* Tabs */}
       {viewMode === 'tabs' ? (
