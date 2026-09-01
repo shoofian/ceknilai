@@ -2214,7 +2214,7 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
     margin: 0 !important;
     animation: slideUpBottomSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     overflow-y: auto !important;
-    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom, 16px)) !important;
   }
   
   /* Exclude things that are not bottom sheets */
