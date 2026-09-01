@@ -1086,7 +1086,7 @@ export default function KelolaKelas() {
               </div>
               <div style={{ position: "relative", zIndex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px", marginBottom: "8px" }}>
-                  <h3 style={{ fontSize: "clamp(1.1rem, 4vw, 1.4rem)", fontWeight: "900", lineHeight: "1.2", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
+                  <h3 style={{ fontSize: "clamp(1.25rem, 5vw, 1.6rem)", fontWeight: "900", lineHeight: "1.15", margin: 0, color: "var(--text-primary)", wordBreak: "break-word" }}>
                     {k.nama}
                   </h3>
                   
@@ -1112,30 +1112,30 @@ export default function KelolaKelas() {
 
                 <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", marginBottom: "8px" }}>
                   {k.tingkatan && (
-                    <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
+                    <span className="badge" style={{ fontSize: "0.65rem", padding: "3px 6px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid rgba(139, 92, 246, 0.15)", fontWeight: "700" }}>
                       🎓 KLS {k.tingkatan}
                     </span>
                   )}
-                  <span className="badge badge-primary" style={{ fontSize: "0.7rem", padding: "4px 8px" }}>
+                  <span className="badge badge-primary hide-on-mobile" style={{ fontSize: "0.65rem", padding: "3px 6px" }}>
                     📚 {k.tahunAjaran}
                   </span>
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
+                  <span className="badge hide-on-mobile" style={{ fontSize: "0.65rem", padding: "3px 6px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", border: "1px solid rgba(16, 185, 129, 0.15)" }}>
                     ⏱️ {k.semester || "Ganjil"}
                   </span>
-                  <span className="badge" style={{ fontSize: "0.7rem", padding: "4px 8px", backgroundColor: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "4px", fontWeight: "700" }}>
+                  <span className="badge" style={{ fontSize: "0.65rem", padding: "3px 6px", backgroundColor: "rgba(59,130,246,0.1)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.2)", borderRadius: "4px", fontWeight: "700" }}>
                     💻 {k.mataPelajaran}
                   </span>
                 </div>
                 
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode:</span>
-                  <code style={{ fontSize: "0.75rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)", fontWeight: "700" }}>{k.id}</code>
+                <div className="hide-on-mobile" style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "6px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: "600" }}>Kode:</span>
+                  <code style={{ fontSize: "0.7rem", backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px", color: "var(--primary)", border: "1px solid var(--border-color)", fontWeight: "700" }}>{k.id}</code>
                   <button 
                     onClick={() => {
                       navigator.clipboard.writeText(k.id);
                       triggerConfirm("Kode Kelas berhasil disalin ke papan klip!", null, { title: "Salin Kode", confirmText: "OK", cancelText: "" });
                     }}
-                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem", padding: "2px" }}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem", padding: "2px" }}
                     title="Salin Kode Kelas"
                   >
                     📋
@@ -1143,7 +1143,7 @@ export default function KelolaKelas() {
                 </div>
                 
                 {/* Compact Stats for Mobile & Desktop */}
-                <div style={{ display: "flex", gap: "12px", marginTop: "12px", borderTop: "1px dashed var(--border-color)", paddingTop: "12px", color: "var(--text-secondary)", fontSize: "0.8rem", fontWeight: "600" }}>
+                <div style={{ display: "flex", gap: "10px", marginTop: "10px", borderTop: "1px dashed var(--border-color)", paddingTop: "10px", color: "var(--text-secondary)", fontSize: "0.65rem", fontWeight: "600" }}>
                   <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                     👨‍🎓 {k.siswa.length} Siswa
                   </span>
