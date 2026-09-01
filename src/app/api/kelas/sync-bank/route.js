@@ -56,8 +56,8 @@ export async function POST(request) {
              String(s.rombel).toLowerCase() === filterRombel
       );
 
-      const existingSiswa = kelas.siswa || [];
-      const bankSiswaArr = [...filteredBankSiswa];
+      let unmappedExisting = [...existingSiswa];
+      let bankSiswaArr = [...filteredBankSiswa];
       
       const added = [];
       const updated = [];
@@ -70,60 +70,88 @@ export async function POST(request) {
         return str && str !== '1900-01-01' && str !== 'undefined' && str !== 'null';
       };
 
-      existingSiswa.forEach(exS => {
-        let bestMatchIndex = -1;
+      const processMatch = (exS, bankSIndex) => {
+        const bankS = bankSiswaArr[bankSIndex];
+        bankSiswaArr.splice(bankSIndex, 1); // Remove from unmatched bank pool
         
-        for (let i = 0; i < bankSiswaArr.length; i++) {
-          const bankS = bankSiswaArr[i];
-          let score = 0;
-          
-          const nisnMatch = normalize(exS.nisn) === normalize(bankS.nisn);
-          if (nisnMatch) score++;
-          if (exS.nama && bankS.nama && normalize(exS.nama) === normalize(bankS.nama)) score++;
-          if (isValidDate(exS.tanggalLahir) && isValidDate(bankS.tanggal_lahir) && normalize(exS.tanggalLahir) === normalize(bankS.tanggal_lahir)) score++;
-          
-          // Match if NISN is exactly the same, OR if at least 2 other fields match, OR if Name is exactly the same (potential merge)
-          const nameMatch = exS.nama && bankS.nama && normalize(exS.nama) === normalize(bankS.nama);
-          if (nisnMatch || score >= 2 || nameMatch) {
-            bestMatchIndex = i;
-            break; // Stop at first valid match
-          }
-        }
+        const nisnChanged = normalize(exS.nisn) !== normalize(bankS.nisn);
+        const nameChanged = normalize(exS.nama) !== normalize(bankS.nama);
         
-        if (bestMatchIndex !== -1) {
-          const bankS = bankSiswaArr[bestMatchIndex];
-          bankSiswaArr.splice(bestMatchIndex, 1); // Remove from unmatched bank pool
-          
-          const nisnChanged = normalize(exS.nisn) !== normalize(bankS.nisn);
-          const nameChanged = normalize(exS.nama) !== normalize(bankS.nama);
-          
-          // Check if DOB changed (treating missing/invalid DOBs as different if bank has a valid one)
-          const exDob = isValidDate(exS.tanggalLahir) ? normalize(exS.tanggalLahir) : "";
-          const bankDob = isValidDate(bankS.tanggal_lahir) ? normalize(bankS.tanggal_lahir) : "";
-          const dobChanged = exDob !== bankDob;
-          
-          if (nisnChanged || nameChanged || dobChanged) {
-            updated.push({ 
-              nisnLama: exS.nisn, 
-              nisnBaru: bankS.nisn, 
-              namaLama: exS.nama, 
-              namaBaru: bankS.nama, 
-              tanggalLahirLama: exS.tanggalLahir,
-              tanggalLahirBaru: bankS.tanggal_lahir,
-              nisnChanged,
-              nameChanged,
-              dobChanged,
-              nilai: exS.nilai, 
-              catatan: exS.catatan 
-            });
-          } else {
-            unchanged.push(exS);
-          }
+        const exDob = isValidDate(exS.tanggalLahir) ? normalize(exS.tanggalLahir) : "";
+        const bankDob = isValidDate(bankS.tanggal_lahir) ? normalize(bankS.tanggal_lahir) : "";
+        const dobChanged = exDob !== bankDob;
+        
+        if (nisnChanged || nameChanged || dobChanged) {
+          updated.push({ 
+            nisnLama: exS.nisn, 
+            nisnBaru: bankS.nisn, 
+            namaLama: exS.nama, 
+            namaBaru: bankS.nama, 
+            tanggalLahirLama: exS.tanggalLahir,
+            tanggalLahirBaru: bankS.tanggal_lahir,
+            nisnChanged,
+            nameChanged,
+            dobChanged,
+            nilai: exS.nilai, 
+            catatan: exS.catatan 
+          });
         } else {
-          removed.push({ nisn: exS.nisn, nama: exS.nama });
+          unchanged.push(exS);
         }
+      };
+
+      // PASS 1: Prioritas Utama - Cocokkan berdasarkan NISN yang persis sama
+      for (let i = unmappedExisting.length - 1; i >= 0; i--) {
+        const exS = unmappedExisting[i];
+        const matchIdx = bankSiswaArr.findIndex(b => normalize(b.nisn) === normalize(exS.nisn));
+        
+        if (matchIdx !== -1) {
+          processMatch(exS, matchIdx);
+          unmappedExisting.splice(i, 1);
+        }
+      }
+
+      // PASS 2: Prioritas Kedua - Jika NISN berubah (typo), cocokkan Nama DAN Tanggal Lahir
+      for (let i = unmappedExisting.length - 1; i >= 0; i--) {
+        const exS = unmappedExisting[i];
+        if (!isValidDate(exS.tanggalLahir)) continue;
+        
+        const matchIdx = bankSiswaArr.findIndex(b => 
+          normalize(b.nama) === normalize(exS.nama) && 
+          isValidDate(b.tanggal_lahir) &&
+          normalize(b.tanggal_lahir) === normalize(exS.tanggalLahir)
+        );
+        
+        if (matchIdx !== -1) {
+          processMatch(exS, matchIdx);
+          unmappedExisting.splice(i, 1);
+        }
+      }
+
+      // PASS 3: Prioritas Ketiga - Cocokkan hanya dengan Nama (Hanya jika nama tersebut UNIK di kedua sisi)
+      for (let i = unmappedExisting.length - 1; i >= 0; i--) {
+        const exS = unmappedExisting[i];
+        const exName = normalize(exS.nama);
+        if (!exName) continue;
+        
+        // Pastikan nama ini hanya ada 1 di daftar bank data yang tersisa
+        const bankMatches = bankSiswaArr.filter(b => normalize(b.nama) === exName);
+        // Pastikan nama ini juga hanya ada 1 di kelas yang belum terpetakan
+        const exMatches = unmappedExisting.filter(e => normalize(e.nama) === exName);
+
+        if (bankMatches.length === 1 && exMatches.length === 1) {
+          const matchIdx = bankSiswaArr.findIndex(b => normalize(b.nama) === exName);
+          processMatch(exS, matchIdx);
+          unmappedExisting.splice(i, 1);
+        }
+      }
+
+      // Siswa yang masih tersisa di kelas (tidak menemukan pasangan) berarti dihapus
+      unmappedExisting.forEach(exS => {
+        removed.push({ nisn: exS.nisn, nama: exS.nama });
       });
       
+      // Siswa yang masih tersisa di bank data (tidak terpakai) berarti siswa baru
       bankSiswaArr.forEach(bankS => {
         added.push({ nisn: bankS.nisn, nama: bankS.nama, tanggalLahir: bankS.tanggal_lahir });
       });
