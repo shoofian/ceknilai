@@ -980,6 +980,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const saveCatatan = async (studentNisn) => {
+    if (handleLockedAction()) return;
     const draftText = catatanDraft[studentNisn] || "";
     setSavingCatatan(prev => ({ ...prev, [studentNisn]: true }));
     try {
@@ -1169,6 +1170,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const handleSavePertemuan = async () => {
+    if (handleLockedAction()) return;
     if (!pertemuanNama.trim()) {
       alert("Nama pertemuan harus diisi.");
       return;
@@ -1280,6 +1282,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const handleSyncBankDataInit = async () => {
+    if (handleLockedAction()) return;
     if (isSyncingBankData || isLocked) return;
     setIsSyncingBankData(true);
     try {
@@ -1514,6 +1517,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const handleSiswaSubmit = async (e) => {
     e.preventDefault();
+    if (handleLockedAction()) return;
     if (!nisn.trim() || !namaSiswa.trim()) {
       setSiswaError("NISN dan Nama Siswa harus diisi.");
       return;
@@ -2284,6 +2288,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   const saveAllBobot = async () => {
+    if (handleLockedAction()) return;
     // Validasi bobot kelompok sub-komponen kustom
     for (const col of kelas.kolomNilai) {
       if (col.isGroup && col.hitungMetode === "persentase") {
@@ -2480,6 +2485,25 @@ export default function DetailKelas({ params: paramsPromise }) {
     } finally {
       setIsSavingBobot(false);
     }
+  };
+  // === HELPER UNTUK MENCEGAH AKSI SAAT TERKUNCI ===
+  const handleLockedAction = () => {
+    if (kelas?.archived) {
+      triggerConfirm("Kelas ini sudah diarsipkan. Anda tidak dapat mengubah datanya.", null, { title: "Akses Ditolak", cancelText: "Tutup", isAlert: true });
+      return true;
+    }
+    if (isLocked) {
+      setConfirmConfig({
+        isOpen: true,
+        title: "⚠️ Akses Terkunci",
+        message: guruProfile?.lock_message || "Masa aktif premium/trial Anda telah habis. Silakan perpanjang lisensi Anda untuk mengedit data ini.",
+        isAlert: true,
+        cancelText: "Tutup",
+        onConfirm: () => setConfirmConfig(prev => ({ ...prev, isOpen: false }))
+      });
+      return true;
+    }
+    return false;
   };
 
   // === SPREADSHEET AUTO SAVE ON BLUR ===
@@ -2822,6 +2846,10 @@ export default function DetailKelas({ params: paramsPromise }) {
  
   // === DYNAMIC EXCEL PARSER ===
   const handleExcelUpload = (e) => {
+    if (handleLockedAction()) {
+      e.target.value = "";
+      return;
+    }
     const file = e.target.files[0];
     if (!file) return;
     
@@ -3321,7 +3349,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                 }
               }}
               className="btn"
-              disabled={isLocked}
               style={{
                 padding: "8px 18px",
                 fontSize: "0.85rem",
@@ -4456,8 +4483,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "center" }}>
                           <span>N. AKHIR {sortConfig.key === 'finalScore' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}</span>
                           <button 
-                            onClick={handleTogglePublish}
-                            disabled={kelas.archived || isLocked}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (handleLockedAction()) return;
+                              handleTogglePublish(e);
+                            }}
                             className={`btn ${kelas.isNilaiAkhirGenerated ? "btn-secondary" : "btn-primary"}`}
                             style={{ 
                               padding: "4px 8px", 
@@ -4465,9 +4495,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                               borderColor: kelas.isNilaiAkhirGenerated ? "var(--border-color)" : "transparent",
                               color: kelas.isNilaiAkhirGenerated ? "var(--text-primary)" : "#fff",
                               width: "100%",
-                              whiteSpace: "nowrap",
-                              opacity: (kelas.archived || isLocked) ? 0.5 : 1,
-                              cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer"
+                              whiteSpace: "nowrap"
                             }}
                           >
                             {kelas.isNilaiAkhirGenerated ? "🔒 Batalkan" : "🚀 Tampilkan"}
@@ -4603,7 +4631,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                                           }
                                         }
                                       }}
-                                      disabled={kelas.archived || isLocked}
+                                      readOnly={kelas.archived || isLocked}
+                                      onClick={() => handleLockedAction()}
                                       className="form-input"
                                       style={{
                                         padding: "8px 8px",
@@ -4883,9 +4912,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 outline: "none",
                 maxWidth: "200px"
               }}
-              disabled={isLocked}
               defaultValue=""
               onChange={(e) => {
+                if (handleLockedAction()) {
+                  e.target.value = "";
+                  return;
+                }
                 const targetId = e.target.value;
                 if (targetId) {
                   handleBulkTransferStudents(targetId);
@@ -4902,8 +4934,10 @@ export default function DetailKelas({ params: paramsPromise }) {
             </select>
 
             <button
-              onClick={handleBulkDeleteStudents}
-              disabled={isLocked}
+              onClick={(e) => {
+                if (handleLockedAction()) return;
+                handleBulkDeleteStudents(e);
+              }}
               className="btn btn-primary"
               style={{
                 backgroundColor: "var(--danger)",
@@ -5327,7 +5361,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <button type="button" onClick={() => setSiswaModalOpen(false)} className="btn btn-secondary">
                   Batal
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={isLocked}>
+                <button type="submit" className="btn btn-primary">
                   Simpan
                 </button>
               </div>
@@ -6174,7 +6208,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 type="button"
                 onClick={handleSavePertemuan} 
                 className="btn btn-primary"
-                disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal || isLocked}
+                disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal}
                 style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
                 {isSavingPertemuan ? (
@@ -6278,7 +6312,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                       }}
                       className="btn btn-primary"
                       style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                      disabled={isLocked}
                     >
                       👤 Tambah Siswa Baru
                     </button>
@@ -6305,12 +6338,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
                     <label
-                      className={`btn btn-primary ${isLocked ? "disabled" : ""}`}
+                      className="btn btn-primary"
                       style={{
                         display: "inline-flex", alignItems: "center", gap: "8px",
                         fontSize: "0.85rem", padding: "10px 24px", borderRadius: "8px",
-                        cursor: isLocked ? "not-allowed" : "pointer",
-                        opacity: isLocked ? 0.5 : 1,
+                        cursor: "pointer",
                         margin: 0, fontWeight: "700"
                       }}
                     >
@@ -6323,7 +6355,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                           setKelolaSiswaModalOpen(false);
                           handleExcelUpload(e);
                         }}
-                        disabled={isLocked}
                       />
                     </label>
                   </div>
@@ -6341,9 +6372,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
                     <button
                       onClick={handleSyncBankDataInit}
-                      className={`btn btn-primary ${isSyncingBankData || isLocked ? "disabled" : ""}`}
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", cursor: isSyncingBankData || isLocked ? "not-allowed" : "pointer", opacity: isSyncingBankData || isLocked ? 0.5 : 1 }}
-                      disabled={isSyncingBankData || isLocked}
+                      className={`btn btn-primary ${isSyncingBankData ? "disabled" : ""}`}
+                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", cursor: isSyncingBankData ? "not-allowed" : "pointer", opacity: isSyncingBankData ? 0.5 : 1 }}
+                      disabled={isSyncingBankData}
                     >
                       {isSyncingBankData ? "⏳ Mensinkronkan..." : "🔄 Tarik dari Bank Data"}
                     </button>
@@ -6558,7 +6589,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 type="button"
                 onClick={() => saveCatatan(catatanSiswaTerpilih.nisn)} 
                 className="btn btn-primary"
-                disabled={savingCatatan[catatanSiswaTerpilih.nisn] || kelas.archived || isLocked}
+                disabled={savingCatatan[catatanSiswaTerpilih.nisn] || kelas.archived}
                 style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
                 {savingCatatan[catatanSiswaTerpilih.nisn] ? (
@@ -7769,7 +7800,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   onClick={saveAllBobot}
                   className="btn btn-primary btn-simpan-aspek"
                   style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
-                  disabled={isSavingBobot || isLocked}
+                  disabled={isSavingBobot}
                 >
                   {isSavingBobot ? (
                     <>
@@ -7950,6 +7981,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </button>
                 <button 
                   onClick={async () => {
+                    if (handleLockedAction()) return;
                     setIsSavingKatrol(true);
                     try {
                       const _katrol = katrolValue !== "" && katrolValue !== null && katrolValue !== undefined ? Number(katrolValue) : null;
@@ -7985,7 +8017,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   }} 
                   className="btn btn-primary" 
                   style={{ padding: "6px 16px", fontSize: "0.82rem", minWidth: "90px", display: "flex", justifyContent: "center" }}
-                  disabled={isSavingKatrol || isLocked}
+                  disabled={isSavingKatrol}
                 >
                   {isSavingKatrol ? (
                     <>
@@ -8221,6 +8253,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <div style={{ display: "flex", gap: "8px", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "6px" }}>
                       <button
                         onClick={async () => {
+                          if (handleLockedAction()) return;
                           if (confirm("⚠️ Apakah Anda yakin ingin MENGHAPUS / MERESET semua nilai katrol & normalisasi seluruh siswa di kelas ini?")) {
                             setIsSavingNorm(true);
                             try {
@@ -8243,7 +8276,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         }}
                         className="btn btn-secondary"
                         style={{ padding: "6px 12px", fontSize: "0.78rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.2)" }}
-                        disabled={isSavingNorm || isLocked}
+                        disabled={isSavingNorm}
                       >
                         🗑️ Reset Semua Katrol
                       </button>
@@ -8259,6 +8292,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </button>
                         <button
                           onClick={async () => {
+                            if (handleLockedAction()) return;
                             setIsSavingNorm(true);
                             try {
                               const promises = computedPreview.map(s =>
@@ -8283,7 +8317,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           }}
                           className="btn btn-primary"
                           style={{ padding: "6px 16px", fontSize: "0.82rem", fontWeight: "700" }}
-                          disabled={isSavingNorm || isLocked}
+                          disabled={isSavingNorm}
                         >
                           {isSavingNorm ? "Terapkan..." : `Terapkan Normalisasi (${computedPreview.length} Siswa)`}
                         </button>
