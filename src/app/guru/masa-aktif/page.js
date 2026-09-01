@@ -656,7 +656,6 @@ export default function MasaAktifPage() {
 
               <div style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', border: '1px solid var(--warning)', borderRadius: '8px', padding: '10px', marginTop: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                 <strong>Pemberitahuan:</strong> Setelah menekan kirim, Anda akan mendapatkan <strong>akses masa tenggang 24 jam</strong> secara instan agar bisa langsung menggunakan aplikasi sambil menunggu Superadmin memverifikasi pembayaran Anda.
-                <div style={{ marginTop: '4px', color: 'var(--danger)', fontWeight: 'bold' }}>Jika bukti pembayaran terindikasi fiktif/palsu, akun Anda akan diblokir.</div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
