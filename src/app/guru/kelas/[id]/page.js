@@ -4278,8 +4278,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             <button 
               onClick={() => { handleOpenKolomModal(); }} 
               className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
-              style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", opacity: isLocked ? 0.6 : 1, cursor: isLocked ? "not-allowed" : "pointer", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) && !isLocked ? "pulse-soft 2s infinite" : "none" }}
-              disabled={isLocked}
+              style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "pulse-soft 2s infinite" : "none" }}
             >
               + Komponen Nilai
             </button>
@@ -5328,7 +5327,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <button type="button" onClick={() => setSiswaModalOpen(false)} className="btn btn-secondary">
                   Batal
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="submit" className="btn btn-primary" disabled={isLocked}>
                   Simpan
                 </button>
               </div>
@@ -6175,7 +6174,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 type="button"
                 onClick={handleSavePertemuan} 
                 className="btn btn-primary"
-                disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal}
+                disabled={isSavingPertemuan || !pertemuanNama.trim() || !pertemuanTanggal || isLocked}
                 style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
                 {isSavingPertemuan ? (
@@ -6559,7 +6558,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 type="button"
                 onClick={() => saveCatatan(catatanSiswaTerpilih.nisn)} 
                 className="btn btn-primary"
-                disabled={savingCatatan[catatanSiswaTerpilih.nisn] || kelas.archived}
+                disabled={savingCatatan[catatanSiswaTerpilih.nisn] || kelas.archived || isLocked}
                 style={{ padding: "8px 20px", fontSize: "0.85rem" }}
               >
                 {savingCatatan[catatanSiswaTerpilih.nisn] ? (
@@ -7770,7 +7769,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   onClick={saveAllBobot}
                   className="btn btn-primary btn-simpan-aspek"
                   style={{ padding: "8px 20px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "7px", minWidth: "110px", justifyContent: "center" }}
-                  disabled={isSavingBobot}
+                  disabled={isSavingBobot || isLocked}
                 >
                   {isSavingBobot ? (
                     <>
@@ -7986,7 +7985,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   }} 
                   className="btn btn-primary" 
                   style={{ padding: "6px 16px", fontSize: "0.82rem", minWidth: "90px", display: "flex", justifyContent: "center" }}
-                  disabled={isSavingKatrol}
+                  disabled={isSavingKatrol || isLocked}
                 >
                   {isSavingKatrol ? (
                     <>
@@ -8244,7 +8243,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         }}
                         className="btn btn-secondary"
                         style={{ padding: "6px 12px", fontSize: "0.78rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.2)" }}
-                        disabled={isSavingNorm}
+                        disabled={isSavingNorm || isLocked}
                       >
                         🗑️ Reset Semua Katrol
                       </button>
@@ -8284,7 +8283,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           }}
                           className="btn btn-primary"
                           style={{ padding: "6px 16px", fontSize: "0.82rem", fontWeight: "700" }}
-                          disabled={isSavingNorm}
+                          disabled={isSavingNorm || isLocked}
                         >
                           {isSavingNorm ? "Terapkan..." : `Terapkan Normalisasi (${computedPreview.length} Siswa)`}
                         </button>
