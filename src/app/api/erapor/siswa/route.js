@@ -25,30 +25,23 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Anda bukan wali kelas' }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const reqSemester = searchParams.get('semester') || 'Ganjil';
+
     if (!supabase) {
       return NextResponse.json({ siswa: [] });
     }
 
     // Gunakan fungsi yang sama dengan halaman Wali Kelas agar data presisi
     const { getLegerData } = await import('@/lib/db');
-    // Ambil data ganjil atau genap, siswa akan muncul jika terdaftar di salah satu mapel.
+    // Ambil data berdasarkan semester yang dipilih
     let leger = await getLegerData(
       guru.sekolah_id, 
       guru.walikelas_tingkatan, 
       guru.walikelas_rombel_nama, 
       guru.tahun_ajaran || '2025/2026', 
-      "Ganjil"
+      reqSemester
     );
-
-    if (!leger || !leger.siswa || leger.siswa.length === 0) {
-      leger = await getLegerData(
-        guru.sekolah_id, 
-        guru.walikelas_tingkatan, 
-        guru.walikelas_rombel_nama, 
-        guru.tahun_ajaran || '2025/2026', 
-        "Genap"
-      );
-    }
 
     if (!leger || !leger.siswa || leger.siswa.length === 0) {
       return NextResponse.json({ siswa: [] });

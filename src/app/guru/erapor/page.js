@@ -20,6 +20,8 @@ export default function ERaporDashboard() {
   const [guru, setGuru] = useState(null);
   const [showBiodataModal, setShowBiodataModal] = useState(false);
 
+  const [selectedSemester, setSelectedSemester] = useState("Ganjil");
+
   const filteredStudents = students.filter(s => 
     (s.nama && s.nama.toLowerCase().includes(search.toLowerCase())) || 
     (s.nisn && s.nisn.includes(search))
@@ -28,7 +30,7 @@ export default function ERaporDashboard() {
   const missingStats = React.useMemo(() => {
     let stats = {
       nipd: 0, tempat_lahir: 0, tanggal_lahir: 0, jenis_kelamin: 0, 
-      agama: 0, alamat_lengkap: 0, status_keluarga: 0, anak_ke: 0, telepon: 0, 
+      agama: 0, alamat_lengkap: 0, telepon: 0, 
       nama_ayah: 0, pekerjaan_ayah: 0, nama_ibu: 0, pekerjaan_ibu: 0
     };
     students.forEach(s => {
@@ -39,8 +41,6 @@ export default function ERaporDashboard() {
       if (!b.jenis_kelamin) stats.jenis_kelamin++;
       if (!b.agama) stats.agama++;
       if (!b.alamat_lengkap) stats.alamat_lengkap++;
-      if (!b.status_keluarga) stats.status_keluarga++;
-      if (!b.anak_ke) stats.anak_ke++;
       if (!b.telepon) stats.telepon++;
       if (!b.nama_ayah) stats.nama_ayah++;
       if (!b.pekerjaan_ayah) stats.pekerjaan_ayah++;
@@ -54,12 +54,23 @@ export default function ERaporDashboard() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState({ message: "", type: "" }); // type: 'success' | 'error' | 'info'
 
-  // Mock data for preview (sementara sebelum tarik dari database)
-  const mockStudents = [
-    { id: '1', name: 'Ahmad Faisal', nisn: '0012345678', status: 'Selesai' },
-    { id: '2', name: 'Budi Santoso', nisn: '0012345679', status: 'Selesai' },
-    { id: '3', name: 'Citra Kirana', nisn: '0012345680', status: 'Belum Selesai' },
-  ];
+  const fetchStudents = async (semester) => {
+    try {
+      setLoading(true);
+      const resSiswa = await fetch(`/api/erapor/siswa?semester=${semester}`);
+      if (resSiswa.ok) {
+        const dataSiswa = await resSiswa.json();
+        setStudents(dataSiswa.siswa || []);
+      } else {
+        setErrorMsg("Gagal memuat daftar siswa dari database.");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Terjadi kesalahan koneksi.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -72,17 +83,10 @@ export default function ERaporDashboard() {
             
             if (!data.user.walikelas_tingkatan || !data.user.walikelas_rombel_nama) {
               setErrorMsg("Akses Ditolak: Anda bukan Wali Kelas aktif. Hanya Wali Kelas yang dapat mengelola dan mencetak e-Rapor.");
+              setLoading(false);
             } else {
               setAuthorized(true);
-              
-              // Fetch from backend
-              const resSiswa = await fetch("/api/erapor/siswa");
-              if (resSiswa.ok) {
-                const dataSiswa = await resSiswa.json();
-                setStudents(dataSiswa.siswa || []);
-              } else {
-                setErrorMsg("Gagal memuat daftar siswa dari database.");
-              }
+              fetchStudents(selectedSemester);
             }
           } else {
             router.push("/login");
@@ -93,12 +97,18 @@ export default function ERaporDashboard() {
       } catch (err) {
         console.error("Gagal memeriksa sesi", err);
         router.push("/login");
-      } finally {
-        setLoading(false);
       }
     };
     checkAuth();
   }, [router]);
+
+  const handleSemesterChange = (e) => {
+    const newSemester = e.target.value;
+    setSelectedSemester(newSemester);
+    if (authorized) {
+      fetchStudents(newSemester);
+    }
+  };
 
   // Fungsi Parser Excel Dapodik
   const handleFileUpload = async (e) => {
@@ -365,11 +375,20 @@ export default function ERaporDashboard() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
             <h3 style={{ fontSize: "1.2rem", margin: 0 }}>Daftar Siswa & Status Rapor</h3>
+            <select 
+              className="form-input" 
+              style={{ width: "auto", padding: "6px 12px", fontSize: "0.85rem", fontWeight: "600" }}
+              value={selectedSemester}
+              onChange={handleSemesterChange}
+            >
+              <option value="Ganjil">Semester Ganjil</option>
+              <option value="Genap">Semester Genap</option>
+            </select>
             <div style={{ display: "flex", gap: "8px" }}>
               <button onClick={() => setShowBiodataModal(true)} className="btn btn-secondary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
                 <FileText size={16} /> Detail Kelengkapan
               </button>
-              <Link href="/guru/erapor/cetak-semua" className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
+              <Link href={`/guru/erapor/cetak-semua?semester=${selectedSemester}`} className="btn btn-primary" style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}>
                 <Printer size={16} /> Cetak Semua Rapor
               </Link>
             </div>
@@ -413,7 +432,7 @@ export default function ERaporDashboard() {
                     </td>
                     <td style={{ textAlign: "right" }}>
                       <Link 
-                        href={`/guru/erapor/${siswa.nisn}`}
+                        href={`/guru/erapor/${siswa.nisn}?semester=${selectedSemester}`}
                         className="btn btn-primary"
                         style={{ padding: "6px 16px", fontSize: "0.85rem", gap: "6px" }}
                       >
@@ -463,8 +482,6 @@ export default function ERaporDashboard() {
                 {missingStats.tanggal_lahir > 0 && <span className="badge badge-warning">Tgl.Lahir: {missingStats.tanggal_lahir}</span>}
                 {missingStats.jenis_kelamin > 0 && <span className="badge badge-warning">JK: {missingStats.jenis_kelamin}</span>}
                 {missingStats.agama > 0 && <span className="badge badge-warning">Agama: {missingStats.agama}</span>}
-                {missingStats.status_keluarga > 0 && <span className="badge badge-warning">Status Keluarga: {missingStats.status_keluarga}</span>}
-                {missingStats.anak_ke > 0 && <span className="badge badge-warning">Anak Ke: {missingStats.anak_ke}</span>}
                 {missingStats.alamat_lengkap > 0 && <span className="badge badge-warning">Alamat: {missingStats.alamat_lengkap}</span>}
                 {missingStats.telepon > 0 && <span className="badge badge-warning">Telepon: {missingStats.telepon}</span>}
                 {missingStats.nama_ayah > 0 && <span className="badge badge-warning">Nm.Ayah: {missingStats.nama_ayah}</span>}
@@ -537,12 +554,12 @@ export default function ERaporDashboard() {
                             {siswa.biodata_detail?.status_keluarga ? (
                               <div>{siswa.biodata_detail.status_keluarga}</div>
                             ) : (
-                              <div><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Status Kosong</span></div>
+                              <div><span style={{ color: "var(--text-muted)" }}>-</span></div>
                             )}
                             {siswa.biodata_detail?.anak_ke ? (
                               <div style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Anak Ke-{siswa.biodata_detail.anak_ke}</div>
                             ) : (
-                              <div style={{ marginTop: "4px" }}><span className="badge badge-danger" style={{ fontSize: "0.7rem", padding: "2px 6px" }}>Ke- Kosong</span></div>
+                              <div style={{ marginTop: "4px" }}><span style={{ color: "var(--text-muted)" }}>-</span></div>
                             )}
                           </td>
                           <td style={{ fontSize: "0.85rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "250px" }} title={siswa.biodata_detail?.alamat_lengkap}>

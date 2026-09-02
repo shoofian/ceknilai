@@ -26,6 +26,9 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Anda bukan wali kelas' }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const reqSemester = searchParams.get('semester') || 'Ganjil';
+
     if (!supabase) {
       return NextResponse.json({ error: 'Database tidak terhubung' }, { status: 500 });
     }
@@ -37,7 +40,7 @@ export async function GET(request, { params }) {
       guru.walikelas_tingkatan, 
       guru.walikelas_rombel_nama, 
       guru.tahun_ajaran || '2025/2026', 
-      "Ganjil"
+      reqSemester
     );
 
     let studentLeger = null;
@@ -46,20 +49,7 @@ export async function GET(request, { params }) {
     }
 
     if (!studentLeger) {
-      leger = await getLegerData(
-        guru.sekolah_id, 
-        guru.walikelas_tingkatan, 
-        guru.walikelas_rombel_nama, 
-        guru.tahun_ajaran || '2025/2026', 
-        "Genap"
-      );
-      if (leger && leger.siswa) {
-        studentLeger = leger.siswa.find(s => String(s.nisn).trim() === String(siswaId).trim());
-      }
-    }
-
-    if (!studentLeger) {
-      return NextResponse.json({ error: 'Siswa tidak ditemukan di data nilai kelas ini' }, { status: 404 });
+      return NextResponse.json({ error: `Siswa tidak ditemukan di data nilai kelas ini untuk semester ${reqSemester}` }, { status: 404 });
     }
 
     // 2. Coba ambil dari bank_siswa (opsional)
@@ -98,8 +88,7 @@ export async function GET(request, { params }) {
       `)
       .eq('nisn', siswaId)
       .eq('tahun_ajaran', guru.tahun_ajaran || '2025/2026')
-      // Note: we might need to filter by semester if we want, or just get all for the year
-      // For now we get Ganjil by default, or Genap if fallback.
+      .eq('semester', reqSemester)
       .limit(10);
       
     if (dbEkskul && dbEkskul.length > 0) {
@@ -145,7 +134,7 @@ export async function GET(request, { params }) {
       .select('catatan')
       .eq('nisn', siswaId)
       .eq('tahun_ajaran', guru.tahun_ajaran || '2025/2026')
-      .eq('semester', 'Ganjil')
+      .eq('semester', reqSemester)
       .maybeSingle();
       
     if (dbCatatanWali && dbCatatanWali.catatan) {
