@@ -1384,6 +1384,49 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSyncSelectedAdded(nextSelectedAdded);
   };
 
+  const handleManualMerge = (removedSiswa, addedSiswa) => {
+    // 1. Remove from removed
+    const newRemoved = (syncPreviewData.removed || []).filter(r => r.nisn !== removedSiswa.nisn);
+    
+    // 2. Remove from added
+    const newAdded = (syncPreviewData.added || []).filter(a => a.nisn !== addedSiswa.nisn);
+    
+    // 3. Add to updated
+    // Need to find old tanggalLahir. If we don't have it in removedSiswa, try to find it in kelas.siswa
+    const oldSiswaFull = kelas.siswa?.find(s => s.nisn === removedSiswa.nisn) || {};
+    
+    const nisnChanged = removedSiswa.nisn !== addedSiswa.nisn;
+    const nameChanged = removedSiswa.nama !== addedSiswa.nama;
+    const dobChanged = oldSiswaFull.tanggalLahir !== addedSiswa.tanggalLahir;
+    
+    const newUpdatedItem = {
+      nisnLama: removedSiswa.nisn,
+      nisnBaru: addedSiswa.nisn,
+      namaLama: removedSiswa.nama,
+      namaBaru: addedSiswa.nama,
+      tanggalLahirLama: oldSiswaFull.tanggalLahir || null,
+      tanggalLahirBaru: addedSiswa.tanggalLahir,
+      nisnChanged,
+      nameChanged,
+      dobChanged
+    };
+    
+    const newUpdated = [...(syncPreviewData.updated || []), newUpdatedItem];
+    
+    // Update state
+    setSyncPreviewData({
+      ...syncPreviewData,
+      updated: newUpdated,
+      removed: newRemoved,
+      added: newAdded
+    });
+    
+    // Auto check the new updated item
+    const nextSelectedUpdated = new Set(syncSelectedUpdated);
+    nextSelectedUpdated.add(newUpdatedItem.nisnLama);
+    setSyncSelectedUpdated(nextSelectedUpdated);
+  };
+
   const handleCommitSyncBankData = async () => {
     if (isSyncingBankData || isLocked || !syncPreviewData) return;
     setIsSyncingBankData(true);
@@ -8984,8 +9027,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </div>
                   <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "150px", overflowY: "auto", listStyleType: "none" }}>
                     {syncPreviewData.removed.map(s => (
-                      <li key={s.nisn} style={{ marginBottom: "4px" }}>
-                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <li key={s.nisn} style={{ marginBottom: "6px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", flex: 1, minWidth: "200px" }}>
                           <input 
                             type="checkbox"
                             checked={syncSelectedRemoved.has(s.nisn)}
@@ -8996,8 +9039,29 @@ export default function DetailKelas({ params: paramsPromise }) {
                               setSyncSelectedRemoved(newSet);
                             }}
                           />
-                          {s.nama} ({s.nisn})
+                          <span style={{ flex: 1, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{s.nama} ({s.nisn})</span>
                         </label>
+                        
+                        {syncPreviewData.added && syncPreviewData.added.length > 0 && (
+                          <select
+                            className="form-input"
+                            style={{ padding: "2px 6px", fontSize: "0.75rem", minWidth: "150px", height: "auto", flex: 1 }}
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                const addedSiswa = syncPreviewData.added.find(a => a.nisn === e.target.value);
+                                if (addedSiswa) handleManualMerge(s, addedSiswa);
+                              }
+                            }}
+                            value=""
+                          >
+                            <option value="">🔗 Tautkan (Manual Merger)...</option>
+                            {syncPreviewData.added.map(a => (
+                              <option key={a.nisn} value={a.nisn}>
+                                {a.nama} ({a.nisn})
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </li>
                     ))}
                   </ul>
