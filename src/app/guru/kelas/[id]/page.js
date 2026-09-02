@@ -1338,7 +1338,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         if (data.preview) {
           setSyncPreviewData(data);
           setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
-          setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
+          setSyncSelectedUpdated(new Set((data.updated || []).filter(s => !(s.nisnChanged && s.nameChanged)).map(s => s.nisnLama)));
           setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn)));
           setShowSyncModal(true);
           setBankRombelModalOpen(false); // Close selection modal if preview is shown
@@ -8973,39 +8973,51 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </label>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "200px", overflowY: "auto", listStyleType: "none" }}>
-                    {syncPreviewData.updated.map(s => (
-                      <li key={s.nisnLama} style={{ marginBottom: "8px" }}>
-                        <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer", flex: 1 }}>
-                          <input 
-                            type="checkbox"
-                            checked={syncSelectedUpdated.has(s.nisnLama)}
-                            onChange={(e) => {
-                              const newSet = new Set(syncSelectedUpdated);
-                              if (e.target.checked) newSet.add(s.nisnLama);
-                              else newSet.delete(s.nisnLama);
-                              setSyncSelectedUpdated(newSet);
-                            }}
-                            style={{ marginTop: "3px" }}
-                          />
-                          <div>
-                            <span style={{ fontWeight: "600" }}>{s.namaLama} ({s.nisnLama})</span>
-                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "2px", display: "flex", flexDirection: "column", gap: "2px" }}>
-                              {s.nameChanged && <span>• Nama: <del style={{ opacity: 0.7 }}>{s.namaLama}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.namaBaru}</span></span>}
-                              {s.nisnChanged && <span>• NISN: <del style={{ opacity: 0.7 }}>{s.nisnLama}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.nisnBaru}</span></span>}
-                              {s.dobChanged && <span>• Tgl Lahir: <del style={{ opacity: 0.7 }}>{s.tanggalLahirLama || 'kosong'}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.tanggalLahirBaru || 'kosong'}</span></span>}
+                    {syncPreviewData.updated.map(s => {
+                      const isExtremeMerge = s.nameChanged && s.nisnChanged;
+                      return (
+                      <li key={s.nisnLama} style={{ marginBottom: "12px", padding: isExtremeMerge ? "8px" : "0", backgroundColor: isExtremeMerge ? "rgba(239, 68, 68, 0.05)" : "transparent", border: isExtremeMerge ? "1px dashed var(--danger)" : "none", borderRadius: "8px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
+                          <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer", flex: 1 }}>
+                            <input 
+                              type="checkbox"
+                              checked={syncSelectedUpdated.has(s.nisnLama)}
+                              onChange={(e) => {
+                                const newSet = new Set(syncSelectedUpdated);
+                                if (e.target.checked) newSet.add(s.nisnLama);
+                                else newSet.delete(s.nisnLama);
+                                setSyncSelectedUpdated(newSet);
+                              }}
+                              style={{ marginTop: "3px" }}
+                            />
+                            <div>
+                              <span style={{ fontWeight: "600", color: isExtremeMerge && !syncSelectedUpdated.has(s.nisnLama) ? "var(--text-muted)" : "inherit" }}>
+                                {s.namaLama} ({s.nisnLama})
+                              </span>
+                              {isExtremeMerge && (
+                                <div style={{ fontSize: "0.75rem", color: "var(--danger)", fontWeight: "600", marginTop: "2px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                  <span>⚠️ Perhatian Ekstra: NISN dan Nama berubah total. Centang jika yakin ini orang yang sama!</span>
+                                </div>
+                              )}
+                              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                                {s.nameChanged && <span>• Nama: <del style={{ opacity: 0.7 }}>{s.namaLama}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.namaBaru}</span></span>}
+                                {s.nisnChanged && <span>• NISN: <del style={{ opacity: 0.7 }}>{s.nisnLama}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.nisnBaru}</span></span>}
+                                {s.dobChanged && <span>• Tgl Lahir: <del style={{ opacity: 0.7 }}>{s.tanggalLahirLama || 'kosong'}</del> ➔ <span style={{ color: "var(--primary)", fontWeight: "600" }}>{s.tanggalLahirBaru || 'kosong'}</span></span>}
+                              </div>
                             </div>
-                          </div>
-                        </label>
-                        <button 
-                          className="btn btn-secondary"
-                          onClick={() => handleSeparateStudent(s)}
-                          style={{ padding: "4px 8px", fontSize: "0.75rem" }}
-                          title="Batal merger (keduanya bukan orang yang sama)"
-                        >
-                          ⎇ Pisahkan
-                        </button>
+                          </label>
+                          <button 
+                            className="btn btn-secondary"
+                            onClick={() => handleSeparateStudent(s)}
+                            style={{ padding: "4px 8px", fontSize: "0.75rem", whiteSpace: "nowrap" }}
+                            title="Batal merger (keduanya bukan orang yang sama)"
+                          >
+                            ⎇ Pisahkan
+                          </button>
+                        </div>
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 </div>
               )}
