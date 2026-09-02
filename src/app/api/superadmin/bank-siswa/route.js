@@ -23,6 +23,41 @@ export async function GET(request) {
   }
 }
 
+export async function PUT(request) {
+  try {
+    const data = await request.json();
+    const { id, nisn, nama, tingkatan, rombel, tanggal_lahir, tahun_pelajaran, sekolah_id } = data;
+
+    if (!id || !sekolah_id) {
+      return NextResponse.json({ error: 'ID dan Sekolah ID wajib diisi' }, { status: 400 });
+    }
+
+    const auth = await checkAdminSekolahAuth(sekolah_id);
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { updateBankSiswa } = await import('@/lib/db');
+    const success = await updateBankSiswa(id, {
+      nisn: String(nisn).trim(),
+      nama: String(nama).trim(),
+      tingkatan: String(tingkatan).trim(),
+      rombel: String(rombel).trim(),
+      tanggal_lahir: tanggal_lahir || null,
+      tahun_pelajaran
+    });
+
+    if (success) {
+      return NextResponse.json({ success: true });
+    } else {
+      return NextResponse.json({ error: 'Gagal memperbarui data' }, { status: 400 });
+    }
+  } catch (error) {
+    console.error('Error updating bank siswa:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+
 export async function POST(request) {
   try {
     const { data, sekolah_id: bodySekolahId } = await request.json();

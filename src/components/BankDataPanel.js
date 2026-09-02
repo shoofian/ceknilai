@@ -23,6 +23,33 @@ export default function BankDataPanel({ targetSekolahId }) {
   const [importDataPreview, setImportDataPreview] = useState(null);
   const [importFileName, setImportFileName] = useState("");
   const [parsingExcel, setParsingExcel] = useState(false);
+
+  const [editingSiswa, setEditingSiswa] = useState(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setIsSavingEdit(true);
+    try {
+      const res = await fetch(`/api/superadmin/bank-siswa`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingSiswa)
+      });
+      if (res.ok) {
+        setEditingSiswa(null);
+        fetchBankData();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || "Gagal menyimpan perubahan.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan server saat menyimpan data.");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
   
   useEffect(() => {
     fetchBankData();
@@ -361,9 +388,14 @@ export default function BankDataPanel({ targetSekolahId }) {
                   <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{siswa.sekolah_id?.substring(0, 8)}...</td>
                   <td>{siswa.tahun_pelajaran}</td>
                   <td>
-                    <button onClick={() => handleDelete(siswa.id)} className="btn btn-secondary" style={{ padding: "4px 8px", fontSize: "0.75rem", color: "var(--danger)" }}>
-                      Hapus
-                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={() => setEditingSiswa(siswa)} className="btn btn-secondary" style={{ padding: "4px 8px", fontSize: "0.75rem" }}>
+                        ✏️ Edit
+                      </button>
+                      <button onClick={() => handleDelete(siswa.id)} className="btn btn-secondary" style={{ padding: "4px 8px", fontSize: "0.75rem", color: "var(--danger)" }}>
+                        Hapus
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -505,6 +537,86 @@ export default function BankDataPanel({ targetSekolahId }) {
                 {uploading ? "Menyimpan..." : "Simpan ke Bank Data"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {editingSiswa && (
+        <div className="animate-fade-in" style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1000,
+          display: "flex", justifyContent: "center", alignItems: "center", padding: "16px", backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "var(--bg-primary)", padding: "24px",
+            borderRadius: "16px", maxWidth: "450px", width: "100%",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.2)"
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: "16px", display: "flex", justifyContent: "space-between" }}>
+              <span>✏️ Edit Data Siswa</span>
+              <button onClick={() => setEditingSiswa(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "var(--text-muted)" }}>✕</button>
+            </h3>
+            
+            <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>NISN</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={editingSiswa.nisn || ""} 
+                  onChange={(e) => setEditingSiswa({...editingSiswa, nisn: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Nama Lengkap</label>
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  value={editingSiswa.nama || ""} 
+                  onChange={(e) => setEditingSiswa({...editingSiswa, nama: e.target.value})} 
+                  required 
+                />
+              </div>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Tingkat</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={editingSiswa.tingkatan || ""} 
+                    onChange={(e) => setEditingSiswa({...editingSiswa, tingkatan: e.target.value})} 
+                    required 
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Rombel</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    value={editingSiswa.rombel || ""} 
+                    onChange={(e) => setEditingSiswa({...editingSiswa, rombel: e.target.value})} 
+                    required 
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ fontSize: "0.85rem", fontWeight: "600", display: "block", marginBottom: "6px" }}>Tanggal Lahir</label>
+                <input 
+                  type="date" 
+                  className="form-input" 
+                  value={editingSiswa.tanggal_lahir ? editingSiswa.tanggal_lahir.split('T')[0] : ""} 
+                  onChange={(e) => setEditingSiswa({...editingSiswa, tanggal_lahir: e.target.value})} 
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "12px" }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditingSiswa(null)}>Batal</button>
+                <button type="submit" className="btn btn-primary" disabled={isSavingEdit}>
+                  {isSavingEdit ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

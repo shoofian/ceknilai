@@ -1979,6 +1979,24 @@ export async function getBankSiswa(sekolahId, tahunPelajaran) {
   }
 }
 
+export async function updateBankSiswa(id, data) {
+  try {
+    const { error } = await supabase
+      .from('bank_siswa')
+      .update(data)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating bank siswa:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in updateBankSiswa:', err);
+    return false;
+  }
+}
+
 export async function upsertBankSiswa(dataArray) {
   if (!supabase || !dataArray || dataArray.length === 0) return { success: false, error: 'Tidak ada data untuk diimpor' };
   try {
