@@ -147,6 +147,28 @@ export async function POST(request) {
         }
       }
 
+      // PASS 4: Prioritas Keempat - Cocokkan hanya dengan Tanggal Lahir (Hanya jika Tgl Lahir UNIK di kedua sisi)
+      for (let i = unmappedExisting.length - 1; i >= 0; i--) {
+        const exS = unmappedExisting[i];
+        const exDob = isValidDate(exS.tanggalLahir) ? normalize(exS.tanggalLahir) : null;
+        if (!exDob) continue;
+        
+        const bankMatches = bankSiswaArr.filter(b => isValidDate(b.tanggal_lahir) && normalize(b.tanggal_lahir) === exDob);
+        const exMatches = unmappedExisting.filter(e => isValidDate(e.tanggalLahir) && normalize(e.tanggalLahir) === exDob);
+
+        if (bankMatches.length === 1 && exMatches.length === 1) {
+          const matchIdx = bankSiswaArr.findIndex(b => isValidDate(b.tanggal_lahir) && normalize(b.tanggal_lahir) === exDob);
+          processMatch(exS, matchIdx);
+          unmappedExisting.splice(i, 1);
+        }
+      }
+
+      // PASS 5: Prioritas Kelima (Sapu Jagat) - Jika hanya tersisa TEPAT 1 siswa di kelas dan 1 siswa di Bank Data, pasti itu orang yang sama (typo parah di NISN & Nama)
+      if (unmappedExisting.length === 1 && bankSiswaArr.length === 1) {
+        processMatch(unmappedExisting[0], 0);
+        unmappedExisting.splice(0, 1);
+      }
+
       // Siswa yang masih tersisa di kelas (tidak menemukan pasangan) berarti dihapus
       unmappedExisting.forEach(exS => {
         removed.push({ nisn: exS.nisn, nama: exS.nama });
