@@ -4439,7 +4439,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <table className="premium-table crosshair-highlight " style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: 0, zIndex: 22 }}>
                         <input
                           type="checkbox"
                           checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -4447,13 +4447,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
                         />
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: "50px", zIndex: 22 }}>
                         No
                       </th>
-                      <th className="mobile-hide" rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", backgroundColor: "var(--bg-tertiary)" }} onClick={() => handleSort('nisn')}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: "90px", zIndex: 22 }} onClick={() => handleSort('nisn')}>
                         NISN {sortConfig.key === 'nisn' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
-                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: 0, zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: "230px", zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
                         Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", backgroundColor: "var(--bg-tertiary)" }}>Tanggal Lahir</th>
@@ -4535,7 +4535,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   return (
                     <Fragment key={student.nisn}>
                       <tr style={{ backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                        <td data-label="Pilih" style={{ width: "50px", minWidth: "50px", textAlign: "center" }}>
+                        <td data-label="Pilih" style={{ width: "50px", minWidth: "50px", textAlign: "center", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                           <input
                             type="checkbox"
                             checked={selectedNisns.includes(student.nisn)}
@@ -4543,10 +4543,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                             style={{ cursor: "pointer", width: "16px", height: "16px" }}
                           />
                         </td>
-                        <td data-label="No" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold" }}>
+                        <td data-label="No" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: "50px", zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                           {idx + 1}
                         </td>
-                        <td data-label="NISN" className="mobile-hide" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
+                        <td data-label="NISN" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600", position: "sticky", left: "90px", zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                           {student.nisn}
                         </td>
                         <td 
@@ -4554,7 +4554,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           className={`sticky-nama ${isNamaColumnExpanded ? 'expanded-active' : ''}`}
                           onClick={toggleNamaExpand}
                           title="Klik untuk melihat nama lengkap"
-                          style={{ fontWeight: "600", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
+                          style={{ fontWeight: "600", position: "sticky", left: "230px", zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer" }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                             <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
