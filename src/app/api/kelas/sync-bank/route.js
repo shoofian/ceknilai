@@ -56,6 +56,7 @@ export async function POST(request) {
              String(s.rombel).toLowerCase() === filterRombel
       );
 
+      const existingSiswa = kelas.siswa || [];
       let unmappedExisting = [...existingSiswa];
       let bankSiswaArr = [...filteredBankSiswa];
       
