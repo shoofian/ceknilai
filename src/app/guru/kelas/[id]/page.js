@@ -8973,7 +8973,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                     </label>
                   </div>
                   <ul style={{ margin: 0, paddingLeft: "10px", fontSize: "0.85rem", maxHeight: "200px", overflowY: "auto", listStyleType: "none" }}>
-                    {syncPreviewData.updated.map(s => {
+                    {[...syncPreviewData.updated]
+                      .sort((a, b) => {
+                        const aExtreme = a.nameChanged && a.nisnChanged ? 1 : 0;
+                        const bExtreme = b.nameChanged && b.nisnChanged ? 1 : 0;
+                        return bExtreme - aExtreme;
+                      })
+                      .map(s => {
                       const isExtremeMerge = s.nameChanged && s.nisnChanged;
                       return (
                       <li key={s.nisnLama} style={{ marginBottom: "12px", padding: isExtremeMerge ? "8px" : "0", backgroundColor: isExtremeMerge ? "rgba(239, 68, 68, 0.05)" : "transparent", border: isExtremeMerge ? "1px dashed var(--danger)" : "none", borderRadius: "8px" }}>
