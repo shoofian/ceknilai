@@ -58,6 +58,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [nisn, setNisn] = useState("");
   const [namaSiswa, setNamaSiswa] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
+  const [focusColumn, setFocusColumn] = useState(null);
   const [targetClassId, setTargetClassId] = useState("");
   const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
@@ -4057,7 +4058,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                       opacity: unlockedPertemuanIds.length > 0 && !unlockedPertemuanIds.includes(p.id) ? 0.35 : 1,
                       transition: "opacity 0.2s ease"
                     }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                      <div 
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", cursor: guru?.username === 'shoofian' ? "pointer" : "default" }}
+                        onClick={() => { if(guru?.username === 'shoofian') setFocusColumn({ type: 'presensi', id: p.id, nama: p.nama, kegiatan: p.kegiatan }); }}
+                        title={guru?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                      >
                         <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)" }} title={p.nama}>
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
                         </span>
@@ -4511,7 +4516,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                           );
                         }
                         return (
-                          <th key={col.id} rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)" }}>
+                          <th 
+                            key={col.id} 
+                            rowSpan={hasGroups ? 2 : 1} 
+                            onClick={() => { if(guru?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
+                            style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guru?.username === 'shoofian' ? "pointer" : "default" }}
+                            title={guru?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                          >
                             {col.nama} ({col.bobot}%)
                           </th>
                         );
@@ -4556,7 +4567,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                         {kelas.kolomNilai.map(col => {
                           if (col.isGroup && col.subKolom?.length > 0) {
                             return col.subKolom.map(sub => (
-                              <th key={sub.id} style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600" }}>
+                              <th 
+                                key={sub.id} 
+                                onClick={() => { if(guru?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
+                                style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guru?.username === 'shoofian' ? "pointer" : "default" }}
+                                title={guru?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                              >
                                 {sub.nama}
                               </th>
                             ));
@@ -9199,6 +9215,125 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           </div>
         </>
+      )}
+      {/* Modal Mode Fokus (Experimental Shoofian) */}
+      {focusColumn && guru?.username === 'shoofian' && (
+        <Modal 
+          isOpen={true} 
+          onClose={() => setFocusColumn(null)} 
+          title={`Mode Fokus: ${focusColumn.nama}`}
+        >
+          <div style={{ maxHeight: "65vh", overflowY: "auto", paddingRight: "8px", margin: "-16px", padding: "16px" }}>
+            <table className="premium-table" style={{ width: "100%", margin: 0 }}>
+              <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>
+                <tr>
+                  <th style={{ width: "40px", textAlign: "center" }}>No</th>
+                  <th>Nama Siswa</th>
+                  <th style={{ textAlign: "center", width: "140px" }}>{focusColumn.nama}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedStudents.map((student, idx) => {
+                  if (focusColumn.type === 'nilai') {
+                    const cellKey = `${student.nisn}-${focusColumn.id}`;
+                    return (
+                      <tr key={student.nisn}>
+                        <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
+                        <td style={{ fontWeight: "600" }}>{student.nama}</td>
+                        <td style={{ textAlign: "center" }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[focusColumn.id] !== null && student.nilai[focusColumn.id] !== undefined ? student.nilai[focusColumn.id] : "")}
+                            onChange={(e) => {
+                              let val = e.target.value;
+                              if (val !== "") {
+                                val = val.replace(/[^0-9]/g, '');
+                                if (val !== "") {
+                                  const num = parseInt(val, 10);
+                                  if (num > 100) val = "100";
+                                  else val = num.toString();
+                                }
+                              }
+                              setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
+                            }}
+                            onBlur={(e) => handleGradeBlur(student.nisn, focusColumn.id, e.target.value)}
+                            onWheel={(e) => e.target.blur()}
+                            onPaste={(e) => handleGradePaste(e, student.nisn, focusColumn.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleGradeBlur(student.nisn, focusColumn.id, e.target.value);
+                                const nextInput = document.getElementById(`focus-grade-${idx + 1}`);
+                                if (nextInput) {
+                                  nextInput.focus();
+                                  nextInput.select();
+                                }
+                              }
+                            }}
+                            id={`focus-grade-${idx}`}
+                            readOnly={kelas.archived || isLocked}
+                            className="form-input"
+                            style={{
+                              padding: "8px",
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                              textAlign: "center",
+                              width: "100px",
+                              border: "1.5px solid var(--border-color)",
+                              margin: "0 auto",
+                              display: "block"
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  } else {
+                    // Presensi
+                    const p = kelas.skemaPenilaian.pertemuan.find(pt => pt.id === focusColumn.id);
+                    if (!p) return null;
+                    const val = student.nilai[`_presensi_${p.id}`] || "";
+                    const isUnlocked = !unlockedPertemuanIds.includes(p.id) && !kelas.archived && !isLocked;
+                    
+                    return (
+                      <tr key={student.nisn}>
+                        <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
+                        <td style={{ fontWeight: "600" }}>{student.nama}</td>
+                        <td style={{ textAlign: "center" }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isUnlocked) return;
+                              const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
+                              const newSiswa = [...kelas.siswa];
+                              const sIdx = newSiswa.findIndex(s => s.nisn === student.nisn);
+                              newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
+                              setKelas({ ...kelas, siswa: newSiswa });
+                              handleSaveScore(student.nisn, `_presensi_${p.id}`, nextVal);
+                            }}
+                            style={{
+                              width: "50px", height: "50px", borderRadius: "12px", fontWeight: "800",
+                              cursor: !isUnlocked ? "not-allowed" : "pointer",
+                              fontSize: val === "" ? "1.2rem" : "1.1rem",
+                              backgroundColor: val === 'H' ? "#10b981" : val === 'I' ? "#f59e0b" : val === 'S' ? "#3b82f6" : val === 'A' ? "#ef4444" : val === 'D' ? "#8b5cf6" : (isUnlocked ? "rgba(59, 130, 246, 0.08)" : "var(--bg-tertiary)"),
+                              color: val !== "" ? "#ffffff" : (isUnlocked ? "var(--primary)" : "var(--text-muted)"),
+                              border: val !== "" ? "none" : (isUnlocked ? "1.5px dashed var(--primary)" : "1px dashed var(--border-color)"),
+                              margin: "0 auto",
+                              display: "block"
+                            }}
+                          >
+                            {val || (isUnlocked ? "+" : "-")}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  }
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Modal>
       )}
 
       {/* Modal Jurnal Agenda */}
