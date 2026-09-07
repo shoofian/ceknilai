@@ -242,6 +242,11 @@ export default function KelolaKelas() {
         setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
         setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn))); 
         setWizardStep("preview");
+      } else if (res.ok && !data.preview && data.message) {
+        alert(data.message);
+        const nextIndex = currentWizardIndex + 1;
+        setCurrentWizardIndex(nextIndex);
+        await fetchRombelsForWizardIndex(nextIndex, wizardQueue);
       } else {
         alert(data.error || data.message || "Gagal pratinjau sinkronisasi.");
       }
@@ -282,7 +287,7 @@ export default function KelolaKelas() {
       if (res.ok) {
         fetchKelas();
         setCurrentWizardIndex(currentWizardIndex + 1);
-        fetchRombelsForWizardIndex(currentWizardIndex + 1, wizardQueue);
+        await fetchRombelsForWizardIndex(currentWizardIndex + 1, wizardQueue);
       } else {
         const data = await res.json();
         alert(data.error || "Gagal menyimpan hasil sinkronisasi.");

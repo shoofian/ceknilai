@@ -775,8 +775,6 @@ export async function deleteSiswaBulkFromKelas(kelasId, nisnArray, guruUsername 
   }
 }
 
-}
-
 export async function restoreSiswa(kelasId, nisn, guruUsername = null) {
   if (!supabase) return false;
   try {

@@ -8,6 +8,7 @@ export default function BankDataPanel({ targetSekolahId }) {
   const [filterTingkat, setFilterTingkat] = useState("");
   const [filterRombel, setFilterRombel] = useState("");
   const [filterTahun, setFilterTahun] = useState("");
+  const [filterTanggalLahir, setFilterTanggalLahir] = useState("");
   
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
@@ -271,12 +272,14 @@ export default function BankDataPanel({ targetSekolahId }) {
     const matchesSearch = String(item.nama || '').toLowerCase().includes(searchLower) ||
                           String(item.nisn || '').toLowerCase().includes(searchLower) ||
                           String(item.rombel || '').toLowerCase().includes(searchLower) ||
-                          String(item.tahun_pelajaran || '').toLowerCase().includes(searchLower);
+                          String(item.tahun_pelajaran || '').toLowerCase().includes(searchLower) ||
+                          String(item.tanggal_lahir || '').toLowerCase().includes(searchLower);
     const matchesTingkat = filterTingkat ? String(item.tingkatan) === filterTingkat : true;
     const matchesRombel = filterRombel ? String(item.rombel) === filterRombel : true;
     const matchesTahun = filterTahun ? String(item.tahun_pelajaran) === filterTahun : true;
+    const matchesTanggalLahir = filterTanggalLahir ? String(item.tanggal_lahir).startsWith(filterTanggalLahir) : true;
     
-    return matchesSearch && matchesTingkat && matchesRombel && matchesTahun;
+    return matchesSearch && matchesTingkat && matchesRombel && matchesTahun && matchesTanggalLahir;
   });
 
   const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
@@ -285,7 +288,7 @@ export default function BankDataPanel({ targetSekolahId }) {
   // reset page if filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterTingkat, filterRombel, filterTahun]);
+  }, [searchQuery, filterTingkat, filterRombel, filterTahun, filterTanggalLahir]);
 
   return (
     <div className="glass-card" style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -319,6 +322,14 @@ export default function BankDataPanel({ targetSekolahId }) {
             <option value="">Semua Tahun</option>
             {uniqueTahun.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
+          <input
+            type="date"
+            className="form-input"
+            value={filterTanggalLahir}
+            onChange={e => setFilterTanggalLahir(e.target.value)}
+            title="Filter Tanggal Lahir"
+            style={{ maxWidth: "150px", padding: "8px 12px", fontSize: "0.85rem" }}
+          />
           <input
             type="text"
             placeholder="🔍 Cari nama, NISN..."
