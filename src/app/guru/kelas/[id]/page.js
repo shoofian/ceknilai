@@ -9708,7 +9708,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         >
           <div style={{ padding: "0 16px 16px 16px" }}>
             {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
-              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", padding: "4px 6px" }}>
                 {(() => {
                   const parentCol = focusColumn.type === 'nilai' ? kelas.kolomNilai.find(c => c.id === focusColumn.id || (c.isGroup && c.subKolom?.some(s => s.id === focusColumn.id))) : null;
                   if (!parentCol) return <div />;
@@ -9719,21 +9719,20 @@ export default function DetailKelas({ params: paramsPromise }) {
                         setQuickEditData(JSON.parse(JSON.stringify(parentCol)));
                         setQuickEditModalOpen(true);
                       }}
-                      className="btn btn-secondary"
-                      style={{ padding: "6px 10px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", backgroundColor: "var(--bg-tertiary)" }}
+                      className="btn"
+                      style={{ padding: "6px 8px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", backgroundColor: "transparent", color: "var(--text-secondary)", border: "none", boxShadow: "none" }}
                       title="Pengaturan Komponen"
                     >
-                      <span style={{ fontSize: "1rem" }}>⚙️</span> <span className="hide-on-mobile">Pengaturan</span>
+                      <span style={{ fontSize: "1.1rem" }}>⚙️</span> <span className="hide-on-mobile" style={{ fontWeight: "600" }}>Pengaturan</span>
                     </button>
                   );
                 })()}
-                <div style={{ display: "flex", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-secondary)", padding: "6px 8px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "1rem", marginRight: "4px", cursor: "help" }} title="Isi Cepat (Terapkan ke semua siswa)">⚡</span>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <span style={{ fontSize: "1rem", marginRight: "2px", opacity: 0.7 }} title="Isi Cepat">⚡</span>
                   <input
                     type="text"
                     inputMode="numeric"
-                    placeholder="Nilai..."
-                    className="form-input"
+                    placeholder="Nilai"
                     value={focusBulkValue}
                     onChange={(e) => {
                       let val = e.target.value.replace(/[^0-9]/g, '');
@@ -9758,7 +9757,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         }, { confirmText: "Ya, Terapkan", title: "Terapkan Bulk Fill" });
                       }
                     }}
-                    style={{ width: "70px", textAlign: "center", padding: "4px 8px", minHeight: "32px", fontSize: "0.85rem" }}
+                    style={{ width: "60px", textAlign: "center", padding: "4px 8px", minHeight: "28px", fontSize: "0.85rem", borderRadius: "6px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}
                   />
                   <button
                     className="btn btn-primary"
@@ -9776,9 +9775,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                       }
                     }}
                     disabled={!focusBulkValue}
-                    style={{ padding: "4px 12px", minHeight: "32px", fontSize: "0.85rem", whiteSpace: "nowrap" }}
+                    style={{ padding: "4px 10px", minHeight: "28px", fontSize: "0.85rem", borderRadius: "6px", display: "flex", alignItems: "center", gap: "4px" }}
+                    title="Terapkan ke semua siswa"
                   >
-                    Terapkan ke Semua
+                    <span>✓</span> <span className="hide-on-mobile">Terapkan</span>
                   </button>
                 </div>
               </div>
