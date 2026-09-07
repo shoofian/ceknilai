@@ -236,7 +236,7 @@ export default function StudentPortal() {
       <main style={{ flex: 1, padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         
         {/* Split Hero Layout */}
-        <div className="portal-hero-container">
+        <div className="portal-hero-container no-print">
           
           {/* Left Column: Branding */}
           <div className="portal-info-panel">
@@ -407,7 +407,7 @@ export default function StudentPortal() {
           <div id="search-results" style={{ width: "100%", maxWidth: "900px" }} className="animate-fade-in">
             
             {/* Header pencarian */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+            <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
               <h3 style={{ fontSize: "1.5rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>
                 <span>📊 Hasil Pencarian Nilai</span>
               </h3>

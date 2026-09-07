@@ -1098,7 +1098,7 @@ input[type="date"].form-input {
     display: none !important;
   }
 
-  body.print-portrait-mode #printable-khs-area {
+  #printable-khs-area {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
