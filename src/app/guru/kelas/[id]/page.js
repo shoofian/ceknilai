@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, use, useMemo, Fragment, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback, use } from "react";
+import { useConfirm } from "@/components/ConfirmProvider";
 import { createPortal } from "react-dom";
 import Modal from '@/components/Modal';
 import Link from "next/link";
@@ -134,48 +135,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [activeAspectId, setActiveAspectId] = useState(null);
   const [initialHiddenAspek, setInitialHiddenAspek] = useState([]);
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
-  const [confirmConfig, setConfirmConfig] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    confirmText: "OK",
-    cancelText: "Batal",
-    isDanger: false,
-    isAlert: false,
-    onConfirm: null
-  });
-
-  const triggerConfirm = (message, onConfirm, options = {}) => {
-    setConfirmConfig({
-      isOpen: true,
-      title: options.title || "Konfirmasi",
-      message: message,
-      confirmText: options.confirmText || "OK",
-      cancelText: options.cancelText || "Batal",
-      isDanger: !!options.isDanger,
-      isAlert: false,
-      onConfirm: () => {
-        onConfirm();
-        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  };
-
-  const triggerAlert = (message, onConfirm = null, options = {}) => {
-    setConfirmConfig({
-      isOpen: true,
-      title: options.title || "Informasi",
-      message: message,
-      confirmText: options.confirmText || "Tutup",
-      cancelText: "",
-      isDanger: !!options.isDanger,
-      isAlert: true,
-      onConfirm: () => {
-        if (onConfirm) onConfirm();
-        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  };
+  const { triggerConfirm, triggerAlert } = useConfirm();
   
   // Status penyimpanan otomatis tabel nilai
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
@@ -1134,8 +1094,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     const confirmMsg = newStatus 
       ? "🚀 Apakah Anda yakin ingin MENAMPILKAN dan MEMPUBLIKASIKAN Nilai Akhir? Siswa akan bisa melihat nilai akhir aktual dan status kelulusan mereka." 
       : "🔒 Apakah Anda yakin ingin MENARIK KEMBALI Nilai Akhir? Nilai akhir akan kembali disembunyikan dari siswa.";
-      
-    if (confirm(confirmMsg)) {
+    triggerConfirm(confirmMsg, async () => {
       try {
         const response = await fetch(`/api/kelas/${classId}`, {
           method: "PATCH",
@@ -1147,13 +1106,12 @@ export default function DetailKelas({ params: paramsPromise }) {
            fetchClassDetail();
         } else {
            const data = await response.json();
-           alert(data.error || "Gagal mengubah status publikasi.");
+           triggerAlert(data.error || "Gagal mengubah status publikasi.", null, { title: "Gagal", isDanger: true });
         }
       } catch (err) {
-        console.error("Toggle publish failed", err);
-        alert("Terjadi kesalahan sistem.");
+        triggerAlert("Terjadi kesalahan pada jaringan.", null, { title: "Gagal", isDanger: true });
       }
-    }
+    }, { title: newStatus ? "Publikasikan Nilai" : "Tarik Kembali Nilai", confirmText: "Ya, Lanjutkan" });
   };
 
   const handleOpenAddPertemuan = () => {
@@ -2451,90 +2409,94 @@ export default function DetailKelas({ params: paramsPromise }) {
 
       warningMessage += "Apakah Anda yakin ingin melanjutkan dan menyimpan perubahan ini?";
       
-      if (!confirm(warningMessage)) {
-        return; // Batalkan penyimpanan
-      }
+      triggerConfirm(warningMessage, () => {
+        doSaveBobot();
+      }, { title: "Konfirmasi Perubahan Data", confirmText: "Ya, Simpan", cancelText: "Batal", isDanger: true });
+      return;
     }
 
-    setIsSavingBobot(true);
-    try {
-      // Dapatkan daftar komponen akhir (komponen lama yang tidak dihapus + komponen baru yang valid)
-      const existingRemainingCols = kelas.kolomNilai.filter(col => !deletedKolomIds.includes(col.id));
-      const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
-      
-      const updatedKolomNilai = [...existingRemainingCols, ...validNewAspects];
-      const kolomToSave = updatedKolomNilai.map(col => ({ ...col, bobot: Number(col.bobot) || 0 }));
+    doSaveBobot();
 
-      // Konfigurasi TP baru & bersihkan TP dari komponen yang dihapus
-      let updatedTpConfig = { ...(kelas.skemaPenilaian?.tpConfig || {}) };
-      const idsToDelete = deletedKolomIds || [];
-      idsToDelete.forEach(id => {
-        delete updatedTpConfig[id];
-        const oldCol = kelas.kolomNilai.find(c => c.id === id);
-        if (oldCol && oldCol.isGroup && oldCol.subKolom) {
-          oldCol.subKolom.forEach(sub => {
-            delete updatedTpConfig[sub.id];
-          });
-        }
-      });
+    async function doSaveBobot() {
+      setIsSavingBobot(true);
+      try {
+        // Dapatkan daftar komponen akhir (komponen lama yang tidak dihapus + komponen baru yang valid)
+        const existingRemainingCols = kelas.kolomNilai.filter(col => !deletedKolomIds.includes(col.id));
+        const validNewAspects = newAspects.filter(a => a.nama.trim() !== "");
+        
+        const updatedKolomNilai = [...existingRemainingCols, ...validNewAspects];
+        const kolomToSave = updatedKolomNilai.map(col => ({ ...col, bobot: Number(col.bobot) || 0 }));
 
-      // Tambahkan TP komponen & sub-komponen baru
-      for (const aspect of validNewAspects) {
-        if (aspect.tp) {
-          updatedTpConfig[aspect.id] = aspect.tp;
-        }
-        if (aspect.isGroup && aspect.subKolom) {
-          aspect.subKolom.forEach(sub => {
-            if (sub.tp) {
-              updatedTpConfig[sub.id] = sub.tp;
-            }
-          });
-        }
-      }
-
-      // Validasi urutan KKM sebelum menyimpan
-      if (gradeA < gradeB || gradeB < gradeC || gradeC < gradeD) {
-        alert('Gagal menyimpan: Pastikan urutan nilai KKM adalah A ≥ B ≥ C ≥ D.');
-        setIsSavingBobot(false);
-        return;
-      }
-
-      // Kirim satu permintaan PATCH untuk melakukan semua perubahan (tambah, hapus, update) secara sekaligus di database
-      const response = await fetch(`/api/kelas/${classId}/kolom`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          kolomNilai: kolomToSave,
-          skemaPenilaian: {
-            ...(kelas.skemaPenilaian || {}),
-            A: gradeA,
-            B: gradeB,
-            C: gradeC,
-            D: gradeD,
-            kkm: kkm,
-            statusA: statusA.trim() || 'A',
-            statusB: statusB.trim() || 'B',
-            statusC: statusC.trim() || 'C',
-            statusD: statusD.trim() || 'D',
-            tpConfig: updatedTpConfig
+        // Konfigurasi TP baru & bersihkan TP dari komponen yang dihapus
+        let updatedTpConfig = { ...(kelas.skemaPenilaian?.tpConfig || {}) };
+        const idsToDelete = deletedKolomIds || [];
+        idsToDelete.forEach(id => {
+          delete updatedTpConfig[id];
+          const oldCol = kelas.kolomNilai.find(c => c.id === id);
+          if (oldCol && oldCol.isGroup && oldCol.subKolom) {
+            oldCol.subKolom.forEach(sub => {
+              delete updatedTpConfig[sub.id];
+            });
           }
-        }),
-      });
+        });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Gagal memperbarui bobot.");
+        // Tambahkan TP komponen & sub-komponen baru
+        for (const aspect of validNewAspects) {
+          if (aspect.tp) {
+            updatedTpConfig[aspect.id] = aspect.tp;
+          }
+          if (aspect.isGroup && aspect.subKolom) {
+            aspect.subKolom.forEach(sub => {
+              if (sub.tp) {
+                updatedTpConfig[sub.id] = sub.tp;
+              }
+            });
+          }
+        }
+
+        // Validasi urutan KKM sebelum menyimpan
+        if (gradeA < gradeB || gradeB < gradeC || gradeC < gradeD) {
+          triggerAlert('Gagal menyimpan: Pastikan urutan nilai KKM adalah A ≥ B ≥ C ≥ D.', null, { title: "Kesalahan Input", isDanger: true });
+          setIsSavingBobot(false);
+          return;
+        }
+
+        // Kirim satu permintaan PATCH untuk melakukan semua perubahan (tambah, hapus, update) secara sekaligus di database
+        const response = await fetch(`/api/kelas/${classId}/kolom`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            kolomNilai: kolomToSave,
+            skemaPenilaian: {
+              ...(kelas.skemaPenilaian || {}),
+              A: gradeA,
+              B: gradeB,
+              C: gradeC,
+              D: gradeD,
+              kkm: kkm,
+              statusA: statusA.trim() || 'A',
+              statusB: statusB.trim() || 'B',
+              statusC: statusC.trim() || 'C',
+              statusD: statusD.trim() || 'D',
+              tpConfig: updatedTpConfig
+            }
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Gagal memperbarui bobot.");
+        }
+
+        setDeletedKolomIds([]);
+        setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah
+        setKolomModalOpen(false); // Close modal on success
+        await fetchClassDetail();
+      } catch (err) {
+        triggerAlert(err.message || "Gagal menyimpan.", null, { title: "Gagal", isDanger: true });
+      } finally {
+        setIsSavingBobot(false);
       }
-
-      setDeletedKolomIds([]);
-      setNewAspects([{ id: Date.now(), nama: "", bobot: "", isGroup: false, subKolom: [] }]); // Reset form tambah
-      setKolomModalOpen(false); // Close modal on success
-      await fetchClassDetail();
-    } catch (err) {
-      console.error("Update weights failed", err);
-      alert(err.message || "Gagal menyimpan.");
-    } finally {
-      setIsSavingBobot(false);
     }
   };
   // === HELPER UNTUK MENCEGAH AKSI SAAT TERKUNCI ===
@@ -7202,18 +7164,19 @@ export default function DetailKelas({ params: paramsPromise }) {
                 </div>
                 <button 
                   onClick={async () => {
-                    if(!confirm("Hapus komponen presensi lama? (Sangat disarankan)")) return;
-                    const updatedSkema = { ...kelas.skemaPenilaian, presensi: { digunakan: false, bobot: 0 } };
-                    setKelas({ ...kelas, skemaPenilaian: updatedSkema });
-                    try {
-                      await fetch(`/api/kelas/${classId}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ skemaPenilaian: updatedSkema })
-                      });
-                    } catch(e) {
-                      console.error("Gagal menghapus komponen presensi lama", e);
-                    }
+                    triggerConfirm("Hapus komponen presensi lama? (Sangat disarankan)", async () => {
+                      const updatedSkema = { ...kelas.skemaPenilaian, presensi: { digunakan: false, bobot: 0 } };
+                      setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+                      try {
+                        await fetch(`/api/kelas/${classId}`, {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ skemaPenilaian: updatedSkema })
+                        });
+                      } catch(e) {
+                        triggerAlert("Gagal menghapus komponen presensi lama", null, { title: "Gagal", isDanger: true });
+                      }
+                    }, { confirmText: "Ya, Hapus", isDanger: true });
                   }}
                   className="btn" style={{ padding: "6px 12px", fontSize: "0.75rem", backgroundColor: "#ef4444", color: "white", border: "none" }}
                 >
@@ -7830,15 +7793,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                                           handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
                                         } else {
                                           const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
+                                          const deleteAction = () => {
+                                            const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
+                                            setKelas({ ...kelas, kolomNilai: newCols });
+                                          };
                                           if (hasData) {
-                                            if (!confirm(`⚠️ PERINGATAN!\nsub-komponen "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-komponen ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`)) {
-                                              return;
-                                            }
+                                            triggerConfirm(`⚠️ PERINGATAN!\nsub-komponen "${sub.nama}" sudah memiliki data nilai siswa yang terisi!\n\nJika dihapus, nilai siswa di sub-komponen ini akan terhapus secara permanen saat Anda menekan Simpan.\n\nApakah Anda benar-benar yakin ingin menghapusnya?`, deleteAction, { confirmText: "Ya, Hapus Permanen", isDanger: true });
                                           } else {
-                                            if (!confirm(`Hapus sub-komponen ${sub.nama}?`)) return;
+                                            triggerConfirm(`Hapus sub-komponen ${sub.nama}?`, deleteAction, { confirmText: "Ya, Hapus", isDanger: true });
                                           }
-                                          const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
-                                          setKelas({ ...kelas, kolomNilai: newCols });
                                         }
                                       }}
                                       style={{ background: "none", border: "none", color: "var(--danger)", cursor: "pointer", fontSize: "1rem", padding: "4px" }}
@@ -8384,7 +8347,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       <button
                         onClick={async () => {
                           if (handleLockedAction()) return;
-                          if (confirm("⚠️ Apakah Anda yakin ingin MENGHAPUS / MERESET semua nilai katrol & normalisasi seluruh siswa di kelas ini?")) {
+                          triggerConfirm("⚠️ Apakah Anda yakin ingin MENGHAPUS / MERESET semua nilai katrol & normalisasi seluruh siswa di kelas ini?", async () => {
                             setIsSavingNorm(true);
                             try {
                               const promises = kelas.siswa.map(s =>
@@ -8398,11 +8361,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                               setNormModalOpen(false);
                               fetchClassDetail();
                             } catch (err) {
-                              alert("Gagal mereset normalisasi.");
+                              triggerAlert("Gagal mereset normalisasi.", null, { title: "Gagal", isDanger: true });
                             } finally {
                               setIsSavingNorm(false);
                             }
-                          }
+                          }, { confirmText: "Ya, Hapus/Reset", isDanger: true });
                         }}
                         className="btn btn-secondary"
                         style={{ padding: "6px 12px", fontSize: "0.78rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.2)" }}
@@ -8462,62 +8425,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       )}
 
 
-      {/* ===== GLOBAL CUSTOM CONFIRMATION MODAL ===== */}
-      {confirmConfig.isOpen && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-              <span style={{ fontSize: "2rem", lineHeight: "1" }}>
-                {(() => {
-                  const titleLower = (confirmConfig.title || "").toLowerCase();
-                  if (confirmConfig.isDanger || titleLower.includes("⚠️") || titleLower.includes("hapus") || titleLower.includes("delete")) return "⚠️";
-                  if (titleLower.includes("berhasil") || titleLower.includes("sukses") || titleLower.includes("success")) return "✅";
-                  if (titleLower.includes("galat") || titleLower.includes("gagal") || titleLower.includes("error")) return "❌";
-                  if (titleLower.includes("salin") || titleLower.includes("copy") || titleLower.includes("papan klip")) return "📋";
-                  return "❓";
-                })()}
-              </span>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
-                  {confirmConfig.title.replace("⚠️", "").trim() || "Konfirmasi"}
-                </h4>
-              </div>
-            </div>
-            
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line", maxHeight: "250px", overflowY: "auto" }}>
-              {confirmConfig.message}
-            </p>
-            
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "12px" }}>
-              {!confirmConfig.isAlert && (
-                <button
-                  type="button"
-                  onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                  className="btn btn-secondary"
-                  style={{ padding: "8px 16px", fontSize: "0.82rem" }}
-                >
-                  {confirmConfig.cancelText}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={confirmConfig.onConfirm}
-                className={confirmConfig.isDanger ? "btn btn-danger" : "btn btn-primary"}
-                style={{
-                  padding: "8px 20px",
-                  fontSize: "0.82rem",
-                  fontWeight: "700",
-                  backgroundColor: confirmConfig.isDanger ? "var(--danger)" : "var(--primary)",
-                  color: "#fff",
-                  border: confirmConfig.isDanger ? "1px solid var(--danger)" : "1px solid var(--primary)"
-                }}
-              >
-                {confirmConfig.confirmText}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* PORTRAIT KHS / RAPOR BAYANGAN PRINT-ONLY VIEW */}
       {selectedPrintStudent && (() => {
@@ -9184,11 +9092,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                 className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
                 onClick={() => {
                   if (syncSelectedRemoved.size > 0) {
-                    if (!window.confirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
-                      return;
-                    }
+                    triggerConfirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`, () => {
+                      handleCommitSyncBankData();
+                    }, { confirmText: "Ya, Hapus Permanen", isDanger: true });
+                  } else {
+                    handleCommitSyncBankData();
                   }
-                  handleCommitSyncBankData();
                 }}
                 disabled={isSyncingBankData}
               >
@@ -9721,14 +9630,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && focusBulkValue !== "") {
                         e.preventDefault();
-                        if (!window.confirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`)) return;
-                        const newScores = { ...temporaryScores };
-                        sortedStudents.forEach(s => {
-                          newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
-                          handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
-                        });
-                        setTemporaryScores(newScores);
-                        setFocusBulkValue("");
+                        triggerConfirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`, () => {
+                          const newScores = { ...temporaryScores };
+                          sortedStudents.forEach(s => {
+                            newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
+                            handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                          });
+                          setTemporaryScores(newScores);
+                          setFocusBulkValue("");
+                        }, { confirmText: "Ya, Terapkan", title: "Terapkan Bulk Fill" });
                       }
                     }}
                     style={{ width: "70px", textAlign: "center", padding: "4px 8px", minHeight: "32px", fontSize: "0.85rem" }}
@@ -9737,14 +9647,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                     className="btn btn-primary"
                     onClick={() => {
                       if (focusBulkValue !== "") {
-                        if (!window.confirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`)) return;
-                        const newScores = { ...temporaryScores };
-                        sortedStudents.forEach(s => {
-                          newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
-                          handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
-                        });
-                        setTemporaryScores(newScores);
-                        setFocusBulkValue("");
+                        triggerConfirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`, () => {
+                          const newScores = { ...temporaryScores };
+                          sortedStudents.forEach(s => {
+                            newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
+                            handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                          });
+                          setTemporaryScores(newScores);
+                          setFocusBulkValue("");
+                        }, { confirmText: "Ya, Terapkan", title: "Terapkan Bulk Fill" });
                       }
                     }}
                     disabled={!focusBulkValue}

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import OnboardingGuide from "@/components/OnboardingGuide";
 import PromoModal from "@/components/PromoModal";
+import { ConfirmProvider } from "@/components/ConfirmProvider";
 
 export default function GuruLayout({ children }) {
   const [loading, setLoading] = useState(true);
@@ -177,13 +178,16 @@ export default function GuruLayout({ children }) {
 
   if (isPopup) {
     return (
-      <div className="popup-layout" style={{ padding: "20px 0", backgroundColor: "var(--bg-primary)", minHeight: "100vh" }}>
-        {children}
-      </div>
+      <ConfirmProvider>
+        <div className="popup-layout" style={{ padding: "20px 0", backgroundColor: "var(--bg-primary)", minHeight: "100vh" }}>
+          {children}
+        </div>
+      </ConfirmProvider>
     );
   }
 
   return (
+    <ConfirmProvider>
     <div className="app-container" style={{ position: "relative" }}>
       {/* Background Ambient Theme Glow */}
       <div className="theme-ambient-glow" />
@@ -675,5 +679,6 @@ export default function GuruLayout({ children }) {
         }
       `}</style>
     </div>
+    </ConfirmProvider>
   );
 }

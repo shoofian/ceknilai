@@ -12,6 +12,7 @@ export default function SyncPreviewUI({
   onCommit,
   onCancel,
   isSyncingBankData,
+  triggerConfirm,
   title = "Pratinjau Sinkronisasi Bank Data",
   commitText = "Simpan ke Bank Data"
 }) {
@@ -184,11 +185,19 @@ export default function SyncPreviewUI({
             className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
             onClick={() => {
               if (syncSelectedRemoved.size > 0) {
-                if (!window.confirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
-                  return;
+                if (triggerConfirm) {
+                  triggerConfirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`, () => {
+                    onCommit();
+                  }, { confirmText: "Ya, Hapus Permanen", isDanger: true });
+                } else {
+                  if (!window.confirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
+                    return;
+                  }
+                  onCommit();
                 }
+              } else {
+                onCommit();
               }
-              onCommit();
             }}
             disabled={isSyncingBankData}
           >

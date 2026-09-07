@@ -6,6 +6,7 @@ import Link from "next/link";
 import * as XLSX from "xlsx";
 import { ASPEK_PRESETS } from "@/lib/presets";
 import SyncPreviewUI from "@/components/SyncPreviewUI";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function KelolaKelas() {
   const router = useRouter();
@@ -92,30 +93,7 @@ export default function KelolaKelas() {
   const [importWarnings, setImportWarnings] = useState([]);
 
   // Custom Confirm/Alert Dialog Modal States
-  const [confirmConfig, setConfirmConfig] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    confirmText: "OK",
-    cancelText: "Batal",
-    isDanger: false,
-    onConfirm: null
-  });
-
-  const triggerConfirm = (message, onConfirm, options = {}) => {
-    setConfirmConfig({
-      isOpen: true,
-      title: options.title || "Konfirmasi",
-      message: message,
-      confirmText: options.confirmText || "OK",
-      cancelText: options.cancelText === undefined ? "Batal" : options.cancelText,
-      isDanger: !!options.isDanger,
-      onConfirm: () => {
-        if (onConfirm) onConfirm();
-        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  };
+  const { triggerConfirm, triggerAlert } = useConfirm();
 
   // Duplicate Class States
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
@@ -2191,62 +2169,7 @@ export default function KelolaKelas() {
 
 
 
-      {/* ===== GLOBAL CUSTOM CONFIRMATION MODAL ===== */}
-      {confirmConfig.isOpen && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }} className="animate-fade-in">
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-              <span style={{ fontSize: "2rem", lineHeight: "1" }}>
-                {(() => {
-                  const titleLower = (confirmConfig.title || "").toLowerCase();
-                  if (confirmConfig.isDanger || titleLower.includes("⚠️") || titleLower.includes("hapus") || titleLower.includes("delete")) return "⚠️";
-                  if (titleLower.includes("berhasil") || titleLower.includes("sukses") || titleLower.includes("success")) return "✅";
-                  if (titleLower.includes("galat") || titleLower.includes("gagal") || titleLower.includes("error")) return "❌";
-                  if (titleLower.includes("salin") || titleLower.includes("copy") || titleLower.includes("papan klip")) return "📋";
-                  return "❓";
-                })()}
-              </span>
-              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                <h4 style={{ margin: "0", fontSize: "1.1rem", fontWeight: "800", color: confirmConfig.isDanger ? "var(--danger)" : "var(--text-primary)" }}>
-                  {confirmConfig.title.replace("⚠️", "").trim() || "Konfirmasi"}
-                </h4>
-              </div>
-            </div>
-            
-            <p style={{ margin: "0", fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5", whiteSpace: "pre-line", maxHeight: "250px", overflowY: "auto" }}>
-              {confirmConfig.message}
-            </p>
-            
-            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", marginTop: "12px" }}>
-              {confirmConfig.cancelText && (
-                <button
-                  type="button"
-                  onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                  className="btn btn-secondary"
-                  style={{ padding: "8px 16px", fontSize: "0.82rem" }}
-                >
-                  {confirmConfig.cancelText}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={confirmConfig.onConfirm}
-                className={confirmConfig.isDanger ? "btn btn-danger" : "btn btn-primary"}
-                style={{
-                  padding: "8px 20px",
-                  fontSize: "0.82rem",
-                  fontWeight: "700",
-                  backgroundColor: confirmConfig.isDanger ? "var(--danger)" : "var(--primary)",
-                  color: "#fff",
-                  border: confirmConfig.isDanger ? "1px solid var(--danger)" : "1px solid var(--primary)"
-                }}
-              >
-                {confirmConfig.confirmText}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Bulk Sync Selection Modal */}
       {bulkSyncSelectionOpen && (
@@ -2318,6 +2241,7 @@ export default function KelolaKelas() {
               onCommit={handleCommitWizardIndex}
               onCancel={() => setWizardStep("select_rombel")}
               isSyncingBankData={isSyncingBankData}
+              triggerConfirm={triggerConfirm}
               title={`Sinkronisasi Kelas ${currentWizardIndex + 1} dari ${wizardQueue.length}: ${wizardQueue[currentWizardIndex].nama}`}
               commitText={currentWizardIndex + 1 < wizardQueue.length ? "Simpan & Lanjut ke Berikutnya" : "Simpan & Selesai"}
             />
