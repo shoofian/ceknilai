@@ -4533,9 +4533,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
                             <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
-                              {true && (
-                                <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.8rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
-                              )}
+
                               {col.nama} ({col.bobot}%)
                             </th>
                           );
@@ -4550,7 +4548,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           >
                             {true && (
                               <>
-                                <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
+
                                 <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                                 </span>
@@ -9710,7 +9708,25 @@ export default function DetailKelas({ params: paramsPromise }) {
         >
           <div style={{ padding: "0 16px 16px 16px" }}>
             {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
-              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                {(() => {
+                  const parentCol = focusColumn.type === 'nilai' ? kelas.kolomNilai.find(c => c.id === focusColumn.id || (c.isGroup && c.subKolom?.some(s => s.id === focusColumn.id))) : null;
+                  if (!parentCol) return <div />;
+                  return (
+                    <button 
+                      onClick={() => {
+                        setFocusColumn(null);
+                        setQuickEditData(JSON.parse(JSON.stringify(parentCol)));
+                        setQuickEditModalOpen(true);
+                      }}
+                      className="btn btn-secondary"
+                      style={{ padding: "6px 10px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", backgroundColor: "var(--bg-tertiary)" }}
+                      title="Pengaturan Komponen"
+                    >
+                      <span style={{ fontSize: "1rem" }}>⚙️</span> <span className="hide-on-mobile">Pengaturan</span>
+                    </button>
+                  );
+                })()}
                 <div style={{ display: "flex", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-secondary)", padding: "6px 8px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
                   <span style={{ fontSize: "1rem", marginRight: "4px", cursor: "help" }} title="Isi Cepat (Terapkan ke semua siswa)">⚡</span>
                   <input
