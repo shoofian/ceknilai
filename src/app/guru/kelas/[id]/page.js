@@ -9702,7 +9702,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
               <div style={{ marginBottom: "12px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
                 <div style={{ display: "flex", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-secondary)", padding: "6px 8px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)", marginRight: "4px" }}>⚡ Isi Cepat:</span>
+                  <span style={{ fontSize: "1rem", marginRight: "4px", cursor: "help" }} title="Isi Cepat (Terapkan ke semua siswa)">⚡</span>
                   <input
                     type="text"
                     inputMode="numeric"
