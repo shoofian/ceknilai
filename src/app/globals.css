@@ -1197,7 +1197,9 @@ input[type="date"].form-input {
   }
 
   #printable-khs-area .khs-sub-row td {
-    background: #f8fafc !important;
+    background: #ffffff !important;
+  }
+  #printable-khs-area .khs-sub-row td:nth-child(2) {
     padding-left: 18pt !important;
   }
 

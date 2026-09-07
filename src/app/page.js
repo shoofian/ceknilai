@@ -1118,12 +1118,12 @@ export default function StudentPortal() {
                             <table className="khs-identity-table">
                               <tbody>
                                 <tr>
-                                  <td style={{ width: "15%", fontWeight: "bold" }}>Nama Siswa</td>
+                                  <td style={{ width: "20%", fontWeight: "bold" }}>Nama Siswa</td>
                                   <td style={{ width: "2%" }}>:</td>
-                                  <td style={{ width: "33%" }}><strong>{res.siswa.nama}</strong></td>
-                                  <td style={{ width: "15%", fontWeight: "bold" }}>Mata Pelajaran</td>
+                                  <td style={{ width: "28%" }}><strong>{res.siswa.nama}</strong></td>
+                                  <td style={{ width: "20%", fontWeight: "bold" }}>Mata Pelajaran</td>
                                   <td style={{ width: "2%" }}>:</td>
-                                  <td style={{ width: "33%" }}>{res.mataPelajaran || "Informatika"}</td>
+                                  <td style={{ width: "28%" }}>{res.mataPelajaran || "Informatika"}</td>
                                 </tr>
                                 <tr>
                                   <td style={{ fontWeight: "bold" }}>NISN</td>
@@ -1149,17 +1149,17 @@ export default function StudentPortal() {
                               <thead>
                                 <tr>
                                   <th style={{ width: "5%", textAlign: "center" }}>No</th>
-                                  <th style={{ width: "50%", textAlign: "left" }}>Komponen Penilaian</th>
-                                  <th style={{ width: "15%", textAlign: "center" }}>KKM</th>
+                                  <th style={{ width: "45%", textAlign: "left" }}>Komponen Penilaian</th>
+                                  <th style={{ width: "10%", textAlign: "center" }}>KKM</th>
                                   <th style={{ width: "15%", textAlign: "center" }}>Nilai Angka</th>
-                                  <th style={{ width: "15%", textAlign: "center" }}>Keterangan</th>
+                                  <th style={{ width: "25%", textAlign: "center" }}>Keterangan</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {res.detailNilai.map((col, idx) => {
                                   const isTuntas = col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm);
                                   const ketText = col.isMayoritasSudah
-                                    ? "Kosong (Mayoritas Kelas Sudah Dinilai)"
+                                    ? "Kosong (Menunggu Penilaian)"
                                     : (col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" 
                                        ? "Belum Diisi" 
                                        : isTuntas ? "Tuntas" : "Belum Tuntas");
@@ -1170,7 +1170,7 @@ export default function StudentPortal() {
                                       <tr style={col.isGroup ? { fontWeight: "bold" } : {}}>
                                         <td style={{ textAlign: "center" }}>{idx + 1}</td>
                                         <td style={{ textAlign: "left" }}>
-                                          {col.isGroup && <span style={{ fontSize: "0.7rem", border: "1.5px solid #000", padding: "1px 4px", marginRight: "6px", fontWeight: "bold" }}>GRUP</span>}
+                                          
                                           {col.namaKolom}
                                           {(res.skemaPenilaian?.tpConfig?.[col.kolomId] || res.skema?.tpConfig?.[col.kolomId]) && (
                                             <div style={{ fontSize: "0.75rem", fontStyle: "italic", fontWeight: "normal", color: "#4b5563", marginTop: "2px" }}>
@@ -1191,7 +1191,7 @@ export default function StudentPortal() {
                                       {col.isGroup && col.subDetail?.map((sub) => {
                                         const subTuntas = sub.nilaiAsli !== null && sub.nilaiAsli >= res.kkm;
                                         const subKet = sub.isMayoritasSudah
-                                          ? "Kosong (Mayoritas Kelas Sudah Dinilai)"
+                                          ? "Kosong (Menunggu Penilaian)"
                                           : (sub.nilaiAsli === null ? "Belum Diisi" : subTuntas ? "Tuntas" : "Belum Tuntas");
                                         const subTp = res.skemaPenilaian?.tpConfig?.[sub.subId] || res.skema?.tpConfig?.[sub.subId];
                                         return (
@@ -1230,18 +1230,18 @@ export default function StudentPortal() {
                                 </div>
                                 <div className="khs-summary-item">
                                   <span>Nilai Akhir Rapor</span>
-                                  <strong>{res.isNilaiAkhirGenerated ? res.nilaiAkhir : "🔒 Sedang Diproses"}</strong>
+                                  <strong>{res.isNilaiAkhirGenerated ? res.nilaiAkhir : "Sedang Diproses"}</strong>
                                 </div>
                               </div>
                               <div className="khs-summary-column">
                                 <div className="khs-summary-item">
                                   <span>Predikat Capaian</span>
-                                  <strong>{res.isNilaiAkhirGenerated ? res.predikat : "🔒"}</strong>
+                                  <strong>{res.isNilaiAkhirGenerated ? res.predikat : "-"}</strong>
                                 </div>
                                 <div className="khs-summary-item">
                                   <span>Status Kelulusan</span>
                                   <strong style={{ color: res.nilaiAkhir >= res.kkm ? "#15803d" : "#b91c1c" }}>
-                                    {res.isNilaiAkhirGenerated ? res.statusKelulusan : "🔒 Menunggu"}
+                                    {res.isNilaiAkhirGenerated ? res.statusKelulusan : "Menunggu"}
                                   </strong>
                                 </div>
                               </div>
