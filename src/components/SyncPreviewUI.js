@@ -181,11 +181,15 @@ export default function SyncPreviewUI({
             Batal
           </button>
           <button 
-            className="btn btn-primary" 
+            className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
             onClick={onCommit}
             disabled={isSyncingBankData}
           >
-            {isSyncingBankData ? "Menyimpan..." : commitText}
+            {isSyncingBankData 
+              ? "Menyimpan..." 
+              : syncSelectedRemoved.size > 0 
+                ? `Ya, Hapus (${syncSelectedRemoved.size}) & Lanjutkan` 
+                : commitText}
           </button>
         </div>
       </div>

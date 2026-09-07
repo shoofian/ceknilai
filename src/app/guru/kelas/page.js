@@ -240,7 +240,7 @@ export default function KelolaKelas() {
         setSyncPreviewData(data);
         setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
         setSyncSelectedUpdated(new Set((data.updated || []).map(s => s.nisnLama)));
-        setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn))); 
+        setSyncSelectedRemoved(new Set()); 
         setWizardStep("preview");
       } else if (res.ok && !data.preview && data.message) {
         alert(data.message);
