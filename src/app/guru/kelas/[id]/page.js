@@ -9273,7 +9273,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           onClose={() => setQuickAddModalOpen(false)}
           title="Tambah Komponen Penilaian"
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px 0" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px", paddingBottom: "16px", paddingRight: "8px", maxHeight: "70vh", overflowY: "auto" }}>
             <div className="form-group">
               <label>Nama Komponen <span style={{ color: "var(--danger)" }}>*</span></label>
               <input
@@ -9518,7 +9518,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           onClose={() => { setQuickEditModalOpen(false); setQuickEditData(null); }}
           title={`Edit Komponen: ${quickEditData.nama}`}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px 0" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", paddingTop: "8px", paddingBottom: "16px", paddingRight: "8px", maxHeight: "70vh", overflowY: "auto" }}>
             <div className="form-group">
               <label>Nama Komponen <span style={{ color: "var(--danger)" }}>*</span></label>
               <input
