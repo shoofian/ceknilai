@@ -60,6 +60,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [namaSiswa, setNamaSiswa] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [focusColumn, setFocusColumn] = useState(null);
+  const [focusBulkValue, setFocusBulkValue] = useState("");
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
   const [quickAddData, setQuickAddData] = useState({ nama: "", bobot: 0, isGroup: false, subCount: 1, hitungMetode: 'rata-rata', isPresensi: false, subKolom: [] });
   const [quickEditModalOpen, setQuickEditModalOpen] = useState(false);
@@ -9703,7 +9704,82 @@ export default function DetailKelas({ params: paramsPromise }) {
                 <tr>
                   <th style={{ position: "sticky", top: 0, zIndex: 10, width: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>No</th>
                   <th style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
-                  <th style={{ position: "sticky", top: 0, zIndex: 10, textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)" }}>{focusColumn.nama}</th>
+                  <th style={{ position: "sticky", top: 0, zIndex: 10, textAlign: "center", width: "150px", backgroundColor: "var(--bg-tertiary)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                      <span>{focusColumn.nama}</span>
+                      {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="Isi Bulk"
+                            title="Isi bulk (semua siswa)"
+                            value={focusBulkValue}
+                            onChange={(e) => {
+                              let val = e.target.value.replace(/[^0-9]/g, '');
+                              if (val !== "") {
+                                const num = parseInt(val, 10);
+                                if (num > 100) val = "100";
+                                else val = num.toString();
+                              }
+                              setFocusBulkValue(val);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && focusBulkValue !== "") {
+                                e.preventDefault();
+                                const newScores = { ...temporaryScores };
+                                sortedStudents.forEach(s => {
+                                  newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
+                                  handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                                });
+                                setTemporaryScores(newScores);
+                                setFocusBulkValue("");
+                              }
+                            }}
+                            style={{ 
+                              width: "60px", 
+                              padding: "2px 4px", 
+                              fontSize: "0.75rem", 
+                              textAlign: "center", 
+                              borderRadius: "4px", 
+                              border: "1px solid var(--border-color)", 
+                              backgroundColor: "var(--bg-primary)", 
+                              color: "var(--text-primary)" 
+                            }}
+                          />
+                          <button
+                            title="Terapkan nilai ke semua siswa"
+                            onClick={() => {
+                              if (focusBulkValue !== "") {
+                                const newScores = { ...temporaryScores };
+                                sortedStudents.forEach(s => {
+                                  newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
+                                  handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                                });
+                                setTemporaryScores(newScores);
+                                setFocusBulkValue("");
+                              }
+                            }}
+                            style={{ 
+                              background: "var(--primary)", 
+                              color: "white", 
+                              border: "none", 
+                              borderRadius: "4px", 
+                              padding: "2px 6px", 
+                              cursor: "pointer", 
+                              fontSize: "0.7rem", 
+                              fontWeight: "600",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            ✓
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
