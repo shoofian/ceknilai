@@ -9700,12 +9700,9 @@ export default function DetailKelas({ params: paramsPromise }) {
         >
           <div style={{ padding: "0 16px 16px 16px" }}>
             {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
-              <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-secondary)", padding: "12px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", gap: "12px" }}>
-                <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                  <div style={{ fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>⚡ Isi Cepat (Bulk Fill)</div>
-                  Terapkan nilai yang sama untuk seluruh siswa di kolom ini secara otomatis.
-                </div>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", backgroundColor: "var(--bg-secondary)", padding: "6px 8px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "var(--text-secondary)", marginRight: "4px" }}>⚡ Isi Cepat:</span>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -9734,7 +9731,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         setFocusBulkValue("");
                       }
                     }}
-                    style={{ width: "90px", textAlign: "center", padding: "6px 8px" }}
+                    style={{ width: "70px", textAlign: "center", padding: "4px 8px", minHeight: "32px", fontSize: "0.85rem" }}
                   />
                   <button
                     className="btn btn-primary"
@@ -9751,9 +9748,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                       }
                     }}
                     disabled={!focusBulkValue}
-                    style={{ padding: "6px 12px", whiteSpace: "nowrap" }}
+                    style={{ padding: "4px 12px", minHeight: "32px", fontSize: "0.85rem", whiteSpace: "nowrap" }}
                   >
-                    Terapkan
+                    Terapkan ke Semua
                   </button>
                 </div>
               </div>
