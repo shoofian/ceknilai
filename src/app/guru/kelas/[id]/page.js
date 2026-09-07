@@ -4309,8 +4309,8 @@ export default function DetailKelas({ params: paramsPromise }) {
       {/* Table: Main Spreadsheet Gradebook */}
       <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
         
-        <div style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
-          <div>
+        <div className="buku-nilai-header" style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
+          <div className="buku-nilai-title">
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>📊 Buku Nilai Kelas</h4>
             </div>
@@ -4320,7 +4320,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
           
           {/* Action Toolbar */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", overflow: "visible", paddingBottom: "4px" }}>
+          <div className="buku-nilai-actions" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", overflow: "visible", paddingBottom: "4px" }}>
             <button 
               onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
               className={(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
@@ -4355,10 +4355,9 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
               
               {settingsDropdownOpen && (
-                <div style={{
+                <div className="settings-dropdown-menu" style={{
                   position: "absolute",
                   top: "100%",
-                  right: 0,
                   marginTop: "8px",
                   background: "var(--bg-primary)",
                   border: "1px solid var(--border-color)",
@@ -4402,6 +4401,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           
           {settingsDropdownOpen && (
             <div 
+              className="settings-dropdown-overlay"
               style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
               onClick={() => setSettingsDropdownOpen(false)}
             />
@@ -5708,8 +5708,69 @@ export default function DetailKelas({ params: paramsPromise }) {
             font-style: italic;
           }
         }
+        .settings-dropdown-menu {
+          right: 0;
+        }
 
         @media (max-width: 576px) {
+          .buku-nilai-header {
+            padding: 0 16px 12px 16px !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+          }
+          
+          .buku-nilai-title h4 {
+            font-size: 1.1rem !important;
+          }
+          
+          .buku-nilai-title p {
+            font-size: 0.75rem !important;
+          }
+
+          .buku-nilai-actions {
+            width: 100%;
+            justify-content: flex-start;
+          }
+          
+          .buku-nilai-actions button {
+            padding: 6px 10px !important;
+            font-size: 0.75rem !important;
+            flex: 1;
+            justify-content: center;
+          }
+          
+          .buku-nilai-actions .btn-secondary {
+            flex: 0 0 auto !important;
+          }
+
+          .settings-dropdown-menu {
+            position: fixed !important;
+            bottom: 0 !important;
+            top: auto !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 16px 16px 0 0 !important;
+            border: none !important;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15) !important;
+            z-index: 9999 !important;
+            padding-bottom: 20px !important;
+            margin: 0 !important;
+            transform: none !important;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+          
+          @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+          }
+          
+          .settings-dropdown-overlay {
+            background-color: rgba(0,0,0,0.5) !important;
+            z-index: 9998 !important;
+          }
           .mobile-hide {
             display: none !important;
           }
