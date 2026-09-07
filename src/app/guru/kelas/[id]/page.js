@@ -59,6 +59,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [namaSiswa, setNamaSiswa] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [focusColumn, setFocusColumn] = useState(null);
+  const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
+  const [quickAddData, setQuickAddData] = useState({ nama: "", bobot: 0, isGroup: false, subCount: 1 });
   const [targetClassId, setTargetClassId] = useState("");
   const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
@@ -4533,6 +4535,25 @@ export default function DetailKelas({ params: paramsPromise }) {
                           </th>
                         );
                       })}
+
+                      {/* Shortcut Quick Add Column */}
+                      {guruProfile?.username === 'shoofian' && (
+                        <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "45px", backgroundColor: "var(--bg-tertiary)", padding: 0, border: "1px dashed var(--border-color)" }}>
+                          <button 
+                            onClick={() => {
+                              if (handleLockedAction()) return;
+                              setQuickAddData({ nama: "", bobot: 0, isGroup: false, subCount: 1 });
+                              setQuickAddModalOpen(true);
+                            }}
+                            style={{ width: "100%", height: "100%", minHeight: "45px", background: "rgba(59, 130, 246, 0.05)", border: "none", color: "var(--primary)", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "1.2rem", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }}
+                            onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.background = "rgba(59, 130, 246, 0.15)"; }}
+                            onMouseOut={e => e.currentTarget.style.background = "rgba(59, 130, 246, 0.05)"}
+                            title="Tambah Komponen Penilaian Baru (Shortcut)"
+                          >
+                            +
+                          </button>
+                        </th>
+                      )}
  
                       {/* Optional Dedicated Column for Star Bonus */}
                       {kelas.skemaPenilaian?.enableBonusStars && (
@@ -4747,6 +4768,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                             );
                           });
                         })}
+
+                        {/* Shortcut Quick Add Column Spacer */}
+                        {guruProfile?.username === 'shoofian' && (
+                          <td style={{ backgroundColor: "var(--bg-secondary)", borderLeft: "1px dashed var(--border-color)", borderRight: "1px dashed var(--border-color)" }}></td>
+                        )}
 
                         {/* Optional Dedicated Cell for Star Bonus (Bonus Keaktifan) */}
                         {kelas.skemaPenilaian?.enableBonusStars && (
@@ -9224,6 +9250,132 @@ export default function DetailKelas({ params: paramsPromise }) {
             </div>
           </div>
         </>
+      )}
+
+      {/* Modal Quick Add Column (Shortcut) */}
+      {quickAddModalOpen && (
+        <Modal
+          isOpen={true}
+          onClose={() => setQuickAddModalOpen(false)}
+          title="Tambah Komponen Penilaian"
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px 0" }}>
+            <div className="form-group">
+              <label>Nama Komponen <span style={{ color: "var(--danger)" }}>*</span></label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Misal: Tugas, Ulangan Harian, UTS..."
+                value={quickAddData.nama}
+                onChange={(e) => setQuickAddData({ ...quickAddData, nama: e.target.value })}
+                autoFocus
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Bobot Komponen (%) <span style={{ color: "var(--danger)" }}>*</span></label>
+              <input
+                type="number"
+                className="form-input"
+                placeholder="Misal: 20"
+                min="0"
+                max="100"
+                value={quickAddData.bobot || ""}
+                onChange={(e) => setQuickAddData({ ...quickAddData, bobot: parseInt(e.target.value) || 0 })}
+              />
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+                Total bobot saat ini: <strong>{kelas.kolomNilai.reduce((acc, col) => acc + (Number(col.bobot) || 0), 0)}%</strong>
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={quickAddData.isGroup}
+                  onChange={(e) => setQuickAddData({ ...quickAddData, isGroup: e.target.checked })}
+                  style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                />
+                Berupa Kelompok (Memiliki sub-kolom / anak kolom)
+              </label>
+            </div>
+
+            {quickAddData.isGroup && (
+              <div className="form-group animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)" }}>
+                <label>Jumlah Anak Kolom (Awal)</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  min="1"
+                  max="10"
+                  value={quickAddData.subCount}
+                  onChange={(e) => setQuickAddData({ ...quickAddData, subCount: parseInt(e.target.value) || 1 })}
+                />
+                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Contoh: Jika diisi 3, maka akan otomatis dibuatkan kolom {quickAddData.nama || 'Komponen'} 1, {quickAddData.nama || 'Komponen'} 2, dan {quickAddData.nama || 'Komponen'} 3.</p>
+              </div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "10px" }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setQuickAddModalOpen(false)}
+              >
+                Batal
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={async () => {
+                  if (!quickAddData.nama.trim()) return alert("Nama komponen wajib diisi!");
+                  if (quickAddData.bobot < 0 || quickAddData.bobot > 100) return alert("Bobot harus antara 0-100!");
+                  
+                  const currentTotal = kelas.kolomNilai.reduce((acc, col) => acc + (Number(col.bobot) || 0), 0);
+                  if (currentTotal + quickAddData.bobot > 100) {
+                    return alert(`Total bobot akan melebihi 100% (sekarang ${currentTotal}%, tambah ${quickAddData.bobot}% = ${currentTotal + quickAddData.bobot}%). Silakan sesuaikan.`);
+                  }
+
+                  const newId = Date.now().toString();
+                  const newKolom = {
+                    id: newId,
+                    nama: quickAddData.nama.trim(),
+                    bobot: quickAddData.bobot,
+                    isGroup: quickAddData.isGroup,
+                    subKolom: []
+                  };
+
+                  if (quickAddData.isGroup) {
+                    for (let i = 1; i <= quickAddData.subCount; i++) {
+                      newKolom.subKolom.push({
+                        id: `${newId}_sub_${i}`,
+                        nama: `${newKolom.nama} ${i}`
+                      });
+                    }
+                  }
+
+                  const updatedKolomNilai = [...kelas.kolomNilai, newKolom];
+                  
+                  // Update UI first
+                  setKelas({ ...kelas, kolomNilai: updatedKolomNilai });
+                  setQuickAddModalOpen(false);
+                  
+                  try {
+                    await fetch(`/api/kelas/${kelas.id}/kolom`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ 
+                        kolomNilai: updatedKolomNilai, 
+                        skemaPenilaian: kelas.skemaPenilaian 
+                      })
+                    });
+                  } catch(err) {
+                    alert("Terjadi kesalahan saat menyimpan data ke server.");
+                  }
+                }}
+              >
+                Simpan Komponen
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
       {/* Modal Mode Fokus (Experimental Shoofian) */}
       {focusColumn && guruProfile?.username === 'shoofian' && (
