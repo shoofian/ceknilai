@@ -4072,7 +4072,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
                         {guruProfile?.username === 'shoofian' && (
-                          <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "0.75rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                          <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "1.1rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
                         )}
                         {p.materi && (
                           <div 
@@ -4535,8 +4535,8 @@ export default function DetailKelas({ params: paramsPromise }) {
                           >
                             {guruProfile?.username === 'shoofian' && (
                               <>
-                                <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.8rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
-                                <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "0.75rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                                <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
+                                <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "1.1rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
                               </>
                             )}
                             {col.nama} ({col.bobot}%)
@@ -4609,7 +4609,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                               >
                                 {guruProfile?.username === 'shoofian' && (
-                                  <span style={{ position: "absolute", top: "2px", right: "4px", color: "var(--primary)", fontSize: "0.6rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                                  <span style={{ position: "absolute", top: "2px", right: "4px", color: "var(--primary)", fontSize: "0.95rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
                                 )}
                                 {sub.nama}
                               </th>
