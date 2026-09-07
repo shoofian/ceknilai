@@ -1327,138 +1327,7 @@ export default function StudentPortal() {
                         );
                       })()}
 
-                      {/* Simulator Modal Pop-up */}
-                      {isSimulatorOpen && (
-                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
-                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflowY: "auto" }}>
-                            <button onClick={() => setIsSimulatorOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
-                            
-                            <div style={{ textAlign: "center" }}>
-                              <span style={{ fontSize: "2rem" }}>✨</span>
-                              <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", marginTop: "10px", marginBottom: "4px" }}>Kalkulator Simulasi Target</h3>
-                              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>Isi target skor Anda pada tugas yang masih kosong untuk melihat proyeksi hasil akhir murni (aktual).</p>
-                            </div>
-                            
-                            <div style={{ background: "var(--primary-glow)", padding: "16px", borderRadius: "var(--radius-sm)", textAlign: "center", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
-                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>PROYEKSI NILAI AKHIR AKTUAL</span>
-                              <h3 style={{ fontSize: "2.5rem", fontWeight: "800", color: "var(--primary)", margin: "4px 0", lineHeight: 1 }}>{displayNilaiAkhir}</h3>
-                              <span className="badge badge-primary" style={{ fontSize: "0.7rem" }}>PREDIKAT: {displayPredikat}</span>
-                            </div>
-
-                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
-                              {res.detailNilai.map((col) => (col.nilaiAsli === null || col.nilaiAsli === "-" || col.nilaiAsli === "") ? (
-                                <div key={col.kolomId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", background: "var(--bg-secondary)" }}>
-                                  <div>
-                                    <h4 style={{ fontSize: "0.9rem", fontWeight: "700", margin: 0 }}>{col.namaKolom || col.namaKomom}</h4>
-                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Bobot: {col.bobot}%</span>
-                                  </div>
-                                  <input 
-                                    type="number" 
-                                    min="0" 
-                                    max="100" 
-                                    placeholder="Skor (0-100)" 
-                                    value={simulationScores[col.kolomId] || ""}
-                                    onChange={(e) => handleSimulationChange(col.kolomId, e.target.value)}
-                                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--primary)", background: "var(--bg-primary)", color: "var(--text-primary)", fontWeight: "700", width: "120px", fontSize: "0.9rem", outline: "none" }}
-                                  />
-                                </div>
-                              ) : null)}
-                            </div>
-                            
-                            <button onClick={() => setSimulationScores({})} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Reset Simulasi</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Attendance Recap Modal Pop-up */}
-                      {isPresensiOpen && res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
-                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
-                          <div className="glass-card" style={{ width: "90%", maxWidth: "600px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflow: "hidden" }}>
-                            <button onClick={() => setIsPresensiOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", zIndex: 10 }}>✕</button>
-                            
-                            <div style={{ textAlign: "center" }}>
-                              <span style={{ fontSize: "2rem" }}>📅</span>
-                              <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", marginTop: "10px", marginBottom: "4px" }}>Rekap Presensi Kehadiran</h3>
-                              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>Detail catatan kehadiran Anda selama semester ini.</p>
-                            </div>
-                            
-                            {/* Attendance Summary Cards */}
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "8px", textAlign: "center" }}>
-                              <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.65rem", color: "var(--success)", fontWeight: "800" }}>HADIR</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--success)" }}>{res.rekapPresensi.summary.H}</div>
-                              </div>
-                              <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.65rem", color: "var(--warning)", fontWeight: "800" }}>IZIN</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--warning)" }}>{res.rekapPresensi.summary.I}</div>
-                              </div>
-                              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.65rem", color: "#3b82f6", fontWeight: "800" }}>SAKIT</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#3b82f6" }}>{res.rekapPresensi.summary.S}</div>
-                              </div>
-                              <div style={{ background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.65rem", color: "#8b5cf6", fontWeight: "800" }}>DISPEN</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#8b5cf6" }}>{res.rekapPresensi.summary.D || 0}</div>
-                              </div>
-                              <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
-                                <div style={{ fontSize: "0.65rem", color: "var(--danger)", fontWeight: "800" }}>ALPHA</div>
-                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--danger)" }}>{res.rekapPresensi.summary.A}</div>
-                              </div>
-                              <div style={{ background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                                <div style={{ fontSize: "0.6rem", color: "var(--primary)", fontWeight: "800" }}>HADIR %</div>
-                                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--primary)" }}>{res.rekapPresensi.persentase}%</div>
-                              </div>
-                            </div>
-
-                            {/* Meeting list */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
-                              <table className="premium-table" style={{ fontSize: "0.85rem" }}>
-                                <thead>
-                                  <tr>
-                                    <th>Pertemuan</th>
-                                    <th>Tanggal</th>
-                                    <th>Materi</th>
-                                    <th style={{ textAlign: "center" }}>Status</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {res.rekapPresensi.detail.map((p, idx) => (
-                                    <tr key={p.pertemuanId || idx}>
-                                      <td style={{ fontWeight: "700" }}>{p.nama}</td>
-                                      <td>{p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "-"}</td>
-                                      <td style={{ color: "var(--text-secondary)" }}>{p.materi || "—"}</td>
-                                      <td style={{ textAlign: "center" }}>
-                                        <span style={{ 
-                                          fontWeight: "800", 
-                                          fontSize: "0.85rem",
-                                          padding: "2px 8px",
-                                          borderRadius: "4px",
-                                          backgroundColor: 
-                                            p.status === 'H' ? "rgba(16, 185, 129, 0.15)" :
-                                            p.status === 'I' ? "rgba(245, 158, 11, 0.15)" :
-                                            p.status === 'S' ? "rgba(59, 130, 246, 0.15)" :
-                                            p.status === 'D' ? "rgba(139, 92, 246, 0.15)" :
-                                            p.status === 'A' ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
-                                          color:
-                                            p.status === 'H' ? "var(--success)" :
-                                            p.status === 'I' ? "var(--warning)" :
-                                            p.status === 'S' ? "#3b82f6" :
-                                            p.status === 'D' ? "#8b5cf6" :
-                                            p.status === 'A' ? "var(--danger)" : "var(--text-muted)"
-                                        }}>
-                                          {p.status}
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                            
-                            <button onClick={() => setIsPresensiOpen(false)} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Tutup</button>
-                          </div>
-                        </div>
-                      )}
+                      {/* Modals moved to root level */}
 
                       {/* Off-Screen Dashboard for Export (Portrait mode 4:5 ratio = 1000x1250) */}
                       <div id={`export-dashboard-${res.kelasId}`} style={{
@@ -1813,6 +1682,189 @@ export default function StudentPortal() {
           </div>
         </div>
       )}
+
+      
+      {/* ===================== STUDENT MODALS ===================== */}
+      {(() => {
+        const activeRes = results && activeClassId ? results.find(r => r.kelasId === activeClassId) : null;
+        if (!activeRes) return null;
+        
+        let displayNilaiAkhir = activeRes.nilaiAkhir;
+        let displayPredikat = activeRes.predikat;
+        
+        if (isSimulatorOpen) {
+          let simTotalNilai = 0;
+          let simTotalBobot = 0;
+          
+          activeRes.detailNilai.forEach((col) => {
+            let scoreVal = col.nilaiAsli;
+            if (scoreVal === null || scoreVal === "-" || scoreVal === "") {
+              if (simulationScores[col.kolomId] !== undefined && simulationScores[col.kolomId] !== "") {
+                scoreVal = Number(simulationScores[col.kolomId]);
+              } else {
+                scoreVal = 0;
+              }
+            }
+            if (typeof scoreVal === 'number' && !isNaN(scoreVal)) {
+              simTotalNilai += (scoreVal * (col.bobot / 100));
+              simTotalBobot += col.bobot;
+            }
+          });
+          
+          if (simTotalBobot > 0) {
+            let simFinal = (simTotalNilai / simTotalBobot) * 100;
+            displayNilaiAkhir = Number(simFinal.toFixed(2));
+            
+            displayPredikat = 'E';
+            if (displayNilaiAkhir >= activeRes.skema.A) displayPredikat = 'A';
+            else if (displayNilaiAkhir >= activeRes.skema.B) displayPredikat = 'B';
+            else if (displayNilaiAkhir >= activeRes.skema.C) displayPredikat = 'C';
+            else if (displayNilaiAkhir >= activeRes.skema.D) displayPredikat = 'D';
+          }
+        }
+
+        const handleSimulationChange = (kolomId, val) => {
+          setSimulationScores(prev => ({...prev, [kolomId]: val}));
+        };
+
+        return (
+          <>
+                      {/* Simulator Modal Pop-up */}
+                      {isSimulatorOpen && (
+                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflowY: "auto" }}>
+                            <button onClick={() => setIsSimulatorOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+                            
+                            <div style={{ textAlign: "center" }}>
+                              <span style={{ fontSize: "2rem" }}>✨</span>
+                              <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", marginTop: "10px", marginBottom: "4px" }}>Kalkulator Simulasi Target</h3>
+                              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>Isi target skor Anda pada tugas yang masih kosong untuk melihat proyeksi hasil akhir murni (aktual).</p>
+                            </div>
+                            
+                            <div style={{ background: "var(--primary-glow)", padding: "16px", borderRadius: "var(--radius-sm)", textAlign: "center", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "700" }}>PROYEKSI NILAI AKHIR AKTUAL</span>
+                              <h3 style={{ fontSize: "2.5rem", fontWeight: "800", color: "var(--primary)", margin: "4px 0", lineHeight: 1 }}>{displayNilaiAkhir}</h3>
+                              <span className="badge badge-primary" style={{ fontSize: "0.7rem" }}>PREDIKAT: {displayPredikat}</span>
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
+                              {activeRes.detailNilai.map((col) => (col.nilaiAsli === null || col.nilaiAsli === "-" || col.nilaiAsli === "") ? (
+                                <div key={col.kolomId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", background: "var(--bg-secondary)" }}>
+                                  <div>
+                                    <h4 style={{ fontSize: "0.9rem", fontWeight: "700", margin: 0 }}>{col.namaKolom || col.namaKomom}</h4>
+                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Bobot: {col.bobot}%</span>
+                                  </div>
+                                  <input 
+                                    type="number" 
+                                    min="0" 
+                                    max="100" 
+                                    placeholder="Skor (0-100)" 
+                                    value={simulationScores[col.kolomId] || ""}
+                                    onChange={(e) => handleSimulationChange(col.kolomId, e.target.value)}
+                                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--primary)", background: "var(--bg-primary)", color: "var(--text-primary)", fontWeight: "700", width: "120px", fontSize: "0.9rem", outline: "none" }}
+                                  />
+                                </div>
+                              ) : null)}
+                            </div>
+                            
+                            <button onClick={() => setSimulationScores({})} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Reset Simulasi</button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Attendance Recap Modal Pop-up */}
+                      {isPresensiOpen && activeRes.rekapPresensi && activeRes.rekapPresensi.totalPertemuan > 0 && (
+                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "600px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflow: "hidden" }}>
+                            <button onClick={() => setIsPresensiOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", zIndex: 10 }}>✕</button>
+                            
+                            <div style={{ textAlign: "center" }}>
+                              <span style={{ fontSize: "2rem" }}>📅</span>
+                              <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "var(--primary)", marginTop: "10px", marginBottom: "4px" }}>Rekap Presensi Kehadiran</h3>
+                              <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem", lineHeight: "1.5" }}>Detail catatan kehadiran Anda selama semester ini.</p>
+                            </div>
+                            
+                            {/* Attendance Summary Cards */}
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(80px, 1fr))", gap: "8px", textAlign: "center" }}>
+                              <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--success)", fontWeight: "800" }}>HADIR</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--success)" }}>{activeRes.rekapPresensi.summary.H}</div>
+                              </div>
+                              <div style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--warning)", fontWeight: "800" }}>IZIN</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--warning)" }}>{activeRes.rekapPresensi.summary.I}</div>
+                              </div>
+                              <div style={{ background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "#3b82f6", fontWeight: "800" }}>SAKIT</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#3b82f6" }}>{activeRes.rekapPresensi.summary.S}</div>
+                              </div>
+                              <div style={{ background: "rgba(139, 92, 246, 0.1)", border: "1px solid rgba(139, 92, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "#8b5cf6", fontWeight: "800" }}>DISPEN</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#8b5cf6" }}>{activeRes.rekapPresensi.summary.D || 0}</div>
+                              </div>
+                              <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)" }}>
+                                <div style={{ fontSize: "0.65rem", color: "var(--danger)", fontWeight: "800" }}>ALPHA</div>
+                                <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "var(--danger)" }}>{activeRes.rekapPresensi.summary.A}</div>
+                              </div>
+                              <div style={{ background: "var(--primary-glow)", border: "1px solid rgba(59, 130, 246, 0.2)", padding: "10px 3px", borderRadius: "var(--radius-sm)", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                                <div style={{ fontSize: "0.6rem", color: "var(--primary)", fontWeight: "800" }}>HADIR %</div>
+                                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--primary)" }}>{activeRes.rekapPresensi.persentase}%</div>
+                              </div>
+                            </div>
+
+                            {/* Meeting list */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "40vh", overflowY: "auto", paddingRight: "10px" }}>
+                              <table className="premium-table" style={{ fontSize: "0.85rem" }}>
+                                <thead>
+                                  <tr>
+                                    <th>Pertemuan</th>
+                                    <th>Tanggal</th>
+                                    <th>Materi</th>
+                                    <th style={{ textAlign: "center" }}>Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {activeRes.rekapPresensi.detail.map((p, idx) => (
+                                    <tr key={p.pertemuanId || idx}>
+                                      <td style={{ fontWeight: "700" }}>{p.nama}</td>
+                                      <td>{p.tanggal ? new Date(p.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : "-"}</td>
+                                      <td style={{ color: "var(--text-secondary)" }}>{p.materi || "—"}</td>
+                                      <td style={{ textAlign: "center" }}>
+                                        <span style={{ 
+                                          fontWeight: "800", 
+                                          fontSize: "0.85rem",
+                                          padding: "2px 8px",
+                                          borderRadius: "4px",
+                                          backgroundColor: 
+                                            p.status === 'H' ? "rgba(16, 185, 129, 0.15)" :
+                                            p.status === 'I' ? "rgba(245, 158, 11, 0.15)" :
+                                            p.status === 'S' ? "rgba(59, 130, 246, 0.15)" :
+                                            p.status === 'D' ? "rgba(139, 92, 246, 0.15)" :
+                                            p.status === 'A' ? "rgba(239, 68, 68, 0.15)" : "rgba(255,255,255,0.05)",
+                                          color:
+                                            p.status === 'H' ? "var(--success)" :
+                                            p.status === 'I' ? "var(--warning)" :
+                                            p.status === 'S' ? "#3b82f6" :
+                                            p.status === 'D' ? "#8b5cf6" :
+                                            p.status === 'A' ? "var(--danger)" : "var(--text-muted)"
+                                        }}>
+                                          {p.status}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            
+                            <button onClick={() => setIsPresensiOpen(false)} className="btn btn-secondary" style={{ width: "100%", padding: "10px", fontSize: "0.85rem" }}>Tutup</button>
+                          </div>
+                        </div>
+                      )}
+          </>
+        );
+      })()}
+
 
       {/* MODAL: GABUNG KELAS */}
       {joinModalOpen && (
