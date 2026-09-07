@@ -8949,7 +8949,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 {bankAvailableRombels.length === 0 && <option value="">Tidak ada rombel tersedia</option>}
                 {bankAvailableRombels.map(r => (
                   <option key={`${r.tahun}|${r.tingkatan}|${r.rombel}`} value={`${r.tahun}|${r.tingkatan}|${r.rombel}`}>
-                    [{r.tahun}] Kelas {r.tingkatan} - {r.rombel}
+                    {r.rombel}
                   </option>
                 ))}
               </select>

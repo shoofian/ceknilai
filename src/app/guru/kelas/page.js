@@ -1393,7 +1393,7 @@ export default function KelolaKelas() {
                               }}
                             />
                             <div style={{ display: "flex", flexDirection: "column" }}>
-                              <strong style={{ fontSize: "0.9rem" }}>Tingkat {br.tingkatan} - {br.rombel}</strong>
+                              <strong style={{ fontSize: "0.9rem" }}>{br.rombel}</strong>
                               <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{br.siswaCount || '?'} Siswa</span>
                             </div>
                           </label>
@@ -1610,7 +1610,7 @@ export default function KelolaKelas() {
                         <option value="-" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Rombel --</option>
                         {bankRombels.map(br => (
                           <option key={`${br.tingkatan}-${br.rombel}`} value={`${br.tingkatan}-${br.rombel}`} style={{ backgroundColor: "var(--bg-secondary)" }}>
-                            Tingkat {br.tingkatan} - {br.rombel}
+                            {br.rombel}
                           </option>
                         ))}
                       </select>
@@ -2353,7 +2353,7 @@ export default function KelolaKelas() {
                       <option value="" disabled style={{ backgroundColor: "var(--bg-secondary)" }}>-- Pilih Rombel --</option>
                       {bankAvailableRombels.map(br => (
                         <option key={`${br.tahun}|${br.tingkatan}|${br.rombel}`} value={`${br.tahun}|${br.tingkatan}|${br.rombel}`} style={{ backgroundColor: "var(--bg-secondary)" }}>
-                          Tingkat {br.tingkatan} - {br.rombel} ({br.siswaCount} Siswa)
+                          {br.rombel} ({br.siswaCount} Siswa)
                         </option>
                       ))}
                     </select>
