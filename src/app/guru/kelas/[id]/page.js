@@ -60,7 +60,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [focusColumn, setFocusColumn] = useState(null);
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
-  const [quickAddData, setQuickAddData] = useState({ nama: "", bobot: 0, isGroup: false, subCount: 1 });
+  const [quickAddData, setQuickAddData] = useState({ nama: "", bobot: 0, isGroup: false, subCount: 1, hitungMetode: 'rata-rata', isPresensi: false });
   const [targetClassId, setTargetClassId] = useState("");
   const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
@@ -4542,7 +4542,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <button 
                             onClick={() => {
                               if (handleLockedAction()) return;
-                              setQuickAddData({ nama: "", bobot: 0, isGroup: false, subCount: 1 });
+                              setQuickAddData({ nama: "", bobot: 0, isGroup: false, subCount: 1, hitungMetode: 'rata-rata', isPresensi: false });
                               setQuickAddModalOpen(true);
                             }}
                             style={{ width: "100%", height: "100%", minHeight: "45px", background: "rgba(59, 130, 246, 0.05)", border: "none", color: "var(--primary)", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "1.2rem", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }}
@@ -9300,18 +9300,49 @@ export default function DetailKelas({ params: paramsPromise }) {
               </label>
             </div>
 
-            {quickAddData.isGroup && (
-              <div className="form-group animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)" }}>
-                <label>Jumlah Anak Kolom (Awal)</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  min="1"
-                  max="10"
-                  value={quickAddData.subCount}
-                  onChange={(e) => setQuickAddData({ ...quickAddData, subCount: parseInt(e.target.value) || 1 })}
-                />
-                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Contoh: Jika diisi 3, maka akan otomatis dibuatkan kolom {quickAddData.nama || 'Komponen'} 1, {quickAddData.nama || 'Komponen'} 2, dan {quickAddData.nama || 'Komponen'} 3.</p>
+            {quickAddData.isGroup ? (
+              <div className="animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div className="form-group">
+                  <label>Jumlah Anak Kolom (Awal)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="1"
+                    max="10"
+                    value={quickAddData.subCount}
+                    onChange={(e) => setQuickAddData({ ...quickAddData, subCount: parseInt(e.target.value) || 1 })}
+                  />
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Contoh: Jika diisi 3, maka otomatis dibuat kolom {quickAddData.nama || 'Komponen'} 1, 2, 3.</p>
+                </div>
+                <div className="form-group">
+                  <label>Metode Hitung Sub-kolom</label>
+                  <select
+                    className="form-input"
+                    value={quickAddData.hitungMetode}
+                    onChange={(e) => setQuickAddData({ ...quickAddData, hitungMetode: e.target.value })}
+                  >
+                    <option value="rata-rata">Rata-rata Otomatis (Bagi rata otomatis)</option>
+                    <option value="persentase">Persentase (Setiap sub-kolom punya bobot spesifik)</option>
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", color: "var(--text-primary)" }}>
+                  <input
+                    type="checkbox"
+                    checked={quickAddData.isPresensi}
+                    onChange={(e) => setQuickAddData({ ...quickAddData, isPresensi: e.target.checked })}
+                    style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                    disabled={!quickAddData.isPresensi && kelas.kolomNilai.some(c => c.isPresensi)}
+                  />
+                  Gunakan untuk Nilai Presensi
+                </label>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 24px" }}>
+                  {kelas.kolomNilai.some(c => c.isPresensi) && !quickAddData.isPresensi 
+                    ? "Sudah ada komponen lain yang menggunakan presensi." 
+                    : "Nilai akan otomatis terisi berdasarkan persentase kehadiran siswa."}
+                </p>
               </div>
             )}
 
@@ -9339,14 +9370,24 @@ export default function DetailKelas({ params: paramsPromise }) {
                     nama: quickAddData.nama.trim(),
                     bobot: quickAddData.bobot,
                     isGroup: quickAddData.isGroup,
+                    isPresensi: !quickAddData.isGroup ? quickAddData.isPresensi : false,
+                    hitungMetode: quickAddData.isGroup ? quickAddData.hitungMetode : 'rata-rata',
                     subKolom: []
                   };
 
                   if (quickAddData.isGroup) {
+                    let sisaBobot = 100;
+                    const baseBobot = Math.floor(100 / quickAddData.subCount);
+                    
                     for (let i = 1; i <= quickAddData.subCount; i++) {
+                      let subBobot = baseBobot;
+                      if (i === quickAddData.subCount) subBobot = sisaBobot; // Berikan sisa ke sub terakhir
+                      else sisaBobot -= baseBobot;
+
                       newKolom.subKolom.push({
                         id: `${newId}_sub_${i}`,
-                        nama: `${newKolom.nama} ${i}`
+                        nama: `${newKolom.nama} ${i}`,
+                        ...(quickAddData.hitungMetode === 'persentase' ? { bobot: subBobot } : {})
                       });
                     }
                   }
