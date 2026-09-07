@@ -26,7 +26,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email sudah terdaftar' }, { status: 400 });
     }
 
-    const trialUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const trialUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     // Create the new teacher
     const newGuru = await createGuruByAdmin({

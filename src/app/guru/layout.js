@@ -15,6 +15,7 @@ export default function GuruLayout({ children }) {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [kelasViewMode, setKelasViewMode] = useState('tabs');
   const [trialBannerDismissed, setTrialBannerDismissed] = useState(false);
+  const [pendingPayments, setPendingPayments] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -83,6 +84,19 @@ export default function GuruLayout({ children }) {
           if (data.loggedIn) {
             setGuru(data.user);
             setLoading(false);
+            
+            // If superadmin, fetch pending payments count
+            if (["superadmin", "shoofian"].includes(data.user.username.toLowerCase())) {
+              fetch("/api/superadmin/finance")
+                .then(res => res.json())
+                .then(logs => {
+                  if (Array.isArray(logs)) {
+                    const pendingCount = logs.filter(log => log.aksi === 'PAYMENT_PENDING').length;
+                    setPendingPayments(pendingCount);
+                  }
+                })
+                .catch(err => console.error("Failed to fetch pending payments", err));
+            }
           } else {
             router.push("/login");
           }
@@ -126,7 +140,11 @@ export default function GuruLayout({ children }) {
   }
 
     if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
-      navItems.push({ name: "🛡️ Superadmin Panel", path: "/guru/superadmin" });
+      navItems.push({ 
+        name: "🛡️ Superadmin Panel", 
+        path: "/guru/superadmin",
+        badge: pendingPayments > 0 ? pendingPayments : null
+      });
     }
     
     // Add "Konfigurasi Sekolah" for Superadmin OR Admin Sekolah
@@ -375,7 +393,22 @@ export default function GuruLayout({ children }) {
                   transition: "var(--transition)"
                 }}
               >
-                {item.name}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                  <span>{item.name}</span>
+                  {item.badge && (
+                    <span style={{ 
+                      backgroundColor: "var(--danger)", 
+                      color: "white", 
+                      borderRadius: "12px", 
+                      padding: "2px 8px", 
+                      fontSize: "0.75rem", 
+                      fontWeight: "bold",
+                      boxShadow: "0 2px 4px rgba(239, 68, 68, 0.4)"
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
               </Link>
             );
           })}

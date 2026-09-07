@@ -52,11 +52,14 @@ export async function POST(request) {
       // Generate a random password for OAuth accounts (not used directly since they login via Google)
       const randomPassword = 'google_' + Math.random().toString(36).substring(2, 15);
 
+      const trialUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
       guru = await createGuruByAdmin({
         nama: name || 'Guru CekNilai',
         email: cleanEmail,
         username: finalUsername,
-        password: randomPassword
+        password: randomPassword,
+        premium_until: trialUntil
       });
 
       if (!guru) {

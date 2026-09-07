@@ -50,7 +50,8 @@ export async function POST(request) {
     }
 
     try {
-      const newGuru = await createGuruByAdmin({ username, nama, email, password });
+      const trialUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const newGuru = await createGuruByAdmin({ username, nama, email, password, premium_until: trialUntil });
       const { password: _, ...sanitized } = newGuru;
       return NextResponse.json({ success: true, user: sanitized });
     } catch (dbError) {
