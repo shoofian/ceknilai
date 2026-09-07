@@ -1330,7 +1330,7 @@ export default function StudentPortal() {
                       {/* Simulator Modal Pop-up */}
                       {isSimulatorOpen && (
                         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" }} className="animate-fade-in">
-                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)" }}>
+                          <div className="glass-card" style={{ width: "90%", maxWidth: "500px", padding: "30px", display: "flex", flexDirection: "column", gap: "12px", position: "relative", backgroundColor: "var(--bg-primary)", maxHeight: "90vh", overflowY: "auto" }}>
                             <button onClick={() => setIsSimulatorOpen(false)} style={{ position: "absolute", top: "15px", right: "15px", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
                             
                             <div style={{ textAlign: "center" }}>
