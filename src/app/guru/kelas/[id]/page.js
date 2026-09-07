@@ -4063,15 +4063,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                       transition: "opacity 0.2s ease"
                     }}>
                       <div 
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
-                        onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'presensi', id: p.id, nama: p.nama, kegiatan: p.kegiatan }); }}
-                        title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", cursor: "pointer" }}
+                        onClick={() => { setFocusColumn({ type: 'presensi', id: p.id, nama: p.nama, kegiatan: p.kegiatan }); }}
+                        title="Klik untuk masuk ke Mode Fokus"
                       >
                         <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)" }} title={p.nama}>
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
-                        {guruProfile?.username === 'shoofian' && (
+                        {true && (
                           <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                           </span>
@@ -4520,7 +4520,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
                             <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
-                              {guruProfile?.username === 'shoofian' && (
+                              {true && (
                                 <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.8rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
                               )}
                               {col.nama} ({col.bobot}%)
@@ -4531,11 +4531,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <th 
                             key={col.id} 
                             rowSpan={hasGroups ? 2 : 1} 
-                            onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
-                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
-                            title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                            onClick={() => { setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
+                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer" }}
+                            title="Klik untuk masuk ke Mode Fokus"
                           >
-                            {guruProfile?.username === 'shoofian' && (
+                            {true && (
                               <>
                                 <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
                                 <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
@@ -4549,7 +4549,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       })}
 
                       {/* Shortcut Quick Add Column */}
-                      {guruProfile?.username === 'shoofian' && (
+                      {true && (
                         <th rowSpan={hasGroups ? 2 : 1} style={{ textAlign: "center", minWidth: "45px", backgroundColor: "var(--bg-tertiary)", padding: 0, border: "1px dashed var(--border-color)" }}>
                           <button 
                             onClick={() => {
@@ -4608,11 +4608,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                             return col.subKolom.map(sub => (
                               <th 
                                 key={sub.id} 
-                                onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
-                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
-                                title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                                onClick={() => { setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
+                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: "pointer" }}
+                                title="Klik untuk masuk ke Mode Fokus"
                               >
-                                {guruProfile?.username === 'shoofian' && (
+                                {true && (
                                   <span style={{ position: "absolute", top: "2px", right: "4px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                                   </span>
@@ -4784,7 +4784,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         })}
 
                         {/* Shortcut Quick Add Column Spacer */}
-                        {guruProfile?.username === 'shoofian' && (
+                        {true && (
                           <td style={{ backgroundColor: "var(--bg-secondary)", borderLeft: "1px dashed var(--border-color)", borderRight: "1px dashed var(--border-color)" }}></td>
                         )}
 
@@ -9662,8 +9662,8 @@ export default function DetailKelas({ params: paramsPromise }) {
         </Modal>
       )}
 
-      {/* Modal Mode Fokus (Experimental Shoofian) */}
-      {focusColumn && guruProfile?.username === 'shoofian' && (
+      {/* Modal Mode Fokus */}
+      {focusColumn && (
         <Modal 
           isOpen={true} 
           onClose={() => setFocusColumn(null)} 
