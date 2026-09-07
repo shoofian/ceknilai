@@ -1346,7 +1346,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           setSyncPreviewData(data);
           setSyncSelectedAdded(new Set((data.added || []).map(s => s.nisn)));
           setSyncSelectedUpdated(new Set((data.updated || []).filter(s => !(s.nisnChanged && s.nameChanged)).map(s => s.nisnLama)));
-          setSyncSelectedRemoved(new Set((data.removed || []).map(s => s.nisn)));
+          setSyncSelectedRemoved(new Set());
           setShowSyncModal(true);
           setBankRombelModalOpen(false); // Close selection modal if preview is shown
         } else {
@@ -9180,11 +9180,15 @@ export default function DetailKelas({ params: paramsPromise }) {
                 Batal
               </button>
               <button 
-                className="btn btn-primary" 
+                className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
                 onClick={handleCommitSyncBankData}
                 disabled={isSyncingBankData}
               >
-                {isSyncingBankData ? "Menyimpan..." : "Lanjutkan Sinkronisasi"}
+                {isSyncingBankData 
+                  ? "Menyimpan..." 
+                  : syncSelectedRemoved.size > 0 
+                    ? `Ya, Hapus (${syncSelectedRemoved.size}) & Lanjutkan` 
+                    : "Lanjutkan Sinkronisasi"}
               </button>
             </div>
           </div>
