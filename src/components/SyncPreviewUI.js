@@ -182,7 +182,14 @@ export default function SyncPreviewUI({
           </button>
           <button 
             className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
-            onClick={onCommit}
+            onClick={() => {
+              if (syncSelectedRemoved.size > 0) {
+                if (!window.confirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
+                  return;
+                }
+              }
+              onCommit();
+            }}
             disabled={isSyncingBankData}
           >
             {isSyncingBankData 

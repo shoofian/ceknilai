@@ -9181,7 +9181,14 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
               <button 
                 className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
-                onClick={handleCommitSyncBankData}
+                onClick={() => {
+                  if (syncSelectedRemoved.size > 0) {
+                    if (!window.confirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
+                      return;
+                    }
+                  }
+                  handleCommitSyncBankData();
+                }}
                 disabled={isSyncingBankData}
               >
                 {isSyncingBankData 
