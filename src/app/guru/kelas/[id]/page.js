@@ -3110,7 +3110,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   return (
     <>
-      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "40px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "28px", paddingBottom: "40px" }}>
       
       {/* Breadcrumbs */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
@@ -4355,9 +4355,12 @@ export default function DetailKelas({ params: paramsPromise }) {
               </button>
               
               {settingsDropdownOpen && (
-                <div className="settings-dropdown-menu" style={{
+                <>
+                {/* Desktop Dropdown */}
+                <div className="hide-on-mobile" style={{
                   position: "absolute",
                   top: "100%",
+                  right: 0,
                   marginTop: "8px",
                   background: "var(--bg-primary)",
                   border: "1px solid var(--border-color)",
@@ -4395,17 +4398,54 @@ export default function DetailKelas({ params: paramsPromise }) {
                     🛡️ Backup & Pemulihan
                   </div>
                 </div>
+                
+                {/* Mobile Bottom Sheet */}
+                {typeof document !== 'undefined' && createPortal(
+                  <div className="hide-on-desktop" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
+                    <div 
+                      className="settings-dropdown-overlay"
+                      style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)" }}
+                      onClick={() => setSettingsDropdownOpen(false)}
+                    />
+                    <div className="settings-dropdown-menu" style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "var(--bg-primary)",
+                      borderRadius: "16px 16px 0 0",
+                      paddingBottom: "env(safe-area-inset-bottom, 20px)",
+                      display: "flex",
+                      flexDirection: "column",
+                      overflow: "hidden",
+                      boxShadow: "0 -4px 20px rgba(0,0,0,0.15)"
+                    }}>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }}
+                        style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                      >
+                        📖 Panduan Penggunaan
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); setAdvancedToolsModalOpen(true); }}
+                        style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                      >
+                        🧪 Fitur Lanjutan (Eksperimental)
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); setBackupModalOpen(true); }}
+                        style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", color: "var(--text-primary)" }}
+                      >
+                        🛡️ Backup & Pemulihan
+                      </div>
+                    </div>
+                  </div>,
+                  document.body
+                )}
+                </>
               )}
             </div>
           </div>
-          
-          {settingsDropdownOpen && (
-            <div 
-              className="settings-dropdown-overlay"
-              style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
-              onClick={() => setSettingsDropdownOpen(false)}
-            />
-          )}
         </div>
 
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
