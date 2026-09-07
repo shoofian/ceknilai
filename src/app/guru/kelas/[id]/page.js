@@ -4067,6 +4067,11 @@ export default function DetailKelas({ params: paramsPromise }) {
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
+                        {guruProfile?.username === 'shoofian' && (
+                          <div style={{ fontSize: "0.6rem", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", padding: "2px 6px", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid rgba(59, 130, 246, 0.2)", marginTop: "2px" }}>
+                            ⤢ Fokus
+                          </div>
+                        )}
                         {p.materi && (
                           <div 
                             style={{ 
@@ -4523,7 +4528,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                             style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
                             title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                           >
-                            {col.nama} ({col.bobot}%)
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                              <span>{col.nama} ({col.bobot}%)</span>
+                              {guruProfile?.username === 'shoofian' && (
+                                <div style={{ fontSize: "0.6rem", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", padding: "2px 6px", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid rgba(59, 130, 246, 0.2)", marginTop: "2px" }}>
+                                  ⤢ Fokus
+                                </div>
+                              )}
+                            </div>
                           </th>
                         );
                       })}
@@ -4573,7 +4585,14 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
                                 title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                               >
-                                {sub.nama}
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                  <span>{sub.nama}</span>
+                                  {guruProfile?.username === 'shoofian' && (
+                                    <div style={{ fontSize: "0.55rem", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", padding: "1px 4px", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+                                      ⤢ Fokus
+                                    </div>
+                                  )}
+                                </div>
                               </th>
                             ));
                           }
