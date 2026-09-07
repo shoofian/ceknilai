@@ -4072,7 +4072,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
                         {guruProfile?.username === 'shoofian' && (
-                          <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "1.1rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                          <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                          </span>
                         )}
                         {p.materi && (
                           <div 
@@ -4536,7 +4538,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                             {guruProfile?.username === 'shoofian' && (
                               <>
                                 <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
-                                <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "1.1rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                                <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                                </span>
                               </>
                             )}
                             {col.nama} ({col.bobot}%)
@@ -4609,7 +4613,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                                 title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                               >
                                 {guruProfile?.username === 'shoofian' && (
-                                  <span style={{ position: "absolute", top: "2px", right: "4px", color: "var(--primary)", fontSize: "0.95rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                                  <span style={{ position: "absolute", top: "2px", right: "4px", color: "var(--primary)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center" }} title="Mode Fokus">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                                  </span>
                                 )}
                                 {sub.nama}
                               </th>
