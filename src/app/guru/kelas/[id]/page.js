@@ -11,6 +11,7 @@ import RaporIntegrationModal from "@/components/RaporIntegrationModal";
 import RemedialModal from "@/components/RemedialModal";
 import RemedialReportModal from "@/components/RemedialReportModal";
 import AdvancedToolsModal from "@/components/AdvancedToolsModal";
+import BackupManagerModal from "@/components/BackupManagerModal";
 import dynamic from "next/dynamic";
 
 import { ASPEK_PRESETS } from '@/lib/presets';
@@ -73,6 +74,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [remedialReportOpen, setRemedialReportOpen] = useState(false);
   const [remedialReportConfig, setRemedialReportConfig] = useState({});
   const [advancedToolsModalOpen, setAdvancedToolsModalOpen] = useState(false);
+  const [backupModalOpen, setBackupModalOpen] = useState(false);
 
   const handleSaveRemedial = async (updatedSiswaList, newSkemaConfig) => {
     try {
@@ -4416,11 +4418,19 @@ export default function DetailKelas({ params: paramsPromise }) {
                   </div>
                   <div 
                     onClick={() => { setSettingsDropdownOpen(false); setAdvancedToolsModalOpen(true); }}
-                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", color: "var(--text-primary)" }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
                     onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
                     onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
                   >
                     🧪 Fitur Lanjutan (Eksperimental)
+                  </div>
+                  <div 
+                    onClick={() => { setSettingsDropdownOpen(false); setBackupModalOpen(true); }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", color: "var(--text-primary)" }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    🛡️ Backup & Pemulihan
                   </div>
                 </div>
               )}
@@ -4946,6 +4956,13 @@ export default function DetailKelas({ params: paramsPromise }) {
         Belum ada siswa dan komponen nilai di kelas ini. Silakan atur komponen nilai atau tambah siswa terlebih dahulu.
       </div>
     )}
+      <BackupManagerModal
+        isOpen={backupModalOpen}
+        onClose={() => setBackupModalOpen(false)}
+        kelasId={classId}
+        onSuccess={fetchClassDetail}
+      />
+
       {/* Advanced Tools & Settings Modal */}
       <AdvancedToolsModal
         isOpen={advancedToolsModalOpen}

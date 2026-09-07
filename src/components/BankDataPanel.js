@@ -371,6 +371,7 @@ export default function BankDataPanel({ targetSekolahId }) {
               <tr>
                 <th>NISN</th>
                 <th>Nama</th>
+                <th>Tanggal Lahir</th>
                 <th>Tingkat</th>
                 <th>Rombel</th>
                 <th>Sekolah ID</th>
@@ -383,6 +384,9 @@ export default function BankDataPanel({ targetSekolahId }) {
                 <tr key={siswa.id || `siswa_${siswa.nisn}`}>
                   <td><code>{siswa.nisn}</code></td>
                   <td><strong>{siswa.nama}</strong></td>
+                  <td style={{ color: siswa.tanggal_lahir ? "inherit" : "var(--danger)" }}>
+                    {siswa.tanggal_lahir ? siswa.tanggal_lahir.split('T')[0] : <i>Kosong</i>}
+                  </td>
                   <td>{siswa.tingkatan}</td>
                   <td>{siswa.rombel}</td>
                   <td style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{siswa.sekolah_id?.substring(0, 8)}...</td>

@@ -105,7 +105,7 @@ function mapKelasFromDb(k) {
         })) : []
       };
     }),
-    siswa: (k.siswa || []).map(s => ({
+    siswa: (k.siswa || []).filter(s => !s.deleted_at).map(s => ({
       nisn: s.nisn,
       nama: s.nama,
       tanggalLahir: s.tanggal_lahir === '1900-01-01' ? '' : s.tanggal_lahir,
@@ -738,7 +738,7 @@ export async function deleteSiswaFromKelas(kelasId, nisn, guruUsername = null) {
     if (!kelas) return false;
     const { error } = await supabase
       .from('siswa')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('kelas_id', kelasId)
       .eq('nisn', nisn);
 
@@ -760,7 +760,7 @@ export async function deleteSiswaBulkFromKelas(kelasId, nisnArray, guruUsername 
     if (!kelas) return false;
     const { error } = await supabase
       .from('siswa')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('kelas_id', kelasId)
       .in('nisn', nisnArray);
 
@@ -772,6 +772,162 @@ export async function deleteSiswaBulkFromKelas(kelasId, nisnArray, guruUsername 
   } catch (err) {
     console.error('Unexpected error in deleteSiswaBulkFromKelas:', err);
     return false;
+  }
+}
+
+}
+
+export async function restoreSiswa(kelasId, nisn, guruUsername = null) {
+  if (!supabase) return false;
+  try {
+    const kelas = await getKelasById(kelasId, guruUsername);
+    if (!kelas) return false;
+    const { error } = await supabase
+      .from('siswa')
+      .update({ deleted_at: null })
+      .eq('kelas_id', kelasId)
+      .eq('nisn', nisn);
+
+    if (error) {
+      console.error('Error restoring student:', error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in restoreSiswa:', err);
+    return false;
+  }
+}
+
+// === BACKUP & RESTORE KELAS ===
+export async function createKelasBackup(kelasId, guruUsername, keterangan = "Auto-backup") {
+  if (!supabase) return null;
+  try {
+    // We fetch the current complete state of the class (including students and grades)
+    const snapshot = await getKelasById(kelasId);
+    if (!snapshot) return null;
+
+    const { data, error } = await supabase
+      .from('kelas_backups')
+      .insert([
+        {
+          kelas_id: kelasId,
+          guru_username: guruUsername,
+          snapshot: snapshot,
+          keterangan: keterangan
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating class backup:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in createKelasBackup:', err);
+    return null;
+  }
+}
+
+export async function getKelasBackups(kelasId) {
+  if (!supabase) return [];
+  try {
+    const { data, error } = await supabase
+      .from('kelas_backups')
+      .select('id, kelas_id, guru_username, keterangan, created_at')
+      .eq('kelas_id', kelasId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching class backups:', error);
+      return [];
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in getKelasBackups:', err);
+    return [];
+  }
+}
+
+export async function restoreKelasFromSnapshot(kelasId, snapshot) {
+  if (!supabase) return false;
+  try {
+    // 1. Soft-delete all current students in the class
+    const { error: delError } = await supabase
+      .from('siswa')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('kelas_id', kelasId);
+    
+    if (delError) {
+      console.error('Error in restoring (soft deleting current students):', delError);
+      return false;
+    }
+
+    // 2. Upsert students from snapshot and set deleted_at to null
+    if (snapshot.siswa && snapshot.siswa.length > 0) {
+      const studentsToUpsert = snapshot.siswa.map(s => ({
+        kelas_id: kelasId,
+        nisn: s.nisn,
+        nama: s.nama,
+        tanggal_lahir: (s.tanggalLahir && s.tanggalLahir.toString().trim() !== "") ? s.tanggalLahir : '1900-01-01',
+        nilai: s.nilai || {},
+        catatan: s.catatan || "",
+        deleted_at: null
+      }));
+      
+      const { error: upsertError } = await supabase
+        .from('siswa')
+        .upsert(studentsToUpsert, { onConflict: 'kelas_id,nisn' });
+        
+      if (upsertError) {
+        console.error('Error in restoring (upserting snapshot students):', upsertError);
+        return false;
+      }
+    }
+    
+    // Also restore class properties like skemaPenilaian
+    const { error: updateKelasError } = await supabase
+      .from('kelas')
+      .update({
+        nama: snapshot.nama,
+        rombel_nama: snapshot.rombelNama,
+        nama_kustom: snapshot.namaKustom,
+        tingkatan: snapshot.tingkatan,
+        skema_penilaian: snapshot.skemaPenilaian
+      })
+      .eq('id', kelasId);
+
+    if (updateKelasError) {
+      console.error('Error restoring class properties:', updateKelasError);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in restoreKelasFromSnapshot:', err);
+    return false;
+  }
+}
+
+export async function getKelasBackupById(backupId) {
+  if (!supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('kelas_backups')
+      .select('*')
+      .eq('id', backupId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching class backup details:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('Unexpected error in getKelasBackupById:', err);
+    return null;
   }
 }
 

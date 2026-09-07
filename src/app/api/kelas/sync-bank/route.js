@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
-import { getKelasById, getGuru, getBankSiswa, updateKelas, deleteSiswaBulkFromKelas, logAktivitasGuru } from '@/lib/db';
+import { getKelasById, getGuru, getBankSiswa, updateKelas, deleteSiswaBulkFromKelas, logAktivitasGuru, createKelasBackup } from '@/lib/db';
 
 
 
@@ -78,9 +78,15 @@ export async function POST(request) {
         const nisnChanged = normalize(exS.nisn) !== normalize(bankS.nisn);
         const nameChanged = normalize(exS.nama) !== normalize(bankS.nama);
         
+        // Mencegah data tanggal lahir yang valid di kelas terhapus jika di bank data kosong
+        let resolvedBankDob = bankS.tanggal_lahir;
+        if (!isValidDate(bankS.tanggal_lahir) && isValidDate(exS.tanggalLahir)) {
+          resolvedBankDob = exS.tanggalLahir;
+        }
+
         const exDob = isValidDate(exS.tanggalLahir) ? normalize(exS.tanggalLahir) : "";
-        const bankDob = isValidDate(bankS.tanggal_lahir) ? normalize(bankS.tanggal_lahir) : "";
-        const dobChanged = exDob !== bankDob;
+        const bankDobNorm = isValidDate(resolvedBankDob) ? normalize(resolvedBankDob) : "";
+        const dobChanged = exDob !== bankDobNorm;
         
         if (nisnChanged || nameChanged || dobChanged) {
           updated.push({ 
@@ -89,7 +95,7 @@ export async function POST(request) {
             namaLama: exS.nama, 
             namaBaru: bankS.nama, 
             tanggalLahirLama: exS.tanggalLahir,
-            tanggalLahirBaru: bankS.tanggal_lahir,
+            tanggalLahirBaru: resolvedBankDob,
             nisnChanged,
             nameChanged,
             dobChanged,
@@ -187,6 +193,14 @@ export async function POST(request) {
     }
 
     if (action === 'commit' && previewData) {
+      // Create auto-backup before modifying any data
+      try {
+        await createKelasBackup(kelasId, username, 'Auto-backup sebelum Sinkronisasi Bank Data');
+      } catch (backupErr) {
+        console.error('Failed to create auto-backup before sync:', backupErr);
+        // We continue the sync even if backup fails, but it's logged
+      }
+
       const { added = [], updated = [], removed = [] } = previewData;
       
       let currentSiswa = kelas.siswa ? [...kelas.siswa] : [];
