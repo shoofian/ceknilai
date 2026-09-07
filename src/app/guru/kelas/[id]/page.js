@@ -9698,92 +9698,80 @@ export default function DetailKelas({ params: paramsPromise }) {
           onClose={() => setFocusColumn(null)} 
           title={`Mode Fokus: ${focusColumn.nama}`}
         >
-          <div style={{ maxHeight: "65vh", overflowY: "auto", margin: "0 -16px", padding: "0 16px 16px 16px" }}>
-            <table className="premium-table" style={{ width: "100%", margin: 0 }}>
-              <thead>
-                <tr>
-                  <th style={{ position: "sticky", top: 0, zIndex: 10, width: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>No</th>
-                  <th style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
-                  <th style={{ position: "sticky", top: 0, zIndex: 10, textAlign: "center", width: "150px", backgroundColor: "var(--bg-tertiary)" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                      <span>{focusColumn.nama}</span>
-                      {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "4px" }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="Isi Bulk"
-                            title="Isi bulk (semua siswa)"
-                            value={focusBulkValue}
-                            onChange={(e) => {
-                              let val = e.target.value.replace(/[^0-9]/g, '');
-                              if (val !== "") {
-                                const num = parseInt(val, 10);
-                                if (num > 100) val = "100";
-                                else val = num.toString();
-                              }
-                              setFocusBulkValue(val);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && focusBulkValue !== "") {
-                                e.preventDefault();
-                                const newScores = { ...temporaryScores };
-                                sortedStudents.forEach(s => {
-                                  newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
-                                  handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
-                                });
-                                setTemporaryScores(newScores);
-                                setFocusBulkValue("");
-                              }
-                            }}
-                            style={{ 
-                              width: "60px", 
-                              padding: "2px 4px", 
-                              fontSize: "0.75rem", 
-                              textAlign: "center", 
-                              borderRadius: "4px", 
-                              border: "1px solid var(--border-color)", 
-                              backgroundColor: "var(--bg-primary)", 
-                              color: "var(--text-primary)" 
-                            }}
-                          />
-                          <button
-                            title="Terapkan nilai ke semua siswa"
-                            onClick={() => {
-                              if (focusBulkValue !== "") {
-                                const newScores = { ...temporaryScores };
-                                sortedStudents.forEach(s => {
-                                  newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
-                                  handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
-                                });
-                                setTemporaryScores(newScores);
-                                setFocusBulkValue("");
-                              }
-                            }}
-                            style={{ 
-                              background: "var(--primary)", 
-                              color: "white", 
-                              border: "none", 
-                              borderRadius: "4px", 
-                              padding: "2px 6px", 
-                              cursor: "pointer", 
-                              fontSize: "0.7rem", 
-                              fontWeight: "600",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center"
-                            }}
-                          >
-                            ✓
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedStudents.map((student, idx) => {
+          <div style={{ padding: "0 16px 16px 16px" }}>
+            {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
+              <div style={{ marginBottom: "16px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-secondary)", padding: "12px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", gap: "12px" }}>
+                <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                  <div style={{ fontWeight: "600", color: "var(--text-primary)", marginBottom: "4px" }}>⚡ Isi Cepat (Bulk Fill)</div>
+                  Terapkan nilai yang sama untuk seluruh siswa di kolom ini secara otomatis.
+                </div>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Nilai..."
+                    className="form-input"
+                    value={focusBulkValue}
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/[^0-9]/g, '');
+                      if (val !== "") {
+                        const num = parseInt(val, 10);
+                        if (num > 100) val = "100";
+                        else val = num.toString();
+                      }
+                      setFocusBulkValue(val);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && focusBulkValue !== "") {
+                        e.preventDefault();
+                        if (!window.confirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`)) return;
+                        const newScores = { ...temporaryScores };
+                        sortedStudents.forEach(s => {
+                          newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
+                          handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                        });
+                        setTemporaryScores(newScores);
+                        setFocusBulkValue("");
+                      }
+                    }}
+                    style={{ width: "90px", textAlign: "center", padding: "6px 8px" }}
+                  />
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (focusBulkValue !== "") {
+                        if (!window.confirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`)) return;
+                        const newScores = { ...temporaryScores };
+                        sortedStudents.forEach(s => {
+                          newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
+                          handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                        });
+                        setTemporaryScores(newScores);
+                        setFocusBulkValue("");
+                      }
+                    }}
+                    disabled={!focusBulkValue}
+                    style={{ padding: "6px 12px", whiteSpace: "nowrap" }}
+                  >
+                    Terapkan
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div style={{ maxHeight: "55vh", overflowY: "auto", margin: "0 -16px", padding: "0 16px" }}>
+              <table className="premium-table" style={{ width: "100%", margin: 0 }}>
+                <thead>
+                  <tr>
+                    <th style={{ position: "sticky", top: 0, zIndex: 10, width: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>No</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
+                    <th style={{ position: "sticky", top: 0, zIndex: 10, textAlign: "center", width: "120px", backgroundColor: "var(--bg-tertiary)" }}>
+                      {focusColumn.nama}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedStudents.map((student, idx) => {
                   if (focusColumn.type === 'nilai') {
                     const cellKey = `${student.nisn}-${focusColumn.id}`;
                     return (
@@ -9883,7 +9871,8 @@ export default function DetailKelas({ params: paramsPromise }) {
               </tbody>
             </table>
           </div>
-        </Modal>
+        </div>
+      </Modal>
       )}
 
       {/* Modal Jurnal Agenda */}
