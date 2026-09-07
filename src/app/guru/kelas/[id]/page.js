@@ -61,6 +61,8 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [focusColumn, setFocusColumn] = useState(null);
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
   const [quickAddData, setQuickAddData] = useState({ nama: "", bobot: 0, isGroup: false, subCount: 1, hitungMetode: 'rata-rata', isPresensi: false });
+  const [quickEditModalOpen, setQuickEditModalOpen] = useState(false);
+  const [quickEditData, setQuickEditData] = useState(null);
   const [targetClassId, setTargetClassId] = useState("");
   const [nilaiKatrol, setNilaiKatrol] = useState("");
   const [siswaError, setSiswaError] = useState("");
@@ -4515,7 +4517,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                       {kelas.kolomNilai.map(col => {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
-                            <th key={col.id} colSpan={col.subKolom.length} style={{ textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
+                            <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
+                              {guruProfile?.username === 'shoofian' && (
+                                <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.8rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
+                              )}
                               {col.nama} ({col.bobot}%)
                             </th>
                           );
@@ -4529,7 +4534,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                             title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                           >
                             {guruProfile?.username === 'shoofian' && (
-                              <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "0.75rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                              <>
+                                <span onClick={(e) => { e.stopPropagation(); setQuickEditData(JSON.parse(JSON.stringify(col))); setQuickEditModalOpen(true); }} style={{ position: "absolute", top: "4px", left: "6px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.8rem", opacity: 0.7 }} title="Edit Komponen">⚙️</span>
+                                <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "0.75rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                              </>
                             )}
                             {col.nama} ({col.bobot}%)
                           </th>
@@ -9418,6 +9426,169 @@ export default function DetailKelas({ params: paramsPromise }) {
           </div>
         </Modal>
       )}
+
+      {/* Modal Quick Edit Column (Shortcut) */}
+      {quickEditModalOpen && quickEditData && (
+        <Modal
+          isOpen={true}
+          onClose={() => { setQuickEditModalOpen(false); setQuickEditData(null); }}
+          title={`Edit Komponen: ${quickEditData.nama}`}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px 0" }}>
+            <div className="form-group">
+              <label>Nama Komponen <span style={{ color: "var(--danger)" }}>*</span></label>
+              <input
+                type="text"
+                className="form-input"
+                value={quickEditData.nama}
+                onChange={(e) => setQuickEditData({ ...quickEditData, nama: e.target.value })}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Bobot Komponen (%) <span style={{ color: "var(--danger)" }}>*</span></label>
+              <input
+                type="number"
+                className="form-input"
+                min="0"
+                max="100"
+                value={quickEditData.bobot !== undefined ? quickEditData.bobot : ""}
+                onChange={(e) => setQuickEditData({ ...quickEditData, bobot: parseInt(e.target.value) || 0 })}
+              />
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>
+                {(() => {
+                  const currentOtherTotal = kelas.kolomNilai.filter(c => c.id !== quickEditData.id).reduce((acc, col) => acc + (Number(col.bobot) || 0), 0);
+                  const newTotal = currentOtherTotal + (Number(quickEditData.bobot) || 0);
+                  return <>Total bobot jika disimpan: <strong style={{ color: newTotal > 100 ? "var(--danger)" : "inherit" }}>{newTotal}%</strong> (Komponen lain: {currentOtherTotal}%)</>;
+                })()}
+              </p>
+            </div>
+
+            {quickEditData.isGroup ? (
+              <div className="form-group animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)", marginTop: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <label>Metode Hitung Sub-kolom</label>
+                <select
+                  className="form-input"
+                  value={quickEditData.hitungMetode || 'rata-rata'}
+                  onChange={(e) => {
+                    const mode = e.target.value;
+                    const newData = { ...quickEditData, hitungMetode: mode };
+                    if (mode === 'persentase') {
+                      const count = newData.subKolom.length;
+                      if (count > 0) {
+                        const base = Math.floor(100 / count);
+                        let sisa = 100;
+                        newData.subKolom = newData.subKolom.map((sub, i) => {
+                          let b = base;
+                          if (i === count - 1) b = sisa;
+                          else sisa -= base;
+                          return { ...sub, bobot: b };
+                        });
+                      }
+                    }
+                    setQuickEditData(newData);
+                  }}
+                >
+                  <option value="rata-rata">Rata-rata Otomatis (Bagi rata otomatis)</option>
+                  <option value="persentase">Persentase (Setiap sub-kolom punya bobot spesifik)</option>
+                </select>
+
+                {quickEditData.hitungMetode === 'persentase' && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px" }}>
+                    <label style={{ fontSize: "0.85rem", fontWeight: "600" }}>Distribusi Bobot Anak Kolom (Total = 100%)</label>
+                    {quickEditData.subKolom.map((sub, idx) => (
+                      <div key={sub.id} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "0.85rem", flex: 1 }}>{sub.nama}</span>
+                        <input
+                          type="number"
+                          className="form-input"
+                          style={{ width: "80px", padding: "4px 8px" }}
+                          value={sub.bobot !== undefined ? sub.bobot : ""}
+                          onChange={(e) => {
+                            const newSubCols = [...quickEditData.subKolom];
+                            newSubCols[idx].bobot = parseInt(e.target.value) || 0;
+                            setQuickEditData({ ...quickEditData, subKolom: newSubCols });
+                          }}
+                        />
+                        <span style={{ fontSize: "0.85rem" }}>%</span>
+                      </div>
+                    ))}
+                    <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>
+                      {(() => {
+                        const sum = quickEditData.subKolom.reduce((acc, sub) => acc + (Number(sub.bobot) || 0), 0);
+                        return <span style={{ color: sum !== 100 ? "var(--danger)" : "var(--success)" }}>Total saat ini: {sum}% {sum !== 100 ? "(Belum pas 100!)" : "✅"}</span>;
+                      })()}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)", marginTop: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", color: "var(--text-primary)" }}>
+                  <input
+                    type="checkbox"
+                    checked={quickEditData.isPresensi || false}
+                    onChange={(e) => setQuickEditData({ ...quickEditData, isPresensi: e.target.checked })}
+                    style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
+                    disabled={!quickEditData.isPresensi && kelas.kolomNilai.some(c => c.isPresensi && c.id !== quickEditData.id)}
+                  />
+                  Gunakan untuk Nilai Presensi
+                </label>
+              </div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "10px" }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => { setQuickEditModalOpen(false); setQuickEditData(null); }}
+              >
+                Batal
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={async () => {
+                  if (!quickEditData.nama.trim()) return alert("Nama komponen wajib diisi!");
+                  if (quickEditData.bobot < 0 || quickEditData.bobot > 100) return alert("Bobot harus antara 0-100!");
+                  
+                  const currentOtherTotal = kelas.kolomNilai.filter(c => c.id !== quickEditData.id).reduce((acc, col) => acc + (Number(col.bobot) || 0), 0);
+                  if (currentOtherTotal + quickEditData.bobot > 100) {
+                    return alert(`Total bobot akan melebihi 100% (sekarang ${currentOtherTotal}%, tambah ${quickEditData.bobot}% = ${currentOtherTotal + quickEditData.bobot}%). Silakan sesuaikan.`);
+                  }
+
+                  if (quickEditData.isGroup && quickEditData.hitungMetode === 'persentase') {
+                    const subSum = quickEditData.subKolom.reduce((acc, sub) => acc + (Number(sub.bobot) || 0), 0);
+                    if (subSum !== 100) {
+                      return alert(`Total bobot anak kolom harus tepat 100%. Saat ini ${subSum}%.`);
+                    }
+                  }
+
+                  const updatedKolomNilai = kelas.kolomNilai.map(c => c.id === quickEditData.id ? quickEditData : c);
+                  
+                  setKelas({ ...kelas, kolomNilai: updatedKolomNilai });
+                  setQuickEditModalOpen(false);
+                  setQuickEditData(null);
+                  
+                  try {
+                    await fetch(`/api/kelas/${kelas.id}/kolom`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ 
+                        kolomNilai: updatedKolomNilai, 
+                        skemaPenilaian: kelas.skemaPenilaian 
+                      })
+                    });
+                  } catch(err) {
+                    alert("Terjadi kesalahan saat menyimpan data ke server.");
+                  }
+                }}
+              >
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Modal Mode Fokus (Experimental Shoofian) */}
       {focusColumn && guruProfile?.username === 'shoofian' && (
         <Modal 
