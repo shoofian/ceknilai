@@ -9302,22 +9302,41 @@ export default function DetailKelas({ params: paramsPromise }) {
               </p>
             </div>
 
-            <div className="form-group">
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                <input
-                  type="checkbox"
-                  checked={quickAddData.isGroup}
-                  onChange={(e) => setQuickAddData({ ...quickAddData, isGroup: e.target.checked })}
-                  style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
-                />
-                Berupa Kelompok (Memiliki sub-kolom / anak kolom)
-              </label>
+            <div className="form-group" style={{ marginTop: "8px" }}>
+              <label style={{ marginBottom: "10px", display: "block", fontWeight: "600" }}>Tipe Komponen <span style={{ color: "var(--danger)" }}>*</span></label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", border: "2px solid " + (!quickAddData.isGroup && !quickAddData.isPresensi ? "var(--primary)" : "transparent"), borderRadius: "8px", backgroundColor: "var(--bg-tertiary)", transition: "all 0.2s" }}>
+                  <input type="radio" name="tipeKomponen" checked={!quickAddData.isGroup && !quickAddData.isPresensi} onChange={() => setQuickAddData({...quickAddData, isGroup: false, isPresensi: false})} style={{ marginTop: "4px", accentColor: "var(--primary)", width: "16px", height: "16px" }} />
+                  <div>
+                    <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--text-primary)" }}>Nilai Tunggal</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px", lineHeight: 1.4 }}>Kolom nilai biasa untuk satu tugas atau ujian.</div>
+                  </div>
+                </label>
+                
+                <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer", padding: "12px", border: "2px solid " + (quickAddData.isGroup ? "var(--primary)" : "transparent"), borderRadius: "8px", backgroundColor: "var(--bg-tertiary)", transition: "all 0.2s" }}>
+                  <input type="radio" name="tipeKomponen" checked={quickAddData.isGroup} onChange={() => setQuickAddData({...quickAddData, isGroup: true, isPresensi: false})} style={{ marginTop: "4px", accentColor: "var(--primary)", width: "16px", height: "16px" }} />
+                  <div>
+                    <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--text-primary)" }}>Kelompok (Banyak Nilai)</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px", lineHeight: 1.4 }}>Wadah untuk beberapa anak kolom (cth: Kumpulan Tugas).</div>
+                  </div>
+                </label>
+                
+                <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: (!quickAddData.isPresensi && kelas.kolomNilai.some(c => c.isPresensi)) ? "not-allowed" : "pointer", padding: "12px", border: "2px solid " + (quickAddData.isPresensi ? "var(--primary)" : "transparent"), borderRadius: "8px", backgroundColor: "var(--bg-tertiary)", transition: "all 0.2s", opacity: (!quickAddData.isPresensi && kelas.kolomNilai.some(c => c.isPresensi)) ? 0.6 : 1 }}>
+                  <input type="radio" name="tipeKomponen" checked={quickAddData.isPresensi} onChange={() => setQuickAddData({...quickAddData, isGroup: false, isPresensi: true})} disabled={!quickAddData.isPresensi && kelas.kolomNilai.some(c => c.isPresensi)} style={{ marginTop: "4px", accentColor: "var(--primary)", width: "16px", height: "16px" }} />
+                  <div>
+                    <div style={{ fontWeight: "700", fontSize: "0.95rem", color: "var(--text-primary)" }}>Integrasi Presensi</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "2px", lineHeight: 1.4 }}>
+                      {kelas.kolomNilai.some(c => c.isPresensi) && !quickAddData.isPresensi ? "Sudah ada komponen presensi lain yang aktif." : "Nilai ditarik otomatis dari persentase kehadiran siswa."}
+                    </div>
+                  </div>
+                </label>
+              </div>
             </div>
 
-            {quickAddData.isGroup ? (
-              <div className="animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "12px" }}>
+            {quickAddData.isGroup && (
+              <div className="animate-fade-in" style={{ padding: "16px", backgroundColor: "var(--bg-tertiary)", borderRadius: "8px", border: "1px dashed var(--border-color)", display: "flex", flexDirection: "column", gap: "12px", marginTop: "4px" }}>
                 <div className="form-group">
-                  <label>Jumlah Anak Kolom (Awal)</label>
+                  <label style={{ fontSize: "0.85rem" }}>Jumlah Anak Kolom (Awal)</label>
                   <input
                     type="number"
                     className="form-input"
@@ -9326,10 +9345,10 @@ export default function DetailKelas({ params: paramsPromise }) {
                     value={quickAddData.subCount}
                     onChange={(e) => setQuickAddData({ ...quickAddData, subCount: parseInt(e.target.value) || 1 })}
                   />
-                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Contoh: Jika diisi 3, maka otomatis dibuat kolom {quickAddData.nama || 'Komponen'} 1, 2, 3.</p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 0" }}>Contoh: Jika diisi 3, maka otomatis dibuat {quickAddData.nama || 'Komponen'} 1, 2, 3.</p>
                 </div>
                 <div className="form-group">
-                  <label>Metode Hitung Sub-kolom</label>
+                  <label style={{ fontSize: "0.85rem" }}>Metode Hitung Sub-kolom</label>
                   <select
                     className="form-input"
                     value={quickAddData.hitungMetode}
@@ -9339,24 +9358,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                     <option value="persentase">Persentase (Setiap sub-kolom punya bobot spesifik)</option>
                   </select>
                 </div>
-              </div>
-            ) : (
-              <div className="animate-fade-in" style={{ paddingLeft: "24px", borderLeft: "2px solid var(--border-color)" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", color: "var(--text-primary)" }}>
-                  <input
-                    type="checkbox"
-                    checked={quickAddData.isPresensi}
-                    onChange={(e) => setQuickAddData({ ...quickAddData, isPresensi: e.target.checked })}
-                    style={{ width: "16px", height: "16px", accentColor: "var(--primary)" }}
-                    disabled={!quickAddData.isPresensi && kelas.kolomNilai.some(c => c.isPresensi)}
-                  />
-                  Gunakan untuk Nilai Presensi
-                </label>
-                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: "4px 0 0 24px" }}>
-                  {kelas.kolomNilai.some(c => c.isPresensi) && !quickAddData.isPresensi 
-                    ? "Sudah ada komponen lain yang menggunakan presensi." 
-                    : "Nilai akan otomatis terisi berdasarkan persentase kehadiran siswa."}
-                </p>
               </div>
             )}
 
