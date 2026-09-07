@@ -4059,9 +4059,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                       transition: "opacity 0.2s ease"
                     }}>
                       <div 
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", cursor: guru?.username === 'shoofian' ? "pointer" : "default" }}
-                        onClick={() => { if(guru?.username === 'shoofian') setFocusColumn({ type: 'presensi', id: p.id, nama: p.nama, kegiatan: p.kegiatan }); }}
-                        title={guru?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
+                        onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'presensi', id: p.id, nama: p.nama, kegiatan: p.kegiatan }); }}
+                        title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                       >
                         <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "var(--text-primary)" }} title={p.nama}>
                           {p.nama.replace(/Pertemuan/i, "Pert.")}
@@ -4519,9 +4519,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                           <th 
                             key={col.id} 
                             rowSpan={hasGroups ? 2 : 1} 
-                            onClick={() => { if(guru?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
-                            style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guru?.username === 'shoofian' ? "pointer" : "default" }}
-                            title={guru?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                            onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
+                            style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
+                            title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                           >
                             {col.nama} ({col.bobot}%)
                           </th>
@@ -4569,9 +4569,9 @@ export default function DetailKelas({ params: paramsPromise }) {
                             return col.subKolom.map(sub => (
                               <th 
                                 key={sub.id} 
-                                onClick={() => { if(guru?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
-                                style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guru?.username === 'shoofian' ? "pointer" : "default" }}
-                                title={guru?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
+                                onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
+                                style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
+                                title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                               >
                                 {sub.nama}
                               </th>
@@ -9217,7 +9217,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         </>
       )}
       {/* Modal Mode Fokus (Experimental Shoofian) */}
-      {focusColumn && guru?.username === 'shoofian' && (
+      {focusColumn && guruProfile?.username === 'shoofian' && (
         <Modal 
           isOpen={true} 
           onClose={() => setFocusColumn(null)} 
