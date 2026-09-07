@@ -738,7 +738,7 @@ export async function deleteSiswaFromKelas(kelasId, nisn, guruUsername = null) {
     if (!kelas) return false;
     const { error } = await supabase
       .from('siswa')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('kelas_id', kelasId)
       .eq('nisn', nisn);
 
