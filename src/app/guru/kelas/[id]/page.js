@@ -9425,13 +9425,13 @@ export default function DetailKelas({ params: paramsPromise }) {
           onClose={() => setFocusColumn(null)} 
           title={`Mode Fokus: ${focusColumn.nama}`}
         >
-          <div style={{ maxHeight: "65vh", overflowY: "auto", paddingRight: "8px", margin: "-16px", padding: "16px" }}>
+          <div style={{ maxHeight: "65vh", overflowY: "auto", margin: "0 -16px", padding: "0 16px 16px 16px" }}>
             <table className="premium-table" style={{ width: "100%", margin: 0 }}>
-              <thead style={{ position: "sticky", top: 0, zIndex: 10 }}>
+              <thead>
                 <tr>
-                  <th style={{ width: "40px", textAlign: "center" }}>No</th>
-                  <th>Nama Siswa</th>
-                  <th style={{ textAlign: "center", width: "140px" }}>{focusColumn.nama}</th>
+                  <th style={{ position: "sticky", top: 0, zIndex: 10, width: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>No</th>
+                  <th style={{ position: "sticky", top: 0, zIndex: 10, backgroundColor: "var(--bg-tertiary)" }}>Nama Siswa</th>
+                  <th style={{ position: "sticky", top: 0, zIndex: 10, textAlign: "center", width: "140px", backgroundColor: "var(--bg-tertiary)" }}>{focusColumn.nama}</th>
                 </tr>
               </thead>
               <tbody>
