@@ -4068,9 +4068,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                         </span>
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "600" }}>{p.tanggal}</div>
                         {guruProfile?.username === 'shoofian' && (
-                          <div style={{ fontSize: "0.6rem", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", padding: "2px 6px", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid rgba(59, 130, 246, 0.2)", marginTop: "2px" }}>
-                            ⤢ Fokus
-                          </div>
+                          <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "0.75rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
                         )}
                         {p.materi && (
                           <div 
@@ -4525,17 +4523,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                             key={col.id} 
                             rowSpan={hasGroups ? 2 : 1} 
                             onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
-                            style={{ textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
+                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
                             title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                           >
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                              <span>{col.nama} ({col.bobot}%)</span>
-                              {guruProfile?.username === 'shoofian' && (
-                                <div style={{ fontSize: "0.6rem", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", padding: "2px 6px", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid rgba(59, 130, 246, 0.2)", marginTop: "2px" }}>
-                                  ⤢ Fokus
-                                </div>
-                              )}
-                            </div>
+                            {guruProfile?.username === 'shoofian' && (
+                              <span style={{ position: "absolute", top: "4px", right: "6px", color: "var(--primary)", fontSize: "0.75rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                            )}
+                            {col.nama} ({col.bobot}%)
                           </th>
                         );
                       })}
@@ -4582,17 +4576,13 @@ export default function DetailKelas({ params: paramsPromise }) {
                               <th 
                                 key={sub.id} 
                                 onClick={() => { if(guruProfile?.username === 'shoofian') setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
-                                style={{ textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
+                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: guruProfile?.username === 'shoofian' ? "pointer" : "default" }}
                                 title={guruProfile?.username === 'shoofian' ? "Klik untuk masuk ke Mode Fokus" : ""}
                               >
-                                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                                  <span>{sub.nama}</span>
-                                  {guruProfile?.username === 'shoofian' && (
-                                    <div style={{ fontSize: "0.55rem", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "var(--primary)", padding: "1px 4px", borderRadius: "8px", display: "inline-flex", alignItems: "center", gap: "2px", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
-                                      ⤢ Fokus
-                                    </div>
-                                  )}
-                                </div>
+                                {guruProfile?.username === 'shoofian' && (
+                                  <span style={{ position: "absolute", top: "2px", right: "4px", color: "var(--primary)", fontSize: "0.6rem", opacity: 0.8, fontWeight: "bold" }}>⤢</span>
+                                )}
+                                {sub.nama}
                               </th>
                             ));
                           }
