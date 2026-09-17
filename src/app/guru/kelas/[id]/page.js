@@ -9857,7 +9857,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     const p = kelas.skemaPenilaian.pertemuan.find(pt => pt.id === focusColumn.id);
                     if (!p) return null;
                     const val = student.nilai[`_presensi_${p.id}`] || "";
-                    const isUnlocked = !unlockedPertemuanIds.includes(p.id) && !kelas.archived && !isLocked;
+                    const isUnlocked = !kelas.archived && !isLocked;
                     
                     return (
                       <tr key={student.nisn}>
