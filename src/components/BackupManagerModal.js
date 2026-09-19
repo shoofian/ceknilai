@@ -41,6 +41,7 @@ export default function BackupManagerModal({ isOpen, onClose, kelasId, onSuccess
       const data = await res.json();
       if (data.success) {
         fetchBackups();
+        if (onSuccess) onSuccess();
       } else {
         setError(data.error || 'Gagal membuat backup');
       }
@@ -77,55 +78,88 @@ export default function BackupManagerModal({ isOpen, onClose, kelasId, onSuccess
   if (!isOpen) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Manajemen Backup & Pemulihan">
-      <div className="p-4 flex flex-col gap-4">
-        <p className="text-sm text-gray-600">
-          Sistem secara otomatis menyimpan kondisi kelas Anda (termasuk daftar siswa dan nilai) sebelum sinkronisasi Bank Data. Anda juga dapat membuat backup manual sewaktu-waktu.
-        </p>
+    <Modal isOpen={isOpen} onClose={onClose} title="🛡️ Manajemen Backup & Pemulihan">
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px" }}>
+        
+        {/* Info Box */}
+        <div className="glass-card" style={{ padding: "16px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", borderLeft: "4px solid var(--primary)" }}>
+          <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
+            Sistem secara otomatis menyimpan kondisi kelas Anda (termasuk daftar siswa dan nilai) sebelum sinkronisasi Bank Data. Anda juga dapat membuat backup manual sewaktu-waktu.
+          </p>
+        </div>
 
-        {error && <div className="p-3 bg-red-100 text-red-700 rounded-md text-sm">{error}</div>}
+        {error && (
+          <div style={{ padding: "12px", backgroundColor: "rgba(239, 68, 68, 0.1)", color: "#ef4444", borderRadius: "var(--radius-md)", fontSize: "0.9rem", border: "1px solid rgba(239, 68, 68, 0.2)" }}>
+            {error}
+          </div>
+        )}
 
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="font-semibold text-gray-800">Daftar Backup Tersedia</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
+          <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "var(--text-primary)", margin: 0 }}>
+            Daftar Riwayat Backup
+          </h3>
           <button 
             onClick={handleCreateBackup}
             disabled={creating || loading || restoring}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:bg-gray-400"
+            className="btn btn-primary"
+            style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", padding: "8px 16px" }}
           >
+            {creating ? <span className="btn-spinner" /> : "➕"}
             {creating ? 'Membuat...' : 'Buat Backup Manual'}
           </button>
         </div>
 
-        <div className="border border-gray-200 rounded-md overflow-hidden max-h-[60vh] overflow-y-auto">
+        {/* Tabel Data */}
+        <div style={{ 
+          border: "1px solid var(--border-color)", 
+          borderRadius: "var(--radius-lg)", 
+          overflow: "hidden", 
+          maxHeight: "50vh", 
+          overflowY: "auto",
+          backgroundColor: "var(--bg-primary)"
+        }}>
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Memuat data...</div>
+            <div style={{ padding: "30px", textAlign: "center", color: "var(--text-muted)", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+              <span className="btn-spinner" style={{ width: "24px", height: "24px", borderTopColor: "var(--primary)" }} />
+              Memuat riwayat backup...
+            </div>
           ) : backups.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">Belum ada backup untuk kelas ini.</div>
+            <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--text-muted)" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "12px", opacity: 0.5 }}>🗃️</div>
+              Belum ada data backup untuk kelas ini.
+            </div>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+              <thead style={{ position: "sticky", top: 0, backgroundColor: "var(--bg-secondary)", zIndex: 1, boxShadow: "0 1px 0 var(--border-color)" }}>
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Waktu</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Keterangan</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Aksi</th>
+                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: "600", color: "var(--text-secondary)" }}>Waktu</th>
+                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: "600", color: "var(--text-secondary)" }}>Keterangan</th>
+                  <th style={{ padding: "12px 16px", textAlign: "right", fontWeight: "600", color: "var(--text-secondary)" }}>Aksi</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {backups.map(b => (
-                  <tr key={b.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-900">
-                      {new Date(b.created_at).toLocaleString('id-ID')}
+              <tbody>
+                {backups.map((b, idx) => (
+                  <tr key={b.id} style={{ borderBottom: idx !== backups.length - 1 ? "1px solid var(--border-color)" : "none", transition: "background-color 0.2s" }} onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'} onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                    <td style={{ padding: "12px 16px", color: "var(--text-primary)", fontWeight: "500", whiteSpace: "nowrap" }}>
+                      {new Date(b.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {b.keterangan}
+                    <td style={{ padding: "12px 16px", color: "var(--text-secondary)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        {b.keterangan === 'Auto-backup' ? <span style={{ fontSize: "0.8rem", padding: "2px 8px", backgroundColor: "rgba(59, 130, 246, 0.1)", color: "#3b82f6", borderRadius: "12px", fontWeight: "600" }}>Otomatis</span> : <span style={{ fontSize: "0.8rem", padding: "2px 8px", backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981", borderRadius: "12px", fontWeight: "600" }}>Manual</span>}
+                        <span>{b.keterangan}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
+                    <td style={{ padding: "12px 16px", textAlign: "right" }}>
                       <button 
                         onClick={() => handleRestore(b.id, b.keterangan)}
                         disabled={restoring}
-                        className="text-orange-600 hover:text-orange-800 disabled:text-gray-400 font-medium"
+                        className="btn btn-outline"
+                        style={{ padding: "6px 12px", fontSize: "0.8rem", color: "#f59e0b", borderColor: "rgba(245, 158, 11, 0.3)", borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        onMouseOver={e => !restoring && (e.currentTarget.style.backgroundColor = "rgba(245, 158, 11, 0.1)")}
+                        onMouseOut={e => !restoring && (e.currentTarget.style.backgroundColor = "transparent")}
                       >
-                        {restoring ? 'Memulihkan...' : 'Pulihkan'}
+                        {restoring ? <span className="btn-spinner" style={{ width: "12px", height: "12px", borderTopColor: "#f59e0b" }} /> : "⏪"}
+                        {restoring ? 'Memulihkan' : 'Pulihkan Data'}
                       </button>
                     </td>
                   </tr>

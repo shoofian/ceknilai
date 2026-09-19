@@ -77,6 +77,21 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [remedialReportConfig, setRemedialReportConfig] = useState({});
   const [advancedToolsModalOpen, setAdvancedToolsModalOpen] = useState(false);
   const [backupModalOpen, setBackupModalOpen] = useState(false);
+  const [latestBackupDate, setLatestBackupDate] = useState("");
+
+  const fetchLatestBackupDate = async () => {
+    try {
+      const res = await fetch(`/api/kelas/${classId}/backup`);
+      const data = await res.json();
+      if (data.backups && data.backups.length > 0) {
+        setLatestBackupDate(new Date(data.backups[0].created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
+      } else {
+        setLatestBackupDate("");
+      }
+    } catch (err) {
+      console.error("Gagal mengambil data backup:", err);
+    }
+  };
 
   const handleSaveRemedial = async (updatedSiswaList, newSkemaConfig) => {
     try {
@@ -1008,6 +1023,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   useEffect(() => {
     fetchClassDetail();
+    fetchLatestBackupDate();
     // Fetch guru profile
     fetch('/api/profil')
       .then(res => res.json())
@@ -3119,6 +3135,15 @@ export default function DetailKelas({ params: paramsPromise }) {
           <span>/</span>
           <span style={{ color: "var(--text-primary)" }}>{kelas.nama}</span>
         </div>
+        <button 
+          onClick={() => setBackupModalOpen(true)}
+          style={{ padding: "6px 12px", backgroundColor: "var(--bg-primary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", transition: "all 0.2s", color: "var(--text-primary)", fontSize: "0.85rem", fontWeight: "600", boxShadow: "var(--shadow-sm)" }}
+          onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+          onMouseOut={e => e.currentTarget.style.backgroundColor = "var(--bg-primary)"}
+          title="Backup & Pemulihan"
+        >
+          🛡️ <span className="hide-on-mobile">{latestBackupDate ? `Backup: ${latestBackupDate}` : 'Belum dibackup'}</span>
+        </button>
       </div>
 
       {/* Warning Banner for Archived Class */}
@@ -3233,7 +3258,8 @@ export default function DetailKelas({ params: paramsPromise }) {
               />
             )}
             
-            <div style={{ position: "relative", marginLeft: "4px" }}>
+
+            <div style={{ position: "relative" }}>
               <button 
                 onClick={() => setShareDropdownOpen(!shareDropdownOpen)}
                 style={{ padding: "6px 10px", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "background 0.2s", color: "var(--text-primary)" }}
@@ -4389,14 +4415,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                   >
                     🧪 Fitur Lanjutan (Eksperimental)
                   </div>
-                  <div 
-                    onClick={() => { setSettingsDropdownOpen(false); setBackupModalOpen(true); }}
-                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", color: "var(--text-primary)" }}
-                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
-                  >
-                    🛡️ Backup & Pemulihan
-                  </div>
                 </div>
                 
                 {/* Mobile Bottom Sheet */}
@@ -4431,12 +4449,6 @@ export default function DetailKelas({ params: paramsPromise }) {
                         style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
                       >
                         🧪 Fitur Lanjutan (Eksperimental)
-                      </div>
-                      <div 
-                        onClick={() => { setSettingsDropdownOpen(false); setBackupModalOpen(true); }}
-                        style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", color: "var(--text-primary)" }}
-                      >
-                        🛡️ Backup & Pemulihan
                       </div>
                     </div>
                   </div>,
@@ -4961,7 +4973,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         isOpen={backupModalOpen}
         onClose={() => setBackupModalOpen(false)}
         kelasId={classId}
-        onSuccess={fetchClassDetail}
+        onSuccess={() => { fetchClassDetail(); fetchLatestBackupDate(); }}
       />
 
       {/* Advanced Tools & Settings Modal */}
