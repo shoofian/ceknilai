@@ -233,7 +233,7 @@ export default function PromoModal({ guru }) {
               color: "#ffffff"
             }}
           >
-            Fitur & Pengaturan Lanjutan Kini <span style={{ color: "#facc15" }}>Lebih Lengkap!</span> ✨
+            Fitur Backup & Pemulihan Kini <span style={{ color: "#facc15" }}>Lebih Canggih!</span> 🚀
           </h2>
 
           <p
@@ -248,14 +248,14 @@ export default function PromoModal({ guru }) {
               marginRight: "auto",
             }}
           >
-            Akses seluruh alat kalkulasi khusus, program remedial, bonus keaktifan, dan aturan MaxCap kelas dengan jauh lebih praktis di menu <strong>🛠️ Operasi Data</strong>!
+            Amankan seluruh data kelas Anda dengan fitur <strong>Backup Massal</strong> terbaru. Proses pencadangan seluruh kelas kini bisa dilakukan hanya dengan satu kali klik!
           </p>
         </div>
 
         {/* Body Content / Feature Highlights */}
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "12px" }}>
           
-          {/* Highlight 1: Remedial & Pengayaan */}
+          {/* Highlight 1: Backup Massal */}
           <div
             style={{
               display: "flex",
@@ -272,8 +272,8 @@ export default function PromoModal({ guru }) {
                 width: "40px",
                 height: "40px",
                 borderRadius: "10px",
-                backgroundColor: "rgba(239, 68, 68, 0.12)",
-                color: "#ef4444",
+                backgroundColor: "rgba(16, 185, 129, 0.12)",
+                color: "#10b981",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -282,14 +282,14 @@ export default function PromoModal({ guru }) {
                 fontWeight: "700"
               }}
             >
-              🔴
+              💾
             </div>
             <div>
               <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                Program Remedial & Pengayaan Bertahap
+                Backup Massal Seluruh Kelas
               </h4>
               <p style={{ margin: "3px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                Simpan nilai murni awal siswa, masukkan nilai tes remedial kapan saja secara individu bertahap, dan cetak Berita Acara resmi.
+                Cadangkan seluruh kelas yang sedang aktif secara paralel dan instan dari halaman utama daftar kelas Anda.
               </p>
             </div>
           </div>
