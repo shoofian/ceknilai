@@ -30,6 +30,7 @@ export default function KelolaKelas() {
   const [error, setError] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isBackingUpAll, setIsBackingUpAll] = useState(false);
   
   // Bank Data States
   const [bankRombels, setBankRombels] = useState([]);
@@ -508,6 +509,32 @@ export default function KelolaKelas() {
       },
       { title: "Arsipkan Kelas", confirmText: "Arsipkan", cancelText: "Batal" }
     );
+  };
+
+  const handleBackupAll = async () => {
+    if (kelas.length === 0) {
+      await alertAsync("Tidak ada kelas untuk di-backup!");
+      return;
+    }
+    const confirmed = await confirmAsync("Apakah Anda yakin ingin membuat backup manual untuk SEMUA kelas aktif?");
+    if (!confirmed) return;
+
+    setIsBackingUpAll(true);
+    try {
+      const res = await fetch("/api/kelas/backup-all", {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await alertAsync(data.message || "Backup massal berhasil!");
+      } else {
+        await alertAsync(data.error || "Gagal melakukan backup massal.");
+      }
+    } catch (err) {
+      await alertAsync("Terjadi kesalahan koneksi.");
+    } finally {
+      setIsBackingUpAll(false);
+    }
   };
 
   const handleDelete = async (id, name) => {
@@ -1029,6 +1056,15 @@ export default function KelolaKelas() {
                 title="Sinkronisasi Massal"
               >
                 🔄 <span className="hide-on-mobile">Sinkronisasi Massal</span>
+              </button>
+              <button 
+                onClick={handleBackupAll} 
+                className="btn btn-secondary"
+                style={{ opacity: isBackingUpAll ? 0.6 : 1, cursor: isBackingUpAll ? "not-allowed" : "pointer", padding: "6px 10px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px" }}
+                disabled={isBackingUpAll || kelas.length === 0}
+                title="Backup Semua Kelas"
+              >
+                {isBackingUpAll ? "🔄" : "💾"} <span className="hide-on-mobile">{isBackingUpAll ? "Memproses..." : "Backup Semua"}</span>
               </button>
               <button 
                 onClick={handleOpenAdd} 
