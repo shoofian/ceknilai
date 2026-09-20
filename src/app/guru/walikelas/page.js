@@ -1,3 +1,4 @@
+import { useConfirm } from "@/components/ConfirmProvider";
 "use client";
 
 import { useState, useEffect, Fragment, useMemo } from "react";
@@ -7,6 +8,8 @@ import Link from "next/link";
 import InputEkskulPanel from "@/components/InputEkskulPanel";
 
 export default function WaliKelasDashboard() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
@@ -50,7 +53,7 @@ export default function WaliKelasDashboard() {
   // Leger Sort States
   const [legerSortConfig, setLegerSortConfig] = useState({ key: "nama", direction: "asc" });
 
-  const handleLegerSort = (key) => {
+  const handleLegerSort = async (key) => {
     let direction = "asc";
     if (legerSortConfig.key === key && legerSortConfig.direction === "asc") {
       direction = "desc";
@@ -58,7 +61,7 @@ export default function WaliKelasDashboard() {
     setLegerSortConfig({ key, direction });
   };
 
-  const handleViewModeChange = (mode) => {
+  const handleViewModeChange = async (mode) => {
     setViewMode(mode);
     localStorage.setItem('ceknilai_view_mode', mode);
     if (mode === 'dashboard') {
@@ -102,11 +105,11 @@ export default function WaliKelasDashboard() {
         setCatatanWalikelasData(prev => ({ ...prev, [nisn]: draftText }));
         setCatatanWalikelasSiswaTerpilih(null);
       } else {
-        alert("Gagal menyimpan catatan wali kelas.");
+        await alertAsync("Gagal menyimpan catatan wali kelas.");
       }
     } catch (err) {
       console.error("Error saving catatan walikelas", err);
-      alert("Terjadi kesalahan.");
+      await alertAsync("Terjadi kesalahan.");
     } finally {
       setSavingCatatanWalikelas(prev => ({ ...prev, [nisn]: false }));
     }
@@ -114,7 +117,7 @@ export default function WaliKelasDashboard() {
   const TAHUN_AJARAN_OPTIONS = ["2023/2024", "2024/2025", "2025/2026", "2026/2027"];
   const SEMESTER_OPTIONS = ["Ganjil", "Genap"];
 
-  const getSubjectStats = (subjectName, kkm) => {
+  const getSubjectStats = async (subjectName, kkm) => {
     const scores = (siswa || [])
       .map(s => (s.nilaiMapel || {})[subjectName])
       .filter(score => score !== undefined && score !== null);
@@ -317,7 +320,7 @@ export default function WaliKelasDashboard() {
   };
 
   // EWS Calculations
-  const ewsData = (() => {
+  const ewsData = async (() => {
     const highRisk = []; // >= 3 failing
     const mediumRisk = []; // 1-2 failing
     let safeCount = 0;
@@ -345,7 +348,7 @@ export default function WaliKelasDashboard() {
     return { highRisk, mediumRisk, safeCount };
   })();
 
-  const downloadLegerCSV = () => {
+  const downloadLegerCSV = async () => {
     if (siswa.length === 0) return;
     
     // Build CSV Content
@@ -415,7 +418,7 @@ export default function WaliKelasDashboard() {
     );
   }
 
-  const renderModal = () => {
+  const renderModal = async () => {
     if (!subjectDetailModalOpen || !mounted) return null;
     return createPortal(
       <div
@@ -476,7 +479,7 @@ export default function WaliKelasDashboard() {
             const kkm = selectedSubjectDetail.skemaPenilaian?.kkm || 75;
             const columns = selectedSubjectDetail.kolomNilai || [];
 
-            const getColScore = (student, col) => {
+            const getColScore = async (student, col) => {
               if (col.subKolom && col.subKolom.length > 0) {
                 let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
                 col.subKolom.forEach(sub => {
@@ -497,7 +500,7 @@ export default function WaliKelasDashboard() {
               }
             };
 
-            const calcFinal = (s) => {
+            const calcFinal = async (s) => {
               let total = 0;
               columns.forEach(col => { total += getColScore(s, col) * (col.bobot / 100); });
               

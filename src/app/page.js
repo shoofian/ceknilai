@@ -1,3 +1,4 @@
+import { useConfirm } from "@/components/ConfirmProvider";
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
@@ -5,6 +6,8 @@ import Link from "next/link";
 import html2canvas from "html2canvas";
 
 export default function StudentPortal() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [nisn, setNisn] = useState("");
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [loading, setLoading] = useState(false);
@@ -121,13 +124,13 @@ export default function StudentPortal() {
       setGeneratedImage({ url: image, filename: `Rapor_CekNilai_${kelasId}.png` });
     } catch (err) {
       console.error(err);
-      alert("Gagal memproses gambar. Silakan coba kembali.");
+      await alertAsync("Gagal memproses gambar. Silakan coba kembali.");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handlePrintKHS = () => {
+  const handlePrintKHS = async () => {
     // 1. Tambahkan style element untuk set size: A4 portrait
     const printStyle = document.createElement("style");
     printStyle.id = "dynamic-print-portrait-style";
@@ -489,7 +492,7 @@ export default function StudentPortal() {
                   const activeResults = filteredResults.filter(r => !r.archived);
                   const archivedResults = filteredResults.filter(r => r.archived);
 
-                  const renderClassCard = (res, index, isArchived = false) => {
+                  const renderClassCard = async (res, index, isArchived = false) => {
                     const gradients = isArchived ? [
                       "linear-gradient(135deg, #64748b, #475569)",
                       "linear-gradient(135deg, #6b7280, #4b5563)",
@@ -683,7 +686,7 @@ export default function StudentPortal() {
                 {results.map((res) => {
                   if (res.kelasId !== activeClassId) return null;
 
-                  const handleSimulationChange = (kolomId, val) => {
+                  const handleSimulationChange = async (kolomId, val) => {
                     setSimulationScores(prev => ({...prev, [kolomId]: val}));
                   };
                   
@@ -1465,7 +1468,7 @@ export default function StudentPortal() {
                             }
                             const N = chartItems.length;
                             const CX = 270, CY = 250, R = 200;
-                            const toXY = (i, val) => {
+                            const toXY = async (i, val) => {
                               const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                               const r = (val / 100) * R;
                               return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
@@ -1723,7 +1726,7 @@ export default function StudentPortal() {
           }
         }
 
-        const handleSimulationChange = (kolomId, val) => {
+        const handleSimulationChange = async (kolomId, val) => {
           setSimulationScores(prev => ({...prev, [kolomId]: val}));
         };
 

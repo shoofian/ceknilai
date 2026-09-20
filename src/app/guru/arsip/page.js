@@ -2,8 +2,11 @@
  
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useConfirm } from "@/components/ConfirmProvider";
  
 export default function ArsipKelas() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState([]);
   
@@ -34,7 +37,7 @@ export default function ArsipKelas() {
   }, []);
  
   const handleRestore = async (id, name) => {
-    if (confirm(`Apakah Anda yakin ingin memulihkan kelas "${name}"? Kelas ini akan kembali muncul di daftar kelas aktif.`)) {
+    if (await confirmAsync(`Apakah Anda yakin ingin memulihkan kelas "${name}"? Kelas ini akan kembali muncul di daftar kelas aktif.`)) {
       try {
         const response = await fetch(`/api/kelas/${id}`, {
           method: "PATCH",
@@ -46,7 +49,7 @@ export default function ArsipKelas() {
           fetchArchivedKelas();
         } else {
           const data = await response.json();
-          alert(data.error || "Gagal memulihkan kelas.");
+          await alertAsync(data.error || "Gagal memulihkan kelas.");
         }
       } catch (err) {
         console.error("Restore failed", err);
@@ -55,7 +58,7 @@ export default function ArsipKelas() {
   };
  
   const handleDelete = async (id, name) => {
-    if (confirm(`⚠️ PERINGATAN KERAS!\nApakah Anda yakin ingin menghapus kelas "${name}" dari arsip?\nTindakan ini bersifat PERMANEN dan akan menghapus semua data siswa serta nilai di dalamnya secara permanen!`)) {
+    if (await confirmAsync(`⚠️ PERINGATAN KERAS!\nApakah Anda yakin ingin menghapus kelas "${name}" dari arsip?\nTindakan ini bersifat PERMANEN dan akan menghapus semua data siswa serta nilai di dalamnya secara permanen!`)) {
       try {
         const response = await fetch(`/api/kelas/${id}`, {
           method: "DELETE",
@@ -65,7 +68,7 @@ export default function ArsipKelas() {
           fetchArchivedKelas();
         } else {
           const data = await response.json();
-          alert(data.error || "Gagal menghapus kelas.");
+          await alertAsync(data.error || "Gagal menghapus kelas.");
         }
       } catch (err) {
         console.error("Delete failed", err);

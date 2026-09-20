@@ -26,6 +26,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "jscodeshift": "^17.4.0",
     "tailwindcss": "^4"
   }
 }

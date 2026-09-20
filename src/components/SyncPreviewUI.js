@@ -1,4 +1,5 @@
 import React from 'react';
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function SyncPreviewUI({
   syncPreviewData,
@@ -16,6 +17,8 @@ export default function SyncPreviewUI({
   title = "Pratinjau Sinkronisasi Bank Data",
   commitText = "Simpan ke Bank Data"
 }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   return (
     <div className="modal-overlay" style={{
       position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
@@ -183,14 +186,14 @@ export default function SyncPreviewUI({
           </button>
           <button 
             className={`btn ${syncSelectedRemoved.size > 0 ? 'btn-danger' : 'btn-primary'}`} 
-            onClick={() => {
+            onClick={async () => {
               if (syncSelectedRemoved.size > 0) {
                 if (triggerConfirm) {
                   triggerConfirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`, () => {
                     onCommit();
                   }, { confirmText: "Ya, Hapus Permanen", isDanger: true });
                 } else {
-                  if (!window.confirm(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
+                  if (!await confirmAsync(`PERINGATAN: Anda akan menghapus ${syncSelectedRemoved.size} siswa beserta SELURUH data nilainya secara permanen dari kelas ini. Lanjutkan?`)) {
                     return;
                   }
                   onCommit();

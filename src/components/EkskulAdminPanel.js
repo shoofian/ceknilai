@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function EkskulAdminPanel({ targetSekolahId }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [ekskuls, setEkskuls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formNama, setFormNama] = useState('');
@@ -83,7 +86,7 @@ export default function EkskulAdminPanel({ targetSekolahId }) {
     }
   };
 
-  const handleEdit = (ekskul) => {
+  const handleEdit = async (ekskul) => {
     setFormNama(ekskul.nama_ekskul);
     setFormPembina(ekskul.pembina || '');
     setEditId(ekskul.id);
@@ -91,7 +94,7 @@ export default function EkskulAdminPanel({ targetSekolahId }) {
   };
 
   const handleDelete = async (id, nama) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus ekskul "${nama}"? Semua nilai siswa untuk ekskul ini akan ikut terhapus!`)) {
+    if (!await confirmAsync(`Apakah Anda yakin ingin menghapus ekskul "${nama}"? Semua nilai siswa untuk ekskul ini akan ikut terhapus!`)) {
       return;
     }
 
@@ -100,11 +103,11 @@ export default function EkskulAdminPanel({ targetSekolahId }) {
       if (res.ok) {
         fetchEkskul();
       } else {
-        alert('Gagal menghapus ekskul');
+        await alertAsync('Gagal menghapus ekskul');
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan koneksi server');
+      await alertAsync('Terjadi kesalahan koneksi server');
     }
   };
 

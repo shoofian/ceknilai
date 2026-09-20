@@ -1,8 +1,11 @@
+import { useConfirm } from "@/components/ConfirmProvider";
 "use client";
 
 import { useState, useEffect } from 'react';
 
 export default function MasaAktifPage() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [data, setData] = useState({
     premiumUntil: null,
     isFirstPaymentClaimed: false,
@@ -24,7 +27,7 @@ export default function MasaAktifPage() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [infoModal, setInfoModal] = useState(null);
 
-  const setTodayDateTime = () => {
+  const setTodayDateTime = async () => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -60,7 +63,7 @@ export default function MasaAktifPage() {
   const handleConfirmPayment = async (e) => {
     e.preventDefault();
     if (!namaGuru.trim() || !namaBank.trim() || !nomorRekening.trim() || !tanggalTransfer) {
-      alert('Mohon lengkapi semua kolom yang wajib diisi.');
+      await alertAsync('Mohon lengkapi semua kolom yang wajib diisi.');
       return;
     }
 
@@ -110,7 +113,7 @@ export default function MasaAktifPage() {
       ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
 
       // Helper to draw dashed line
-      const drawDashedLine = (yPos) => {
+      const drawDashedLine = async (yPos) => {
         ctx.beginPath();
         ctx.setLineDash([6, 4]);
         ctx.moveTo(20, yPos);
@@ -136,7 +139,7 @@ export default function MasaAktifPage() {
       // Body (Left aligned)
       ctx.textAlign = 'left';
       ctx.fillStyle = '#334155';
-      const drawRow = (label, value) => {
+      const drawRow = async (label, value) => {
         ctx.font = 'bold 14px "Courier New", Courier, monospace';
         ctx.fillText(label, 20, y);
         ctx.font = '14px "Courier New", Courier, monospace';

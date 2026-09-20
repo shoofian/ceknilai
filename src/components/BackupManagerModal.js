@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import Modal from '@/components/Modal';
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function BackupManagerModal({ isOpen, onClose, kelasId, onSuccess }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -29,7 +32,7 @@ export default function BackupManagerModal({ isOpen, onClose, kelasId, onSuccess
   }, [isOpen, kelasId]);
 
   const handleCreateBackup = async () => {
-    if (!confirm('Buat backup manual sekarang?')) return;
+    if (!await confirmAsync('Buat backup manual sekarang?')) return;
     setCreating(true);
     setError('');
     try {
@@ -52,7 +55,7 @@ export default function BackupManagerModal({ isOpen, onClose, kelasId, onSuccess
   };
 
   const handleRestore = async (backupId, keterangan) => {
-    if (!confirm(`PERINGATAN: Memulihkan dari backup ini ("${keterangan}") akan menimpa seluruh data kelas saat ini. Siswa yang dihapus akan kembali, dan perubahan terbaru akan hilang. Lanjutkan?`)) return;
+    if (!await confirmAsync(`PERINGATAN: Memulihkan dari backup ini ("${keterangan}") akan menimpa seluruh data kelas saat ini. Siswa yang dihapus akan kembali, dan perubahan terbaru akan hilang. Lanjutkan?`)) return;
     setRestoring(true);
     setError('');
     try {
@@ -63,7 +66,7 @@ export default function BackupManagerModal({ isOpen, onClose, kelasId, onSuccess
       });
       const data = await res.json();
       if (data.success) {
-        alert('Backup berhasil dipulihkan!');
+        await alertAsync('Backup berhasil dipulihkan!');
         onClose();
         if (onSuccess) onSuccess();
       } else {

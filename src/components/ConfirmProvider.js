@@ -21,6 +21,8 @@ export function ConfirmProvider({ children }) {
     cancelText: "Batal",
     isDanger: false,
     isAlert: false,
+    isPrompt: false,
+    promptValue: "",
     onConfirm: null,
     onCancel: null
   });
@@ -34,6 +36,8 @@ export function ConfirmProvider({ children }) {
       cancelText: options.cancelText || "Batal",
       isDanger: !!options.isDanger,
       isAlert: false,
+      isPrompt: false,
+      promptValue: "",
       onConfirm: () => {
         if (onConfirm) onConfirm();
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -54,6 +58,8 @@ export function ConfirmProvider({ children }) {
       cancelText: "",
       isDanger: !!options.isDanger,
       isAlert: true,
+      isPrompt: false,
+      promptValue: "",
       onConfirm: () => {
         if (onConfirm) onConfirm();
         setConfirmConfig(prev => ({ ...prev, isOpen: false }));
@@ -64,8 +70,48 @@ export function ConfirmProvider({ children }) {
     });
   }, []);
 
+  const triggerPrompt = useCallback((message, onSubmit, options = {}) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: options.title || "Input",
+      message: message,
+      confirmText: options.confirmText || "OK",
+      cancelText: options.cancelText || "Batal",
+      isDanger: !!options.isDanger,
+      isAlert: false,
+      isPrompt: true,
+      promptValue: options.defaultValue || "",
+      onConfirm: (val) => {
+        if (onSubmit) onSubmit(val);
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      },
+      onCancel: () => {
+        if (options.onCancel) options.onCancel();
+        setConfirmConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  }, []);
+
+  const confirmAsync = useCallback((message, options = {}) => {
+    return new Promise((resolve) => {
+      triggerConfirm(message, () => resolve(true), { ...options, onCancel: () => resolve(false) });
+    });
+  }, [triggerConfirm]);
+
+  const alertAsync = useCallback((message, options = {}) => {
+    return new Promise((resolve) => {
+      triggerAlert(message, () => resolve(), options);
+    });
+  }, [triggerAlert]);
+
+  const promptAsync = useCallback((message, options = {}) => {
+    return new Promise((resolve) => {
+      triggerPrompt(message, (val) => resolve(val), { ...options, onCancel: () => resolve(null) });
+    });
+  }, [triggerPrompt]);
+
   return (
-    <ConfirmContext.Provider value={{ triggerConfirm, triggerAlert }}>
+    <ConfirmContext.Provider value={{ triggerConfirm, triggerAlert, triggerPrompt, confirmAsync, alertAsync, promptAsync }}>
       {children}
       {confirmConfig.isOpen && (
         <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
@@ -89,26 +135,39 @@ export function ConfirmProvider({ children }) {
             <p style={{ margin: 0, fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
               {confirmConfig.message}
             </p>
+            
+            {confirmConfig.isPrompt && (
+              <input 
+                type="text" 
+                value={confirmConfig.promptValue} 
+                onChange={(e) => setConfirmConfig(prev => ({ ...prev, promptValue: e.target.value }))}
+                className="form-input" 
+                autoFocus
+                style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-tertiary)", color: "var(--text-primary)", outline: "none" }}
+              />
+            )}
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
               {!confirmConfig.isAlert && confirmConfig.cancelText && (
                 <button 
                   onClick={confirmConfig.onCancel}
                   className="btn btn-secondary"
-                  style={{ padding: "8px 16px", fontWeight: "600", color: "var(--text-secondary)", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)" }}
+                  style={{ padding: "8px 16px", fontWeight: "600", color: "var(--text-secondary)", backgroundColor: "var(--bg-tertiary)", border: "1px solid var(--border-color)", borderRadius: "8px", cursor: "pointer" }}
                 >
                   {confirmConfig.cancelText}
                 </button>
               )}
               <button 
-                onClick={confirmConfig.onConfirm}
+                onClick={() => confirmConfig.isPrompt ? confirmConfig.onConfirm(confirmConfig.promptValue) : confirmConfig.onConfirm()}
                 className={confirmConfig.isDanger ? "btn btn-danger" : "btn btn-primary"}
                 style={{ 
                   padding: "8px 16px", 
                   fontWeight: "600",
                   backgroundColor: confirmConfig.isDanger ? "var(--danger)" : "var(--primary)",
                   color: "white",
-                  border: confirmConfig.isDanger ? "1px solid var(--danger)" : "1px solid var(--primary)"
+                  border: confirmConfig.isDanger ? "1px solid var(--danger)" : "1px solid var(--primary)",
+                  borderRadius: "8px",
+                  cursor: "pointer"
                 }}
               >
                 {confirmConfig.confirmText}

@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function BankDataPanel({ targetSekolahId }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [bankData, setBankData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,11 +45,11 @@ export default function BankDataPanel({ targetSekolahId }) {
         fetchBankData();
       } else {
         const errorData = await res.json();
-        alert(errorData.error || "Gagal menyimpan perubahan.");
+        await alertAsync(errorData.error || "Gagal menyimpan perubahan.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan server saat menyimpan data.");
+      await alertAsync("Terjadi kesalahan server saat menyimpan data.");
     } finally {
       setIsSavingEdit(false);
     }
@@ -74,13 +77,13 @@ export default function BankDataPanel({ targetSekolahId }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Yakin ingin menghapus data siswa ini dari Bank Data?")) return;
+    if (!await confirmAsync("Yakin ingin menghapus data siswa ini dari Bank Data?")) return;
     try {
       const res = await fetch(`/api/superadmin/bank-siswa?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         fetchBankData();
       } else {
-        alert("Gagal menghapus data.");
+        await alertAsync("Gagal menghapus data.");
       }
     } catch (err) {
       console.error(err);
@@ -89,7 +92,7 @@ export default function BankDataPanel({ targetSekolahId }) {
 
   const handleResetBankData = async () => {
     if (!targetSekolahId) {
-      alert("Silakan pilih Sekolah Tujuan terlebih dahulu.");
+      await alertAsync("Silakan pilih Sekolah Tujuan terlebih dahulu.");
       return;
     }
     
@@ -109,7 +112,7 @@ export default function BankDataPanel({ targetSekolahId }) {
       }
     } catch (err) {
       console.error(err);
-      alert(err.message);
+      await alertAsync(err.message);
     } finally {
       setIsDeletingBulk(false);
     }
@@ -120,7 +123,7 @@ export default function BankDataPanel({ targetSekolahId }) {
     if (!file) return;
 
     if (!targetSekolahId) {
-      alert("Harap pilih Sekolah terlebih dahulu di panel utama.");
+      await alertAsync("Harap pilih Sekolah terlebih dahulu di panel utama.");
       e.target.value = "";
       return;
     }
@@ -169,7 +172,7 @@ export default function BankDataPanel({ targetSekolahId }) {
       const idxRombel = headers.findIndex(h => h && h.includes("rombel"));
       const idxTanggalLahir = headers.findIndex(h => h && (h.includes("tanggal lahir") || h.includes("tgl_lahir")));
 
-      const detectTingkatan = (rombelStr) => {
+      const detectTingkatan = async (rombelStr) => {
         const str = String(rombelStr || "").toUpperCase().trim();
         const romanMatch = str.match(/^(XII|XI|X|IX|VIII|VII|VI|V|IV|III|II|I)\b/);
         if (romanMatch) {
@@ -216,7 +219,7 @@ export default function BankDataPanel({ targetSekolahId }) {
       setImportDataPreview(formattedData);
     } catch (err) {
       console.error(err);
-      alert(err.message || "Terjadi kesalahan saat memproses file");
+      await alertAsync(err.message || "Terjadi kesalahan saat memproses file");
       setImportDataPreview(null);
     } finally {
       setParsingExcel(false);
@@ -257,7 +260,7 @@ export default function BankDataPanel({ targetSekolahId }) {
     } catch (err) {
       console.error(err);
       setUploadMessage("");
-      alert(err.message || "Terjadi kesalahan saat menyimpan data");
+      await alertAsync(err.message || "Terjadi kesalahan saat menyimpan data");
     } finally {
       setUploading(false);
     }
@@ -360,9 +363,9 @@ export default function BankDataPanel({ targetSekolahId }) {
         </button>
         <button 
           className="btn btn-danger" 
-          onClick={() => {
+          onClick={async () => {
             if (!targetSekolahId) {
-              alert("Pilih sekolah terlebih dahulu sebelum menghapus data.");
+              await alertAsync("Pilih sekolah terlebih dahulu sebelum menghapus data.");
               return;
             }
             setShowConfirmReset(true);

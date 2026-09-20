@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function HadiahReferralPage() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [data, setData] = useState({
     balance: 0,
     history: [],
@@ -80,7 +83,7 @@ export default function HadiahReferralPage() {
     return () => clearInterval(interval);
   }, [trialTheme]);
 
-  const startThemeTrial = (theme) => {
+  const startThemeTrial = async (theme) => {
     const expiresAt = Date.now() + 1 * 60 * 1000; // 1 minute trial
     const trialData = {
       id: theme.id,
@@ -96,7 +99,7 @@ export default function HadiahReferralPage() {
     setSuccessMsg(`Mode Uji Coba 1 Menit diaktifkan untuk "${theme.name}". Selamat mencoba!`);
   };
 
-  const stopThemeTrial = (isExpired = false) => {
+  const stopThemeTrial = async (isExpired = false) => {
     sessionStorage.removeItem("theme_preview");
     setTrialTheme(null);
     
@@ -109,24 +112,24 @@ export default function HadiahReferralPage() {
     }
 
     if (isExpired) {
-      alert("Masa uji coba tema selama 1 menit telah berakhir.");
+      await alertAsync("Masa uji coba tema selama 1 menit telah berakhir.");
     }
   };
 
-  const formatTimer = (seconds) => {
+  const formatTimer = async (seconds) => {
     const m = Math.floor((seconds || 0) / 60);
     const s = (seconds || 0) % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     if (!data.referralCode) return;
     navigator.clipboard.writeText(data.referralCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isThemeUnlocked = (themeId) => {
+  const isThemeUnlocked = async (themeId) => {
     if (themeId === 'default') return true;
     let localUnlocked = [];
     try {
@@ -151,7 +154,7 @@ export default function HadiahReferralPage() {
     return false;
   };
 
-  const applyTheme = (themeId) => {
+  const applyTheme = async (themeId) => {
     if (trialTheme) {
       stopThemeTrial(false);
     }
@@ -175,11 +178,11 @@ export default function HadiahReferralPage() {
     }
 
     if (data.balance < price) {
-      alert(`Poin Anda tidak mencukupi untuk menukar "${rewardName}".`);
+      await alertAsync(`Poin Anda tidak mencukupi untuk menukar "${rewardName}".`);
       return;
     }
 
-    if (!confirm(`Apakah Anda yakin ingin menukar ${price} poin untuk "${rewardName}"?`)) {
+    if (!await confirmAsync(`Apakah Anda yakin ingin menukar ${price} poin untuk "${rewardName}"?`)) {
       return;
     }
 

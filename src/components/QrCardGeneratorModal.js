@@ -3,8 +3,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { zipSync } from "fflate";
 import html2canvas from "html2canvas";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function QrCardGeneratorModal({ isOpen, onClose, kelas }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [selectedSiswa, setSelectedSiswa] = useState([]);
   const [exportType, setExportType] = useState("zip"); // 'zip' (ZIP files) or 'print' (A4 grid print)
   const [cardStyle, setCardStyle] = useState("card"); // 'card' (ready-to-print card) or 'qr-only' (only QR code)
@@ -22,7 +25,7 @@ export default function QrCardGeneratorModal({ isOpen, onClose, kelas }) {
 
   if (!isOpen || !kelas) return null;
 
-  const handleSelectAll = (checked) => {
+  const handleSelectAll = async (checked) => {
     if (checked) {
       setSelectedSiswa(kelas.siswa.map(s => s.nisn));
     } else {
@@ -30,7 +33,7 @@ export default function QrCardGeneratorModal({ isOpen, onClose, kelas }) {
     }
   };
 
-  const handleToggleSiswa = (nisn) => {
+  const handleToggleSiswa = async (nisn) => {
     setSelectedSiswa(prev => 
       prev.includes(nisn) ? prev.filter(id => id !== nisn) : [...prev, nisn]
     );
@@ -38,7 +41,7 @@ export default function QrCardGeneratorModal({ isOpen, onClose, kelas }) {
 
   const handleStartExport = async () => {
     if (selectedSiswa.length === 0) {
-      alert("Pilih minimal 1 siswa untuk dicetak!");
+      await alertAsync("Pilih minimal 1 siswa untuk dicetak!");
       return;
     }
 
@@ -156,7 +159,7 @@ export default function QrCardGeneratorModal({ isOpen, onClose, kelas }) {
 
       } catch (err) {
         console.error("ZIP Generation error:", err);
-        alert("Gagal mengunduh kartu QR. Silakan periksa koneksi internet Anda.");
+        await alertAsync("Gagal mengunduh kartu QR. Silakan periksa koneksi internet Anda.");
       } finally {
         setIsGenerating(false);
       }
@@ -166,7 +169,7 @@ export default function QrCardGeneratorModal({ isOpen, onClose, kelas }) {
       
       const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        alert("Pop-up diblokir! Izinkan pop-up untuk mencetak kartu QR.");
+        await alertAsync("Pop-up diblokir! Izinkan pop-up untuk mencetak kartu QR.");
         return;
       }
 

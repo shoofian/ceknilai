@@ -3,8 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function LoginGuru() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [mode, setMode] = useState("login"); // "login" | "register"
   const [nama, setNama] = useState("");
   const [email, setEmail] = useState("");
@@ -296,7 +299,7 @@ export default function LoginGuru() {
                     {mode === "login" && (
                       <span 
                         style={{ fontSize: "0.75rem", color: "var(--text-muted)", cursor: "pointer" }}
-                        onClick={() => alert("Lupa password? Silakan hubungi admin sekolah Anda.")}
+                        onClick={async () => await alertAsync("Lupa password? Silakan hubungi admin sekolah Anda.")}
                       >
                         Lupa password?
                       </span>

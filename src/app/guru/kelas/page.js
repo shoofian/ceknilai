@@ -9,6 +9,8 @@ import SyncPreviewUI from "@/components/SyncPreviewUI";
 import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function KelolaKelas() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [kelas, setKelas] = useState([]);
@@ -61,7 +63,7 @@ export default function KelolaKelas() {
     return `${y}/${y + 1}`;
   });
 
-  const getEffectiveMataPelajaran = () => {
+  const getEffectiveMataPelajaran = async () => {
     if (mataPelajaran === "Lainnya") return mataPelajaranCustom.trim();
     return mataPelajaran;
   };
@@ -74,13 +76,13 @@ export default function KelolaKelas() {
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
-  const detectLevelInRombel = (tingkatan, rombel) => {
+  const detectLevelInRombel = async (tingkatan, rombel) => {
     if (!rombel) return false;
     const r = rombel.toUpperCase().trim();
     return /^(10|11|12|X|XI|XII)\b/i.test(r) || r.startsWith("KELAS");
   };
 
-  const stripLevelFromRombel = (rombel) => {
+  const stripLevelFromRombel = async (rombel) => {
     if (!rombel) return "";
     return rombel.replace(/^(?:KELAS\s+)?(10|11|12|X{1,3}I{0,3})\b\s*[-_]?\s*/i, "").trim();
   };
@@ -137,7 +139,7 @@ export default function KelolaKelas() {
     }
   };
 
-  const startBulkSync = () => {
+  const startBulkSync = async () => {
     const selectedClasses = kelas.filter(k => selectedClassesForSync.has(k.id));
     if (selectedClasses.length === 0) return;
     
@@ -149,7 +151,7 @@ export default function KelolaKelas() {
 
   const fetchRombelsForWizardIndex = async (index, queue) => {
     if (index >= queue.length) {
-      alert("Sinkronisasi massal selesai!");
+      await alertAsync("Sinkronisasi massal selesai!");
       setWizardQueue([]);
       setCurrentWizardIndex(-1);
       setSelectedClassesForSync(new Set());
@@ -183,13 +185,13 @@ export default function KelolaKelas() {
           setSelectedBankRombel("");
         }
       } else {
-        alert(data.error || "Gagal memuat daftar rombel bank data.");
+        await alertAsync(data.error || "Gagal memuat daftar rombel bank data.");
         setWizardQueue([]);
         setCurrentWizardIndex(-1);
       }
     } catch (err) {
       console.error(err);
-      alert("Kesalahan koneksi saat mengambil rombel bank data.");
+      await alertAsync("Kesalahan koneksi saat mengambil rombel bank data.");
       setWizardQueue([]);
       setCurrentWizardIndex(-1);
     } finally {
@@ -199,7 +201,7 @@ export default function KelolaKelas() {
 
   const handleProceedToPreview = async () => {
     if (!selectedBankRombel) {
-      alert("Silakan pilih rombel tujuan dari Bank Data.");
+      await alertAsync("Silakan pilih rombel tujuan dari Bank Data.");
       return;
     }
     const k = wizardQueue[currentWizardIndex];
@@ -221,16 +223,16 @@ export default function KelolaKelas() {
         setSyncSelectedRemoved(new Set()); 
         setWizardStep("preview");
       } else if (res.ok && !data.preview && data.message) {
-        alert(data.message);
+        await alertAsync(data.message);
         const nextIndex = currentWizardIndex + 1;
         setCurrentWizardIndex(nextIndex);
         await fetchRombelsForWizardIndex(nextIndex, wizardQueue);
       } else {
-        alert(data.error || data.message || "Gagal pratinjau sinkronisasi.");
+        await alertAsync(data.error || data.message || "Gagal pratinjau sinkronisasi.");
       }
     } catch (err) {
       console.error(err);
-      alert("Kesalahan koneksi.");
+      await alertAsync("Kesalahan koneksi.");
     } finally {
       setIsSyncingBankData(false);
     }
@@ -268,17 +270,17 @@ export default function KelolaKelas() {
         await fetchRombelsForWizardIndex(currentWizardIndex + 1, wizardQueue);
       } else {
         const data = await res.json();
-        alert(data.error || "Gagal menyimpan hasil sinkronisasi.");
+        await alertAsync(data.error || "Gagal menyimpan hasil sinkronisasi.");
       }
     } catch (err) {
       console.error(err);
-      alert("Kesalahan koneksi saat menyimpan.");
+      await alertAsync("Kesalahan koneksi saat menyimpan.");
     } finally {
       setIsSyncingBankData(false);
     }
   };
   
-  const handleSeparateStudentWizard = (s) => {
+  const handleSeparateStudentWizard = async (s) => {
     setSyncPreviewData(prev => {
       const newUpdated = prev.updated.filter(u => u.nisnLama !== s.nisnLama);
       const newRemoved = [...prev.removed, { nisn: s.nisnLama, nama: s.namaLama }];
@@ -347,7 +349,7 @@ export default function KelolaKelas() {
     }
   }, [tahunAjaran, creationMethod, isEditing]);
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = async () => {
     setIsEditing(false);
     setNama("");
     setRombelNama("");
@@ -364,7 +366,7 @@ export default function KelolaKelas() {
     setModalOpen(true);
   };
 
-  const handleOpenEdit = (k) => {
+  const handleOpenEdit = async (k) => {
     setIsEditing(true);
     setCurrentId(k.id);
     setNama(k.nama);
@@ -418,7 +420,7 @@ export default function KelolaKelas() {
     }
 
     // Auto-Trimming and construction
-    const getRoman = (num) => {
+    const getRoman = async (num) => {
       const roman = { 10: "X", 11: "XI", 12: "XII" };
       return roman[num] || num;
     };
@@ -531,7 +533,7 @@ export default function KelolaKelas() {
     );
   };
 
-  const handleDuplicateOpen = (k) => {
+  const handleDuplicateOpen = async (k) => {
     setSourceClass(k);
     setDupNama(`${k.nama} (Salinan)`);
     setDupTingkatan(k.tingkatan ? String(k.tingkatan) : "");
@@ -681,7 +683,7 @@ export default function KelolaKelas() {
           september: "09", oktober: "10", november: "11", desember: "12",
         };
 
-        const normalizeTanggal = (raw) => {
+        const normalizeTanggal = async (raw) => {
           if (!raw && raw !== 0) return "";
           const s = String(raw).trim();
           if (!s || s === "-") return "";
@@ -799,7 +801,7 @@ export default function KelolaKelas() {
     reader.readAsBinaryString(file);
   };
 
-  const handleDrag = (e) => {
+  const handleDrag = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -809,7 +811,7 @@ export default function KelolaKelas() {
     }
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
@@ -818,7 +820,7 @@ export default function KelolaKelas() {
     }
   };
 
-  const handleBulkFormChange = (id, field, value) => {
+  const handleBulkFormChange = async (id, field, value) => {
     setBulkForms((prev) => {
       const updated = prev.map((form) => {
         if (form.id === id) {
@@ -852,7 +854,7 @@ export default function KelolaKelas() {
     });
   };
 
-  const handleRemoveBulkForm = (id) => {
+  const handleRemoveBulkForm = async (id) => {
     setBulkForms((prev) => prev.filter((f) => f.id !== id));
   };
 
@@ -895,7 +897,7 @@ export default function KelolaKelas() {
       const payload = {
         classes: validForms.map((form) => {
           const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
-          const getRoman = (num) => {
+          const getRoman = async (num) => {
             const roman = { 10: "X", 11: "XI", 12: "XII" };
             return roman[num] || num;
           };
@@ -1648,7 +1650,7 @@ export default function KelolaKelas() {
                     <span style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>🏷️ Pratinjau Nama Kelas</span>
                     <strong style={{ fontSize: "1rem", color: "var(--primary)" }}>
                       {(() => {
-                        const getRoman = (num) => {
+                        const getRoman = async (num) => {
                           const roman = { 10: "X", 11: "XI", 12: "XII" };
                           return roman[num] || num;
                         };

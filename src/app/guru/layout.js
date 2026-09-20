@@ -8,6 +8,8 @@ import PromoModal from "@/components/PromoModal";
 import { ConfirmProvider } from "@/components/ConfirmProvider";
 
 export default function GuruLayout({ children }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [loading, setLoading] = useState(true);
   const [guru, setGuru] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -61,14 +63,14 @@ export default function GuruLayout({ children }) {
     }
   }, [pathname]);
 
-  const handleSetViewMode = (mode) => {
+  const handleSetViewMode = async (mode) => {
     setKelasViewMode(mode);
     localStorage.setItem('ceknilai_view_mode', mode);
     window.dispatchEvent(new Event('ceknilai_view_mode_changed'));
   };
 
   // Toggle dark mode dan simpan ke localStorage
-  const toggleDark = () => {
+  const toggleDark = async () => {
     const next = !isDark;
     setIsDark(next);
     document.documentElement.classList.toggle("dark", next);
@@ -113,7 +115,7 @@ export default function GuruLayout({ children }) {
   }, [router]);
 
   const handleLogout = async () => {
-    if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
+    if (await confirmAsync("Apakah Anda yakin ingin keluar dari sistem?")) {
       try {
         const response = await fetch("/api/auth/logout", {
           method: "POST",

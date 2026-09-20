@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function SuperadminPanel() {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [activeTab, setActiveTab] = useState("dashboard"); // default to dashboard
   const [viewMode, setViewMode] = useState("tabs");
   const [loading, setLoading] = useState(true);
@@ -27,7 +30,7 @@ export default function SuperadminPanel() {
     }
   }, []);
 
-  const handleViewModeChange = (mode) => {
+  const handleViewModeChange = async (mode) => {
     setViewMode(mode);
     localStorage.setItem('ceknilai_view_mode', mode);
     if (mode === 'dashboard') {
@@ -195,7 +198,7 @@ export default function SuperadminPanel() {
     }
   };
 
-  const handleOpenAdd = () => {
+  const handleOpenAdd = async () => {
     setIsEditing(false);
     setFormUsername("");
     setFormNama("");
@@ -213,7 +216,7 @@ export default function SuperadminPanel() {
     setModalOpen(true);
   };
 
-  const handleOpenEdit = (guru) => {
+  const handleOpenEdit = async (guru) => {
     setIsEditing(true);
     setFormUsername(guru.username);
     setFormNama(guru.nama);
@@ -297,11 +300,11 @@ export default function SuperadminPanel() {
 
   const handleGuruDelete = async (username, nama) => {
     if (username.toLowerCase() === currentUser.toLowerCase()) {
-      alert("Anda tidak dapat menghapus akun Anda sendiri.");
+      await alertAsync("Anda tidak dapat menghapus akun Anda sendiri.");
       return;
     }
 
-    if (confirm(`⚠️ PERINGATAN!\nApakah Anda yakin ingin menghapus akun guru "${nama}"?\nSemua kelas yang dibuat oleh guru ini akan terpengaruh!`)) {
+    if (await confirmAsync(`⚠️ PERINGATAN!\nApakah Anda yakin ingin menghapus akun guru "${nama}"?\nSemua kelas yang dibuat oleh guru ini akan terpengaruh!`)) {
       try {
         const res = await fetch(`/api/superadmin/guru/${username}`, {
           method: "DELETE",
@@ -311,16 +314,16 @@ export default function SuperadminPanel() {
           fetchData();
         } else {
           const data = await res.json();
-          alert(data.error || "Gagal menghapus akun guru.");
+          await alertAsync(data.error || "Gagal menghapus akun guru.");
         }
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan koneksi server.");
+        await alertAsync("Terjadi kesalahan koneksi server.");
       }
     }
   };
 
-  const calculateGuruPoints = (username) => {
+  const calculateGuruPoints = async (username) => {
     let balance = 0;
     const logsForGuru = financeLogs.filter(l => l.username?.toLowerCase() === username.toLowerCase());
     for (const log of logsForGuru) {
@@ -335,7 +338,7 @@ export default function SuperadminPanel() {
   };
 
   const handleApprovePayment = async (logId, username) => {
-    if (confirm(`Setujui konfirmasi pembayaran dan aktifkan akun guru @${username}?`)) {
+    if (await confirmAsync(`Setujui konfirmasi pembayaran dan aktifkan akun guru @${username}?`)) {
       try {
         // Use POST to trigger unlock + auto referral points crediting
         const res = await fetch(`/api/superadmin/guru/${username}`, {
@@ -346,21 +349,21 @@ export default function SuperadminPanel() {
 
         if (res.ok) {
           const data = await res.json();
-          alert(data.message || "Selesai! Akun guru berhasil diaktifkan.");
+          await alertAsync(data.message || "Selesai! Akun guru berhasil diaktifkan.");
           fetchData();
         } else {
           const data = await res.json();
-          alert(data.error || "Gagal mengaktifkan akun guru.");
+          await alertAsync(data.error || "Gagal mengaktifkan akun guru.");
         }
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan koneksi server.");
+        await alertAsync("Terjadi kesalahan koneksi server.");
       }
     }
   };
 
   const handleCancelPayment = async (logId, username) => {
-    if (confirm(`Apakah Anda yakin ingin membatalkan transaksi untuk @${username}?\nAkun guru akan kembali dikunci dan poin referral yang dikreditkan dari transaksi ini akan ditarik kembali.`)) {
+    if (await confirmAsync(`Apakah Anda yakin ingin membatalkan transaksi untuk @${username}?\nAkun guru akan kembali dikunci dan poin referral yang dikreditkan dari transaksi ini akan ditarik kembali.`)) {
       try {
         const res = await fetch("/api/superadmin/pembayaran/cancel", {
           method: "POST",
@@ -369,21 +372,21 @@ export default function SuperadminPanel() {
         });
 
         if (res.ok) {
-          alert("Pembayaran berhasil dibatalkan.");
+          await alertAsync("Pembayaran berhasil dibatalkan.");
           fetchData();
         } else {
           const data = await res.json();
-          alert(data.error || "Gagal membatalkan pembayaran.");
+          await alertAsync(data.error || "Gagal membatalkan pembayaran.");
         }
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan koneksi server.");
+        await alertAsync("Terjadi kesalahan koneksi server.");
       }
     }
   };
 
   const handleDeletePendingPayment = async (logId, username) => {
-    if (confirm(`Apakah Anda yakin ingin MENGHAPUS PERMANEN riwayat pembayaran pending ini untuk @${username}?\nGuru akan dapat mengunggah ulang bukti transfernya dari awal.`)) {
+    if (await confirmAsync(`Apakah Anda yakin ingin MENGHAPUS PERMANEN riwayat pembayaran pending ini untuk @${username}?\nGuru akan dapat mengunggah ulang bukti transfernya dari awal.`)) {
       try {
         const res = await fetch("/api/superadmin/pembayaran/delete", {
           method: "POST",
@@ -392,21 +395,21 @@ export default function SuperadminPanel() {
         });
 
         if (res.ok) {
-          alert("Riwayat pembayaran pending berhasil dihapus.");
+          await alertAsync("Riwayat pembayaran pending berhasil dihapus.");
           fetchData();
         } else {
           const data = await res.json();
-          alert(data.error || "Gagal menghapus pembayaran.");
+          await alertAsync(data.error || "Gagal menghapus pembayaran.");
         }
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan koneksi server.");
+        await alertAsync("Terjadi kesalahan koneksi server.");
       }
     }
   };
 
   const handleLockGuru = async (username) => {
-    const reason = prompt("Masukkan pesan alasan penguncian akun (misal: Langganan kedaluwarsa):");
+    const reason = await promptAsync("Masukkan pesan alasan penguncian akun (misal: Langganan kedaluwarsa):");
     if (reason === null) return;
 
     try {
@@ -420,20 +423,20 @@ export default function SuperadminPanel() {
       });
 
       if (res.ok) {
-        alert("Selesai! Akun guru berhasil dikunci.");
+        await alertAsync("Selesai! Akun guru berhasil dikunci.");
         fetchData();
       } else {
         const data = await res.json();
-        alert(data.error || "Gagal mengunci akun guru.");
+        await alertAsync(data.error || "Gagal mengunci akun guru.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi server.");
+      await alertAsync("Terjadi kesalahan koneksi server.");
     }
   };
 
   const handleCompleteRedeem = async (logId, username, detail) => {
-    if (confirm(`Tandai permintaan penukaran hadiah ini sebagai SELESAI diproses?`)) {
+    if (await confirmAsync(`Tandai permintaan penukaran hadiah ini sebagai SELESAI diproses?`)) {
       try {
         const cleanDetail = detail.split('|')[1]?.trim() || detail;
         const resPoints = await fetch("/api/superadmin/poin", {
@@ -447,14 +450,14 @@ export default function SuperadminPanel() {
         });
 
         if (resPoints.ok) {
-          alert("Selesai! Permintaan penukaran hadiah ditandai selesai.");
+          await alertAsync("Selesai! Permintaan penukaran hadiah ditandai selesai.");
           fetchData();
         } else {
-          alert("Gagal memperbarui status penukaran.");
+          await alertAsync("Gagal memperbarui status penukaran.");
         }
       } catch (err) {
         console.error(err);
-        alert("Terjadi kesalahan.");
+        await alertAsync("Terjadi kesalahan.");
       }
     }
   };
@@ -462,7 +465,7 @@ export default function SuperadminPanel() {
   const handleOpexSubmit = async (e) => {
     e.preventDefault();
     if (!opexAmount || !opexDesc.trim() || !opexDate) {
-      alert("Harap isi semua field.");
+      await alertAsync("Harap isi semua field.");
       return;
     }
 
@@ -484,15 +487,15 @@ export default function SuperadminPanel() {
         setOpexAmount("");
         setOpexDesc("");
         setOpexDate("");
-        alert("Biaya operasional berhasil dicatat.");
+        await alertAsync("Biaya operasional berhasil dicatat.");
         fetchData();
       } else {
         const data = await res.json();
-        alert(data.error || "Gagal menyimpan biaya operasional.");
+        await alertAsync(data.error || "Gagal menyimpan biaya operasional.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan.");
+      await alertAsync("Terjadi kesalahan.");
     } finally {
       setSavingOpex(false);
     }
@@ -501,7 +504,7 @@ export default function SuperadminPanel() {
   const handlePointsSubmit = async (e) => {
     e.preventDefault();
     if (!pointsAmount || !pointsReason.trim()) {
-      alert("Harap isi jumlah poin dan alasan penyesuaian.");
+      await alertAsync("Harap isi jumlah poin dan alasan penyesuaian.");
       return;
     }
 
@@ -522,14 +525,14 @@ export default function SuperadminPanel() {
         setPointsModalOpen(false);
         setPointsAmount("");
         setPointsReason("");
-        alert("Penyesuaian poin berhasil disimpan.");
+        await alertAsync("Penyesuaian poin berhasil disimpan.");
         fetchData();
       } else {
-        alert(data.error || "Gagal menyesuaikan poin.");
+        await alertAsync(data.error || "Gagal menyesuaikan poin.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi server.");
+      await alertAsync("Terjadi kesalahan koneksi server.");
     } finally {
       setSavingPoints(false);
     }
@@ -538,7 +541,7 @@ export default function SuperadminPanel() {
   const handleManualPaymentSubmit = async (e) => {
     e.preventDefault();
     if (!manualPaymentUsername.trim() || !manualPaymentPaket) {
-      alert("Username dan paket harus diisi.");
+      await alertAsync("Username dan paket harus diisi.");
       return;
     }
 
@@ -560,14 +563,14 @@ export default function SuperadminPanel() {
         setManualPaymentUsername("");
         setManualPaymentPaket("BULANAN");
         setManualPaymentReferral("");
-        alert(data.message || "Pembayaran manual berhasil diverifikasi.");
+        await alertAsync(data.message || "Pembayaran manual berhasil diverifikasi.");
         fetchData();
       } else {
-        alert(data.error || "Gagal memverifikasi pembayaran.");
+        await alertAsync(data.error || "Gagal memverifikasi pembayaran.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi server.");
+      await alertAsync("Terjadi kesalahan koneksi server.");
     } finally {
       setSavingManualPayment(false);
     }

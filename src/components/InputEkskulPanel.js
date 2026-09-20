@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useConfirm } from "@/components/ConfirmProvider";
 
 export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const [masterEkskul, setMasterEkskul] = useState([]);
   const [nilaiEkskul, setNilaiEkskul] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +54,7 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
     fetchNilaiEkskul();
   }, [tahunAjaran, semester]);
 
-  const openModal = (siswa) => {
+  const openModal = async (siswa) => {
     setSelectedSiswa(siswa);
     setFormEkskulId(masterEkskul.length > 0 ? masterEkskul[0].id : '');
     setFormPredikat('Sangat Baik');
@@ -60,7 +63,7 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
     setModalOpen(true);
   };
 
-  const handleEdit = (ekskul) => {
+  const handleEdit = async (ekskul) => {
     setSelectedSiswa({ nisn: ekskul.nisn, nama: ekskul.bank_siswa?.nama || '-' });
     setFormEkskulId(ekskul.ekskul_id);
     setFormPredikat(ekskul.predikat);
@@ -108,13 +111,13 @@ export default function InputEkskulPanel({ siswa, tahunAjaran, semester }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Apakah Anda yakin ingin menghapus nilai ekskul ini?')) return;
+    if (!await confirmAsync('Apakah Anda yakin ingin menghapus nilai ekskul ini?')) return;
     try {
       const res = await fetch(`/api/walikelas/ekskul/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchNilaiEkskul();
       } else {
-        alert('Gagal menghapus nilai ekskul');
+        await alertAsync('Gagal menghapus nilai ekskul');
       }
     } catch (err) {
       console.error(err);

@@ -22,6 +22,8 @@ const QrCardGeneratorModal = dynamic(() => import("@/components/QrCardGeneratorM
 
 
 export default function DetailKelas({ params: paramsPromise }) {
+  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
+
   const params = use(paramsPromise);
   const classId = params.id;
   const router = useRouter();
@@ -128,7 +130,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleOpenRemedialReport = (kolom, config) => {
+  const handleOpenRemedialReport = async (kolom, config) => {
     setRemedialReportConfig(config);
     setRemedialReportOpen(true);
   };
@@ -137,7 +139,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [presetSelectionModalOpen, setPresetSelectionModalOpen] = useState(false);
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
 
-  const handleOpenKolomModal = () => {
+  const handleOpenKolomModal = async () => {
     if (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) {
       setPresetSelectionModalOpen(true);
     } else {
@@ -187,7 +189,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrCardModalOpen, setQrCardModalOpen] = useState(false);
   const [unlockedPertemuanIds, setUnlockedPertemuanIds] = useState([]);
-  const togglePertemuanLock = (pertemuanId) => {
+  const togglePertemuanLock = async (pertemuanId) => {
     setUnlockedPertemuanIds(prev => 
       prev.includes(pertemuanId) 
         ? [] 
@@ -255,13 +257,13 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State & handler untuk deteksi mobile screen
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = async () => {
       setIsMobile(window.innerWidth <= 768);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
 
-    const handleWindowBlur = () => {
+    const handleWindowBlur = async () => {
       if (document.activeElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
         document.activeElement.blur();
       }
@@ -274,7 +276,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     };
   }, []);
 
-  const formatNameForMobile = (name, isExpanded) => {
+  const formatNameForMobile = async (name, isExpanded) => {
     if (!name) return "";
     if (isExpanded) return name;
     if (!isMobile) return name;
@@ -376,7 +378,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   }, [kolomModalOpen]);
 
-  const hasUnsavedChanges = () => {
+  const hasUnsavedChanges = async () => {
     if (deletedKolomIds.length > 0) return true;
 
     const activeNewAspects = newAspects.filter(a => a.nama.trim() !== "" || (a.bobot !== "" && a.bobot !== 0) || (a.subKolom && a.subKolom.length > 0));
@@ -410,7 +412,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return false;
   };
 
-  const handleCloseKolomModal = () => {
+  const handleCloseKolomModal = async () => {
     if (hasUnsavedChanges()) {
       setShowUnsavedConfirm(true);
     } else {
@@ -418,7 +420,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const forceCloseKolomModal = () => {
+  const forceCloseKolomModal = async () => {
     setKolomModalOpen(false);
     setShowUnsavedConfirm(false);
     setFabOpen(false);
@@ -433,7 +435,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Cetak KHS / Rapor Bayangan PDF
   const [selectedPrintStudent, setSelectedPrintStudent] = useState(null);
 
-  const handlePrintStudentKHS = (student) => {
+  const handlePrintStudentKHS = async (student) => {
     setSelectedPrintStudent(student);
     
     setTimeout(() => {
@@ -473,18 +475,18 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [mergeGroupName, setMergeGroupName] = useState("");
   const [isMerging, setIsMerging] = useState(false);
 
-  const handleOpenHistory = (student) => {
+  const handleOpenHistory = async (student) => {
     setSelectedHistorySiswa(student);
     setHistoryModalOpen(true);
   };
 
   const handleMergeToGroup = async () => {
     if (!mergeGroupName.trim()) {
-      alert("Masukkan nama kelompok terlebih dahulu!");
+      await alertAsync("Masukkan nama kelompok terlebih dahulu!");
       return;
     }
     if (selectedForGroup.size < 2) {
-      alert("Pilih minimal 2 komponen untuk digabung!");
+      await alertAsync("Pilih minimal 2 komponen untuk digabung!");
       return;
     }
     setIsMerging(true);
@@ -505,7 +507,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       await fetchClassDetail();
     } catch (err) {
       console.error("Merge failed", err);
-      alert(err.message || "Terjadi kesalahan.");
+      await alertAsync(err.message || "Terjadi kesalahan.");
     } finally {
       setIsMerging(false);
     }
@@ -517,7 +519,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // Load activeTab and viewMode from sessionStorage/localStorage on mount
   useEffect(() => {
-    const loadSettings = () => {
+    const loadSettings = async () => {
       if (typeof window !== "undefined" && classId) {
         const savedTab = sessionStorage.getItem(`activeTab_${classId}`);
         const savedViewMode = localStorage.getItem('ceknilai_view_mode') || 'tabs';
@@ -557,7 +559,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
 
 
-  const handleViewModeChange = (mode) => {
+  const handleViewModeChange = async (mode) => {
     setViewMode(mode);
     localStorage.setItem('ceknilai_view_mode', mode);
     if (mode === 'dashboard') {
@@ -578,7 +580,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
 
-  const handleTableScroll = () => {
+  const handleTableScroll = async () => {
     if (tableContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
       setShowLeftScroll(scrollLeft > 5);
@@ -605,7 +607,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return () => clearTimeout(timer);
   }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran]);
 
-  const scrollTableBy = (amount) => {
+  const scrollTableBy = async (amount) => {
     if (tableContainerRef.current) {
       tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
     }
@@ -613,7 +615,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
 
-  const handleSort = (key) => {
+  const handleSort = async (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -621,7 +623,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSortConfig({ key, direction });
   };
 
-  const getStudentAttendancePercentage = (student) => {
+  const getStudentAttendancePercentage = async (student) => {
     const pertemuanList = kelas?.skemaPenilaian?.pertemuan || [];
     const totalP = pertemuanList.length;
     if (totalP === 0) return null;
@@ -645,7 +647,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return (countH / totalP) * 100;
   };
 
-  const getColScore = (student, col, tempScores = null) => {
+  const getColScore = async (student, col, tempScores = null) => {
     if (col.isPresensi) {
       const attPercent = getStudentAttendancePercentage(student);
       return {
@@ -945,7 +947,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return { totalH, totalI, totalS, totalA, totalD, avgAttendance, totalPertemuan: totalP };
   }, [kelas]);
 
-  const toggleCatatanRow = (studentNisn) => {
+  const toggleCatatanRow = async (studentNisn) => {
     setOpenCatatan(prev => {
       const isOpen = !prev[studentNisn];
       if (isOpen && catatanDraft[studentNisn] === undefined) {
@@ -958,7 +960,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       return { ...prev, [studentNisn]: isOpen };
     });
   };
-  const toggleNamaExpand = () => {
+  const toggleNamaExpand = async () => {
     setIsNamaColumnExpanded(prev => !prev);
   };
 
@@ -977,11 +979,11 @@ export default function DetailKelas({ params: paramsPromise }) {
         // Tutup modal catatan setelah berhasil menyimpan
         setCatatanSiswaTerpilih(null);
       } else {
-        alert("Gagal menyimpan catatan.");
+        await alertAsync("Gagal menyimpan catatan.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan.");
+      await alertAsync("Terjadi kesalahan.");
     } finally {
       setSavingCatatan(prev => ({ ...prev, [studentNisn]: false }));
     }
@@ -1011,7 +1013,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
 
       } else {
-        alert("Gagal memuat detail kelas.");
+        await alertAsync("Gagal memuat detail kelas.");
         router.push("/guru/kelas");
       }
     } catch (err) {
@@ -1087,14 +1089,14 @@ export default function DetailKelas({ params: paramsPromise }) {
       setGeneratedOverviewImage({ url: image, filename: `Overview_Kelas_${kelas?.namaKelas?.replace(/\s+/g, '_')}_${kelas?.mataPelajaran?.replace(/\s+/g, '_')}.png` });
     } catch (err) {
       console.error(err);
-      alert("Gagal memproses gambar. Silakan coba kembali.");
+      await alertAsync("Gagal memproses gambar. Silakan coba kembali.");
     } finally {
       setIsGeneratingOverview(false);
     }
   };
 
   // === HANDLERS SISWA ===
-  const handleOpenAddSiswa = () => {
+  const handleOpenAddSiswa = async () => {
     setIsEditingSiswa(false);
     setNisn("");
     setOldNisn(null);
@@ -1130,7 +1132,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }, { title: newStatus ? "Publikasikan Nilai" : "Tarik Kembali Nilai", confirmText: "Ya, Lanjutkan" });
   };
 
-  const handleOpenAddPertemuan = () => {
+  const handleOpenAddPertemuan = async () => {
     setIsEditingPertemuan(false);
     setSelectedPertemuanId("");
     setPertemuanNama(`Pert. ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
@@ -1141,7 +1143,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setPertemuanModalOpen(true);
   };
 
-  const handleOpenEditPertemuan = (pertemuan) => {
+  const handleOpenEditPertemuan = async (pertemuan) => {
     setIsEditingPertemuan(true);
     setSelectedPertemuanId(pertemuan.id);
     setPertemuanNama(pertemuan.nama);
@@ -1154,11 +1156,11 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleSavePertemuan = async () => {
     if (handleLockedAction()) return;
     if (!pertemuanNama.trim()) {
-      alert("Nama pertemuan harus diisi.");
+      await alertAsync("Nama pertemuan harus diisi.");
       return;
     }
     if (!pertemuanTanggal) {
-      alert("Tanggal pertemuan harus diisi.");
+      await alertAsync("Tanggal pertemuan harus diisi.");
       return;
     }
 
@@ -1186,11 +1188,11 @@ export default function DetailKelas({ params: paramsPromise }) {
           setKelas({ ...kelas, skemaPenilaian: updatedSkema });
           setPertemuanModalOpen(false);
         } else {
-          alert("Gagal menyimpan pertemuan.");
+          await alertAsync("Gagal menyimpan pertemuan.");
         }
       } catch (e) {
         console.error("Error saving pertemuan", e);
-        alert("Terjadi kesalahan.");
+        await alertAsync("Terjadi kesalahan.");
       } finally {
         setIsSavingPertemuan(false);
       }
@@ -1252,11 +1254,11 @@ export default function DetailKelas({ params: paramsPromise }) {
           setUnlockedPertemuanIds([newPertemuanId]);
           setPertemuanModalOpen(false);
         } else {
-          alert("Gagal menambahkan pertemuan.");
+          await alertAsync("Gagal menambahkan pertemuan.");
         }
       } catch (e) {
         console.error("Error adding pertemuan", e);
-        alert("Terjadi kesalahan.");
+        await alertAsync("Terjadi kesalahan.");
       } finally {
         setIsSavingPertemuan(false);
       }
@@ -1291,11 +1293,11 @@ export default function DetailKelas({ params: paramsPromise }) {
         }
         setBankRombelModalOpen(true);
       } else {
-        alert(data.error || "Gagal mendapatkan daftar rombel dari Bank Data.");
+        await alertAsync(data.error || "Gagal mendapatkan daftar rombel dari Bank Data.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi saat mencoba mengambil daftar rombel.");
+      await alertAsync("Terjadi kesalahan koneksi saat mencoba mengambil daftar rombel.");
     } finally {
       setIsSyncingBankData(false);
     }
@@ -1304,7 +1306,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleSyncBankData = async () => {
     if (isSyncingBankData || isLocked) return;
     if (!selectedBankRombel) {
-      alert("Silakan pilih rombel tujuan dari Bank Data.");
+      await alertAsync("Silakan pilih rombel tujuan dari Bank Data.");
       return;
     }
     const [targetTahun, targetTingkatan, targetRombel] = selectedBankRombel.split("|");
@@ -1325,20 +1327,20 @@ export default function DetailKelas({ params: paramsPromise }) {
           setShowSyncModal(true);
           setBankRombelModalOpen(false); // Close selection modal if preview is shown
         } else {
-          alert(data.message || "Tidak ada perubahan yang perlu disinkronkan.");
+          await alertAsync(data.message || "Tidak ada perubahan yang perlu disinkronkan.");
         }
       } else {
-        alert(data.error || "Gagal memuat pratinjau sinkronisasi.");
+        await alertAsync(data.error || "Gagal memuat pratinjau sinkronisasi.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi saat mencoba pratinjau sinkronisasi.");
+      await alertAsync("Terjadi kesalahan koneksi saat mencoba pratinjau sinkronisasi.");
     } finally {
       setIsSyncingBankData(false);
     }
   };
 
-  const handleSeparateStudent = (s) => {
+  const handleSeparateStudent = async (s) => {
     // 1. Remove from updated
     const newUpdated = (syncPreviewData.updated || []).filter(u => u.nisnLama !== s.nisnLama);
     
@@ -1366,7 +1368,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSyncSelectedAdded(nextSelectedAdded);
   };
 
-  const handleManualMerge = (removedSiswa, addedSiswa) => {
+  const handleManualMerge = async (removedSiswa, addedSiswa) => {
     // 1. Remove from removed
     const newRemoved = (syncPreviewData.removed || []).filter(r => r.nisn !== removedSiswa.nisn);
     
@@ -1430,17 +1432,17 @@ export default function DetailKelas({ params: paramsPromise }) {
       });
       const data = await response.json();
       if (response.ok) {
-        alert("Sinkronisasi Bank Data berhasil dilakukan!");
+        await alertAsync("Sinkronisasi Bank Data berhasil dilakukan!");
         setShowSyncModal(false);
         setSyncPreviewData(null);
         setKelolaSiswaModalOpen(false);
         fetchClassDetail();
       } else {
-        alert(data.error || "Gagal menyimpan hasil sinkronisasi.");
+        await alertAsync(data.error || "Gagal menyimpan hasil sinkronisasi.");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan koneksi saat menyimpan sinkronisasi.");
+      await alertAsync("Terjadi kesalahan koneksi saat menyimpan sinkronisasi.");
     } finally {
       setIsSyncingBankData(false);
     }
@@ -1516,11 +1518,11 @@ export default function DetailKelas({ params: paramsPromise }) {
       await Promise.all(savePromises);
     } catch (err) {
       console.error("Bulk presensi failed", err);
-      alert("Beberapa data presensi gagal disimpan ke server. Silakan muat ulang halaman.");
+      await alertAsync("Beberapa data presensi gagal disimpan ke server. Silakan muat ulang halaman.");
     }
   };
 
-  const handleOpenEditSiswa = (siswa) => {
+  const handleOpenEditSiswa = async (siswa) => {
     setIsEditingSiswa(true);
     setOldNisn(siswa.nisn);
     setNisn(siswa.nisn);
@@ -1584,7 +1586,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             fetchClassDetail();
           } else {
             const data = await response.json();
-            alert(data.error || "Gagal menghapus siswa.");
+            await alertAsync(data.error || "Gagal menghapus siswa.");
           }
         } catch (err) {
           console.error("Delete student failed", err);
@@ -1597,7 +1599,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
     );
   };
-  const handleSelectStudent = (studentNisn) => {
+  const handleSelectStudent = async (studentNisn) => {
     setSelectedNisns((prev) =>
       prev.includes(studentNisn)
         ? prev.filter((id) => id !== studentNisn)
@@ -1605,7 +1607,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     );
   };
 
-  const handleSelectAllStudents = () => {
+  const handleSelectAllStudents = async () => {
     if (!kelas || !kelas.siswa) return;
     if (selectedNisns.length === kelas.siswa.length) {
       setSelectedNisns([]);
@@ -1614,7 +1616,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleBulkDeleteStudents = () => {
+  const handleBulkDeleteStudents = async () => {
     if (selectedNisns.length === 0) return;
     
     triggerConfirm(
@@ -1634,14 +1636,14 @@ export default function DetailKelas({ params: paramsPromise }) {
           triggerConfirm(`Berhasil menghapus ${deletePromises.length} siswa secara sekaligus.`, null, { title: "Sukses", confirmText: "OK", cancelText: "" });
         } catch (err) {
           console.error("Bulk delete failed", err);
-          alert("Gagal melakukan hapus massal.");
+          await alertAsync("Gagal melakukan hapus massal.");
         }
       },
       { title: "⚠️ Hapus Massal Siswa", confirmText: "Hapus Sekaligus", cancelText: "Batal", isDanger: true }
     );
   };
 
-  const handleBulkTransferStudents = (targetClassId) => {
+  const handleBulkTransferStudents = async (targetClassId) => {
     if (selectedNisns.length === 0 || !targetClassId) return;
     const targetClass = availableClasses.find(c => c.id === targetClassId);
     if (!targetClass) return;
@@ -1683,7 +1685,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           }
         } catch (err) {
           console.error("Bulk transfer failed", err);
-          alert("Gagal melakukan pemindahan massal.");
+          await alertAsync("Gagal melakukan pemindahan massal.");
         }
       },
       { title: "🔄 Pindahkan Siswa Massal", confirmText: "Pindahkan", cancelText: "Batal" }
@@ -1692,7 +1694,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // === HANDLERS KOLOM NILAI ===
 
-  const handleNewAspectChange = (id, field, value) => {
+  const handleNewAspectChange = async (id, field, value) => {
     const updated = newAspects.map(a => {
       if (a.id === id) {
         if (field === 'isGroup') {
@@ -1710,7 +1712,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNewAspects(updated);
   };
   
-  const handleRemoveNewAspect = (id) => {
+  const handleRemoveNewAspect = async (id) => {
     const updated = newAspects.filter(a => a.id !== id);
     setNewAspects(updated);
 
@@ -1752,7 +1754,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleMoveNewAspect = (index, direction) => {
+  const handleMoveNewAspect = async (index, direction) => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newAspects.length) return;
     
@@ -1764,14 +1766,14 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNewAspects(newAspectsCopy);
   };
 
-  const handleAddBlankAspect = () => {
+  const handleAddBlankAspect = async () => {
     const newId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     const newAspect = { id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] };
     setNewAspects(prev => [...prev, newAspect]);
     setActiveAspectId(newId);
   };
 
-  const handleMoveSubAspect = (subId, direction) => {
+  const handleMoveSubAspect = async (subId, direction) => {
     if (!activeAspectId) return;
     const isNew = newAspects.some(a => a.id === activeAspectId);
     const activeAspect = isNew 
@@ -1801,12 +1803,12 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleToggleGroupType = (col, nextIsGroup) => {
+  const handleToggleGroupType = async (col, nextIsGroup) => {
     // Jika centang dihilangkan dan ada sub-komponen di dalamnya
     if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
       triggerConfirm(
         `Apakah Anda yakin ingin membongkar kelompok "${col.nama}"?\n\n${col.subKolom.length} sub-komponen di dalamnya akan otomatis dinaikkan menjadi komponen mandiri tingkat teratas agar nilai siswa tidak hilang.`,
-        () => {
+        async () => {
           // Hitung pembagian bobot proporsional (integer) agar tidak memicu error tipe data integer di database (PostgreSQL)
           const B = Number(col.bobot) || 0;
           const N = col.subKolom.length;
@@ -1859,7 +1861,7 @@ export default function DetailKelas({ params: paramsPromise }) {
             setActiveAspectId(promotedCols[0].id);
           }
 
-          alert(`💡 Berhasil membongkar kelompok!\nsub-komponen berikut kini menjadi komponen mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
+          await alertAsync(`💡 Berhasil membongkar kelompok!\nsub-komponen berikut kini menjadi komponen mandiri:\n` + promotedCols.map(p => `- ${p.nama} (${p.bobot}%)`).join("\n"));
         },
         {
           title: "Bongkar Kelompok",
@@ -1893,17 +1895,17 @@ export default function DetailKelas({ params: paramsPromise }) {
         const data = await res.json();
         setAvailableClasses(data.filter(c => c.id !== classId));
       } else {
-        alert("Gagal memuat daftar kelas");
+        await alertAsync("Gagal memuat daftar kelas");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan.");
+      await alertAsync("Terjadi kesalahan.");
     } finally {
       setFetchingClasses(false);
     }
   };
 
-  const handleDuplicateFromClass = (sourceClass) => {
+  const handleDuplicateFromClass = async (sourceClass) => {
     triggerConfirm(
       `Apakah Anda yakin ingin menyalin komponen dari kelas "${sourceClass.nama}"?\n\nKomponen nilai baru yang belum ada di kelas ini akan ditambahkan ke daftar komponen aktif Anda.`,
       () => {
@@ -1998,11 +2000,11 @@ export default function DetailKelas({ params: paramsPromise }) {
         const data = await res.json();
         setAvailableClasses(data.filter(c => c.id !== classId));
       } else {
-        alert("Gagal memuat daftar kelas");
+        await alertAsync("Gagal memuat daftar kelas");
       }
     } catch (err) {
       console.error(err);
-      alert("Terjadi kesalahan.");
+      await alertAsync("Terjadi kesalahan.");
     } finally {
       setFetchingClasses(false);
     }
@@ -2010,12 +2012,12 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   const handleApplyToOtherClasses = async () => {
     if (applySelectedClassIds.length === 0) {
-      alert("Silakan pilih minimal 1 kelas tujuan.");
+      await alertAsync("Silakan pilih minimal 1 kelas tujuan.");
       return;
     }
 
     if (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) {
-      alert("Kelas ini belum memiliki komponen nilai untuk diterapkan ke kelas lain.");
+      await alertAsync("Kelas ini belum memiliki komponen nilai untuk diterapkan ke kelas lain.");
       return;
     }
 
@@ -2153,7 +2155,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
         } catch (err) {
           console.error("Apply to other classes error:", err);
-          alert("Terjadi kesalahan saat menerapkan komponen ke kelas lain.");
+          await alertAsync("Terjadi kesalahan saat menerapkan komponen ke kelas lain.");
         } finally {
           setIsApplyingToOther(false);
         }
@@ -2166,10 +2168,10 @@ export default function DetailKelas({ params: paramsPromise }) {
     );
   };
 
-  const handleDeleteKolom = (colId, colName) => {
+  const handleDeleteKolom = async (colId, colName) => {
     const hasData = kelas.siswa.some(s => s.nilai && s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
     
-    const executeDelete = () => {
+    const executeDelete = async () => {
       // Remove locally
       const updated = kelas.kolomNilai.filter(c => c.id !== colId);
       setKelas({ ...kelas, kolomNilai: updated });
@@ -2222,7 +2224,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const handleSaveRange = async () => {
     // Validate grade ordering
     if (gradeA < gradeB || gradeB < gradeC || gradeC < gradeD) {
-      alert('Pastikan nilai A ≥ B ≥ C ≥ D.');
+      await alertAsync('Pastikan nilai A ≥ B ≥ C ≥ D.');
       return;
     }
     try {
@@ -2249,18 +2251,18 @@ export default function DetailKelas({ params: paramsPromise }) {
       if (!response.ok) {
         throw new Error(data.error || 'Gagal menyimpan skema penilaian');
       }
-      alert('Skema penilaian berhasil disimpan!');
+      await alertAsync('Skema penilaian berhasil disimpan!');
       setRangeModalOpen(false);
       fetchClassDetail();
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Terjadi kesalahan saat menyimpan skema penilaian.');
+      await alertAsync(err.message || 'Terjadi kesalahan saat menyimpan skema penilaian.');
     }
   };
 
 
   // === BATCH UPDATE BOBOT PERSENTASE ===
-  const handleBobotChange = (colId, value) => {
+  const handleBobotChange = async (colId, value) => {
     // Simpan sebagai string mentah agar field bisa dikosongkan tanpa otomatis jadi 0
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
@@ -2271,7 +2273,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
-  const handleColumnNameChange = (colId, value) => {
+  const handleColumnNameChange = async (colId, value) => {
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
         return { ...col, nama: value };
@@ -2281,7 +2283,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
-  const handleIsPresensiChange = (colId, value) => {
+  const handleIsPresensiChange = async (colId, value) => {
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
         return { ...col, isPresensi: value };
@@ -2295,7 +2297,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
-  const toggleAspectVisibility = (colId) => {
+  const toggleAspectVisibility = async (colId) => {
     const currentHidden = kelas.skemaPenilaian?.hiddenAspek || [];
     let newHidden;
     if (currentHidden.includes(colId)) {
@@ -2319,12 +2321,12 @@ export default function DetailKelas({ params: paramsPromise }) {
       if (col.isGroup && col.hitungMetode === "persentase") {
         const sum = (col.subKolom || []).reduce((s, sub) => s + (Number(sub.bobot) || 0), 0);
         if (sum !== 100) {
-          alert(`⚠️ Gagal menyimpan: Komponen kelompok "${col.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-komponennya saat ini adalah ${sum}% (harus pas 100%).`);
+          await alertAsync(`⚠️ Gagal menyimpan: Komponen kelompok "${col.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-komponennya saat ini adalah ${sum}% (harus pas 100%).`);
           return;
         }
         // Pastikan tidak ada nama sub-komponen yang kosong
         if ((col.subKolom || []).some(sub => sub.nama.trim() === "")) {
-          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-komponen yang kosong pada kelompok "${col.nama}".`);
+          await alertAsync(`⚠️ Gagal menyimpan: Terdapat nama sub-komponen yang kosong pada kelompok "${col.nama}".`);
           return;
         }
       }
@@ -2335,18 +2337,18 @@ export default function DetailKelas({ params: paramsPromise }) {
       if (aspect.isGroup && aspect.hitungMetode === "persentase") {
         const sum = (aspect.subKolom || []).reduce((s, sub) => s + (Number(sub.bobot) || 0), 0);
         if (sum !== 100) {
-          alert(`⚠️ Gagal menyimpan: Komponen kelompok baru "${aspect.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-komponennya saat ini adalah ${sum}% (harus pas 100%).`);
+          await alertAsync(`⚠️ Gagal menyimpan: Komponen kelompok baru "${aspect.nama}" menggunakan Bobot Kustom, tetapi total bobot sub-komponennya saat ini adalah ${sum}% (harus pas 100%).`);
           return;
         }
         if ((aspect.subKolom || []).some(sub => sub.nama.trim() === "")) {
-          alert(`⚠️ Gagal menyimpan: Terdapat nama sub-komponen yang kosong pada kelompok baru "${aspect.nama}".`);
+          await alertAsync(`⚠️ Gagal menyimpan: Terdapat nama sub-komponen yang kosong pada kelompok baru "${aspect.nama}".`);
           return;
         }
       }
     }
 
     if (totalBobot > 100) {
-      alert(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
+      await alertAsync(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
     }
 
     // Safety check for data loss
@@ -2516,7 +2518,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
   // === HELPER UNTUK MENCEGAH AKSI SAAT TERKUNCI ===
-  const handleLockedAction = () => {
+  const handleLockedAction = async () => {
     if (kelas?.archived) {
       triggerConfirm("Kelas ini sudah diarsipkan. Anda tidak dapat mengubah datanya.", null, { title: "Akses Ditolak", confirmText: "Tutup", isAlert: true });
       return true;
@@ -2555,7 +2557,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
 
     if (parsedValue !== null && (isNaN(parsedValue) || parsedValue < 0 || parsedValue > 100)) {
-      alert("Nilai harus berupa angka di antara 0 sampai 100!");
+      await alertAsync("Nilai harus berupa angka di antara 0 sampai 100!");
       return;
     }
 
@@ -2615,7 +2617,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // === 1-CLICK QUICK STAR ⭐ FOR ACTIVE STUDENTS (1 STAR = +1 POINT) ===
   const [starToast, setStarToast] = useState(null);
 
-  const getStudentTotalStars = (student) => {
+  const getStudentTotalStars = async (student) => {
     if (!student || !student.nilai) return 0;
     let totalPoinBonus = 0;
     Object.keys(student.nilai).forEach((k) => {
@@ -2731,7 +2733,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // === SMART CLIPBOARD PASTE (FROM EXCEL / GOOGLE SHEETS) ===
-  const handleGradePaste = (e, startStudentNisn, colId) => {
+  const handleGradePaste = async (e, startStudentNisn, colId) => {
     const pastedText = e.clipboardData ? e.clipboardData.getData("text/plain") : "";
     if (!pastedText) return;
 
@@ -2778,7 +2780,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // === DYNAMIC EXCEL TEMPLATE EXPORTER ===
-  const downloadExcelTemplate = () => {
+  const downloadExcelTemplate = async () => {
     // Susun header
     const headers = ["NISN", "Nama", "Tanggal Lahir (YYYY-MM-DD)"];
     kelas.kolomNilai.forEach(col => {
@@ -2878,7 +2880,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
  
   // === DYNAMIC EXCEL PARSER ===
-  const handleExcelUpload = (e) => {
+  const handleExcelUpload = async (e) => {
     if (handleLockedAction()) {
       e.target.value = "";
       return;
@@ -2898,7 +2900,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
         
         if (rows.length === 0) {
-          alert("Berkas Excel kosong!");
+          await alertAsync("Berkas Excel kosong!");
           return;
         }
         
@@ -2918,7 +2920,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         });
         
         if (namaIdx === -1) {
-          alert("Format berkas Excel tidak valid! Harus mempunyai kolom header: Nama");
+          await alertAsync("Format berkas Excel tidak valid! Harus mempunyai kolom header: Nama");
           return;
         }
 
@@ -2935,7 +2937,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           september: "09", oktober: "10", november: "11", desember: "12",
         };
 
-        const normalizeTanggal = (raw) => {
+        const normalizeTanggal = async (raw) => {
           if (!raw && raw !== 0) return "";
           const s = String(raw).trim();
           if (!s || s === "-") return "";
@@ -3057,7 +3059,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           if (warnings.length > 0) {
             errorMsg += " Semua baris dilewati karena data tidak lengkap.";
           }
-          alert(errorMsg);
+          await alertAsync(errorMsg);
           setImportWarnings(warnings);
           return;
         }
@@ -3080,7 +3082,7 @@ export default function DetailKelas({ params: paramsPromise }) {
         e.target.value = null;
       } catch (parseError) {
         console.error(parseError);
-        alert("Gagal membaca file Excel. Pastikan format file benar.");
+        await alertAsync("Gagal membaca file Excel. Pastikan format file benar.");
       }
     };
     reader.readAsArrayBuffer(file);
@@ -3295,7 +3297,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                   <div 
                     onClick={() => {
                       navigator.clipboard.writeText(kelas.id);
-                      alert("Kode Kelas disalin!");
+                      await alertAsync("Kode Kelas disalin!");
                       setShareDropdownOpen(false);
                     }}
                     style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid var(--border-color)" }}
@@ -3308,7 +3310,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     onClick={() => {
                       const shareLink = `${window.location.origin}/?kelas=${kelas.id}`;
                       navigator.clipboard.writeText(shareLink);
-                      alert("Tautan Kelas disalin!");
+                      await alertAsync("Tautan Kelas disalin!");
                       setShareDropdownOpen(false);
                     }}
                     style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}
@@ -3731,7 +3733,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 `\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
                 navigator.clipboard.writeText(text);
-                alert("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
+                await alertAsync("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
               }} className="btn btn-outline" style={{ fontSize: "0.85rem", padding: "8px 16px" }}>
                 📋 Salin Teks WhatsApp
               </button>
@@ -3902,7 +3904,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 onClick={() => {
                   if (!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) {
-                    alert("Belum ada pertemuan. Silakan buat pertemuan terlebih dahulu dengan tombol 'Tambah Pertemuan' sebelum menggunakan pemindai QR.");
+                    await alertAsync("Belum ada pertemuan. Silakan buat pertemuan terlebih dahulu dengan tombol 'Tambah Pertemuan' sebelum menggunakan pemindai QR.");
                     return;
                   }
                   setQrModalOpen(true);
@@ -5268,7 +5270,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                 const N = aspects.length;
                 const CX = 170, CY = 160, R = 100; // Smaller radius to fit tighter column
-                const toXY = (i, val) => {
+                const toXY = async (i, val) => {
                   const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                   const r = (val / 100) * R;
                   return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
@@ -5276,7 +5278,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 const gridLevels = [20, 40, 60, 80, 100];
                 
                 // Helper to abbreviate long aspect names (e.g., "Ujian Tengah Semester" -> "UTS")
-                const abbreviate = (name) => {
+                const abbreviate = async (name) => {
                   if (name.length <= 12) return name;
                   const words = name.split(/[\s_-]+/);
                   if (words.length > 1) {
@@ -7904,7 +7906,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                           handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
                                         } else {
                                           const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
-                                          const deleteAction = () => {
+                                          const deleteAction = async () => {
                                             const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
                                             setKelas({ ...kelas, kolomNilai: newCols });
                                           };
@@ -8205,7 +8207,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       const failedCount = responses.filter(r => !r.ok).length;
                       
                       if (failedCount > 0) {
-                        alert(`${failedCount} dari ${allTargetNisns.length} siswa gagal disimpan.`);
+                        await alertAsync(`${failedCount} dari ${allTargetNisns.length} siswa gagal disimpan.`);
                       }
                       
                       setKatrolModalOpen(false);
@@ -8214,7 +8216,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       setKatrolShowMulti(false);
                       fetchClassDetail();
                     } catch (err) {
-                      alert(err.message || "Gagal menyimpan.");
+                      await alertAsync(err.message || "Gagal menyimpan.");
                     } finally {
                       setIsSavingKatrol(false);
                     }
@@ -8509,12 +8511,12 @@ export default function DetailKelas({ params: paramsPromise }) {
                               const responses = await Promise.all(promises);
                               const failedCount = responses.filter(r => !r.ok).length;
                               if (failedCount > 0) {
-                                alert(`${failedCount} dari ${computedPreview.length} siswa gagal di-update.`);
+                                await alertAsync(`${failedCount} dari ${computedPreview.length} siswa gagal di-update.`);
                               }
                               setNormModalOpen(false);
                               fetchClassDetail();
                             } catch (err) {
-                              alert("Gagal menerapkan normalisasi.");
+                              await alertAsync("Gagal menerapkan normalisasi.");
                             } finally {
                               setIsSavingNorm(false);
                             }
@@ -9489,12 +9491,12 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 className="btn btn-primary"
                 onClick={async () => {
-                  if (!quickAddData.nama.trim()) return alert("Nama komponen wajib diisi!");
-                  if (quickAddData.bobot < 0 || quickAddData.bobot > 100) return alert("Bobot harus antara 0-100!");
+                  if (!quickAddData.nama.trim()) return await alertAsync("Nama komponen wajib diisi!");
+                  if (quickAddData.bobot < 0 || quickAddData.bobot > 100) return await alertAsync("Bobot harus antara 0-100!");
                   
                   const currentTotal = kelas.kolomNilai.reduce((acc, col) => acc + (Number(col.bobot) || 0), 0);
                   if (currentTotal + quickAddData.bobot > 100) {
-                    return alert(`Total bobot akan melebihi 100% (sekarang ${currentTotal}%, tambah ${quickAddData.bobot}% = ${currentTotal + quickAddData.bobot}%). Silakan sesuaikan.`);
+                    return await alertAsync(`Total bobot akan melebihi 100% (sekarang ${currentTotal}%, tambah ${quickAddData.bobot}% = ${currentTotal + quickAddData.bobot}%). Silakan sesuaikan.`);
                   }
 
                   const newId = Date.now().toString();
@@ -9512,7 +9514,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     if (quickAddData.hitungMetode === 'persentase') {
                       const subSum = quickAddData.subKolom.reduce((acc, sub) => acc + (Number(sub.bobot) || 0), 0);
                       if (subSum !== 100) {
-                        return alert(`Total bobot anak kolom harus tepat 100%. Saat ini ${subSum}%.`);
+                        return await alertAsync(`Total bobot anak kolom harus tepat 100%. Saat ini ${subSum}%.`);
                       }
                     }
                     newKolom.subKolom = quickAddData.subKolom.map((sub, i) => ({
@@ -9538,7 +9540,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       })
                     });
                   } catch(err) {
-                    alert("Terjadi kesalahan saat menyimpan data ke server.");
+                    await alertAsync("Terjadi kesalahan saat menyimpan data ke server.");
                   }
                 }}
               >
@@ -9669,18 +9671,18 @@ export default function DetailKelas({ params: paramsPromise }) {
               <button 
                 className="btn btn-primary"
                 onClick={async () => {
-                  if (!quickEditData.nama.trim()) return alert("Nama komponen wajib diisi!");
-                  if (quickEditData.bobot < 0 || quickEditData.bobot > 100) return alert("Bobot harus antara 0-100!");
+                  if (!quickEditData.nama.trim()) return await alertAsync("Nama komponen wajib diisi!");
+                  if (quickEditData.bobot < 0 || quickEditData.bobot > 100) return await alertAsync("Bobot harus antara 0-100!");
                   
                   const currentOtherTotal = kelas.kolomNilai.filter(c => c.id !== quickEditData.id).reduce((acc, col) => acc + (Number(col.bobot) || 0), 0);
                   if (currentOtherTotal + quickEditData.bobot > 100) {
-                    return alert(`Total bobot akan melebihi 100% (sekarang ${currentOtherTotal}%, tambah ${quickEditData.bobot}% = ${currentOtherTotal + quickEditData.bobot}%). Silakan sesuaikan.`);
+                    return await alertAsync(`Total bobot akan melebihi 100% (sekarang ${currentOtherTotal}%, tambah ${quickEditData.bobot}% = ${currentOtherTotal + quickEditData.bobot}%). Silakan sesuaikan.`);
                   }
 
                   if (quickEditData.isGroup && quickEditData.hitungMetode === 'persentase') {
                     const subSum = quickEditData.subKolom.reduce((acc, sub) => acc + (Number(sub.bobot) || 0), 0);
                     if (subSum !== 100) {
-                      return alert(`Total bobot anak kolom harus tepat 100%. Saat ini ${subSum}%.`);
+                      return await alertAsync(`Total bobot anak kolom harus tepat 100%. Saat ini ${subSum}%.`);
                     }
                   }
 
@@ -9700,7 +9702,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                       })
                     });
                   } catch(err) {
-                    alert("Terjadi kesalahan saat menyimpan data ke server.");
+                    await alertAsync("Terjadi kesalahan saat menyimpan data ke server.");
                   }
                 }}
               >
