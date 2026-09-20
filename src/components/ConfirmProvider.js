@@ -114,7 +114,7 @@ export function ConfirmProvider({ children }) {
     <ConfirmContext.Provider value={{ triggerConfirm, triggerAlert, triggerPrompt, confirmAsync, alertAsync, promptAsync }}>
       {children}
       {confirmConfig.isOpen && (
-        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
+        <div className="modal-overlay" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 999999 }}>
           <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "420px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", border: confirmConfig.isDanger ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid var(--border-focus)", boxShadow: "var(--shadow-lg), 0 0 30px rgba(0,0,0,0.2)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ width: "40px", height: "40px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: confirmConfig.isDanger ? "rgba(239, 68, 68, 0.1)" : "rgba(59, 130, 246, 0.1)", color: confirmConfig.isDanger ? "var(--danger)" : "var(--primary)", fontSize: "1.2rem", flexShrink: 0 }}>
