@@ -22,8 +22,6 @@ const QrCardGeneratorModal = dynamic(() => import("@/components/QrCardGeneratorM
 
 
 export default function DetailKelas({ params: paramsPromise }) {
-  const { confirmAsync, alertAsync, promptAsync } = useConfirm();
-
   const params = use(paramsPromise);
   const classId = params.id;
   const router = useRouter();
@@ -130,7 +128,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleOpenRemedialReport = async (kolom, config) => {
+  const handleOpenRemedialReport = (kolom, config) => {
     setRemedialReportConfig(config);
     setRemedialReportOpen(true);
   };
@@ -139,7 +137,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [presetSelectionModalOpen, setPresetSelectionModalOpen] = useState(false);
   const [kolomModalOpen, setKolomModalOpen] = useState(false);
 
-  const handleOpenKolomModal = async () => {
+  const handleOpenKolomModal = () => {
     if (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) {
       setPresetSelectionModalOpen(true);
     } else {
@@ -189,7 +187,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [qrCardModalOpen, setQrCardModalOpen] = useState(false);
   const [unlockedPertemuanIds, setUnlockedPertemuanIds] = useState([]);
-  const togglePertemuanLock = async (pertemuanId) => {
+  const togglePertemuanLock = (pertemuanId) => {
     setUnlockedPertemuanIds(prev => 
       prev.includes(pertemuanId) 
         ? [] 
@@ -257,13 +255,13 @@ export default function DetailKelas({ params: paramsPromise }) {
   // State & handler untuk deteksi mobile screen
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const handleResize = async () => {
+    const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
 
-    const handleWindowBlur = async () => {
+    const handleWindowBlur = () => {
       if (document.activeElement && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
         document.activeElement.blur();
       }
@@ -276,7 +274,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     };
   }, []);
 
-  const formatNameForMobile = async (name, isExpanded) => {
+  const formatNameForMobile = (name, isExpanded) => {
     if (!name) return "";
     if (isExpanded) return name;
     if (!isMobile) return name;
@@ -378,7 +376,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   }, [kolomModalOpen]);
 
-  const hasUnsavedChanges = async () => {
+  const hasUnsavedChanges = () => {
     if (deletedKolomIds.length > 0) return true;
 
     const activeNewAspects = newAspects.filter(a => a.nama.trim() !== "" || (a.bobot !== "" && a.bobot !== 0) || (a.subKolom && a.subKolom.length > 0));
@@ -412,7 +410,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return false;
   };
 
-  const handleCloseKolomModal = async () => {
+  const handleCloseKolomModal = () => {
     if (hasUnsavedChanges()) {
       setShowUnsavedConfirm(true);
     } else {
@@ -420,7 +418,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const forceCloseKolomModal = async () => {
+  const forceCloseKolomModal = () => {
     setKolomModalOpen(false);
     setShowUnsavedConfirm(false);
     setFabOpen(false);
@@ -435,7 +433,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Cetak KHS / Rapor Bayangan PDF
   const [selectedPrintStudent, setSelectedPrintStudent] = useState(null);
 
-  const handlePrintStudentKHS = async (student) => {
+  const handlePrintStudentKHS = (student) => {
     setSelectedPrintStudent(student);
     
     setTimeout(() => {
@@ -475,7 +473,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [mergeGroupName, setMergeGroupName] = useState("");
   const [isMerging, setIsMerging] = useState(false);
 
-  const handleOpenHistory = async (student) => {
+  const handleOpenHistory = (student) => {
     setSelectedHistorySiswa(student);
     setHistoryModalOpen(true);
   };
@@ -519,7 +517,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // Load activeTab and viewMode from sessionStorage/localStorage on mount
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadSettings = () => {
       if (typeof window !== "undefined" && classId) {
         const savedTab = sessionStorage.getItem(`activeTab_${classId}`);
         const savedViewMode = localStorage.getItem('ceknilai_view_mode') || 'tabs';
@@ -559,7 +557,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
 
 
-  const handleViewModeChange = async (mode) => {
+  const handleViewModeChange = (mode) => {
     setViewMode(mode);
     localStorage.setItem('ceknilai_view_mode', mode);
     if (mode === 'dashboard') {
@@ -580,7 +578,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
 
-  const handleTableScroll = async () => {
+  const handleTableScroll = () => {
     if (tableContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
       setShowLeftScroll(scrollLeft > 5);
@@ -607,7 +605,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return () => clearTimeout(timer);
   }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran]);
 
-  const scrollTableBy = async (amount) => {
+  const scrollTableBy = (amount) => {
     if (tableContainerRef.current) {
       tableContainerRef.current.scrollBy({ left: amount, behavior: "smooth" });
     }
@@ -615,7 +613,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // States untuk Sort Tabel
   const [sortConfig, setSortConfig] = useState({ key: 'nama', direction: 'asc' });
 
-  const handleSort = async (key) => {
+  const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -623,7 +621,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSortConfig({ key, direction });
   };
 
-  const getStudentAttendancePercentage = async (student) => {
+  const getStudentAttendancePercentage = (student) => {
     const pertemuanList = kelas?.skemaPenilaian?.pertemuan || [];
     const totalP = pertemuanList.length;
     if (totalP === 0) return null;
@@ -647,7 +645,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return (countH / totalP) * 100;
   };
 
-  const getColScore = async (student, col, tempScores = null) => {
+  const getColScore = (student, col, tempScores = null) => {
     if (col.isPresensi) {
       const attPercent = getStudentAttendancePercentage(student);
       return {
@@ -947,7 +945,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     return { totalH, totalI, totalS, totalA, totalD, avgAttendance, totalPertemuan: totalP };
   }, [kelas]);
 
-  const toggleCatatanRow = async (studentNisn) => {
+  const toggleCatatanRow = (studentNisn) => {
     setOpenCatatan(prev => {
       const isOpen = !prev[studentNisn];
       if (isOpen && catatanDraft[studentNisn] === undefined) {
@@ -960,7 +958,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       return { ...prev, [studentNisn]: isOpen };
     });
   };
-  const toggleNamaExpand = async () => {
+  const toggleNamaExpand = () => {
     setIsNamaColumnExpanded(prev => !prev);
   };
 
@@ -1096,7 +1094,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // === HANDLERS SISWA ===
-  const handleOpenAddSiswa = async () => {
+  const handleOpenAddSiswa = () => {
     setIsEditingSiswa(false);
     setNisn("");
     setOldNisn(null);
@@ -1132,7 +1130,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }, { title: newStatus ? "Publikasikan Nilai" : "Tarik Kembali Nilai", confirmText: "Ya, Lanjutkan" });
   };
 
-  const handleOpenAddPertemuan = async () => {
+  const handleOpenAddPertemuan = () => {
     setIsEditingPertemuan(false);
     setSelectedPertemuanId("");
     setPertemuanNama(`Pert. ${(kelas.skemaPenilaian?.pertemuan?.length || 0) + 1}`);
@@ -1143,7 +1141,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setPertemuanModalOpen(true);
   };
 
-  const handleOpenEditPertemuan = async (pertemuan) => {
+  const handleOpenEditPertemuan = (pertemuan) => {
     setIsEditingPertemuan(true);
     setSelectedPertemuanId(pertemuan.id);
     setPertemuanNama(pertemuan.nama);
@@ -1340,7 +1338,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleSeparateStudent = async (s) => {
+  const handleSeparateStudent = (s) => {
     // 1. Remove from updated
     const newUpdated = (syncPreviewData.updated || []).filter(u => u.nisnLama !== s.nisnLama);
     
@@ -1368,7 +1366,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setSyncSelectedAdded(nextSelectedAdded);
   };
 
-  const handleManualMerge = async (removedSiswa, addedSiswa) => {
+  const handleManualMerge = (removedSiswa, addedSiswa) => {
     // 1. Remove from removed
     const newRemoved = (syncPreviewData.removed || []).filter(r => r.nisn !== removedSiswa.nisn);
     
@@ -1522,7 +1520,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleOpenEditSiswa = async (siswa) => {
+  const handleOpenEditSiswa = (siswa) => {
     setIsEditingSiswa(true);
     setOldNisn(siswa.nisn);
     setNisn(siswa.nisn);
@@ -1599,7 +1597,7 @@ export default function DetailKelas({ params: paramsPromise }) {
       }
     );
   };
-  const handleSelectStudent = async (studentNisn) => {
+  const handleSelectStudent = (studentNisn) => {
     setSelectedNisns((prev) =>
       prev.includes(studentNisn)
         ? prev.filter((id) => id !== studentNisn)
@@ -1607,7 +1605,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     );
   };
 
-  const handleSelectAllStudents = async () => {
+  const handleSelectAllStudents = () => {
     if (!kelas || !kelas.siswa) return;
     if (selectedNisns.length === kelas.siswa.length) {
       setSelectedNisns([]);
@@ -1616,7 +1614,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleBulkDeleteStudents = async () => {
+  const handleBulkDeleteStudents = () => {
     if (selectedNisns.length === 0) return;
     
     triggerConfirm(
@@ -1643,7 +1641,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     );
   };
 
-  const handleBulkTransferStudents = async (targetClassId) => {
+  const handleBulkTransferStudents = (targetClassId) => {
     if (selectedNisns.length === 0 || !targetClassId) return;
     const targetClass = availableClasses.find(c => c.id === targetClassId);
     if (!targetClass) return;
@@ -1694,7 +1692,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
   // === HANDLERS KOLOM NILAI ===
 
-  const handleNewAspectChange = async (id, field, value) => {
+  const handleNewAspectChange = (id, field, value) => {
     const updated = newAspects.map(a => {
       if (a.id === id) {
         if (field === 'isGroup') {
@@ -1712,7 +1710,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNewAspects(updated);
   };
   
-  const handleRemoveNewAspect = async (id) => {
+  const handleRemoveNewAspect = (id) => {
     const updated = newAspects.filter(a => a.id !== id);
     setNewAspects(updated);
 
@@ -1754,7 +1752,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleMoveNewAspect = async (index, direction) => {
+  const handleMoveNewAspect = (index, direction) => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newAspects.length) return;
     
@@ -1766,14 +1764,14 @@ export default function DetailKelas({ params: paramsPromise }) {
     setNewAspects(newAspectsCopy);
   };
 
-  const handleAddBlankAspect = async () => {
+  const handleAddBlankAspect = () => {
     const newId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
     const newAspect = { id: newId, nama: "", bobot: "", isGroup: false, subKolom: [] };
     setNewAspects(prev => [...prev, newAspect]);
     setActiveAspectId(newId);
   };
 
-  const handleMoveSubAspect = async (subId, direction) => {
+  const handleMoveSubAspect = (subId, direction) => {
     if (!activeAspectId) return;
     const isNew = newAspects.some(a => a.id === activeAspectId);
     const activeAspect = isNew 
@@ -1803,7 +1801,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleToggleGroupType = async (col, nextIsGroup) => {
+  const handleToggleGroupType = (col, nextIsGroup) => {
     // Jika centang dihilangkan dan ada sub-komponen di dalamnya
     if (!nextIsGroup && col.subKolom && col.subKolom.length > 0) {
       triggerConfirm(
@@ -1905,7 +1903,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
 
-  const handleDuplicateFromClass = async (sourceClass) => {
+  const handleDuplicateFromClass = (sourceClass) => {
     triggerConfirm(
       `Apakah Anda yakin ingin menyalin komponen dari kelas "${sourceClass.nama}"?\n\nKomponen nilai baru yang belum ada di kelas ini akan ditambahkan ke daftar komponen aktif Anda.`,
       () => {
@@ -2168,10 +2166,10 @@ export default function DetailKelas({ params: paramsPromise }) {
     );
   };
 
-  const handleDeleteKolom = async (colId, colName) => {
+  const handleDeleteKolom = (colId, colName) => {
     const hasData = kelas.siswa.some(s => s.nilai && s.nilai[colId] !== undefined && s.nilai[colId] !== null && s.nilai[colId] !== "");
     
-    const executeDelete = async () => {
+    const executeDelete = () => {
       // Remove locally
       const updated = kelas.kolomNilai.filter(c => c.id !== colId);
       setKelas({ ...kelas, kolomNilai: updated });
@@ -2262,7 +2260,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
 
   // === BATCH UPDATE BOBOT PERSENTASE ===
-  const handleBobotChange = async (colId, value) => {
+  const handleBobotChange = (colId, value) => {
     // Simpan sebagai string mentah agar field bisa dikosongkan tanpa otomatis jadi 0
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
@@ -2273,7 +2271,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
-  const handleColumnNameChange = async (colId, value) => {
+  const handleColumnNameChange = (colId, value) => {
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
         return { ...col, nama: value };
@@ -2283,7 +2281,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
-  const handleIsPresensiChange = async (colId, value) => {
+  const handleIsPresensiChange = (colId, value) => {
     const updatedKolom = kelas.kolomNilai.map(col => {
       if (col.id === colId) {
         return { ...col, isPresensi: value };
@@ -2297,7 +2295,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     setKelas({ ...kelas, kolomNilai: updatedKolom });
   };
 
-  const toggleAspectVisibility = async (colId) => {
+  const toggleAspectVisibility = (colId) => {
     const currentHidden = kelas.skemaPenilaian?.hiddenAspek || [];
     let newHidden;
     if (currentHidden.includes(colId)) {
@@ -2518,7 +2516,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     }
   };
   // === HELPER UNTUK MENCEGAH AKSI SAAT TERKUNCI ===
-  const handleLockedAction = async () => {
+  const handleLockedAction = () => {
     if (kelas?.archived) {
       triggerConfirm("Kelas ini sudah diarsipkan. Anda tidak dapat mengubah datanya.", null, { title: "Akses Ditolak", confirmText: "Tutup", isAlert: true });
       return true;
@@ -2617,7 +2615,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   // === 1-CLICK QUICK STAR ⭐ FOR ACTIVE STUDENTS (1 STAR = +1 POINT) ===
   const [starToast, setStarToast] = useState(null);
 
-  const getStudentTotalStars = async (student) => {
+  const getStudentTotalStars = (student) => {
     if (!student || !student.nilai) return 0;
     let totalPoinBonus = 0;
     Object.keys(student.nilai).forEach((k) => {
@@ -2733,7 +2731,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
 
   // === SMART CLIPBOARD PASTE (FROM EXCEL / GOOGLE SHEETS) ===
-  const handleGradePaste = async (e, startStudentNisn, colId) => {
+  const handleGradePaste = (e, startStudentNisn, colId) => {
     const pastedText = e.clipboardData ? e.clipboardData.getData("text/plain") : "";
     if (!pastedText) return;
 
@@ -2880,7 +2878,7 @@ export default function DetailKelas({ params: paramsPromise }) {
   };
  
   // === DYNAMIC EXCEL PARSER ===
-  const handleExcelUpload = async (e) => {
+  const handleExcelUpload = (e) => {
     if (handleLockedAction()) {
       e.target.value = "";
       return;
@@ -2937,7 +2935,7 @@ export default function DetailKelas({ params: paramsPromise }) {
           september: "09", oktober: "10", november: "11", desember: "12",
         };
 
-        const normalizeTanggal = async (raw) => {
+        const normalizeTanggal = (raw) => {
           if (!raw && raw !== 0) return "";
           const s = String(raw).trim();
           if (!s || s === "-") return "";
@@ -5270,7 +5268,7 @@ export default function DetailKelas({ params: paramsPromise }) {
 
                 const N = aspects.length;
                 const CX = 170, CY = 160, R = 100; // Smaller radius to fit tighter column
-                const toXY = async (i, val) => {
+                const toXY = (i, val) => {
                   const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                   const r = (val / 100) * R;
                   return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];
@@ -5278,7 +5276,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 const gridLevels = [20, 40, 60, 80, 100];
                 
                 // Helper to abbreviate long aspect names (e.g., "Ujian Tengah Semester" -> "UTS")
-                const abbreviate = async (name) => {
+                const abbreviate = (name) => {
                   if (name.length <= 12) return name;
                   const words = name.split(/[\s_-]+/);
                   if (words.length > 1) {
@@ -7906,7 +7904,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                                           handleNewAspectChange(activeAspect.id, 'subKolom', newSub);
                                         } else {
                                           const hasData = kelas.siswa.some(s => s.nilai && s.nilai[sub.id] !== undefined && s.nilai[sub.id] !== null && s.nilai[sub.id] !== "");
-                                          const deleteAction = async () => {
+                                          const deleteAction = () => {
                                             const newCols = kelas.kolomNilai.map(c => c.id === activeAspect.id ? { ...c, subKolom: c.subKolom.filter(s => s.id !== sub.id) } : c);
                                             setKelas({ ...kelas, kolomNilai: newCols });
                                           };
