@@ -2889,7 +2889,7 @@ export default function DetailKelas({ params: paramsPromise }) {
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = new Uint8Array(event.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
@@ -3295,7 +3295,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     Kode: <span style={{ fontFamily: "monospace", color: "var(--primary)" }}>{kelas.id}</span>
                   </div>
                   <div 
-                    onClick={() => {
+                    onClick={async () => {
                       navigator.clipboard.writeText(kelas.id);
                       await alertAsync("Kode Kelas disalin!");
                       setShareDropdownOpen(false);
@@ -3307,7 +3307,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                     📋 Salin Kode Kelas
                   </div>
                   <div 
-                    onClick={() => {
+                    onClick={async () => {
                       const shareLink = `${window.location.origin}/?kelas=${kelas.id}`;
                       navigator.clipboard.writeText(shareLink);
                       await alertAsync("Tautan Kelas disalin!");
@@ -3725,7 +3725,7 @@ export default function DetailKelas({ params: paramsPromise }) {
                 ))}
               </div>
 
-              <button onClick={() => {
+              <button onClick={async () => {
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nGuru Pengampu: ${guruProfile?.nama || "-"}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
                 analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${totalBobot !== 100 ? `Belum Lengkap (Bobot < 100%) ⚠️` : (s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`)}_` +
@@ -3902,7 +3902,7 @@ export default function DetailKelas({ params: paramsPromise }) {
               marginTop: "4px"
             }}>
               <button 
-                onClick={() => {
+                onClick={async () => {
                   if (!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) {
                     await alertAsync("Belum ada pertemuan. Silakan buat pertemuan terlebih dahulu dengan tombol 'Tambah Pertemuan' sebelum menggunakan pemindai QR.");
                     return;
