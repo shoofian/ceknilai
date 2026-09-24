@@ -321,7 +321,7 @@ export default function WaliKelasDashboard() {
   };
 
   // EWS Calculations
-  const ewsData = async (() => {
+  const ewsData = useMemo(() => {
     const highRisk = []; // >= 3 failing
     const mediumRisk = []; // 1-2 failing
     let safeCount = 0;
@@ -419,7 +419,7 @@ export default function WaliKelasDashboard() {
     );
   }
 
-  const renderModal = async () => {
+  const renderModal = () => {
     if (!subjectDetailModalOpen || !mounted) return null;
     return createPortal(
       <div
@@ -480,7 +480,7 @@ export default function WaliKelasDashboard() {
             const kkm = selectedSubjectDetail.skemaPenilaian?.kkm || 75;
             const columns = selectedSubjectDetail.kolomNilai || [];
 
-            const getColScore = async (student, col) => {
+            const getColScore = (student, col) => {
               if (col.subKolom && col.subKolom.length > 0) {
                 let subTotal = 0, subFilledWeight = 0, subFilledCount = 0;
                 col.subKolom.forEach(sub => {
@@ -501,7 +501,7 @@ export default function WaliKelasDashboard() {
               }
             };
 
-            const calcFinal = async (s) => {
+            const calcFinal = (s) => {
               let total = 0;
               columns.forEach(col => { total += getColScore(s, col) * (col.bobot / 100); });
               

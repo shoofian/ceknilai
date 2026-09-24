@@ -114,7 +114,7 @@ export default function MasaAktifPage() {
       ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
 
       // Helper to draw dashed line
-      const drawDashedLine = async (yPos) => {
+      const drawDashedLine = (yPos) => {
         ctx.beginPath();
         ctx.setLineDash([6, 4]);
         ctx.moveTo(20, yPos);
@@ -140,7 +140,7 @@ export default function MasaAktifPage() {
       // Body (Left aligned)
       ctx.textAlign = 'left';
       ctx.fillStyle = '#334155';
-      const drawRow = async (label, value) => {
+      const drawRow = (label, value) => {
         ctx.font = 'bold 14px "Courier New", Courier, monospace';
         ctx.fillText(label, 20, y);
         ctx.font = '14px "Courier New", Courier, monospace';

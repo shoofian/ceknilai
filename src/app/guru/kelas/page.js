@@ -64,7 +64,7 @@ export default function KelolaKelas() {
     return `${y}/${y + 1}`;
   });
 
-  const getEffectiveMataPelajaran = async () => {
+  const getEffectiveMataPelajaran = () => {
     if (mataPelajaran === "Lainnya") return mataPelajaranCustom.trim();
     return mataPelajaran;
   };
@@ -77,13 +77,13 @@ export default function KelolaKelas() {
   const [isBulkImporting, setIsBulkImporting] = useState(false);
   const [bulkError, setBulkError] = useState("");
 
-  const detectLevelInRombel = async (tingkatan, rombel) => {
+  const detectLevelInRombel = (tingkatan, rombel) => {
     if (!rombel) return false;
     const r = rombel.toUpperCase().trim();
     return /^(10|11|12|X|XI|XII)\b/i.test(r) || r.startsWith("KELAS");
   };
 
-  const stripLevelFromRombel = async (rombel) => {
+  const stripLevelFromRombel = (rombel) => {
     if (!rombel) return "";
     return rombel.replace(/^(?:KELAS\s+)?(10|11|12|X{1,3}I{0,3})\b\s*[-_]?\s*/i, "").trim();
   };
@@ -421,7 +421,7 @@ export default function KelolaKelas() {
     }
 
     // Auto-Trimming and construction
-    const getRoman = async (num) => {
+    const getRoman = (num) => {
       const roman = { 10: "X", 11: "XI", 12: "XII" };
       return roman[num] || num;
     };
@@ -924,7 +924,7 @@ export default function KelolaKelas() {
       const payload = {
         classes: validForms.map((form) => {
           const effectiveMapel = form.mataPelajaran === "Lainnya" ? (form.mataPelajaranCustom || "").trim() : form.mataPelajaran;
-          const getRoman = async (num) => {
+          const getRoman = (num) => {
             const roman = { 10: "X", 11: "XI", 12: "XII" };
             return roman[num] || num;
           };
@@ -1686,7 +1686,7 @@ export default function KelolaKelas() {
                     <span style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>🏷️ Pratinjau Nama Kelas</span>
                     <strong style={{ fontSize: "1rem", color: "var(--primary)" }}>
                       {(() => {
-                        const getRoman = async (num) => {
+                        const getRoman = (num) => {
                           const roman = { 10: "X", 11: "XI", 12: "XII" };
                           return roman[num] || num;
                         };

@@ -493,7 +493,7 @@ function StudentPortalContent() {
                   const activeResults = filteredResults.filter(r => !r.archived);
                   const archivedResults = filteredResults.filter(r => r.archived);
 
-                  const renderClassCard = async (res, index, isArchived = false) => {
+                  const renderClassCard = (res, index, isArchived = false) => {
                     const gradients = isArchived ? [
                       "linear-gradient(135deg, #64748b, #475569)",
                       "linear-gradient(135deg, #6b7280, #4b5563)",
@@ -1469,7 +1469,7 @@ function StudentPortalContent() {
                             }
                             const N = chartItems.length;
                             const CX = 270, CY = 250, R = 200;
-                            const toXY = async (i, val) => {
+                            const toXY = (i, val) => {
                               const angle = (Math.PI * 2 * i) / N - Math.PI / 2;
                               const r = (val / 100) * R;
                               return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)];

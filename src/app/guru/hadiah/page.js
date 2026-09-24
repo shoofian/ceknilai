@@ -116,7 +116,7 @@ export default function HadiahReferralPage() {
     }
   };
 
-  const formatTimer = async (seconds) => {
+  const formatTimer = (seconds) => {
     const m = Math.floor((seconds || 0) / 60);
     const s = (seconds || 0) % 60;
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
@@ -129,7 +129,7 @@ export default function HadiahReferralPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isThemeUnlocked = async (themeId) => {
+  const isThemeUnlocked = (themeId) => {
     if (themeId === 'default') return true;
     let localUnlocked = [];
     try {

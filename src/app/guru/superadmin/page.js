@@ -323,7 +323,7 @@ export default function SuperadminPanel() {
     }
   };
 
-  const calculateGuruPoints = async (username) => {
+  const calculateGuruPoints = (username) => {
     let balance = 0;
     const logsForGuru = financeLogs.filter(l => l.username?.toLowerCase() === username.toLowerCase());
     for (const log of logsForGuru) {
