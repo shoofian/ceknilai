@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo, useCallback, use, Fragment } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback, use, Fragment, Suspense } from "react";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { createPortal } from "react-dom";
 import Modal from '@/components/Modal';
@@ -21,7 +21,7 @@ const QrScannerModal = dynamic(() => import("@/components/QrScannerModal"), { ss
 const QrCardGeneratorModal = dynamic(() => import("@/components/QrCardGeneratorModal"), { ssr: false });
 
 
-export default function DetailKelas({ params: paramsPromise }) {
+function DetailKelasContent({ params: paramsPromise }) {
   const params = use(paramsPromise);
   const classId = params.id;
   const router = useRouter();
@@ -9975,5 +9975,13 @@ export default function DetailKelas({ params: paramsPromise }) {
         </div>
       )}
     </>
+  );
+}
+
+export default function DetailKelas(props) {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center p-8"><div className="text-xl">Memuat...</div></div>}>
+      <DetailKelasContent {...props} />
+    </Suspense>
   );
 }
