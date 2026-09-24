@@ -2,11 +2,11 @@
 import { useConfirm } from "@/components/ConfirmProvider";
 
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, Suspense } from "react";
 import Link from "next/link";
 import html2canvas from "html2canvas";
 
-export default function StudentPortal() {
+function StudentPortalContent() {
   const { confirmAsync, alertAsync, promptAsync } = useConfirm();
 
   const [nisn, setNisn] = useState("");
@@ -2049,5 +2049,13 @@ export default function StudentPortal() {
         }
       `}</style>
     </>
+  );
+}
+
+export default function StudentPortal() {
+  return (
+    <Suspense fallback={<div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>Memuat...</div>}>
+      <StudentPortalContent />
+    </Suspense>
   );
 }
