@@ -9812,7 +9812,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                   if (focusColumn.type === 'nilai') {
                     const cellKey = `${student.nisn}-${focusColumn.id}`;
                     return (
-                      <tr key={student.nisn}>
+                      <tr key={student.nisn} style={{ backgroundColor: idx % 2 === 0 ? "transparent" : "var(--bg-secondary)" }}>
                         <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
                         <td style={{ fontWeight: "600" }}>{student.nama}</td>
                         <td style={{ textAlign: "center" }}>
@@ -9872,7 +9872,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                     const isUnlocked = !kelas.archived && !isLocked;
                     
                     return (
-                      <tr key={student.nisn}>
+                      <tr key={student.nisn} style={{ backgroundColor: idx % 2 === 0 ? "transparent" : "var(--bg-secondary)" }}>
                         <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
                         <td style={{ fontWeight: "600" }}>{student.nama}</td>
                         <td style={{ textAlign: "center" }}>
