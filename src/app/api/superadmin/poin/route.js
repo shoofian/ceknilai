@@ -15,7 +15,7 @@ export async function POST(request) {
 
     const { targetUsername, points, description } = await request.json();
 
-    if (!targetUsername || !points || !description) {
+    if (!targetUsername || points === undefined || points === null || !description) {
       return NextResponse.json({ error: 'Semua kolom wajib diisi' }, { status: 400 });
     }
 
