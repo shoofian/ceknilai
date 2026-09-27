@@ -62,6 +62,7 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [tanggalLahir, setTanggalLahir] = useState("");
   const [focusColumn, setFocusColumn] = useState(null);
   const [focusBulkValue, setFocusBulkValue] = useState("");
+  const [focusBulkTarget, setFocusBulkTarget] = useState("all");
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
   const [quickAddData, setQuickAddData] = useState({ nama: "", bobot: 0, isGroup: false, subCount: 1, hitungMetode: 'rata-rata', isPresensi: false, subKolom: [] });
   const [quickEditModalOpen, setQuickEditModalOpen] = useState(false);
@@ -9741,6 +9742,15 @@ function DetailKelasContent({ params: paramsPromise }) {
                 })()}
                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                   <span style={{ fontSize: "1rem", marginRight: "2px", opacity: 0.7 }} title="Isi Cepat">⚡</span>
+                  <select
+                    value={focusBulkTarget}
+                    onChange={(e) => setFocusBulkTarget(e.target.value)}
+                    style={{ padding: "4px 8px", minHeight: "28px", fontSize: "0.85rem", borderRadius: "6px", border: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)", color: "var(--text-primary)", outline: "none" }}
+                    title="Target penerapan nilai"
+                  >
+                    <option value="all">Semua Siswa</option>
+                    <option value="empty">Yang Kosong</option>
+                  </select>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -9758,11 +9768,16 @@ function DetailKelasContent({ params: paramsPromise }) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && focusBulkValue !== "") {
                         e.preventDefault();
-                        triggerConfirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`, () => {
+                        const targetText = focusBulkTarget === "all" ? "semua siswa" : "siswa yang nilainya masih kosong";
+                        triggerConfirm(`Terapkan nilai ${focusBulkValue} ke ${targetText}?`, () => {
                           const newScores = { ...temporaryScores };
                           sortedStudents.forEach(s => {
-                            newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
-                            handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                            const cellKey = `${s.nisn}-${focusColumn.id}`;
+                            const currentVal = temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (s.nilai[focusColumn.id] !== null && s.nilai[focusColumn.id] !== undefined ? s.nilai[focusColumn.id] : "");
+                            if (focusBulkTarget === "all" || currentVal === "") {
+                              newScores[cellKey] = focusBulkValue;
+                              handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                            }
                           });
                           setTemporaryScores(newScores);
                           setFocusBulkValue("");
@@ -9775,11 +9790,16 @@ function DetailKelasContent({ params: paramsPromise }) {
                     className="btn btn-primary"
                     onClick={() => {
                       if (focusBulkValue !== "") {
-                        triggerConfirm(`Terapkan nilai ${focusBulkValue} ke semua siswa?`, () => {
+                        const targetText = focusBulkTarget === "all" ? "semua siswa" : "siswa yang nilainya masih kosong";
+                        triggerConfirm(`Terapkan nilai ${focusBulkValue} ke ${targetText}?`, () => {
                           const newScores = { ...temporaryScores };
                           sortedStudents.forEach(s => {
-                            newScores[`${s.nisn}-${focusColumn.id}`] = focusBulkValue;
-                            handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                            const cellKey = `${s.nisn}-${focusColumn.id}`;
+                            const currentVal = temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (s.nilai[focusColumn.id] !== null && s.nilai[focusColumn.id] !== undefined ? s.nilai[focusColumn.id] : "");
+                            if (focusBulkTarget === "all" || currentVal === "") {
+                              newScores[cellKey] = focusBulkValue;
+                              handleGradeBlur(s.nisn, focusColumn.id, focusBulkValue);
+                            }
                           });
                           setTemporaryScores(newScores);
                           setFocusBulkValue("");
