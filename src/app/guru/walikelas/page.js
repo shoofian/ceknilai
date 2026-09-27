@@ -347,7 +347,7 @@ export default function WaliKelasDashboard() {
     });
 
     return { highRisk, mediumRisk, safeCount };
-  })();
+  }, [siswa, mataPelajaranList]);
 
   const downloadLegerCSV = async () => {
     if (siswa.length === 0) return;
