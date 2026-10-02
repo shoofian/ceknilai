@@ -21,7 +21,6 @@ function StudentPortalContent() {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
-  const [expandedGroups, setExpandedGroups] = useState({});
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
