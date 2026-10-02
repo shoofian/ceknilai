@@ -20,6 +20,8 @@ function StudentPortalContent() {
   const [isPresensiOpen, setIsPresensiOpen] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState({});
+  const [expandedGroups, setExpandedGroups] = useState({});
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -1011,14 +1013,21 @@ function StudentPortalContent() {
                             </tr>
                           </thead>
                           <tbody>
-                            {res.detailNilai.map((col) => (
-                              <>
+                            {res.detailNilai.map((col) => {
+                              const isExpanded = expandedGroups[col.kolomId];
+                              return (
+                              <Fragment key={col.kolomId}>
                                 {/* Baris komponen utama / grup */}
-                                <tr key={col.kolomId} style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: "none" } : col.isPresensi ? { backgroundColor: "rgba(16,185,129,0.06)" } : {}}>
+                                <tr style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: isExpanded ? "none" : "1px solid var(--border-color)", cursor: "pointer", transition: "background-color 0.2s" } : col.isPresensi ? { backgroundColor: "rgba(16,185,129,0.06)" } : {}} onClick={() => { if(col.isGroup) setExpandedGroups(prev => ({...prev, [col.kolomId]: !prev[col.kolomId]})) }}>
                                   <td style={{ fontWeight: col.isGroup ? "800" : "600" }}>
                                     {col.isGroup && <span style={{ fontSize: "0.7rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid var(--primary)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>GRUP</span>}
                                     {col.isPresensi && <span style={{ fontSize: "0.7rem", backgroundColor: "rgba(16,185,129,0.1)", color: "var(--success)", border: "1px solid var(--success)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>📅 PRESENSI</span>}
                                     {col.namaKolom}
+                                    {col.isGroup && (
+                                      <span style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease", display: "inline-block", color: "var(--text-muted)", fontSize: "0.8rem", float: "right", marginTop: "2px" }}>
+                                        ▼
+                                      </span>
+                                    )}
                                   </td>
                                   <td>{col.bobot}%</td>
                                   <td style={{
@@ -1050,8 +1059,8 @@ function StudentPortalContent() {
                                 </tr>
 
                                 {/* Baris sub-komponen (indent, hanya jika isGroup) */}
-                                {col.isGroup && col.subDetail?.map((sub) => (
-                                  <tr key={sub.subId} style={{ backgroundColor: "var(--bg-secondary)", opacity: 0.9 }}>
+                                {col.isGroup && isExpanded && col.subDetail?.map((sub) => (
+                                  <tr key={sub.subId} style={{ backgroundColor: "var(--bg-secondary)", opacity: 0.9, transition: "all 0.3s ease" }} className="animate-fade-in">
                                     <td style={{ paddingLeft: "2.5rem", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", borderLeft: "3px solid var(--primary)" }}>
                                       ↳ {sub.nama}
                                     </td>
@@ -1079,8 +1088,9 @@ function StudentPortalContent() {
                                     </td>
                                   </tr>
                                 ))}
-                              </>
-                            ))}
+                              </Fragment>
+                            );
+                            })}
                           </tbody>
                         </table>
                       </div>
