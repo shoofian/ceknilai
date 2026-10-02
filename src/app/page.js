@@ -1058,17 +1058,28 @@ function StudentPortalContent() {
                                 </tr>
 
                                 {/* Baris sub-komponen (indent, hanya jika isGroup) */}
-                                {col.isGroup && isExpanded && col.subDetail?.map((sub) => (
-                                  <tr key={sub.subId} style={{ backgroundColor: "var(--bg-secondary)", opacity: 0.9, transition: "all 0.3s ease" }} className="animate-fade-in">
-                                    <td style={{ paddingLeft: "2.5rem", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", borderLeft: "3px solid var(--primary)" }}>
-                                      ↳ {sub.nama}
+                                {col.isGroup && isExpanded && col.subDetail?.map((sub, idx) => {
+                                  const isLast = idx === col.subDetail.length - 1;
+                                  return (
+                                  <tr key={sub.subId} style={{ backgroundColor: "rgba(59,130,246,0.015)", transition: "all 0.3s ease" }} className="animate-fade-in">
+                                    <td style={{ position: "relative", paddingLeft: "3.2rem", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
+                                      {/* Garis vertikal pohon */}
+                                      <div style={{ position: "absolute", left: "1.5rem", top: "-1px", bottom: isLast ? "50%" : "-1px", borderLeft: "2px solid rgba(59,130,246,0.3)" }}></div>
+                                      {/* Garis horizontal pohon */}
+                                      <div style={{ position: "absolute", left: "1.5rem", top: "50%", width: "1rem", borderTop: "2px solid rgba(59,130,246,0.3)" }}></div>
+                                      
+                                      {/* Ikon dot kecil */}
+                                      <div style={{ position: "absolute", left: "2.3rem", top: "50%", transform: "translateY(-50%)", width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", opacity: 0.8 }}></div>
+
+                                      <span style={{ position: "relative", zIndex: 1 }}>{sub.nama}</span>
                                     </td>
-                                    <td style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
-                                      {sub.bobot != null ? `${sub.bobot}%` : "—"}
+                                    <td style={{ fontSize: "0.82rem", color: "var(--text-muted)", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
+                                      {sub.bobot != null ? <span style={{ backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px" }}>{sub.bobot}%</span> : "—"}
                                     </td>
                                     <td style={{
-                                      fontWeight: "700",
-                                      fontSize: "0.88rem",
+                                      fontWeight: "800",
+                                      fontSize: "0.9rem",
+                                      borderBottom: isLast ? "1px solid var(--border-color)" : "none",
                                       color: sub.isMayoritasSudah
                                         ? "var(--warning, #d97706)"
                                         : sub.nilaiAsli === null
@@ -1078,15 +1089,15 @@ function StudentPortalContent() {
                                             : "var(--danger)"
                                     }}>
                                       {sub.isMayoritasSudah ? (
-                                        <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk sub-komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                          Kosong (Mayoritas Kelas Sudah Dinilai) ⚠️
+                                        <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk sub-komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: "600" }}>
+                                          Kosong ⚠️
                                         </span>
                                       ) : (
-                                        sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli
+                                        sub.nilaiAsli === null ? <span style={{ fontSize: "0.8rem", fontWeight: "600" }}>Belum Diisi</span> : sub.nilaiAsli
                                       )}
                                     </td>
                                   </tr>
-                                ))}
+                                )})}
                               </Fragment>
                             );
                             })}
