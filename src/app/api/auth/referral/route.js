@@ -42,7 +42,7 @@ export async function GET() {
     // Check if there is any pending payment confirmation
     const { data: pendingPayments } = await supabase
       .from('log_aktivitas_guru')
-      .select('id')
+      .select('id, detail')
       .eq('guru_username', username)
       .eq('aksi', 'PAYMENT_PENDING')
       .limit(1);
@@ -51,6 +51,7 @@ export async function GET() {
 
     let balance = 0;
     const history = [];
+    let usedReferralCode = null;
 
     if (logs && logs.length > 0) {
       for (const log of logs) {
@@ -66,7 +67,24 @@ export async function GET() {
             });
           }
         }
+        
+        // Extract used referral code from approved payment logs
+        if (log.aksi === 'REFERRAL_POINTS' && log.detail.includes('menggunakan kode @')) {
+          const match = log.detail.match(/menggunakan kode @([a-z0-9_]+)/i);
+          if (match) {
+            usedReferralCode = match[1];
+          }
+        }
       }
+    }
+
+    // If not found in approved logs, check pending payments
+    if (!usedReferralCode && hasPendingPayment) {
+       const detail = pendingPayments[0].detail || '';
+       const referralMatch = detail.match(/REFERRAL:([a-z0-9_]+)/i);
+       if (referralMatch) {
+         usedReferralCode = referralMatch[1];
+       }
     }
 
     // Sort history descending for UI display (latest points log first)
@@ -81,6 +99,7 @@ export async function GET() {
       history,
       isFirstPaymentClaimed,
       referralCode: username,
+      usedReferralCode,
       premiumUntil: guru.premium_until || null,
       hasPendingPayment
     });

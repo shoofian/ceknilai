@@ -45,6 +45,9 @@ export default function MasaAktifPage() {
       if (res.ok) {
         const json = await res.json();
         setData(json);
+        if (json.usedReferralCode) {
+          setReferralInput(json.usedReferralCode);
+        }
       } else {
         const errJson = await res.json();
         setError(errJson.error || 'Gagal memuat data');
@@ -644,8 +647,8 @@ export default function MasaAktifPage() {
               <div className="form-group" style={{ marginBottom: 0 }}>
                 <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}>
                   <span>Kode Referral Guru <span style={{ color: 'var(--text-muted)' }}>(Opsional)</span></span>
-                  {data.isFirstPaymentClaimed && (
-                    <span style={{ fontSize: '0.7rem', color: 'var(--warning)', fontWeight: 'bold' }}>⚠️ Sudah diklaim</span>
+                  {data.usedReferralCode && (
+                    <span style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 'bold' }}>✓ Sudah Terdaftar</span>
                   )}
                 </label>
                 <input
@@ -654,7 +657,7 @@ export default function MasaAktifPage() {
                   placeholder="Username guru perekomendasi"
                   value={referralInput}
                   onChange={(e) => setReferralInput(e.target.value)}
-                  disabled={data.isFirstPaymentClaimed}
+                  disabled={!!data.usedReferralCode}
                 />
               </div>
 
