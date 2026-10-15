@@ -2317,3 +2317,9 @@ html.dark[data-theme="bw"] .btn-theme-gradient {
   .theme-card-btn-group button { padding: 4px !important; font-size: 0.55rem !important; }
   .theme-card-btn-single { padding: 4px !important; font-size: 0.55rem !important; }
 }
+
+@keyframes radialPop {
+  0% { opacity: 0; transform: scale(0.6); }
+  75% { transform: scale(1.08); }
+  100% { opacity: 1; transform: scale(1); }
+}

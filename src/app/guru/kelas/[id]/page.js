@@ -51,6 +51,9 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const iframeRef = useRef(null);
   const lastClickRef = useRef({});
+  const [presensiRadial, setPresensiRadial] = useState(null);
+  const [radialHoverStatus, setRadialHoverStatus] = useState(null);
+  const touchTimerRef = useRef(null);
   
   // States untuk Siswa
   const [siswaModalOpen, setSiswaModalOpen] = useState(false);
@@ -1520,6 +1523,112 @@ function DetailKelasContent({ params: paramsPromise }) {
       await alertAsync("Beberapa data presensi gagal disimpan ke server. Silakan muat ulang halaman.");
     }
   };
+
+  const handleApplyPresensi = (studentNisn, pertemuanId, nextStatus) => {
+    setKelas(prev => {
+      if (!prev || !prev.siswa) return prev;
+      return {
+        ...prev,
+        siswa: prev.siswa.map(s => {
+          if (s.nisn === studentNisn) {
+            return {
+              ...s,
+              nilai: {
+                ...s.nilai,
+                [`_presensi_${pertemuanId}`]: nextStatus === "" ? null : nextStatus
+              }
+            };
+          }
+          return s;
+        })
+      };
+    });
+    handleSaveScore(studentNisn, `_presensi_${pertemuanId}`, nextStatus);
+    setPresensiRadial(null);
+    setRadialHoverStatus(null);
+  };
+
+  const openRadialMenu = (targetEl, studentNisn, studentNama, pertemuanId, currentVal) => {
+    if (!targetEl) return;
+    const rect = targetEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    setPresensiRadial({
+      nisn: studentNisn,
+      nama: studentNama,
+      pertemuanId,
+      currentVal: currentVal || "",
+      x: cx,
+      y: cy
+    });
+    setRadialHoverStatus(null);
+  };
+
+  const handlePresensiCellClick = (e, studentNisn, studentNama, pertemuanId, currentVal, isUnlocked) => {
+    if (!isUnlocked) {
+      const cellKey = `${studentNisn}-${pertemuanId}`;
+      const now = Date.now();
+      const lastClick = lastClickRef.current[cellKey] || 0;
+      lastClickRef.current[cellKey] = now;
+      if (now - lastClick < 500) {
+        triggerAlert("Kolom presensi ini masih terkunci. Silakan klik tombol gembok (🔓 Buka) di bagian atas atau bawah kolom terlebih dahulu untuk dapat mengubah data presensi.", null, { title: "🔒 Kolom Terkunci" });
+      }
+      return;
+    }
+
+    e.currentTarget?.blur();
+
+    // Model Hybrid B + C:
+    // Jika belum diisi (masih kosong): 1x klik langsung Hadir (H)
+    if (!currentVal) {
+      handleApplyPresensi(studentNisn, pertemuanId, "H");
+      return;
+    }
+
+    // Jika sudah ada status: klik membuka menu radial speed-dial
+    openRadialMenu(e.currentTarget, studentNisn, studentNama, pertemuanId, currentVal);
+  };
+
+  const handlePresensiContextMenu = (e, studentNisn, studentNama, pertemuanId, currentVal, isUnlocked) => {
+    e.preventDefault();
+    if (!isUnlocked) return;
+    e.currentTarget?.blur();
+    openRadialMenu(e.currentTarget, studentNisn, studentNama, pertemuanId, currentVal);
+  };
+
+  // Keyboard shortcut ketika radial speed-dial presensi sedang terbuka
+  useEffect(() => {
+    if (!presensiRadial) return;
+    const handleKeyDown = (e) => {
+      if (e.target && ['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      const key = e.key.toLowerCase();
+      if (key === 'h') {
+        e.preventDefault();
+        handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, "H");
+      } else if (key === 'i') {
+        e.preventDefault();
+        handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, "I");
+      } else if (key === 's') {
+        e.preventDefault();
+        handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, "S");
+      } else if (key === 'a') {
+        e.preventDefault();
+        handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, "A");
+      } else if (key === 'd') {
+        e.preventDefault();
+        handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, "D");
+      } else if (key === 'x' || key === 'delete' || key === 'backspace') {
+        e.preventDefault();
+        handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, "");
+      } else if (key === 'escape') {
+        e.preventDefault();
+        setPresensiRadial(null);
+        setRadialHoverStatus(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [presensiRadial]);
 
   const handleOpenEditSiswa = (siswa) => {
     setIsEditingSiswa(true);
@@ -4281,26 +4390,28 @@ function DetailKelasContent({ params: paramsPromise }) {
                           transition: "opacity 0.2s ease"
                         }}>
                           <button 
-                            onClick={() => {
-                              if (!isUnlocked) {
-                                const cellKey = `${siswa.nisn}-${p.id}`;
-                                const now = Date.now();
-                                const lastClick = lastClickRef.current[cellKey] || 0;
-                                lastClickRef.current[cellKey] = now;
-                                if (now - lastClick < 500) {
-                                  triggerAlert("Kolom presensi ini masih terkunci. Silakan klik tombol gembok (🔓 Buka) di bagian atas atau bawah kolom terlebih dahulu untuk dapat mengubah data presensi.", null, { title: "🔒 Kolom Terkunci" });
-                                }
-                                return;
-                              }
-                              const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
-                              const newSiswa = [...kelas.siswa];
-                              newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
-                              setKelas({ ...kelas, siswa: newSiswa });
-                              
-                              // Trigger auto save reusing handleSaveScore logic
-                              handleSaveScore(siswa.nisn, `_presensi_${p.id}`, nextVal);
+                            onClick={(e) => handlePresensiCellClick(e, siswa.nisn, siswa.nama, p.id, val, isUnlocked)}
+                            onContextMenu={(e) => handlePresensiContextMenu(e, siswa.nisn, siswa.nama, p.id, val, isUnlocked)}
+                            onTouchStart={(e) => {
+                              if (!isUnlocked) return;
+                              const targetEl = e.currentTarget;
+                              touchTimerRef.current = setTimeout(() => {
+                                openRadialMenu(targetEl, siswa.nisn, siswa.nama, p.id, val);
+                              }, 450);
                             }}
-                            title={!isUnlocked ? "Kolom terkunci. Klik ikon gembok di atas/bawah kolom untuk mengedit." : "Klik untuk mengubah status kehadiran (H -> I -> S -> A -> D -> kosong)"}
+                            onTouchEnd={() => {
+                              if (touchTimerRef.current) {
+                                clearTimeout(touchTimerRef.current);
+                                touchTimerRef.current = null;
+                              }
+                            }}
+                            onTouchMove={() => {
+                              if (touchTimerRef.current) {
+                                clearTimeout(touchTimerRef.current);
+                                touchTimerRef.current = null;
+                              }
+                            }}
+                            title={!isUnlocked ? "Kolom terkunci. Klik ikon gembok di atas/bawah kolom untuk mengedit." : "Klik 1x untuk Hadir (H). Klik lagi / klik kanan / tahan untuk membuka pilihan kehadiran (H/I/S/A/D/Reset)"}
                             style={{
                               width: "42px", 
                               height: "42px", 
@@ -4313,9 +4424,21 @@ function DetailKelasContent({ params: paramsPromise }) {
                               border: val !== "" ? "none" : (isUnlocked ? "1.5px dashed var(--primary)" : "1px dashed var(--border-color)"),
                               boxShadow: val !== "" ? "0 2px 6px rgba(0,0,0,0.18)" : "none",
                               transition: "all 0.2s ease",
-                              opacity: !isUnlocked && val === "" ? 0.4 : 1
+                              opacity: !isUnlocked && val === "" ? 0.4 : 1,
+                              position: "relative"
                             }}>
                             {val || (isUnlocked ? "+" : "-")}
+                            {isUnlocked && val !== "" && (
+                              <span style={{
+                                position: "absolute",
+                                top: "3px",
+                                right: "4px",
+                                width: "5px",
+                                height: "5px",
+                                borderRadius: "50%",
+                                backgroundColor: "rgba(255, 255, 255, 0.75)"
+                              }} />
+                            )}
                           </button>
                         </td>
                       )
@@ -9978,14 +10101,32 @@ function DetailKelasContent({ params: paramsPromise }) {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (!isUnlocked) return;
-                              const nextVal = val === "" ? "H" : val === "H" ? "I" : val === "I" ? "S" : val === "S" ? "A" : val === "A" ? "D" : "";
-                              const newSiswa = [...kelas.siswa];
-                              const sIdx = newSiswa.findIndex(s => s.nisn === student.nisn);
-                              newSiswa[sIdx].nilai[`_presensi_${p.id}`] = nextVal;
-                              setKelas({ ...kelas, siswa: newSiswa });
-                              handleSaveScore(student.nisn, `_presensi_${p.id}`, nextVal);
+                              handlePresensiCellClick(e, student.nisn, student.nama, p.id, val, isUnlocked);
                             }}
+                            onContextMenu={(e) => {
+                              e.stopPropagation();
+                              handlePresensiContextMenu(e, student.nisn, student.nama, p.id, val, isUnlocked);
+                            }}
+                            onTouchStart={(e) => {
+                              if (!isUnlocked) return;
+                              const targetEl = e.currentTarget;
+                              touchTimerRef.current = setTimeout(() => {
+                                openRadialMenu(targetEl, student.nisn, student.nama, p.id, val);
+                              }, 450);
+                            }}
+                            onTouchEnd={() => {
+                              if (touchTimerRef.current) {
+                                clearTimeout(touchTimerRef.current);
+                                touchTimerRef.current = null;
+                              }
+                            }}
+                            onTouchMove={() => {
+                              if (touchTimerRef.current) {
+                                clearTimeout(touchTimerRef.current);
+                                touchTimerRef.current = null;
+                              }
+                            }}
+                            title={!isUnlocked ? "Kolom terkunci." : "Klik 1x untuk Hadir (H). Klik lagi / klik kanan / tahan untuk buka pilihan status lengkap."}
                             style={{
                               width: "50px", height: "50px", borderRadius: "12px", fontWeight: "800",
                               cursor: !isUnlocked ? "not-allowed" : "pointer",
@@ -9994,10 +10135,22 @@ function DetailKelasContent({ params: paramsPromise }) {
                               color: val !== "" ? "#ffffff" : (isUnlocked ? "var(--primary)" : "var(--text-muted)"),
                               border: val !== "" ? "none" : (isUnlocked ? "1.5px dashed var(--primary)" : "1px dashed var(--border-color)"),
                               margin: "0 auto",
-                              display: "block"
+                              display: "block",
+                              position: "relative"
                             }}
                           >
                             {val || (isUnlocked ? "+" : "-")}
+                            {isUnlocked && val !== "" && (
+                              <span style={{ 
+                                position: "absolute", 
+                                top: "4px", 
+                                right: "5px", 
+                                width: "6px", 
+                                height: "6px", 
+                                borderRadius: "50%", 
+                                backgroundColor: "rgba(255, 255, 255, 0.75)" 
+                              }} />
+                            )}
                           </button>
                         </td>
                       </tr>
@@ -10073,6 +10226,182 @@ function DetailKelasContent({ params: paramsPromise }) {
           </div>
         </div>
       )}
+
+      {/* RADIAL SPEED-DIAL PRESENSI OVERLAY */}
+      {presensiRadial && (() => {
+        const padding = 85;
+        const clampedX = Math.max(padding, Math.min(typeof window !== "undefined" ? window.innerWidth - padding : 400, presensiRadial.x));
+        const clampedY = Math.max(padding, Math.min(typeof window !== "undefined" ? window.innerHeight - padding : 400, presensiRadial.y));
+        const R = 64;
+
+        const RADIAL_OPTIONS = [
+          { val: "H", label: "Hadir", keyHint: "H", bg: "#10b981", angle: -90 },
+          { val: "I", label: "Izin", keyHint: "I", bg: "#f59e0b", angle: -30 },
+          { val: "S", label: "Sakit", keyHint: "S", bg: "#3b82f6", angle: 30 },
+          { val: "", label: "Kosongkan", keyHint: "Del/X", bg: "#64748b", angle: 90, icon: "✕" },
+          { val: "A", label: "Alpha", keyHint: "A", bg: "#ef4444", angle: 150 },
+          { val: "D", label: "Dispensasi", keyHint: "D", bg: "#8b5cf6", angle: 210 },
+        ];
+
+        return (
+          <div 
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 99998,
+              backgroundColor: "rgba(15, 23, 42, 0.4)",
+              backdropFilter: "blur(3px)",
+              WebkitBackdropFilter: "blur(3px)",
+              animation: "fadeIn 0.15s ease-out"
+            }}
+            onClick={() => {
+              setPresensiRadial(null);
+              setRadialHoverStatus(null);
+            }}
+          >
+            {/* Container Radial Center */}
+            <div 
+              style={{
+                position: "fixed",
+                left: clampedX,
+                top: clampedY,
+                width: 0,
+                height: 0,
+                zIndex: 99999
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Lingkaran / Badge Pusat */}
+              <div
+                title="Klik untuk menutup"
+                onClick={() => {
+                  setPresensiRadial(null);
+                  setRadialHoverStatus(null);
+                }}
+                style={{
+                  position: "absolute",
+                  left: -23,
+                  top: -23,
+                  width: 46,
+                  height: 46,
+                  borderRadius: "50%",
+                  backgroundColor: "var(--bg-primary)",
+                  border: "2px solid rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 10px 25px rgba(0,0,0,0.45)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontWeight: "800",
+                  fontSize: "1.1rem",
+                  color: presensiRadial.currentVal === 'H' ? "#10b981" :
+                         presensiRadial.currentVal === 'I' ? "#f59e0b" :
+                         presensiRadial.currentVal === 'S' ? "#3b82f6" :
+                         presensiRadial.currentVal === 'A' ? "#ef4444" :
+                         presensiRadial.currentVal === 'D' ? "#8b5cf6" : "var(--text-muted)",
+                  animation: "radialPop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                }}
+              >
+                {presensiRadial.currentVal || "-"}
+              </div>
+
+              {/* Tombol-tombol Opsi Memancar (Radial) */}
+              {RADIAL_OPTIONS.map((opt) => {
+                const rad = (opt.angle * Math.PI) / 180;
+                const x = R * Math.cos(rad);
+                const y = R * Math.sin(rad);
+                const isSelected = presensiRadial.currentVal === opt.val;
+
+                return (
+                  <button
+                    key={opt.label}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleApplyPresensi(presensiRadial.nisn, presensiRadial.pertemuanId, opt.val);
+                    }}
+                    onMouseEnter={() => setRadialHoverStatus(opt)}
+                    onMouseLeave={() => setRadialHoverStatus(null)}
+                    title={`${opt.label} (Tekan ${opt.keyHint})`}
+                    style={{
+                      position: "absolute",
+                      left: x - 21,
+                      top: y - 21,
+                      width: 42,
+                      height: 42,
+                      borderRadius: "50%",
+                      backgroundColor: opt.bg,
+                      color: "#ffffff",
+                      border: isSelected ? "3px solid #ffffff" : "2px solid rgba(255, 255, 255, 0.25)",
+                      boxShadow: isSelected 
+                        ? "0 0 0 2px " + opt.bg + ", 0 8px 16px rgba(0,0,0,0.35)" 
+                        : "0 4px 12px rgba(0,0,0,0.25)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "800",
+                      fontSize: opt.icon ? "1rem" : "1.05rem",
+                      cursor: "pointer",
+                      transform: isSelected ? "scale(1.12)" : "scale(1)",
+                      transition: "all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                      animation: "radialPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1)"
+                    }}
+                  >
+                    {opt.icon || opt.val}
+                  </button>
+                );
+              })}
+
+              {/* Info Pill di bawah / atas radial cluster */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: clampedY + 105 > (typeof window !== "undefined" ? window.innerHeight : 600) ? -115 : 98,
+                  transform: "translateX(-50%)",
+                  backgroundColor: "rgba(15, 23, 42, 0.95)",
+                  border: "1px solid rgba(255, 255, 255, 0.15)",
+                  borderRadius: "20px",
+                  padding: "6px 14px",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  whiteSpace: "nowrap",
+                  pointerEvents: "none",
+                  animation: "fadeIn 0.15s ease-out"
+                }}
+              >
+                {radialHoverStatus ? (
+                  <>
+                    <span style={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: "50%", 
+                      backgroundColor: radialHoverStatus.bg 
+                    }} />
+                    <span style={{ color: "#ffffff", fontWeight: "700", fontSize: "0.82rem" }}>
+                      {radialHoverStatus.label}
+                    </span>
+                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.72rem", background: "rgba(255,255,255,0.12)", padding: "1px 6px", borderRadius: "4px" }}>
+                      {radialHoverStatus.keyHint}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ color: "#ffffff", fontWeight: "600", fontSize: "0.8rem" }}>
+                      {presensiRadial.nama ? presensiRadial.nama.split(" ")[0] : "Siswa"}
+                    </span>
+                    <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.72rem" }}>
+                      • Tekan H/I/S/A/D/X
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
