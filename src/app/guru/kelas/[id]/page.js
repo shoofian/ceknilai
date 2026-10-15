@@ -4623,7 +4623,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                       {kelas.kolomNilai.map(col => {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
-                            <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", borderLeft: "2px solid var(--primary)", paddingBottom: "4px" }}>
+                            <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", borderLeft: "2px solid var(--border-focus)", paddingBottom: "4px" }}>
 
                               {col.nama} ({col.bobot}%)
                             </th>
@@ -4634,7 +4634,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                             key={col.id} 
                             rowSpan={hasGroups ? 2 : 1} 
                             onClick={() => { setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
-                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", borderLeft: "2px solid var(--primary)" }}
+                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", borderLeft: "2px solid var(--border-focus)" }}
                             title="Klik untuk masuk ke Mode Fokus"
                           >
                             {true && (
@@ -4711,7 +4711,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                               <th 
                                 key={sub.id} 
                                 onClick={() => { setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
-                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: "pointer", borderLeft: subIdx === 0 ? "2px solid var(--primary)" : undefined }}
+                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: "pointer", borderLeft: subIdx === 0 ? "2px solid var(--border-focus)" : undefined }}
                                 title="Klik untuk masuk ke Mode Fokus"
                               >
                                 {true && (
@@ -4779,7 +4779,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                             const isFirstInGroup = subIdx === 0;
 
                             return (
-                              <td data-label={sub.nama || col.nama} key={sub.id} style={{ textAlign: "center", position: "relative", borderLeft: isFirstInGroup ? "2px solid var(--primary)" : undefined }}>
+                              <td data-label={sub.nama || col.nama} key={sub.id} style={{ textAlign: "center", position: "relative", borderLeft: isFirstInGroup ? "2px solid var(--border-focus)" : undefined }}>
                                 <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
                                   {sub.isPresensi ? (
                                     <div 
