@@ -10227,8 +10227,8 @@ function DetailKelasContent({ params: paramsPromise }) {
         </div>
       )}
 
-      {/* RADIAL SPEED-DIAL PRESENSI OVERLAY */}
-      {presensiRadial && (() => {
+      {/* RADIAL SPEED-DIAL PRESENSI OVERLAY (Portaled to document.body so it floats above all modals including Mode Fokus) */}
+      {presensiRadial && typeof document !== "undefined" && createPortal((() => {
         const padding = 85;
         const clampedX = Math.max(padding, Math.min(typeof window !== "undefined" ? window.innerWidth - padding : 400, presensiRadial.x));
         const clampedY = Math.max(padding, Math.min(typeof window !== "undefined" ? window.innerHeight - padding : 400, presensiRadial.y));
@@ -10248,7 +10248,7 @@ function DetailKelasContent({ params: paramsPromise }) {
             style={{
               position: "fixed",
               inset: 0,
-              zIndex: 99998,
+              zIndex: 200000,
               backgroundColor: "rgba(15, 23, 42, 0.4)",
               backdropFilter: "blur(3px)",
               WebkitBackdropFilter: "blur(3px)",
@@ -10267,7 +10267,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 top: clampedY,
                 width: 0,
                 height: 0,
-                zIndex: 99999
+                zIndex: 200001
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -10401,7 +10401,7 @@ function DetailKelasContent({ params: paramsPromise }) {
             </div>
           </div>
         );
-      })()}
+      })(), document.body)}
     </>
   );
 }
