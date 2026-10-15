@@ -1754,15 +1754,35 @@ function DetailKelasContent({ params: paramsPromise }) {
   };
 
   const handleMoveNewAspect = (index, direction) => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newAspects.length) return;
-    
-    const newAspectsCopy = [...newAspects];
-    const temp = newAspectsCopy[index];
-    newAspectsCopy[index] = newAspectsCopy[targetIndex];
-    newAspectsCopy[targetIndex] = temp;
-    
-    setNewAspects(newAspectsCopy);
+    if (direction === 'up') {
+      if (index > 0) {
+        // Swap within newAspects
+        const newAspectsCopy = [...newAspects];
+        const temp = newAspectsCopy[index];
+        newAspectsCopy[index] = newAspectsCopy[index - 1];
+        newAspectsCopy[index - 1] = temp;
+        setNewAspects(newAspectsCopy);
+      } else if (kelas?.kolomNilai?.length > 0) {
+        // Move first new aspect up into existing kolomNilai (append to end of existing)
+        const aspectToMove = newAspects[0];
+        const updatedKolom = [...kelas.kolomNilai, aspectToMove];
+        // Remove from newAspects
+        const updatedNew = newAspects.slice(1);
+        setKelas({ ...kelas, kolomNilai: updatedKolom });
+        setNewAspects(updatedNew);
+        setActiveAspectId(aspectToMove.id);
+      }
+    } else {
+      const targetIndex = index + 1;
+      if (targetIndex < newAspects.length) {
+        // Swap within newAspects
+        const newAspectsCopy = [...newAspects];
+        const temp = newAspectsCopy[index];
+        newAspectsCopy[index] = newAspectsCopy[targetIndex];
+        newAspectsCopy[targetIndex] = temp;
+        setNewAspects(newAspectsCopy);
+      }
+    }
   };
 
   const handleAddBlankAspect = () => {
@@ -1913,10 +1933,37 @@ function DetailKelasContent({ params: paramsPromise }) {
         );
         const skippedNames = [];
         const aspectsToAdd = [];
+        let updatedExistingCols = [...kelas.kolomNilai];
 
         sourceClass.kolomNilai.forEach(col => {
           const trimmedName = col.nama.trim();
           if (existingNames.has(trimmedName.toLowerCase())) {
+            const existingColIndex = updatedExistingCols.findIndex(
+              c => c.nama.trim().toLowerCase() === trimmedName.toLowerCase()
+            );
+            if (existingColIndex !== -1) {
+              const existingCol = updatedExistingCols[existingColIndex];
+              if (col.subKolom && col.subKolom.length > 0) {
+                const existingSubNames = new Set(
+                  (existingCol.subKolom || []).map(sub => sub.nama.trim().toLowerCase())
+                );
+                const newSubs = [];
+                col.subKolom.forEach(sub => {
+                  if (!existingSubNames.has(sub.nama.trim().toLowerCase())) {
+                    newSubs.push({
+                      ...sub,
+                      id: `${existingCol.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+                    });
+                  }
+                });
+                if (newSubs.length > 0) {
+                  updatedExistingCols[existingColIndex] = {
+                    ...existingCol,
+                    subKolom: [...(existingCol.subKolom || []), ...newSubs]
+                  };
+                }
+              }
+            }
             skippedNames.push(trimmedName);
           } else {
             const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
@@ -1931,7 +1978,7 @@ function DetailKelasContent({ params: paramsPromise }) {
           }
         });
 
-        const updatedCols = [...kelas.kolomNilai, ...aspectsToAdd];
+        const updatedCols = [...updatedExistingCols, ...aspectsToAdd];
         
         // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
         const originalTargetOrderMap = new Map();
@@ -2067,6 +2114,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                 const existingNames = new Set(
                   (fullTargetClass.kolomNilai || []).map(col => col.nama.trim().toLowerCase())
                 );
+                
+                let updatedExistingCols = [...(fullTargetClass.kolomNilai || [])];
 
                 const aspectsToAdd = [];
                 currentAspects.forEach(col => {
@@ -2083,10 +2132,38 @@ function DetailKelasContent({ params: paramsPromise }) {
                         bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
                       })) : []
                     });
+                  } else {
+                    const existingColIndex = updatedExistingCols.findIndex(
+                      c => c.nama.trim().toLowerCase() === trimmedName.toLowerCase()
+                    );
+                    if (existingColIndex !== -1) {
+                      const existingCol = updatedExistingCols[existingColIndex];
+                      if (col.subKolom && col.subKolom.length > 0) {
+                        const existingSubNames = new Set(
+                          (existingCol.subKolom || []).map(sub => sub.nama.trim().toLowerCase())
+                        );
+                        const newSubs = [];
+                        col.subKolom.forEach((sub, i) => {
+                          if (!existingSubNames.has(sub.nama.trim().toLowerCase())) {
+                            newSubs.push({
+                              ...sub,
+                              id: `${existingCol.id}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                              bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+                            });
+                          }
+                        });
+                        if (newSubs.length > 0) {
+                          updatedExistingCols[existingColIndex] = {
+                            ...existingCol,
+                            subKolom: [...(existingCol.subKolom || []), ...newSubs]
+                          };
+                        }
+                      }
+                    }
                   }
                 });
 
-                updatedKolomNilai = [...(fullTargetClass.kolomNilai || []), ...aspectsToAdd];
+                updatedKolomNilai = [...updatedExistingCols, ...aspectsToAdd];
                 
                 // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
                 const originalTargetOrderMap = new Map();
@@ -2347,7 +2424,8 @@ function DetailKelasContent({ params: paramsPromise }) {
     }
 
     if (totalBobot > 100) {
-      await alertAsync(`⚠️ Peringatan: Total bobot persentase saat ini adalah ${totalBobot}%. Agar penghitungan nilai akhir siswa akurat, pastikan totalnya pas 100%.`);
+      await alertAsync(`⚠️ Total bobot persentase saat ini adalah ${totalBobot}%, melebihi 100%. Kurangi bobot komponen yang ada agar totalnya tidak melebihi 100% sebelum menyimpan.`);
+      return;
     }
 
     // Safety check for data loss
@@ -7430,7 +7508,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                           </div>
                           
                           <div style={{ display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto", flexShrink: 0 }}>
-                            {idx > 0 && (
+                            {(idx > 0 || (kelas?.kolomNilai?.length > 0)) && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
