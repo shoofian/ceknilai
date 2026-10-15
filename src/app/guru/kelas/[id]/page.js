@@ -151,7 +151,7 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [activeAspectId, setActiveAspectId] = useState(null);
   const [initialHiddenAspek, setInitialHiddenAspek] = useState([]);
   const [showUnsavedConfirm, setShowUnsavedConfirm] = useState(false);
-  const { triggerConfirm, triggerAlert } = useConfirm();
+  const { triggerConfirm, triggerAlert, confirmAsync, alertAsync, promptAsync } = useConfirm();
   
   // Status penyimpanan otomatis tabel nilai
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
@@ -4623,7 +4623,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                       {kelas.kolomNilai.map(col => {
                         if (col.isGroup && col.subKolom?.length > 0) {
                           return (
-                            <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "4px" }}>
+                            <th key={col.id} colSpan={col.subKolom.length} style={{ position: "relative", textAlign: "center", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", borderLeft: "2px solid var(--primary)", paddingBottom: "4px" }}>
 
                               {col.nama} ({col.bobot}%)
                             </th>
@@ -4634,7 +4634,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                             key={col.id} 
                             rowSpan={hasGroups ? 2 : 1} 
                             onClick={() => { setFocusColumn({ type: 'nilai', id: col.id, nama: col.nama, maxVal: 100 }); }}
-                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer" }}
+                            style={{ position: "relative", textAlign: "center", minWidth: "100px", backgroundColor: "var(--bg-tertiary)", cursor: "pointer", borderLeft: "2px solid var(--primary)" }}
                             title="Klik untuk masuk ke Mode Fokus"
                           >
                             {true && (
@@ -4707,11 +4707,11 @@ function DetailKelasContent({ params: paramsPromise }) {
                       <tr>
                         {kelas.kolomNilai.map(col => {
                           if (col.isGroup && col.subKolom?.length > 0) {
-                            return col.subKolom.map(sub => (
+                            return col.subKolom.map((sub, subIdx) => (
                               <th 
                                 key={sub.id} 
                                 onClick={() => { setFocusColumn({ type: 'nilai', id: sub.id, nama: `${col.nama} - ${sub.nama}`, maxVal: 100 }); }}
-                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: "pointer" }}
+                                style={{ position: "relative", textAlign: "center", minWidth: "80px", backgroundColor: "var(--bg-tertiary)", fontSize: "0.75rem", padding: "6px 8px", color: "var(--text-secondary)", fontWeight: "600", cursor: "pointer", borderLeft: subIdx === 0 ? "2px solid var(--primary)" : undefined }}
                                 title="Klik untuk masuk ke Mode Fokus"
                               >
                                 {true && (
@@ -4773,12 +4773,13 @@ function DetailKelasContent({ params: paramsPromise }) {
                         {kelas.kolomNilai.map(col => {
                           const colsToRender = col.isGroup && col.subKolom?.length > 0 ? col.subKolom : [col];
                           
-                          return colsToRender.map(sub => {
+                          return colsToRender.map((sub, subIdx) => {
                             const cellKey = `${student.nisn}-${sub.id}`;
                             const currentStatus = saveStatus[cellKey] || "idle";
+                            const isFirstInGroup = subIdx === 0;
 
                             return (
-                              <td data-label={sub.nama || col.nama} key={sub.id} style={{ textAlign: "center", position: "relative" }}>
+                              <td data-label={sub.nama || col.nama} key={sub.id} style={{ textAlign: "center", position: "relative", borderLeft: isFirstInGroup ? "2px solid var(--primary)" : undefined }}>
                                 <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", position: "relative", width: "80px" }}>
                                   {sub.isPresensi ? (
                                     <div 
