@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
             {children}
           </div>
           <footer className="no-print" style={{ textAlign: "center", padding: "16px", color: "var(--text-secondary)", fontSize: "0.85rem", borderTop: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)" }}>
-            Powered by <strong style={{ color: "var(--primary)" }}>Memofy Studio</strong>
+            Powered by <strong style={{ color: "var(--primary)" }}>NIAL</strong>
           </footer>
         </ClientProviders>
       </body>

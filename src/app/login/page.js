@@ -161,7 +161,7 @@ export default function LoginGuru() {
             </h2>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "4px" }}>
               <span>Powered by</span>
-              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>Memofy Studio</span>
+              <span style={{ fontWeight: "700", color: "var(--text-secondary)" }}>NIAL</span>
             </div>
           </div>
 
