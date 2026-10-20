@@ -254,7 +254,13 @@ function DetailKelasContent({ params: paramsPromise }) {
 
   // State untuk profile guru
   const [guruProfile, setGuruProfile] = useState(null);
+  const [sessionUsername, setSessionUsername] = useState("");
   const isLocked = !!(guruProfile && guruProfile.is_locked);
+  const isShoofian = (guruProfile?.username?.toLowerCase() === "shoofian") || (sessionUsername?.toLowerCase() === "shoofian");
+
+  // State untuk Mode Fokus Siswa (Eksklusif username: shoofian)
+  const [focusStudent, setFocusStudent] = useState(null);
+  const [focusStudentTab, setFocusStudentTab] = useState("nilai"); // "nilai" | "presensi"
 
   // State & handler untuk deteksi mobile screen
   const [isMobile, setIsMobile] = useState(false);
@@ -790,6 +796,108 @@ function DetailKelasContent({ params: paramsPromise }) {
     return mapped;
   }, [kelas?.siswa, kelas?.kolomNilai, temporaryScores, sortConfig]);
 
+  // === MODE FOKUS SISWA (Eksklusif username: shoofian) ===
+  const handleOpenFocusStudent = useCallback((student, preferredTab = null) => {
+    if (!isShoofian) return;
+    setFocusStudent(student);
+    if (preferredTab) {
+      setFocusStudentTab(preferredTab);
+    } else if (activeTab === "presensi") {
+      setFocusStudentTab("presensi");
+    } else {
+      setFocusStudentTab("nilai");
+    }
+  }, [isShoofian, activeTab]);
+
+  const currentFocusStudentIndex = useMemo(() => {
+    if (!focusStudent || !sortedStudents) return -1;
+    return sortedStudents.findIndex(s => s.nisn === focusStudent.nisn);
+  }, [focusStudent, sortedStudents]);
+
+  const currentFocusStudent = useMemo(() => {
+    if (currentFocusStudentIndex === -1) return focusStudent;
+    return sortedStudents[currentFocusStudentIndex];
+  }, [currentFocusStudentIndex, sortedStudents, focusStudent]);
+
+  const handlePrevFocusStudent = useCallback(() => {
+    if (currentFocusStudentIndex > 0) {
+      setFocusStudent(sortedStudents[currentFocusStudentIndex - 1]);
+    }
+  }, [currentFocusStudentIndex, sortedStudents]);
+
+  const handleNextFocusStudent = useCallback(() => {
+    if (currentFocusStudentIndex < sortedStudents.length - 1) {
+      setFocusStudent(sortedStudents[currentFocusStudentIndex + 1]);
+    }
+  }, [currentFocusStudentIndex, sortedStudents]);
+
+  const flatGradeComponents = useMemo(() => {
+    if (!kelas?.kolomNilai) return [];
+    const list = [];
+    kelas.kolomNilai.forEach(col => {
+      if (col.isGroup && col.subKolom?.length > 0) {
+        col.subKolom.forEach(sub => {
+          list.push({
+            ...sub,
+            parentGroup: col,
+            isSub: true,
+            groupName: col.nama,
+            fullName: `${col.nama} - ${sub.nama}`
+          });
+        });
+      } else {
+        list.push({
+          ...col,
+          parentGroup: null,
+          isSub: false,
+          fullName: col.nama
+        });
+      }
+    });
+    return list;
+  }, [kelas?.kolomNilai]);
+
+  const focusPresensiStats = useMemo(() => {
+    if (!currentFocusStudent || !kelas?.skemaPenilaian?.pertemuan) {
+      return { H: 0, I: 0, S: 0, A: 0, D: 0, totalPertemuan: 0, totalTerisi: 0, pct: 0 };
+    }
+    const pList = kelas.skemaPenilaian.pertemuan;
+    let H = 0, I = 0, S = 0, A = 0, D = 0;
+    pList.forEach(p => {
+      const val = currentFocusStudent.nilai?.[`_presensi_${p.id}`];
+      if (val === 'H') H++;
+      else if (val === 'I') I++;
+      else if (val === 'S') S++;
+      else if (val === 'A') A++;
+      else if (val === 'D') D++;
+    });
+    const totalPertemuan = pList.length;
+    const totalTerisi = H + I + S + A + D;
+    const pct = totalPertemuan > 0 ? Math.round((H / totalPertemuan) * 100) : 0;
+    return { H, I, S, A, D, totalPertemuan, totalTerisi, pct };
+  }, [currentFocusStudent, kelas?.skemaPenilaian?.pertemuan]);
+
+  useEffect(() => {
+    if (!focusStudent || !isShoofian) return;
+    const handleKeyNav = (e) => {
+      if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        return;
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevFocusStudent();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleNextFocusStudent();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setFocusStudent(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyNav);
+    return () => window.removeEventListener("keydown", handleKeyNav);
+  }, [focusStudent, isShoofian, handlePrevFocusStudent, handleNextFocusStudent]);
+
   // === COMPUTED ANALYTICS & RANKING ===
   const analyticsData = useMemo(() => {
     if (!kelas || !kelas.siswa || kelas.siswa.length === 0 || kelas.kolomNilai.length === 0) return null;
@@ -1035,6 +1143,16 @@ function DetailKelasContent({ params: paramsPromise }) {
         if (!data.error) setGuruProfile(data);
       })
       .catch(err => console.error("Error fetching guru profile:", err));
+
+    // Fetch auth session to verify username
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data.loggedIn && data.user?.username) {
+          setSessionUsername(data.user.username);
+        }
+      })
+      .catch(err => console.error("Error fetching session:", err));
 
     // Fetch classes for transfer dropdown
     fetch("/api/kelas")
@@ -4376,6 +4494,32 @@ function DetailKelasContent({ params: paramsPromise }) {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                         <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, isNamaColumnExpanded)}</span>
+                        {isShoofian && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenFocusStudent(siswa, "presensi");
+                            }}
+                            style={{
+                              background: "rgba(59, 130, 246, 0.12)",
+                              border: "1px solid rgba(59, 130, 246, 0.3)",
+                              borderRadius: "4px",
+                              padding: "2px 5px",
+                              color: "var(--primary)",
+                              cursor: "pointer",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              fontSize: "0.75rem",
+                              lineHeight: 1
+                            }}
+                            title="Mode Fokus Siswa (Khusus shoofian)"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                          </button>
+                        )}
                       </div>
                     </td>
                     {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map(p => {
@@ -4883,6 +5027,32 @@ function DetailKelasContent({ params: paramsPromise }) {
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                             <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
+                            {isShoofian && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFocusStudent(student, "nilai");
+                                }}
+                                style={{
+                                  background: "rgba(59, 130, 246, 0.12)",
+                                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                                  borderRadius: "4px",
+                                  padding: "2px 5px",
+                                  color: "var(--primary)",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0,
+                                  fontSize: "0.75rem",
+                                  lineHeight: 1
+                                }}
+                                title="Mode Fokus Siswa (Khusus shoofian)"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td data-label="NISN" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
@@ -9452,6 +9622,24 @@ function DetailKelasContent({ params: paramsPromise }) {
               <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Aksi: {studentActionModal.student.nama}</h3>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
+              {isShoofian && (
+                <div 
+                  onClick={() => { 
+                    const s = studentActionModal.student;
+                    setStudentActionModal(null); 
+                    handleOpenFocusStudent(s); 
+                  }}
+                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--primary)" }}
+                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <span style={{ display: "flex", alignItems: "center" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                  </span>
+                  Mode Fokus Siswa
+                  <span style={{ marginLeft: "auto", fontSize: "0.68rem", backgroundColor: "rgba(59, 130, 246, 0.15)", color: "var(--primary)", padding: "2px 6px", borderRadius: "10px", fontWeight: "700" }}>PRO</span>
+                </div>
+              )}
               <div 
                 onClick={() => { setStudentActionModal(null); handleOpenHistory(studentActionModal.student); }}
                 style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (studentActionModal.student.nilai && studentActionModal.student.nilai._login_history && studentActionModal.student.nilai._login_history.length > 0) ? 1 : 0.6 }}
@@ -10162,6 +10350,703 @@ function DetailKelasContent({ params: paramsPromise }) {
           </div>
         </div>
       </Modal>
+      )}
+
+      {/* Modal Mode Fokus Siswa (Eksklusif Username: shoofian) */}
+      {focusStudent && isShoofian && currentFocusStudent && (
+        <div 
+          className="animate-fade-in" 
+          onClick={() => setFocusStudent(null)} 
+          style={{ 
+            position: "fixed", 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: "rgba(0,0,0,0.65)", 
+            backdropFilter: "blur(6px)", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            zIndex: 99999, 
+            padding: "16px" 
+          }}
+        >
+          <div 
+            className="glass-card animate-fade-in" 
+            onClick={e => e.stopPropagation()} 
+            style={{ 
+              backgroundColor: "var(--bg-primary)", 
+              maxWidth: "780px", 
+              width: "100%", 
+              padding: 0, 
+              maxHeight: "92vh", 
+              display: "flex", 
+              flexDirection: "column", 
+              overflow: "hidden", 
+              borderRadius: "var(--radius-lg)", 
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.4)", 
+              border: "1px solid var(--border-color)" 
+            }}
+          >
+            {/* Header: Mode Fokus Siswa & Navigasi */}
+            <div 
+              style={{ 
+                padding: "12px 18px", 
+                borderBottom: "1px solid var(--border-color)", 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center", 
+                backgroundColor: "var(--bg-tertiary)", 
+                flexWrap: "wrap",
+                gap: "10px"
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ 
+                  backgroundColor: "rgba(59, 130, 246, 0.15)", 
+                  color: "var(--primary)", 
+                  padding: "4px 8px", 
+                  borderRadius: "6px", 
+                  fontWeight: "800", 
+                  fontSize: "0.75rem",
+                  letterSpacing: "0.5px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "5px"
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                  MODE FOKUS SISWA
+                </span>
+                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>
+                  ({currentFocusStudentIndex + 1} / {sortedStudents.length})
+                </span>
+              </div>
+
+              {/* Navigasi Siswa */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <button
+                  type="button"
+                  onClick={handlePrevFocusStudent}
+                  disabled={currentFocusStudentIndex <= 0}
+                  className="btn btn-secondary"
+                  style={{ 
+                    padding: "4px 10px", 
+                    fontSize: "0.85rem", 
+                    opacity: currentFocusStudentIndex <= 0 ? 0.35 : 1, 
+                    cursor: currentFocusStudentIndex <= 0 ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                  title="Siswa Sebelumnya (Shortcut: [←])"
+                >
+                  ◀ <span className="hide-on-mobile">Sebelumnya</span>
+                </button>
+
+                <select
+                  value={currentFocusStudent.nisn}
+                  onChange={(e) => {
+                    const found = sortedStudents.find(s => s.nisn === e.target.value);
+                    if (found) setFocusStudent(found);
+                  }}
+                  style={{
+                    padding: "5px 10px",
+                    fontSize: "0.85rem",
+                    fontWeight: "600",
+                    borderRadius: "var(--radius-sm)",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-primary)",
+                    color: "var(--text-primary)",
+                    maxWidth: "200px",
+                    cursor: "pointer"
+                  }}
+                  title="Pilih Siswa"
+                >
+                  {sortedStudents.map((s, idx) => (
+                    <option key={s.nisn} value={s.nisn}>
+                      {idx + 1}. {s.nama}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={handleNextFocusStudent}
+                  disabled={currentFocusStudentIndex >= sortedStudents.length - 1}
+                  className="btn btn-secondary"
+                  style={{ 
+                    padding: "4px 10px", 
+                    fontSize: "0.85rem", 
+                    opacity: currentFocusStudentIndex >= sortedStudents.length - 1 ? 0.35 : 1, 
+                    cursor: currentFocusStudentIndex >= sortedStudents.length - 1 ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                  title="Siswa Berikutnya (Shortcut: [→])"
+                >
+                  <span className="hide-on-mobile">Berikutnya</span> ▶
+                </button>
+
+                <button 
+                  onClick={() => setFocusStudent(null)} 
+                  style={{ 
+                    background: "none", 
+                    border: "none", 
+                    fontSize: "1.2rem", 
+                    cursor: "pointer", 
+                    color: "var(--text-muted)",
+                    padding: "4px 8px",
+                    lineHeight: 1,
+                    marginLeft: "4px"
+                  }}
+                  title="Tutup (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Profil Siswa & Ringkasan Performa */}
+            <div style={{ padding: "14px 18px", borderBottom: "1px solid var(--border-color)", backgroundColor: "var(--bg-secondary)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ 
+                    width: "44px", 
+                    height: "44px", 
+                    borderRadius: "50%", 
+                    backgroundColor: "var(--primary)", 
+                    color: "#ffffff", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    fontWeight: "800", 
+                    fontSize: "1.05rem",
+                    boxShadow: "0 4px 10px rgba(59, 130, 246, 0.3)",
+                    flexShrink: 0
+                  }}>
+                    {currentFocusStudent.nama ? currentFocusStudent.nama.trim().substring(0, 2).toUpperCase() : "SW"}
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "700", color: "var(--text-primary)" }}>
+                      {currentFocusStudent.nama}
+                    </h3>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "3px", fontSize: "0.8rem", color: "var(--text-secondary)", flexWrap: "wrap" }}>
+                      <span style={{ fontFamily: "monospace", backgroundColor: "var(--bg-primary)", padding: "1px 6px", borderRadius: "4px", border: "1px solid var(--border-color)" }}>
+                        NISN: {currentFocusStudent.nisn}
+                      </span>
+                      {currentFocusStudent.tanggalLahir && currentFocusStudent.tanggalLahir !== "-" && (
+                        <span>🎂 {currentFocusStudent.tanggalLahir}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stat Badges */}
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  {kelas.isNilaiAkhirGenerated && (
+                    <div style={{ 
+                      padding: "4px 10px", 
+                      borderRadius: "var(--radius-md)", 
+                      backgroundColor: "var(--bg-primary)", 
+                      border: "1px solid var(--border-color)", 
+                      textAlign: "center" 
+                    }}>
+                      <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase" }}>Nilai Akhir</div>
+                      <div style={{ fontSize: "1.05rem", fontWeight: "800", color: currentFocusStudent.finalScore >= (analyticsData?.kkmVal || 75) ? "var(--success)" : "var(--danger)" }}>
+                        {currentFocusStudent.finalScore.toFixed(2)}
+                      </div>
+                    </div>
+                  )}
+
+                  {focusPresensiStats.totalPertemuan > 0 && (
+                    <div style={{ 
+                      padding: "4px 10px", 
+                      borderRadius: "var(--radius-md)", 
+                      backgroundColor: "var(--bg-primary)", 
+                      border: "1px solid var(--border-color)", 
+                      textAlign: "center" 
+                    }}>
+                      <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontWeight: "600", textTransform: "uppercase" }}>Kehadiran</div>
+                      <div style={{ fontSize: "1.05rem", fontWeight: "800", color: focusPresensiStats.pct >= 80 ? "var(--primary)" : "var(--danger)" }}>
+                        {focusPresensiStats.pct}% <span style={{ fontSize: "0.72rem", fontWeight: "600", color: "var(--text-secondary)" }}>({focusPresensiStats.H}/{focusPresensiStats.totalPertemuan})</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {kelas.skemaPenilaian?.enableBonusStars && (
+                    <div style={{ 
+                      padding: "4px 10px", 
+                      borderRadius: "var(--radius-md)", 
+                      backgroundColor: "rgba(245, 158, 11, 0.1)", 
+                      border: "1px solid rgba(245, 158, 11, 0.3)", 
+                      textAlign: "center" 
+                    }}>
+                      <div style={{ fontSize: "0.68rem", color: "#d97706", fontWeight: "700", textTransform: "uppercase" }}>Keaktifan</div>
+                      <div style={{ fontSize: "1.05rem", fontWeight: "800", color: "#d97706" }}>
+                        ⭐ {getStudentTotalStars(currentFocusStudent)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Catatan Siswa jika ada */}
+              {currentFocusStudent.catatan && (
+                <div style={{ marginTop: "10px", padding: "8px 12px", backgroundColor: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.25)", borderRadius: "var(--radius-sm)", fontSize: "0.82rem", color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>📌</span>
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ color: "#d97706" }}>Catatan Guru:</strong> {currentFocusStudent.catatan}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sub-tab Switcher: Nilai vs Presensi */}
+            <div style={{ padding: "8px 18px", borderBottom: "1px solid var(--border-color)", backgroundColor: "var(--bg-primary)", display: "flex", gap: "8px", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={() => setFocusStudentTab("nilai")}
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "0.85rem",
+                  fontWeight: "700",
+                  borderRadius: "20px",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  backgroundColor: focusStudentTab === "nilai" ? "var(--primary)" : "var(--bg-secondary)",
+                  color: focusStudentTab === "nilai" ? "#ffffff" : "var(--text-secondary)",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <span>📝</span> Nilai Akademik ({flatGradeComponents.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFocusStudentTab("presensi")}
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "0.85rem",
+                  fontWeight: "700",
+                  borderRadius: "20px",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  backgroundColor: focusStudentTab === "presensi" ? "var(--primary)" : "var(--bg-secondary)",
+                  color: focusStudentTab === "presensi" ? "#ffffff" : "var(--text-secondary)",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <span>📅</span> Presensi Kehadiran ({kelas.skemaPenilaian?.pertemuan?.length || 0})
+              </button>
+            </div>
+
+            {/* Body Konten Mode Fokus Siswa */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", maxHeight: "56vh" }}>
+              {/* TAB 1: NILAI AKADEMIK */}
+              {focusStudentTab === "nilai" && (
+                <div>
+                  {kelas.kolomNilai.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                      Belum ada komponen penilaian di kelas ini.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                      {(() => {
+                        let globalInputIdx = 0;
+                        return kelas.kolomNilai.map(col => {
+                          if (col.isGroup && col.subKolom?.length > 0) {
+                            const groupCalc = getColScore(currentFocusStudent, col, temporaryScores);
+                            return (
+                              <div key={col.id} style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", overflow: "hidden", backgroundColor: "var(--bg-secondary)" }}>
+                                <div style={{ padding: "8px 14px", backgroundColor: "var(--bg-tertiary)", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ fontSize: "1rem" }}>📁</span>
+                                    <strong style={{ fontSize: "0.92rem", color: "var(--text-primary)" }}>{col.nama}</strong>
+                                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", backgroundColor: "var(--bg-primary)", padding: "1px 6px", borderRadius: "4px", border: "1px solid var(--border-color)" }}>
+                                      Bobot: {col.bobot}% • {col.hitungMetode === 'persentase' ? 'Tertimbang' : 'Rata-rata'}
+                                    </span>
+                                  </div>
+                                  {groupCalc.isFilled && (
+                                    <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--primary)" }}>
+                                      Subtotal: {groupCalc.score.toFixed(2)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                                  {col.subKolom.map(sub => {
+                                    const inputIdx = globalInputIdx++;
+                                    const cellKey = `${currentFocusStudent.nisn}-${sub.id}`;
+                                    const currentStatus = saveStatus[cellKey] || "idle";
+                                    const currentVal = temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (currentFocusStudent.nilai?.[sub.id] !== null && currentFocusStudent.nilai?.[sub.id] !== undefined ? currentFocusStudent.nilai[sub.id] : "");
+                                    const isSubUnlocked = !kelas.archived && !isLocked;
+
+                                    return (
+                                      <div key={sub.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", backgroundColor: "var(--bg-primary)", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+                                        <div>
+                                          <div style={{ fontWeight: "600", fontSize: "0.88rem", color: "var(--text-primary)" }}>{sub.nama}</div>
+                                          {col.hitungMetode === 'persentase' && sub.bobot !== undefined && (
+                                            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Bobot komponen: {sub.bobot}%</div>
+                                          )}
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
+                                          <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            id={`focus-student-grade-${inputIdx}`}
+                                            value={currentVal}
+                                            disabled={!isSubUnlocked}
+                                            placeholder="-"
+                                            onChange={(e) => {
+                                              let val = e.target.value;
+                                              if (val !== "") {
+                                                val = val.replace(/[^0-9]/g, '');
+                                                if (val !== "") {
+                                                  const num = parseInt(val, 10);
+                                                  if (num > 100) val = "100";
+                                                  else val = num.toString();
+                                                }
+                                              }
+                                              setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
+                                            }}
+                                            onBlur={(e) => handleGradeBlur(currentFocusStudent.nisn, sub.id, e.target.value)}
+                                            onWheel={(e) => e.target.blur()}
+                                            onPaste={(e) => handleGradePaste(e, currentFocusStudent.nisn, sub.id)}
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") {
+                                                e.preventDefault();
+                                                handleGradeBlur(currentFocusStudent.nisn, sub.id, e.target.value);
+                                                const next = document.getElementById(`focus-student-grade-${inputIdx + 1}`);
+                                                if (next) {
+                                                  next.focus();
+                                                  next.select();
+                                                }
+                                              }
+                                            }}
+                                            className="form-input"
+                                            style={{
+                                              width: "75px",
+                                              textAlign: "center",
+                                              fontWeight: "700",
+                                              fontSize: "1rem",
+                                              padding: "6px 8px",
+                                              borderRadius: "6px",
+                                              border: currentStatus === "failed" ? "2px solid var(--danger)" : "1.5px solid var(--border-color)",
+                                              backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.06)" : "var(--bg-primary)"
+                                            }}
+                                          />
+                                          {currentStatus === "saving" && (
+                                            <span style={{ width: "6px", height: "6px", backgroundColor: "var(--primary)", borderRadius: "50%", display: "inline-block", animation: "pulse 0.6s infinite" }} title="Menyimpan..."></span>
+                                          )}
+                                          {currentStatus === "saved" && (
+                                            <span style={{ width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            const inputIdx = globalInputIdx++;
+                            const cellKey = `${currentFocusStudent.nisn}-${col.id}`;
+                            const currentStatus = saveStatus[cellKey] || "idle";
+                            const currentVal = temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (currentFocusStudent.nilai?.[col.id] !== null && currentFocusStudent.nilai?.[col.id] !== undefined ? currentFocusStudent.nilai[col.id] : "");
+                            const isColUnlocked = !kelas.archived && !isLocked;
+
+                            return (
+                              <div key={col.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                                <div>
+                                  <div style={{ fontWeight: "700", fontSize: "0.92rem", color: "var(--text-primary)" }}>{col.nama}</div>
+                                  <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Bobot: {col.bobot}%</div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
+                                  <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    id={`focus-student-grade-${inputIdx}`}
+                                    value={currentVal}
+                                    disabled={!isColUnlocked}
+                                    placeholder="-"
+                                    onChange={(e) => {
+                                      let val = e.target.value;
+                                      if (val !== "") {
+                                        val = val.replace(/[^0-9]/g, '');
+                                        if (val !== "") {
+                                          const num = parseInt(val, 10);
+                                          if (num > 100) val = "100";
+                                          else val = num.toString();
+                                        }
+                                      }
+                                      setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
+                                    }}
+                                    onBlur={(e) => handleGradeBlur(currentFocusStudent.nisn, col.id, e.target.value)}
+                                    onWheel={(e) => e.target.blur()}
+                                    onPaste={(e) => handleGradePaste(e, currentFocusStudent.nisn, col.id)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleGradeBlur(currentFocusStudent.nisn, col.id, e.target.value);
+                                        const next = document.getElementById(`focus-student-grade-${inputIdx + 1}`);
+                                        if (next) {
+                                          next.focus();
+                                          next.select();
+                                        }
+                                      }
+                                    }}
+                                    className="form-input"
+                                    style={{
+                                      width: "75px",
+                                      textAlign: "center",
+                                      fontWeight: "700",
+                                      fontSize: "1rem",
+                                      padding: "6px 8px",
+                                      borderRadius: "6px",
+                                      border: currentStatus === "failed" ? "2px solid var(--danger)" : "1.5px solid var(--border-color)",
+                                      backgroundColor: currentStatus === "saving" ? "rgba(59,130,246,0.06)" : "var(--bg-primary)"
+                                    }}
+                                  />
+                                  {currentStatus === "saving" && (
+                                    <span style={{ width: "6px", height: "6px", backgroundColor: "var(--primary)", borderRadius: "50%", display: "inline-block", animation: "pulse 0.6s infinite" }} title="Menyimpan..."></span>
+                                  )}
+                                  {currentStatus === "saved" && (
+                                    <span style={{ width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          }
+                        });
+                      })()}
+
+                      {/* Keaktifan Star Control jika diaktifkan */}
+                      {kelas.skemaPenilaian?.enableBonusStars && (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", backgroundColor: "rgba(245, 158, 11, 0.05)", borderRadius: "var(--radius-md)", border: "1px dashed rgba(245, 158, 11, 0.3)" }}>
+                          <div>
+                            <div style={{ fontWeight: "700", fontSize: "0.9rem", color: "#d97706" }}>⭐ Bonus Keaktifan Siswa</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>1 Bintang (⭐) bernilai +1 poin nilai akhir</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            {getStudentTotalStars(currentFocusStudent) > 0 && (
+                              <button
+                                type="button"
+                                disabled={kelas.archived || isLocked}
+                                onClick={() => handleQuickRemoveStar(currentFocusStudent)}
+                                className="btn btn-secondary"
+                                style={{ padding: "4px 10px", fontSize: "0.85rem", fontWeight: "bold", color: "#dc2626" }}
+                                title="Kurangi 1 Bintang"
+                              >
+                                - 1 ⭐
+                              </button>
+                            )}
+                            <span style={{ fontWeight: "800", fontSize: "1rem", color: "#d97706", minWidth: "40px", textAlign: "center" }}>
+                              {getStudentTotalStars(currentFocusStudent)}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={kelas.archived || isLocked}
+                              onClick={() => handleQuickAddStar(currentFocusStudent)}
+                              className="btn btn-primary"
+                              style={{ padding: "4px 10px", fontSize: "0.85rem", fontWeight: "bold" }}
+                              title="Tambah 1 Bintang"
+                            >
+                              + 1 ⭐
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: PRESENSI KEHADIRAN */}
+              {focusStudentTab === "presensi" && (
+                <div>
+                  {(!kelas.skemaPenilaian?.pertemuan || kelas.skemaPenilaian.pertemuan.length === 0) ? (
+                    <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                      Belum ada data pertemuan presensi di kelas ini.
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {/* Presensi Quick Bulk & Stat Bar */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", padding: "10px 14px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)" }}>
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#10b981", backgroundColor: "rgba(16, 185, 129, 0.1)", padding: "2px 8px", borderRadius: "12px", border: "1px solid rgba(16, 185, 129, 0.25)" }}>
+                            Hadir: {focusPresensiStats.H}
+                          </span>
+                          <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#f59e0b", backgroundColor: "rgba(245, 158, 11, 0.1)", padding: "2px 8px", borderRadius: "12px", border: "1px solid rgba(245, 158, 11, 0.25)" }}>
+                            Izin: {focusPresensiStats.I}
+                          </span>
+                          <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#3b82f6", backgroundColor: "rgba(59, 130, 246, 0.1)", padding: "2px 8px", borderRadius: "12px", border: "1px solid rgba(59, 130, 246, 0.25)" }}>
+                            Sakit: {focusPresensiStats.S}
+                          </span>
+                          <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#ef4444", backgroundColor: "rgba(239, 68, 68, 0.1)", padding: "2px 8px", borderRadius: "12px", border: "1px solid rgba(239, 68, 68, 0.25)" }}>
+                            Alpha: {focusPresensiStats.A}
+                          </span>
+                          {focusPresensiStats.D > 0 && (
+                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#8b5cf6", backgroundColor: "rgba(139, 92, 246, 0.1)", padding: "2px 8px", borderRadius: "12px", border: "1px solid rgba(139, 92, 246, 0.25)" }}>
+                              Disp: {focusPresensiStats.D}
+                            </span>
+                          )}
+                        </div>
+
+                        {!kelas.archived && !isLocked && (
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                triggerConfirm(
+                                  `Terapkan status Hadir (H) untuk semua pertemuan (${kelas.skemaPenilaian.pertemuan.length} pertemuan) pada siswa ${currentFocusStudent.nama}?`,
+                                  () => {
+                                    kelas.skemaPenilaian.pertemuan.forEach(p => {
+                                      handleApplyPresensi(currentFocusStudent.nisn, p.id, "H");
+                                    });
+                                  },
+                                  { title: "Set Semua Hadir", confirmText: "Ya, Terapkan" }
+                                );
+                              }}
+                              className="btn btn-secondary"
+                              style={{ padding: "4px 8px", fontSize: "0.78rem", fontWeight: "600", borderRadius: "6px" }}
+                              title="Set semua pertemuan menjadi Hadir"
+                            >
+                              ✓ Semua Hadir
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const emptyMeetings = kelas.skemaPenilaian.pertemuan.filter(p => !currentFocusStudent.nilai?.[`_presensi_${p.id}`]);
+                                if (emptyMeetings.length === 0) {
+                                  triggerAlert("Semua pertemuan sudah memiliki catatan kehadiran.", null, { title: "Presensi Lengkap" });
+                                  return;
+                                }
+                                triggerConfirm(
+                                  `Isi ${emptyMeetings.length} pertemuan yang masih kosong dengan Hadir (H) untuk ${currentFocusStudent.nama}?`,
+                                  () => {
+                                    emptyMeetings.forEach(p => {
+                                      handleApplyPresensi(currentFocusStudent.nisn, p.id, "H");
+                                    });
+                                  },
+                                  { title: "Isi Yang Kosong", confirmText: "Ya, Terapkan" }
+                                );
+                              }}
+                              className="btn btn-secondary"
+                              style={{ padding: "4px 8px", fontSize: "0.78rem", fontWeight: "600", borderRadius: "6px" }}
+                              title="Hanya isi pertemuan yang masih kosong menjadi Hadir"
+                            >
+                              ⚡ Yang Kosong Hadir
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Daftar Pertemuan */}
+                      {([...kelas.skemaPenilaian.pertemuan].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map((p, idx) => {
+                        const val = currentFocusStudent.nilai?.[`_presensi_${p.id}`] || "";
+                        const isUnlocked = !kelas.archived && !isLocked;
+
+                        return (
+                          <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", flexWrap: "wrap", gap: "10px" }}>
+                            <div style={{ flex: "1 1 200px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <strong style={{ fontSize: "0.92rem", color: "var(--text-primary)" }}>{p.nama}</strong>
+                                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>({p.tanggal})</span>
+                              </div>
+                              {p.materi && (
+                                <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                                  <strong>Materi:</strong> {p.materi}
+                                </div>
+                              )}
+                              {p.kegiatan && !p.materi && (
+                                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px", fontStyle: "italic" }}>
+                                  {p.kegiatan}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Quick Attendance Selector Pills */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                              {[
+                                { key: "H", label: "H", name: "Hadir", bg: "#10b981", activeColor: "#ffffff" },
+                                { key: "I", label: "I", name: "Izin", bg: "#f59e0b", activeColor: "#ffffff" },
+                                { key: "S", label: "S", name: "Sakit", bg: "#3b82f6", activeColor: "#ffffff" },
+                                { key: "A", label: "A", name: "Alpha", bg: "#ef4444", activeColor: "#ffffff" },
+                                { key: "D", label: "D", name: "Disp", bg: "#8b5cf6", activeColor: "#ffffff" },
+                                { key: "", label: "✕", name: "Kosongkan", bg: "var(--bg-tertiary)", activeColor: "var(--text-primary)" }
+                              ].map(opt => {
+                                const isSelected = val === opt.key;
+                                return (
+                                  <button
+                                    key={opt.key || "clear"}
+                                    type="button"
+                                    disabled={!isUnlocked}
+                                    onClick={() => handleApplyPresensi(currentFocusStudent.nisn, p.id, opt.key)}
+                                    style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      borderRadius: "8px",
+                                      fontWeight: "800",
+                                      fontSize: "0.82rem",
+                                      cursor: !isUnlocked ? "not-allowed" : "pointer",
+                                      border: isSelected ? `2px solid ${opt.bg}` : "1px solid var(--border-color)",
+                                      backgroundColor: isSelected ? opt.bg : "var(--bg-primary)",
+                                      color: isSelected ? opt.activeColor : "var(--text-secondary)",
+                                      boxShadow: isSelected ? "0 2px 6px rgba(0,0,0,0.2)" : "none",
+                                      transition: "all 0.12s ease",
+                                      opacity: !isUnlocked ? 0.5 : 1
+                                    }}
+                                    title={`Set ${opt.name}`}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Modal: Petunjuk & Tombol Tutup */}
+            <div 
+              style={{ 
+                padding: "10px 18px", 
+                borderTop: "1px solid var(--border-color)", 
+                backgroundColor: "var(--bg-tertiary)", 
+                display: "flex", 
+                justifyContent: "space-between", 
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "8px"
+              }}
+            >
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                💡 <strong>Shortcut:</strong> [← / →] Ganti siswa • [Enter] Komponen berikutnya • [Esc] Tutup
+              </div>
+              <button
+                type="button"
+                onClick={() => setFocusStudent(null)}
+                className="btn btn-secondary"
+                style={{ padding: "6px 18px", fontSize: "0.85rem", fontWeight: "600" }}
+              >
+                Selesai
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Modal Jurnal Agenda */}
