@@ -328,6 +328,8 @@ function DetailKelasContent({ params: paramsPromise }) {
 
   // States untuk Fitur Duplikasi Aspek
   const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [duplicateSyncBobot, setDuplicateSyncBobot] = useState(true);
+  const [duplicateRemoveMissing, setDuplicateRemoveMissing] = useState(false);
   const [availableClasses, setAvailableClasses] = useState([]);
   const [fetchingClasses, setFetchingClasses] = useState(false);
   const [initialKolomNilai, setInitialKolomNilai] = useState([]);
@@ -339,6 +341,8 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [applySearchQuery, setApplySearchQuery] = useState("");
   const [isApplyingToOther, setIsApplyingToOther] = useState(false);
   const [applyMode, setApplyMode] = useState("add"); // "add" | "replace"
+  const [applySyncBobot, setApplySyncBobot] = useState(true);
+  const [applyRemoveMissing, setApplyRemoveMissing] = useState(false);
 
   // States untuk Katrol Nilai Baru
   const [katrolModalOpen, setKatrolModalOpen] = useState(false);
@@ -2167,72 +2171,144 @@ function DetailKelasContent({ params: paramsPromise }) {
   };
 
   const handleDuplicateFromClass = (sourceClass) => {
-    triggerConfirm(
-      `Apakah Anda yakin ingin menyalin komponen dari kelas "${sourceClass.nama}"?\n\nKomponen nilai baru yang belum ada di kelas ini akan ditambahkan ke daftar komponen aktif Anda.`,
-      () => {
-        const existingNames = new Set(
-          kelas.kolomNilai.map(col => col.nama.trim().toLowerCase())
-        );
-        const skippedNames = [];
-        const aspectsToAdd = [];
-        let updatedExistingCols = [...kelas.kolomNilai];
+    let confirmMsg = `Apakah Anda yakin ingin menyalin komponen dari kelas "${sourceClass.nama}" ke kelas ini?\n\n`;
+    confirmMsg += `Ketentuan:\n• Komponen baru dari kelas "${sourceClass.nama}" akan ditambahkan.\n`;
+    if (duplicateSyncBobot) {
+      confirmMsg += `• Bobot komponen yang sudah ada akan disesuaikan sama persis dengan kelas "${sourceClass.nama}".\n`;
+    }
+    if (duplicateRemoveMissing) {
+      confirmMsg += `• ⚠️ Komponen di kelas ini yang sudah tidak ada di kelas "${sourceClass.nama}" akan DIHAPUS.\n`;
+    } else {
+      confirmMsg += `• Komponen yang sudah ada di kelas ini tetap dipertahankan.\n`;
+    }
 
-        sourceClass.kolomNilai.forEach(col => {
-          const trimmedName = col.nama.trim();
-          if (existingNames.has(trimmedName.toLowerCase())) {
-            const existingColIndex = updatedExistingCols.findIndex(
-              c => c.nama.trim().toLowerCase() === trimmedName.toLowerCase()
-            );
-            if (existingColIndex !== -1) {
-              const existingCol = updatedExistingCols[existingColIndex];
-              if (col.subKolom && col.subKolom.length > 0) {
-                const existingSubNames = new Set(
-                  (existingCol.subKolom || []).map(sub => sub.nama.trim().toLowerCase())
-                );
-                const newSubs = [];
-                col.subKolom.forEach(sub => {
-                  if (!existingSubNames.has(sub.nama.trim().toLowerCase())) {
-                    newSubs.push({
-                      ...sub,
-                      id: `${existingCol.id}-sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
-                    });
-                  }
-                });
-                if (newSubs.length > 0) {
-                  updatedExistingCols[existingColIndex] = {
-                    ...existingCol,
-                    subKolom: [...(existingCol.subKolom || []), ...newSubs]
-                  };
-                }
+    triggerConfirm(
+      confirmMsg,
+      () => {
+        const sourceColMap = new Map();
+        (sourceClass.kolomNilai || []).forEach((col, idx) => {
+          sourceColMap.set(col.nama.trim().toLowerCase(), { ...col, sourceIndex: idx });
+        });
+
+        const currentTargetCols = kelas.kolomNilai || [];
+        const updatedExistingCols = [];
+
+        // 1. Periksa komponen yang sudah ada di kelas ini
+        currentTargetCols.forEach(targetCol => {
+          const trimmedTargetName = targetCol.nama.trim().toLowerCase();
+          const matchingSourceCol = sourceColMap.get(trimmedTargetName);
+
+          if (matchingSourceCol) {
+            let newBobot = targetCol.bobot;
+            let isGroup = targetCol.isGroup;
+            let hitungMetode = targetCol.hitungMetode;
+
+            if (duplicateSyncBobot) {
+              newBobot = Number(matchingSourceCol.bobot) || 0;
+              if (matchingSourceCol.isGroup) {
+                isGroup = true;
+                hitungMetode = matchingSourceCol.hitungMetode || 'rata-rata';
               }
             }
-            skippedNames.push(trimmedName);
+
+            let updatedSubKolom = targetCol.subKolom || [];
+
+            if (matchingSourceCol.isGroup && matchingSourceCol.subKolom) {
+              const sourceSubMap = new Map();
+              matchingSourceCol.subKolom.forEach((sub, sIdx) => {
+                sourceSubMap.set(sub.nama.trim().toLowerCase(), { ...sub, sourceIndex: sIdx });
+              });
+
+              const currentSubs = [];
+              (targetCol.subKolom || []).forEach(targetSub => {
+                const trimmedSubName = targetSub.nama.trim().toLowerCase();
+                const matchingSourceSub = sourceSubMap.get(trimmedSubName);
+
+                if (matchingSourceSub) {
+                  currentSubs.push({
+                    ...targetSub,
+                    bobot: (duplicateSyncBobot && matchingSourceSub.bobot !== undefined && matchingSourceSub.bobot !== null)
+                      ? Number(matchingSourceSub.bobot)
+                      : targetSub.bobot
+                  });
+                } else {
+                  if (!duplicateRemoveMissing) {
+                    currentSubs.push(targetSub);
+                  }
+                }
+              });
+
+              const existingSubNames = new Set(currentSubs.map(s => s.nama.trim().toLowerCase()));
+              matchingSourceCol.subKolom.forEach((sub, i) => {
+                if (!existingSubNames.has(sub.nama.trim().toLowerCase())) {
+                  currentSubs.push({
+                    ...sub,
+                    id: `${targetCol.id}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                    bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+                  });
+                }
+              });
+
+              currentSubs.sort((a, b) => {
+                const aSubName = a.nama.trim().toLowerCase();
+                const bSubName = b.nama.trim().toLowerCase();
+                const aMatch = sourceSubMap.get(aSubName);
+                const bMatch = sourceSubMap.get(bSubName);
+                if (aMatch && bMatch) return aMatch.sourceIndex - bMatch.sourceIndex;
+                if (aMatch) return -1;
+                if (bMatch) return 1;
+                return 0;
+              });
+
+              updatedSubKolom = currentSubs;
+            }
+
+            updatedExistingCols.push({
+              ...targetCol,
+              bobot: newBobot,
+              isGroup,
+              hitungMetode,
+              subKolom: updatedSubKolom
+            });
           } else {
+            if (!duplicateRemoveMissing) {
+              updatedExistingCols.push(targetCol);
+            }
+          }
+        });
+
+        // 2. Tambahkan komponen dari sourceClass yang belum ada di kelas ini
+        const existingTargetNames = new Set(currentTargetCols.map(c => c.nama.trim().toLowerCase()));
+        const aspectsToAdd = [];
+        (sourceClass.kolomNilai || []).forEach(col => {
+          if (!existingTargetNames.has(col.nama.trim().toLowerCase())) {
             const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
             aspectsToAdd.push({
               ...col,
               id: newColId,
-              subKolom: col.subKolom ? col.subKolom.map(sub => ({
+              bobot: Number(col.bobot) || 0,
+              subKolom: col.subKolom ? col.subKolom.map((sub, i) => ({
                 ...sub,
-                id: `${newColId}-sub-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`
+                id: `${newColId}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
               })) : []
             });
           }
         });
 
         const updatedCols = [...updatedExistingCols, ...aspectsToAdd];
-        
-        // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
+
+        // 3. Urutkan sesuai urutan kelas asal
+        const sourceOrderMap = new Map();
+        (sourceClass.kolomNilai || []).forEach((col, idx) => {
+          sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
+        });
+
         const originalTargetOrderMap = new Map();
-        kelas.kolomNilai.forEach((col, idx) => {
+        currentTargetCols.forEach((col, idx) => {
           originalTargetOrderMap.set(col.id, idx);
         });
 
-        const sourceOrderMap = new Map();
-        sourceClass.kolomNilai.forEach((col, idx) => {
-          sourceOrderMap.set(col.nama.trim().toLowerCase(), idx);
-        });
-        
         updatedCols.sort((a, b) => {
           const aName = a.nama.trim().toLowerCase();
           const bName = b.nama.trim().toLowerCase();
@@ -2251,27 +2327,22 @@ function DetailKelasContent({ params: paramsPromise }) {
         });
 
         setKelas({ ...kelas, kolomNilai: updatedCols });
-        setNewAspects([]); // Bersihkan newAspects jika ada komponen yang disalin
+        setNewAspects([]);
         if (aspectsToAdd.length > 0) {
-          setActiveAspectId(aspectsToAdd[0].id); // Pilih komponen pertama yang baru disalin
+          setActiveAspectId(aspectsToAdd[0].id);
         }
 
         setDuplicateModalOpen(false);
 
-        if (skippedNames.length > 0) {
-          // Tampilkan informasi komponen yang tidak disalin menggunakan modal kustom
-          setTimeout(() => {
-            triggerAlert(
-              `Beberapa komponen berikut tidak disalin karena sudah ada komponen dengan nama yang sama di kelas ini (nilai & konfigurasi komponen yang sudah ada tetap dipertahankan):\n\n- ${skippedNames.join("\n- ")}`,
-              null,
-              { title: "📋 INFORMASI PENYALINAN" }
-            );
-          }, 300); // Jeda singkat setelah modal duplikat ditutup
-        }
+        triggerAlert(
+          `Berhasil menyalin komponen dari "${sourceClass.nama}"!${duplicateSyncBobot ? " Bobot komponen telah disesuaikan." : ""}${duplicateRemoveMissing ? " Komponen yang tidak ada telah dibersihkan." : ""}`,
+          null,
+          { title: "📋 SALIN KOMPONEN SELESAI" }
+        );
       },
       {
         title: "📋 SALIN ASPEK DARI KELAS LAIN",
-        confirmText: "Ya, Salin",
+        confirmText: "Ya, Salin & Sesuaikan",
         cancelText: "Batal"
       }
     );
@@ -2312,9 +2383,22 @@ function DetailKelasContent({ params: paramsPromise }) {
     const selectedTargetClasses = availableClasses.filter(c => applySelectedClassIds.includes(c.id));
     const targetNames = selectedTargetClasses.map(c => c.nama).join(", ");
 
-    const confirmationMsg = applyMode === "add"
-      ? `Apakah Anda yakin ingin menerapkan komponen & bobot dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\n*Komponen baru yang belum ada di kelas tujuan akan ditambahkan. Komponen yang sudah ada dengan nama yang sama tetap dipertahaman.`
-      : `⚠️ PERINGATAN: Apakah Anda yakin ingin menggantikan seluruh komponen penilaian di ${applySelectedClassIds.length} kelas berikut dengan konfigurasi kelas "${kelas.nama}"?\n\n- ${targetNames}\n\n*Seluruh komponen lama di kelas tujuan akan dihapus dan diganti sepenuhnya.`;
+    const confirmationMsg = applyMode === "replace"
+      ? `⚠️ PERINGATAN: Apakah Anda yakin ingin menggantikan seluruh komponen penilaian di ${applySelectedClassIds.length} kelas berikut dengan konfigurasi kelas "${kelas.nama}"?\n\n- ${targetNames}\n\n*Seluruh komponen lama di kelas tujuan akan dihapus dan diganti sepenuhnya.`
+      : (() => {
+          let msg = `Apakah Anda yakin ingin menerapkan komponen dari kelas "${kelas.nama}" ke ${applySelectedClassIds.length} kelas berikut?\n\n- ${targetNames}\n\nKetentuan penerapan:\n• Komponen baru dari kelas "${kelas.nama}" akan ditambahkan ke kelas tujuan.\n`;
+          if (applySyncBobot) {
+            msg += `• Bobot komponen yang sudah ada akan disesuaikan sama persis dengan kelas "${kelas.nama}".\n`;
+          } else {
+            msg += `• Bobot komponen yang sudah ada tetap dipertahankan.\n`;
+          }
+          if (applyRemoveMissing) {
+            msg += `• ⚠️ Komponen di kelas tujuan yang sudah tidak ada di kelas "${kelas.nama}" akan DIHAPUS.\n`;
+          } else {
+            msg += `• Komponen yang sudah ada di kelas tujuan tetap dipertahankan.\n`;
+          }
+          return msg;
+        })();
 
     triggerConfirm(
       confirmationMsg,
@@ -2352,18 +2436,105 @@ function DetailKelasContent({ params: paramsPromise }) {
                   };
                 });
               } else {
-                // Tambahkan komponen yang belum ada (sifatnya menambah)
-                const existingNames = new Set(
-                  (fullTargetClass.kolomNilai || []).map(col => col.nama.trim().toLowerCase())
-                );
-                
-                let updatedExistingCols = [...(fullTargetClass.kolomNilai || [])];
+                // Gabungkan komponen dengan penyesuaian bobot & opsi pembersihan
+                const sourceColMap = new Map();
+                currentAspects.forEach((col, idx) => {
+                  sourceColMap.set(col.nama.trim().toLowerCase(), { ...col, sourceIndex: idx });
+                });
 
+                const currentTargetCols = fullTargetClass.kolomNilai || [];
+                const updatedExistingCols = [];
+
+                // 1. Periksa komponen yang sudah ada di kelas tujuan
+                currentTargetCols.forEach(targetCol => {
+                  const trimmedTargetName = targetCol.nama.trim().toLowerCase();
+                  const matchingSourceCol = sourceColMap.get(trimmedTargetName);
+
+                  if (matchingSourceCol) {
+                    let newBobot = targetCol.bobot;
+                    let isGroup = targetCol.isGroup;
+                    let hitungMetode = targetCol.hitungMetode;
+
+                    if (applySyncBobot) {
+                      newBobot = Number(matchingSourceCol.bobot) || 0;
+                      if (matchingSourceCol.isGroup) {
+                        isGroup = true;
+                        hitungMetode = matchingSourceCol.hitungMetode || 'rata-rata';
+                      }
+                    }
+
+                    let updatedSubKolom = targetCol.subKolom || [];
+
+                    if (matchingSourceCol.isGroup && matchingSourceCol.subKolom) {
+                      const sourceSubMap = new Map();
+                      matchingSourceCol.subKolom.forEach((sub, sIdx) => {
+                        sourceSubMap.set(sub.nama.trim().toLowerCase(), { ...sub, sourceIndex: sIdx });
+                      });
+
+                      const currentSubs = [];
+                      (targetCol.subKolom || []).forEach(targetSub => {
+                        const trimmedSubName = targetSub.nama.trim().toLowerCase();
+                        const matchingSourceSub = sourceSubMap.get(trimmedSubName);
+
+                        if (matchingSourceSub) {
+                          currentSubs.push({
+                            ...targetSub,
+                            bobot: applySyncBobot && matchingSourceSub.bobot !== undefined && matchingSourceSub.bobot !== null
+                              ? Number(matchingSourceSub.bobot)
+                              : targetSub.bobot
+                          });
+                        } else {
+                          if (!applyRemoveMissing) {
+                            currentSubs.push(targetSub);
+                          }
+                        }
+                      });
+
+                      const existingTargetSubNames = new Set((targetCol.subKolom || []).map(s => s.nama.trim().toLowerCase()));
+                      matchingSourceCol.subKolom.forEach((sub, i) => {
+                        if (!existingTargetSubNames.has(sub.nama.trim().toLowerCase())) {
+                          currentSubs.push({
+                            ...sub,
+                            id: `${targetCol.id}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
+                            bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
+                          });
+                        }
+                      });
+
+                      currentSubs.sort((a, b) => {
+                        const aSubName = a.nama.trim().toLowerCase();
+                        const bSubName = b.nama.trim().toLowerCase();
+                        const aMatch = sourceSubMap.get(aSubName);
+                        const bMatch = sourceSubMap.get(bSubName);
+                        if (aMatch && bMatch) return aMatch.sourceIndex - bMatch.sourceIndex;
+                        if (aMatch) return -1;
+                        if (bMatch) return 1;
+                        return 0;
+                      });
+
+                      updatedSubKolom = currentSubs;
+                    }
+
+                    updatedExistingCols.push({
+                      ...targetCol,
+                      bobot: newBobot,
+                      isGroup,
+                      hitungMetode,
+                      subKolom: updatedSubKolom
+                    });
+                  } else {
+                    if (!applyRemoveMissing) {
+                      updatedExistingCols.push(targetCol);
+                    }
+                  }
+                });
+
+                // 2. Tambahkan komponen dari kelas asal yang belum ada di kelas tujuan
+                const existingTargetNames = new Set(currentTargetCols.map(c => c.nama.trim().toLowerCase()));
                 const aspectsToAdd = [];
-                currentAspects.forEach(col => {
-                  const trimmedName = col.nama.trim();
-                  if (!existingNames.has(trimmedName.toLowerCase())) {
-                    const newColId = 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+                currentAspects.forEach((col, idx) => {
+                  if (!existingTargetNames.has(col.nama.trim().toLowerCase())) {
+                    const newColId = 'col-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).substr(2, 5);
                     aspectsToAdd.push({
                       ...col,
                       id: newColId,
@@ -2374,42 +2545,14 @@ function DetailKelasContent({ params: paramsPromise }) {
                         bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
                       })) : []
                     });
-                  } else {
-                    const existingColIndex = updatedExistingCols.findIndex(
-                      c => c.nama.trim().toLowerCase() === trimmedName.toLowerCase()
-                    );
-                    if (existingColIndex !== -1) {
-                      const existingCol = updatedExistingCols[existingColIndex];
-                      if (col.subKolom && col.subKolom.length > 0) {
-                        const existingSubNames = new Set(
-                          (existingCol.subKolom || []).map(sub => sub.nama.trim().toLowerCase())
-                        );
-                        const newSubs = [];
-                        col.subKolom.forEach((sub, i) => {
-                          if (!existingSubNames.has(sub.nama.trim().toLowerCase())) {
-                            newSubs.push({
-                              ...sub,
-                              id: `${existingCol.id}-sub-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 4)}`,
-                              bobot: sub.bobot !== undefined && sub.bobot !== null ? Number(sub.bobot) : null
-                            });
-                          }
-                        });
-                        if (newSubs.length > 0) {
-                          updatedExistingCols[existingColIndex] = {
-                            ...existingCol,
-                            subKolom: [...(existingCol.subKolom || []), ...newSubs]
-                          };
-                        }
-                      }
-                    }
                   }
                 });
 
                 updatedKolomNilai = [...updatedExistingCols, ...aspectsToAdd];
-                
-                // Urutkan komponen berdasarkan urutan di kelas asal agar susunannya sama
+
+                // 3. Urutkan komponen sesuai urutan kelas asal
                 const originalTargetOrderMap = new Map();
-                (fullTargetClass.kolomNilai || []).forEach((col, idx) => {
+                currentTargetCols.forEach((col, idx) => {
                   originalTargetOrderMap.set(col.id, idx);
                 });
 
@@ -6251,7 +6394,30 @@ function DetailKelasContent({ params: paramsPromise }) {
               <button onClick={() => setDuplicateModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
             </div>
 
-            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Pilih kelas sumber untuk menyalin konfigurasi komponen dan bobotnya. Tindakan ini akan <b style={{color: "var(--danger)"}}>meniban dan menghapus</b> komponen yang ada di tabel saat ini.</p>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Pilih kelas sumber untuk menyalin konfigurasi komponen dan bobotnya ke kelas ini.</p>
+
+            {/* Opsi Penyesuaian Salin */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-secondary)" }}>Opsi Penyesuaian:</span>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: "var(--text-primary)" }}>
+                <input 
+                  type="checkbox" 
+                  checked={duplicateSyncBobot} 
+                  onChange={(e) => setDuplicateSyncBobot(e.target.checked)}
+                  style={{ accentColor: "var(--primary)", cursor: "pointer" }}
+                />
+                <span>Sesuaikan bobot komponen yang sudah ada mengikuti kelas sumber</span>
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: duplicateRemoveMissing ? "var(--danger)" : "var(--text-primary)" }}>
+                <input 
+                  type="checkbox" 
+                  checked={duplicateRemoveMissing} 
+                  onChange={(e) => setDuplicateRemoveMissing(e.target.checked)}
+                  style={{ accentColor: "var(--danger)", cursor: "pointer" }}
+                />
+                <span>Hapus komponen di kelas ini jika tidak ada lagi di kelas sumber</span>
+              </label>
+            </div>
 
             <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px", paddingRight: "4px" }}>
               {fetchingClasses ? (
@@ -6434,13 +6600,36 @@ function DetailKelasContent({ params: paramsPromise }) {
                   🔄 Gantikan Seluruhnya (Override)
                 </label>
               </div>
+
+              {applyMode === "add" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px", paddingTop: "8px", borderTop: "1px dashed var(--border-color)" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: "var(--text-primary)" }}>
+                    <input 
+                      type="checkbox" 
+                      checked={applySyncBobot} 
+                      onChange={(e) => setApplySyncBobot(e.target.checked)}
+                      style={{ accentColor: "var(--primary)", cursor: "pointer" }}
+                    />
+                    <span>Sesuaikan bobot komponen yang sudah ada mengikuti kelas ini</span>
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: applyRemoveMissing ? "var(--danger)" : "var(--text-primary)" }}>
+                    <input 
+                      type="checkbox" 
+                      checked={applyRemoveMissing} 
+                      onChange={(e) => setApplyRemoveMissing(e.target.checked)}
+                      style={{ accentColor: "var(--danger)", cursor: "pointer" }}
+                    />
+                    <span>Hapus komponen di kelas tujuan jika tidak ada lagi di kelas ini</span>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Note & Footer Buttons */}
             <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.4 }}>
               {applyMode === "add" 
-                ? "*Komponen baru akan ditambahkan tanpa menghapus komponen yang sudah ada di kelas tujuan." 
-                : "*Peringatan: Seluruh komponen lama di kelas tujuan akan dihapus dan digantikan dengan konfigurasi kelas ini."}
+                ? `*Komponen baru akan ditambahkan.${applySyncBobot ? " Bobot komponen yang sudah ada disesuaikan." : ""}${applyRemoveMissing ? " Komponen yang tidak ada di kelas ini akan dihapus dari kelas tujuan." : " Komponen lain di kelas tujuan tetap dipertahankan."}` 
+                : "*Peringatan: Seluruh komponen lama di kelas tujuan akan dihapus dan digantikan sepenuhnya dengan konfigurasi kelas ini."}
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px" }}>
