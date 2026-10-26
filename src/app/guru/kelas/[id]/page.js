@@ -10263,7 +10263,7 @@ function DetailKelasContent({ params: paramsPromise }) {
         >
           <div style={{ padding: "0 16px 16px 16px" }}>
             {focusColumn.type === 'nilai' && !kelas.archived && !isLocked && (
-              <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", padding: "4px 6px" }}>
+              <div style={{ marginBottom: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "var(--bg-secondary)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-color)", padding: "4px 8px" }}>
                 {(() => {
                   const parentCol = focusColumn.type === 'nilai' ? kelas.kolomNilai.find(c => c.id === focusColumn.id || (c.isGroup && c.subKolom?.some(s => s.id === focusColumn.id))) : null;
                   if (!parentCol) return <div />;
@@ -10377,13 +10377,18 @@ function DetailKelasContent({ params: paramsPromise }) {
                       <tr key={student.nisn} style={{ backgroundColor: idx % 2 === 0 ? "transparent" : "var(--bg-secondary)" }}>
                         <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
                         <td style={{ fontWeight: "600" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span 
-                              style={{ cursor: isShoofian ? "pointer" : "default" }}
+                              style={{ 
+                                cursor: isShoofian ? "pointer" : "default",
+                                transition: "color 0.15s ease"
+                              }}
+                              onMouseEnter={(e) => { if (isShoofian) e.currentTarget.style.color = "var(--primary)"; }}
+                              onMouseLeave={(e) => { if (isShoofian) e.currentTarget.style.color = "inherit"; }}
                               onClick={() => {
                                 if (isShoofian) handleOpenFocusStudentFromColumn(student, focusColumn);
                               }}
-                              title={isShoofian ? "Klik untuk melihat Mode Fokus Siswa ini" : undefined}
+                              title={isShoofian ? `Buka Mode Fokus Siswa: ${student.nama}` : undefined}
                             >
                               {student.nama}
                             </span>
@@ -10395,23 +10400,30 @@ function DetailKelasContent({ params: paramsPromise }) {
                                   handleOpenFocusStudentFromColumn(student, focusColumn);
                                 }}
                                 style={{
-                                  background: "rgba(59, 130, 246, 0.12)",
-                                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                                  borderRadius: "4px",
-                                  padding: "2px 6px",
-                                  color: "var(--primary)",
+                                  background: "transparent",
+                                  border: "none",
+                                  padding: "2px 4px",
+                                  color: "var(--text-muted)",
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: "4px",
-                                  fontSize: "0.72rem",
-                                  fontWeight: "700",
-                                  lineHeight: 1
+                                  justifyContent: "center",
+                                  opacity: 0.5,
+                                  borderRadius: "4px",
+                                  transition: "all 0.15s ease",
+                                  flexShrink: 0
                                 }}
-                                title="Buka Mode Fokus Siswa Lengkap"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.opacity = "1";
+                                  e.currentTarget.style.color = "var(--primary)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.opacity = "0.5";
+                                  e.currentTarget.style.color = "var(--text-muted)";
+                                }}
+                                title={`Mode Fokus Siswa: ${student.nama}`}
                               >
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                                <span>Fokus Siswa</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                               </button>
                             )}
                           </div>
@@ -10452,11 +10464,12 @@ function DetailKelasContent({ params: paramsPromise }) {
                             readOnly={kelas.archived || isLocked}
                             className="form-input"
                             style={{
-                              padding: "8px",
-                              fontSize: "1rem",
+                              padding: "6px 8px",
+                              fontSize: "0.95rem",
                               fontWeight: "bold",
                               textAlign: "center",
-                              width: "100px",
+                              width: "80px",
+                              borderRadius: "6px",
                               border: "1.5px solid var(--border-color)",
                               margin: "0 auto",
                               display: "block"
@@ -10476,13 +10489,18 @@ function DetailKelasContent({ params: paramsPromise }) {
                       <tr key={student.nisn} style={{ backgroundColor: idx % 2 === 0 ? "transparent" : "var(--bg-secondary)" }}>
                         <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
                         <td style={{ fontWeight: "600" }}>
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span 
-                              style={{ cursor: isShoofian ? "pointer" : "default" }}
+                              style={{ 
+                                cursor: isShoofian ? "pointer" : "default",
+                                transition: "color 0.15s ease"
+                              }}
+                              onMouseEnter={(e) => { if (isShoofian) e.currentTarget.style.color = "var(--primary)"; }}
+                              onMouseLeave={(e) => { if (isShoofian) e.currentTarget.style.color = "inherit"; }}
                               onClick={() => {
                                 if (isShoofian) handleOpenFocusStudentFromColumn(student, focusColumn);
                               }}
-                              title={isShoofian ? "Klik untuk melihat Mode Fokus Siswa ini" : undefined}
+                              title={isShoofian ? `Buka Mode Fokus Siswa: ${student.nama}` : undefined}
                             >
                               {student.nama}
                             </span>
@@ -10494,23 +10512,30 @@ function DetailKelasContent({ params: paramsPromise }) {
                                   handleOpenFocusStudentFromColumn(student, focusColumn);
                                 }}
                                 style={{
-                                  background: "rgba(59, 130, 246, 0.12)",
-                                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                                  borderRadius: "4px",
-                                  padding: "2px 6px",
-                                  color: "var(--primary)",
+                                  background: "transparent",
+                                  border: "none",
+                                  padding: "2px 4px",
+                                  color: "var(--text-muted)",
                                   cursor: "pointer",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: "4px",
-                                  fontSize: "0.72rem",
-                                  fontWeight: "700",
-                                  lineHeight: 1
+                                  justifyContent: "center",
+                                  opacity: 0.5,
+                                  borderRadius: "4px",
+                                  transition: "all 0.15s ease",
+                                  flexShrink: 0
                                 }}
-                                title="Buka Mode Fokus Siswa Lengkap"
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.opacity = "1";
+                                  e.currentTarget.style.color = "var(--primary)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.opacity = "0.5";
+                                  e.currentTarget.style.color = "var(--text-muted)";
+                                }}
+                                title={`Mode Fokus Siswa: ${student.nama}`}
                               >
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                                <span>Fokus Siswa</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                               </button>
                             )}
                           </div>
@@ -10546,9 +10571,9 @@ function DetailKelasContent({ params: paramsPromise }) {
                             }}
                             title={!isUnlocked ? "Kolom terkunci." : "Klik 1x untuk Hadir (H). Klik lagi / klik kanan / tahan untuk buka pilihan status lengkap."}
                             style={{
-                              width: "50px", height: "50px", borderRadius: "12px", fontWeight: "800",
+                              width: "42px", height: "42px", borderRadius: "8px", fontWeight: "800",
                               cursor: !isUnlocked ? "not-allowed" : "pointer",
-                              fontSize: val === "" ? "1.2rem" : "1.1rem",
+                              fontSize: val === "" ? "1.1rem" : "1rem",
                               backgroundColor: val === 'H' ? "#10b981" : val === 'I' ? "#f59e0b" : val === 'S' ? "#3b82f6" : val === 'A' ? "#ef4444" : val === 'D' ? "#8b5cf6" : (isUnlocked ? "rgba(59, 130, 246, 0.08)" : "var(--bg-tertiary)"),
                               color: val !== "" ? "#ffffff" : (isUnlocked ? "var(--primary)" : "var(--text-muted)"),
                               border: val !== "" ? "none" : (isUnlocked ? "1.5px dashed var(--primary)" : "1px dashed var(--border-color)"),
@@ -10663,12 +10688,12 @@ function DetailKelasContent({ params: paramsPromise }) {
                     }}
                     className="btn btn-secondary"
                     style={{
-                      padding: "4px 10px",
-                      fontSize: "0.8rem",
-                      fontWeight: "700",
+                      padding: "3px 8px",
+                      fontSize: "0.78rem",
+                      fontWeight: "600",
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "5px",
+                      gap: "4px",
                       borderRadius: "6px",
                       border: "1px solid var(--border-color)",
                       backgroundColor: "var(--bg-primary)",
@@ -10677,7 +10702,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                     }}
                     title={`Kembali ke Mode Fokus Kolom: ${returnToColumn.nama}`}
                   >
-                    ◀ Kembali ke Kolom: <strong>{returnToColumn.nama.length > 18 ? returnToColumn.nama.substring(0, 18) + "..." : returnToColumn.nama}</strong>
+                    ← Kembali ({returnToColumn.nama.length > 14 ? returnToColumn.nama.substring(0, 14) + "..." : returnToColumn.nama})
                   </button>
                 )}
               </div>
