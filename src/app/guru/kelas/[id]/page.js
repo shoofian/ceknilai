@@ -261,6 +261,7 @@ function DetailKelasContent({ params: paramsPromise }) {
   // State untuk Mode Fokus Siswa (Eksklusif username: shoofian)
   const [focusStudent, setFocusStudent] = useState(null);
   const [focusStudentTab, setFocusStudentTab] = useState("nilai"); // "nilai" | "presensi"
+  const [returnToColumn, setReturnToColumn] = useState(null);
 
   // State & handler untuk deteksi mobile screen
   const [isMobile, setIsMobile] = useState(false);
@@ -799,6 +800,7 @@ function DetailKelasContent({ params: paramsPromise }) {
   // === MODE FOKUS SISWA (Eksklusif username: shoofian) ===
   const handleOpenFocusStudent = useCallback((student, preferredTab = null) => {
     if (!isShoofian) return;
+    setReturnToColumn(null);
     setFocusStudent(student);
     if (preferredTab) {
       setFocusStudentTab(preferredTab);
@@ -808,6 +810,18 @@ function DetailKelasContent({ params: paramsPromise }) {
       setFocusStudentTab("nilai");
     }
   }, [isShoofian, activeTab]);
+
+  const handleOpenFocusStudentFromColumn = useCallback((student, col) => {
+    if (!isShoofian) return;
+    setReturnToColumn(col);
+    setFocusColumn(null);
+    setFocusStudent(student);
+    if (col && col.type === "presensi") {
+      setFocusStudentTab("presensi");
+    } else {
+      setFocusStudentTab("nilai");
+    }
+  }, [isShoofian]);
 
   const currentFocusStudentIndex = useMemo(() => {
     if (!focusStudent || !sortedStudents) return -1;
@@ -892,6 +906,7 @@ function DetailKelasContent({ params: paramsPromise }) {
       } else if (e.key === 'Escape') {
         e.preventDefault();
         setFocusStudent(null);
+        setReturnToColumn(null);
       }
     };
     window.addEventListener("keydown", handleKeyNav);
@@ -4494,32 +4509,6 @@ function DetailKelasContent({ params: paramsPromise }) {
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                         <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(siswa.nama, isNamaColumnExpanded)}</span>
-                        {isShoofian && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenFocusStudent(siswa, "presensi");
-                            }}
-                            style={{
-                              background: "rgba(59, 130, 246, 0.12)",
-                              border: "1px solid rgba(59, 130, 246, 0.3)",
-                              borderRadius: "4px",
-                              padding: "2px 5px",
-                              color: "var(--primary)",
-                              cursor: "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              flexShrink: 0,
-                              fontSize: "0.75rem",
-                              lineHeight: 1
-                            }}
-                            title="Mode Fokus Siswa (Khusus shoofian)"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                          </button>
-                        )}
                       </div>
                     </td>
                     {([...(kelas.skemaPenilaian?.pertemuan || [])].sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal))).map(p => {
@@ -5027,32 +5016,6 @@ function DetailKelasContent({ params: paramsPromise }) {
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
                             <span style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", width: "100%", display: "block" }}>{formatNameForMobile(student.nama, isNamaColumnExpanded)}</span>
-                            {isShoofian && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenFocusStudent(student, "nilai");
-                                }}
-                                style={{
-                                  background: "rgba(59, 130, 246, 0.12)",
-                                  border: "1px solid rgba(59, 130, 246, 0.3)",
-                                  borderRadius: "4px",
-                                  padding: "2px 5px",
-                                  color: "var(--primary)",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  flexShrink: 0,
-                                  fontSize: "0.75rem",
-                                  lineHeight: 1
-                                }}
-                                title="Mode Fokus Siswa (Khusus shoofian)"
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                              </button>
-                            )}
                           </div>
                         </td>
                         <td data-label="NISN" style={{ width: "140px", minWidth: "140px", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600" }}>
@@ -10224,7 +10187,46 @@ function DetailKelasContent({ params: paramsPromise }) {
                     return (
                       <tr key={student.nisn} style={{ backgroundColor: idx % 2 === 0 ? "transparent" : "var(--bg-secondary)" }}>
                         <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
-                        <td style={{ fontWeight: "600" }}>{student.nama}</td>
+                        <td style={{ fontWeight: "600" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                            <span 
+                              style={{ cursor: isShoofian ? "pointer" : "default" }}
+                              onClick={() => {
+                                if (isShoofian) handleOpenFocusStudentFromColumn(student, focusColumn);
+                              }}
+                              title={isShoofian ? "Klik untuk melihat Mode Fokus Siswa ini" : undefined}
+                            >
+                              {student.nama}
+                            </span>
+                            {isShoofian && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFocusStudentFromColumn(student, focusColumn);
+                                }}
+                                style={{
+                                  background: "rgba(59, 130, 246, 0.12)",
+                                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                                  borderRadius: "4px",
+                                  padding: "2px 6px",
+                                  color: "var(--primary)",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: "700",
+                                  lineHeight: 1
+                                }}
+                                title="Buka Mode Fokus Siswa Lengkap"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                                <span>Fokus Siswa</span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
                         <td style={{ textAlign: "center" }}>
                           <input
                             type="text"
@@ -10284,7 +10286,46 @@ function DetailKelasContent({ params: paramsPromise }) {
                     return (
                       <tr key={student.nisn} style={{ backgroundColor: idx % 2 === 0 ? "transparent" : "var(--bg-secondary)" }}>
                         <td style={{ textAlign: "center", color: "var(--text-secondary)", fontWeight: "600" }}>{idx + 1}</td>
-                        <td style={{ fontWeight: "600" }}>{student.nama}</td>
+                        <td style={{ fontWeight: "600" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                            <span 
+                              style={{ cursor: isShoofian ? "pointer" : "default" }}
+                              onClick={() => {
+                                if (isShoofian) handleOpenFocusStudentFromColumn(student, focusColumn);
+                              }}
+                              title={isShoofian ? "Klik untuk melihat Mode Fokus Siswa ini" : undefined}
+                            >
+                              {student.nama}
+                            </span>
+                            {isShoofian && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFocusStudentFromColumn(student, focusColumn);
+                                }}
+                                style={{
+                                  background: "rgba(59, 130, 246, 0.12)",
+                                  border: "1px solid rgba(59, 130, 246, 0.3)",
+                                  borderRadius: "4px",
+                                  padding: "2px 6px",
+                                  color: "var(--primary)",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: "700",
+                                  lineHeight: 1
+                                }}
+                                title="Buka Mode Fokus Siswa Lengkap"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                                <span>Fokus Siswa</span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
                         <td style={{ textAlign: "center" }}>
                           <button
                             onClick={(e) => {
@@ -10356,7 +10397,7 @@ function DetailKelasContent({ params: paramsPromise }) {
       {focusStudent && isShoofian && currentFocusStudent && (
         <div 
           className="animate-fade-in" 
-          onClick={() => setFocusStudent(null)} 
+          onClick={() => { setFocusStudent(null); setReturnToColumn(null); }} 
           style={{ 
             position: "fixed", 
             top: 0, 
@@ -10402,7 +10443,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 gap: "10px"
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                 <span style={{ 
                   backgroundColor: "rgba(59, 130, 246, 0.15)", 
                   color: "var(--primary)", 
@@ -10421,6 +10462,35 @@ function DetailKelasContent({ params: paramsPromise }) {
                 <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600" }}>
                   ({currentFocusStudentIndex + 1} / {sortedStudents.length})
                 </span>
+
+                {returnToColumn && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const col = returnToColumn;
+                      setFocusStudent(null);
+                      setReturnToColumn(null);
+                      setFocusColumn(col);
+                    }}
+                    className="btn btn-secondary"
+                    style={{
+                      padding: "4px 10px",
+                      fontSize: "0.8rem",
+                      fontWeight: "700",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border-color)",
+                      backgroundColor: "var(--bg-primary)",
+                      color: "var(--primary)",
+                      cursor: "pointer"
+                    }}
+                    title={`Kembali ke Mode Fokus Kolom: ${returnToColumn.nama}`}
+                  >
+                    ◀ Kembali ke Kolom: <strong>{returnToColumn.nama.length > 18 ? returnToColumn.nama.substring(0, 18) + "..." : returnToColumn.nama}</strong>
+                  </button>
+                )}
               </div>
 
               {/* Navigasi Siswa */}
@@ -10490,7 +10560,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 </button>
 
                 <button 
-                  onClick={() => setFocusStudent(null)} 
+                  onClick={() => { setFocusStudent(null); setReturnToColumn(null); }} 
                   style={{ 
                     background: "none", 
                     border: "none", 
@@ -11036,14 +11106,31 @@ function DetailKelasContent({ params: paramsPromise }) {
               <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
                 💡 <strong>Shortcut:</strong> [← / →] Ganti siswa • [Enter] Komponen berikutnya • [Esc] Tutup
               </div>
-              <button
-                type="button"
-                onClick={() => setFocusStudent(null)}
-                className="btn btn-secondary"
-                style={{ padding: "6px 18px", fontSize: "0.85rem", fontWeight: "600" }}
-              >
-                Selesai
-              </button>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {returnToColumn && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const col = returnToColumn;
+                      setFocusStudent(null);
+                      setReturnToColumn(null);
+                      setFocusColumn(col);
+                    }}
+                    className="btn btn-primary"
+                    style={{ padding: "6px 14px", fontSize: "0.85rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                  >
+                    ◀ Selesai & Kembali ke Kolom
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setFocusStudent(null); setReturnToColumn(null); }}
+                  className="btn btn-secondary"
+                  style={{ padding: "6px 18px", fontSize: "0.85rem", fontWeight: "600" }}
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
         </div>
