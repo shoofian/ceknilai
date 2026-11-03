@@ -356,19 +356,21 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [normModalOpen, setNormModalOpen] = useState(false);
   const [normMethod, setNormMethod] = useState("linear"); // "linear" | "minmax" | "scalemax"
-  const [normLinearPoin, setNormLinearPoin] = useState(5);
-  const [normMinTarget, setNormMinTarget] = useState(60);
-  const [normMaxTarget, setNormMaxTarget] = useState(100);
-  const [normMaxOnlyTarget, setNormMaxOnlyTarget] = useState(100);
+  const [normLinearPoin, setNormLinearPoin] = useState("");
+  const [normMinTarget, setNormMinTarget] = useState("");
+  const [normMaxTarget, setNormMaxTarget] = useState("");
+  const [normMaxOnlyTarget, setNormMaxOnlyTarget] = useState("");
   const [isSavingNorm, setIsSavingNorm] = useState(false);
 
   useEffect(() => {
-    if (normModalOpen && kelas) {
-      const currentMaxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
-      setNormMaxTarget(currentMaxCap);
-      setNormMaxOnlyTarget(currentMaxCap);
+    if (normModalOpen) {
+      // Buka modal dengan kolom bersih (tidak terisi hardcoded otomatis)
+      setNormLinearPoin("");
+      setNormMinTarget("");
+      setNormMaxTarget("");
+      setNormMaxOnlyTarget("");
     }
-  }, [normModalOpen, kelas]);
+  }, [normModalOpen]);
 
   // State untuk Navigasi Panel Mobile di Modal Atur Komponen
   const [mobileActiveView, setMobileActiveView] = useState("list"); // "list" atau "detail"
@@ -8805,42 +8807,57 @@ function DetailKelasContent({ params: paramsPromise }) {
                       type="number"
                       className="form-input"
                       value={normLinearPoin}
-                      onChange={(e) => setNormLinearPoin(e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="Contoh: 5"
+                      onChange={(e) => setNormLinearPoin(e.target.value)}
+                      placeholder="Contoh: 5 atau -3"
                       style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "160px" }}
                     />
                     <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
-                      Setiap siswa akan mendapat tambahan {normLinearPoin >= 0 ? `+${normLinearPoin}` : normLinearPoin} poin pada nilai akhirnya.
+                      {normLinearPoin !== "" && !isNaN(Number(normLinearPoin)) ? (
+                        <>Setiap siswa akan mendapat penyesuaian <strong>{Number(normLinearPoin) >= 0 ? `+${normLinearPoin}` : normLinearPoin}</strong> poin pada nilai akhirnya.</>
+                      ) : (
+                        "Ketikkan angka poin penambahan (misal 5) atau pengurangan (misal -3) untuk melihat simulasi."
+                      )}
                     </span>
                   </div>
                 )}
 
                 {normMethod === "minmax" && (
-                  <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                    <div style={{ flex: 1, minWidth: "130px" }}>
-                      <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
-                        Target Nilai Terendah (Min):
-                      </label>
-                      <input
-                        type="number"
-                        className="form-input"
-                        value={normMinTarget}
-                        onChange={(e) => setNormMinTarget(e.target.value === '' ? '' : Number(e.target.value))}
-                        style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
-                      />
+                  <div>
+                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: "130px" }}>
+                        <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                          Target Nilai Terendah (Min):
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={normMinTarget}
+                          onChange={(e) => setNormMinTarget(e.target.value)}
+                          placeholder="Contoh: 60"
+                          style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: "130px" }}>
+                        <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                          Target Nilai Tertinggi (Max):
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={normMaxTarget}
+                          onChange={(e) => setNormMaxTarget(e.target.value)}
+                          placeholder={`Contoh: ${Number(kelas?.skemaPenilaian?.maxCap) || 100}`}
+                          style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: "130px" }}>
-                      <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
-                        Target Nilai Tertinggi (Max):
-                      </label>
-                      <input
-                        type="number"
-                        className="form-input"
-                        value={normMaxTarget}
-                        onChange={(e) => setNormMaxTarget(e.target.value === '' ? '' : Number(e.target.value))}
-                        style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
-                      />
-                    </div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "6px" }}>
+                      {normMinTarget !== "" && normMaxTarget !== "" ? (
+                        <>Nilai terendah akan diset ke <strong>{normMinTarget}</strong> dan tertinggi ke <strong>{normMaxTarget}</strong> secara proporsional.</>
+                      ) : (
+                        "Tentukan target batas bawah (misal 60) dan target batas atas (misal 100) untuk meratakan sebaran nilai."
+                      )}
+                    </span>
                   </div>
                 )}
 
@@ -8853,12 +8870,16 @@ function DetailKelasContent({ params: paramsPromise }) {
                       type="number"
                       className="form-input"
                       value={normMaxOnlyTarget}
-                      onChange={(e) => setNormMaxOnlyTarget(e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="Contoh: 100"
+                      onChange={(e) => setNormMaxOnlyTarget(e.target.value)}
+                      placeholder={`Contoh: ${Number(kelas?.skemaPenilaian?.maxCap) || 100}`}
                       style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "160px" }}
                     />
                     <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "4px" }}>
-                      Siswa dengan nilai murni tertinggi akan diset menjadi {normMaxOnlyTarget}, dan siswa lainnya disesuaikan secara proporsional.
+                      {normMaxOnlyTarget !== "" ? (
+                        <>Siswa dengan nilai murni tertinggi akan diset menjadi <strong>{normMaxOnlyTarget}</strong>, dan nilai siswa lainnya disesuaikan secara proporsional.</>
+                      ) : (
+                        "Ketikkan target nilai tertinggi (misal 100) yang akan menjadi patokan skala nilai kelas."
+                      )}
                     </span>
                   </div>
                 )}
@@ -8881,8 +8902,6 @@ function DetailKelasContent({ params: paramsPromise }) {
                       if (isAllFilled) filledCount++;
                     }
                   });
-
-
 
                   let totalPoinBonus = 0;
                   if (skema.enableBonusStars) {
@@ -8909,21 +8928,39 @@ function DetailKelasContent({ params: paramsPromise }) {
                 const minMurni = Math.min(...allMurni);
                 const maxMurni = Math.max(...allMurni);
 
+                const isParamReady = (() => {
+                  if (normMethod === "linear") return normLinearPoin !== "" && !isNaN(Number(normLinearPoin));
+                  if (normMethod === "minmax") return normMinTarget !== "" && normMaxTarget !== "" && !isNaN(Number(normMinTarget)) && !isNaN(Number(normMaxTarget));
+                  if (normMethod === "scalemax") return normMaxOnlyTarget !== "" && !isNaN(Number(normMaxOnlyTarget)) && Number(normMaxOnlyTarget) > 0;
+                  return false;
+                })();
+
                 const computedPreview = previewList.map(s => {
+                  if (!isParamReady) {
+                    return {
+                      ...s,
+                      normalizedScore: null,
+                      newDelta: null
+                    };
+                  }
+
                   let rawNormalized = s.totalMurni;
                   if (normMethod === "linear") {
                     rawNormalized = s.totalMurni + (Number(normLinearPoin) || 0);
                   } else if (normMethod === "minmax") {
+                    const minT = Number(normMinTarget);
+                    const maxT = Number(normMaxTarget);
                     if (maxMurni === minMurni) {
-                      rawNormalized = normMinTarget;
+                      rawNormalized = minT;
                     } else {
-                      rawNormalized = normMinTarget + ((s.totalMurni - minMurni) / (maxMurni - minMurni)) * (normMaxTarget - normMinTarget);
+                      rawNormalized = minT + ((s.totalMurni - minMurni) / (maxMurni - minMurni)) * (maxT - minT);
                     }
                   } else if (normMethod === "scalemax") {
+                    const maxT = Number(normMaxOnlyTarget);
                     if (maxMurni === 0) {
                       rawNormalized = 0;
                     } else {
-                      rawNormalized = (s.totalMurni / maxMurni) * normMaxOnlyTarget;
+                      rawNormalized = (s.totalMurni / maxMurni) * maxT;
                     }
                   }
                   
@@ -8939,12 +8976,21 @@ function DetailKelasContent({ params: paramsPromise }) {
                 });
 
                 const avgCurrent = (computedPreview.reduce((sum, s) => sum + s.finalCurrent, 0) / computedPreview.length).toFixed(2);
-                const avgNormalized = (computedPreview.reduce((sum, s) => sum + s.normalizedScore, 0) / computedPreview.length).toFixed(2);
+                const avgNormalized = isParamReady
+                  ? (computedPreview.reduce((sum, s) => sum + (s.normalizedScore || 0), 0) / computedPreview.length).toFixed(2)
+                  : "-";
 
                 return (
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", backgroundColor: "var(--bg-tertiary)", padding: "8px 12px", borderRadius: "6px" }}>
-                      <span>Rata-rata Kelas: <strong>{avgCurrent}</strong> ➔ <strong style={{ color: "var(--primary)" }}>{avgNormalized}</strong></span>
+                      <span>
+                        Rata-rata Kelas: <strong>{avgCurrent}</strong>
+                        {isParamReady ? (
+                          <> ➔ <strong style={{ color: "var(--primary)" }}>{avgNormalized}</strong></>
+                        ) : (
+                          <span style={{ color: "var(--text-muted)", marginLeft: "6px" }}>(Masukkan target untuk simulasi)</span>
+                        )}
+                      </span>
                       <span>Rentang Murni: <strong>{minMurni} – {maxMurni}</strong></span>
                     </div>
 
@@ -8967,9 +9013,11 @@ function DetailKelasContent({ params: paramsPromise }) {
                                 <td style={{ padding: "6px 12px", fontWeight: "600" }}>{s.nama}</td>
                                 <td style={{ padding: "6px 12px", textAlign: "center", color: "var(--text-muted)" }}>{s.totalMurni}</td>
                                 <td style={{ padding: "6px 12px", textAlign: "center" }}>{s.finalCurrent}</td>
-                                <td style={{ padding: "6px 12px", textAlign: "center", fontWeight: "800", color: "var(--primary)" }}>{s.normalizedScore}</td>
-                                <td style={{ padding: "6px 12px", textAlign: "center", fontWeight: "700", color: s.newDelta >= 0 ? "#10b981" : "#ef4444" }}>
-                                  {s.newDelta >= 0 ? `+${s.newDelta}` : s.newDelta}
+                                <td style={{ padding: "6px 12px", textAlign: "center", fontWeight: "800", color: isParamReady ? "var(--primary)" : "var(--text-muted)" }}>
+                                  {isParamReady ? s.normalizedScore : "-"}
+                                </td>
+                                <td style={{ padding: "6px 12px", textAlign: "center", fontWeight: "700", color: !isParamReady ? "var(--text-muted)" : s.newDelta >= 0 ? "#10b981" : "#ef4444" }}>
+                                  {isParamReady ? (s.newDelta >= 0 ? `+${s.newDelta}` : s.newDelta) : "-"}
                                 </td>
                               </tr>
                             ))}
@@ -9020,7 +9068,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                         </button>
                         <button
                           onClick={async () => {
-                            if (handleLockedAction()) return;
+                            if (!isParamReady || handleLockedAction()) return;
                             setIsSavingNorm(true);
                             try {
                               const promises = computedPreview.map(s =>
@@ -9044,10 +9092,16 @@ function DetailKelasContent({ params: paramsPromise }) {
                             }
                           }}
                           className="btn btn-primary"
-                          style={{ padding: "6px 16px", fontSize: "0.82rem", fontWeight: "700" }}
-                          disabled={isSavingNorm}
+                          style={{
+                            padding: "6px 16px",
+                            fontSize: "0.82rem",
+                            fontWeight: "700",
+                            opacity: isParamReady ? 1 : 0.65,
+                            cursor: isParamReady ? "pointer" : "not-allowed"
+                          }}
+                          disabled={isSavingNorm || !isParamReady}
                         >
-                          {isSavingNorm ? "Terapkan..." : `Terapkan Normalisasi (${computedPreview.length} Siswa)`}
+                          {isSavingNorm ? "Terapkan..." : isParamReady ? `Terapkan Normalisasi (${computedPreview.length} Siswa)` : "Isi Parameter di Atas"}
                         </button>
                       </div>
                     </div>
