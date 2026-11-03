@@ -18,6 +18,7 @@ function StudentPortalContent() {
   const [simulationScores, setSimulationScores] = useState({});
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
   const [isPresensiOpen, setIsPresensiOpen] = useState(false);
+  const [infoModalItem, setInfoModalItem] = useState(null);
   const [generatedImage, setGeneratedImage] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
@@ -1058,53 +1059,171 @@ function StudentPortalContent() {
                           <thead>
                             <tr>
                               <th>Komponen Nilai</th>
-                              <th>Bobot</th>
-                              <th>Nilai</th>
+                              <th style={{ textAlign: "right", paddingRight: "16px", width: "160px" }}>Nilai</th>
                             </tr>
                           </thead>
                           <tbody>
                             {res.detailNilai.map((col) => {
-                              const isExpanded = expandedGroups[col.kolomId];
+                              // Sub-komponen otomatis terbuka (maximize) secara default
+                              const isExpanded = expandedGroups[col.kolomId] !== false;
                               return (
                               <Fragment key={col.kolomId}>
                                 {/* Baris komponen utama / grup */}
-                                <tr style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: isExpanded ? "none" : "1px solid var(--border-color)", cursor: "pointer", transition: "background-color 0.2s" } : col.isPresensi ? { backgroundColor: "rgba(16,185,129,0.06)" } : {}} onClick={() => { if(col.isGroup) setExpandedGroups(prev => ({...prev, [col.kolomId]: !prev[col.kolomId]})) }}>
-                                  <td style={{ fontWeight: col.isGroup ? "800" : "600" }}>
-                                    {col.isGroup && <span style={{ fontSize: "0.7rem", backgroundColor: "var(--primary-glow)", color: "var(--primary)", border: "1px solid var(--primary)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>GRUP</span>}
-                                    {col.isPresensi && <span style={{ fontSize: "0.7rem", backgroundColor: "rgba(16,185,129,0.1)", color: "var(--success)", border: "1px solid var(--success)", padding: "1px 5px", borderRadius: "4px", marginRight: "6px", fontWeight: "700" }}>📅 PRESENSI</span>}
-                                    {col.namaKolom}
-                                    {col.isGroup && (
-                                      <span style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease", display: "inline-block", color: "var(--text-muted)", fontSize: "0.8rem", float: "right", marginTop: "2px" }}>
-                                        ▼
-                                      </span>
-                                    )}
+                                <tr 
+                                  style={col.isGroup ? { backgroundColor: "rgba(59,130,246,0.06)", borderBottom: isExpanded ? "none" : "1px solid var(--border-color)", cursor: "pointer", transition: "background-color 0.2s" } : col.isPresensi ? { backgroundColor: "rgba(16,185,129,0.06)" } : {}} 
+                                  onClick={() => { 
+                                    if (col.isGroup) {
+                                      setExpandedGroups(prev => ({ ...prev, [col.kolomId]: prev[col.kolomId] === false ? true : false }));
+                                    }
+                                  }}
+                                >
+                                  <td style={{ verticalAlign: "middle" }}>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                        {col.isGroup && (
+                                          <span style={{
+                                            fontSize: "0.7rem",
+                                            backgroundColor: "rgba(59, 130, 246, 0.12)",
+                                            color: "var(--primary)",
+                                            border: "1px solid rgba(59, 130, 246, 0.3)",
+                                            padding: "2px 8px",
+                                            borderRadius: "6px",
+                                            fontWeight: "700",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px"
+                                          }}>
+                                            📂 {col.subDetail?.length || 0} Sub-Nilai
+                                          </span>
+                                        )}
+                                        {col.isPresensi && (
+                                          <span style={{
+                                            fontSize: "0.7rem",
+                                            backgroundColor: "rgba(16, 185, 129, 0.12)",
+                                            color: "var(--success)",
+                                            border: "1px solid rgba(16, 185, 129, 0.3)",
+                                            padding: "2px 8px",
+                                            borderRadius: "6px",
+                                            fontWeight: "700",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px"
+                                          }}>
+                                            📅 PRESENSI
+                                          </span>
+                                        )}
+                                        <span style={{ fontWeight: col.isGroup ? "800" : "600", fontSize: "0.95rem", color: "var(--text-primary)" }}>
+                                          {col.namaKolom}
+                                        </span>
+                                        {col.isGroup && (
+                                          <span style={{
+                                            fontSize: "0.72rem",
+                                            color: "var(--text-muted)",
+                                            marginLeft: "auto",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px"
+                                          }}>
+                                            <span>{isExpanded ? "Sembunyikan" : "Buka Rincian"}</span>
+                                            <span style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease", display: "inline-block" }}>▼</span>
+                                          </span>
+                                        )}
+                                      </div>
+                                      {col.isGroup && (
+                                        <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", fontWeight: "500", display: "flex", alignItems: "center", gap: "4px", paddingLeft: "2px" }}>
+                                          <span>↳</span>
+                                          <span style={{ fontStyle: "italic" }}>
+                                            Nilai baris ini adalah <strong>hasil rata-rata</strong> dari {col.subDetail?.length || 0} sub-komponen di bawah:
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </td>
-                                  <td>{col.bobot}%</td>
-                                  <td style={{
-                                    fontWeight: "700",
-                                    color: col.isMayoritasSudah
-                                      ? "var(--warning, #d97706)"
-                                      : col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-"
-                                        ? "var(--text-muted)"
-                                        : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
-                                          ? "var(--success)"
-                                          : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
-                                            ? "var(--danger)"
-                                            : "var(--text-primary)"
-                                  }}>
-                                    {col.isMayoritasSudah ? (
-                                      <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                        Kosong (Mayoritas Kelas Sudah Dinilai) ⚠️
-                                      </span>
-                                    ) : (
-                                      col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli
-                                    )}
-                                    {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && col.hitungMetode !== "persentase" && (
-                                      <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "500", marginLeft: "4px" }}>(rata-rata)</span>
-                                    )}
-                                    {col.isPresensi && col.nilaiAsli !== null && col.nilaiAsli !== "-" && (
-                                      <span style={{ fontSize: "0.7rem", color: "var(--success)", fontWeight: "500", marginLeft: "4px" }}>(dari presensi)</span>
-                                    )}
+                                  <td style={{ textAlign: "right", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+                                    <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                                        <span style={{
+                                          fontWeight: "800",
+                                          fontSize: "1.05rem",
+                                          color: col.isMayoritasSudah
+                                            ? "var(--warning, #d97706)"
+                                            : col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-"
+                                              ? "var(--text-muted)"
+                                              : col.nilaiAsli === "Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli >= res.kkm)
+                                                ? "var(--success)"
+                                                : col.nilaiAsli === "Belum Tuntas" || (typeof col.nilaiAsli === 'number' && col.nilaiAsli < res.kkm)
+                                                  ? "var(--danger)"
+                                                  : "var(--text-primary)"
+                                        }}>
+                                          {col.isMayoritasSudah ? (
+                                            <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                              Kosong ⚠️
+                                            </span>
+                                          ) : (
+                                            col.nilaiAsli === null || col.nilaiAsli === "" || col.nilaiAsli === "-" ? "Belum Diisi" : col.nilaiAsli
+                                          )}
+                                        </span>
+                                        {col.isGroup && col.nilaiAsli !== null && col.nilaiAsli !== "-" && (
+                                          <span style={{
+                                            fontSize: "0.66rem",
+                                            color: "var(--primary)",
+                                            fontWeight: "700",
+                                            backgroundColor: "rgba(59, 130, 246, 0.1)",
+                                            padding: "1px 6px",
+                                            borderRadius: "4px",
+                                            marginTop: "2px"
+                                          }}>
+                                            Rata-rata Sub
+                                          </span>
+                                        )}
+                                        {col.isPresensi && col.nilaiAsli !== null && col.nilaiAsli !== "-" && (
+                                          <span style={{ fontSize: "0.66rem", color: "var(--success)", fontWeight: "700", backgroundColor: "rgba(16, 185, 129, 0.1)", padding: "1px 6px", borderRadius: "4px", marginTop: "2px" }}>
+                                            Presensi
+                                          </span>
+                                        )}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setInfoModalItem(col);
+                                        }}
+                                        style={{
+                                          width: "24px",
+                                          height: "24px",
+                                          minWidth: "24px",
+                                          borderRadius: "50%",
+                                          border: "1px solid var(--border-color)",
+                                          backgroundColor: "var(--bg-tertiary)",
+                                          color: "var(--text-secondary)",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          fontSize: "0.8rem",
+                                          fontWeight: "800",
+                                          cursor: "pointer",
+                                          transition: "all 0.2s ease",
+                                          padding: 0,
+                                          lineHeight: 1
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.color = "var(--primary)";
+                                          e.currentTarget.style.borderColor = "var(--primary)";
+                                          e.currentTarget.style.backgroundColor = "var(--primary-glow)";
+                                          e.currentTarget.style.transform = "scale(1.1)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.color = "var(--text-secondary)";
+                                          e.currentTarget.style.borderColor = "var(--border-color)";
+                                          e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                                          e.currentTarget.style.transform = "scale(1)";
+                                        }}
+                                        title="Klik untuk info bobot & penjelasan nilai"
+                                        aria-label="Info Komponen"
+                                      >
+                                        !
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
 
@@ -1112,8 +1231,8 @@ function StudentPortalContent() {
                                 {col.isGroup && isExpanded && col.subDetail?.map((sub, idx) => {
                                   const isLast = idx === col.subDetail.length - 1;
                                   return (
-                                  <tr key={sub.subId} style={{ backgroundColor: "rgba(59,130,246,0.015)", transition: "all 0.3s ease" }} className="animate-fade-in">
-                                    <td style={{ position: "relative", paddingLeft: "3.2rem", fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "600", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
+                                  <tr key={sub.subId} style={{ backgroundColor: "rgba(59,130,246,0.02)", transition: "all 0.3s ease" }} className="animate-fade-in">
+                                    <td style={{ position: "relative", paddingLeft: "3.2rem", fontSize: "0.88rem", color: "var(--text-secondary)", fontWeight: "600", borderBottom: isLast ? "1px solid var(--border-color)" : "none", verticalAlign: "middle" }}>
                                       {/* Garis vertikal pohon */}
                                       <div style={{ position: "absolute", left: "1.5rem", top: "-1px", bottom: isLast ? "50%" : "-1px", borderLeft: "2px solid rgba(59,130,246,0.3)" }}></div>
                                       {/* Garis horizontal pohon */}
@@ -1122,30 +1241,84 @@ function StudentPortalContent() {
                                       {/* Ikon dot kecil */}
                                       <div style={{ position: "absolute", left: "2.3rem", top: "50%", transform: "translateY(-50%)", width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", opacity: 0.8 }}></div>
 
-                                      <span style={{ position: "relative", zIndex: 1 }}>{sub.nama}</span>
+                                      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <span>{sub.nama}</span>
+                                        {sub.bobot != null && (
+                                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", backgroundColor: "var(--bg-tertiary)", padding: "1px 6px", borderRadius: "4px" }}>
+                                            Porsi {sub.bobot}%
+                                          </span>
+                                        )}
+                                      </div>
                                     </td>
-                                    <td style={{ fontSize: "0.82rem", color: "var(--text-muted)", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
-                                      {sub.bobot != null ? <span style={{ backgroundColor: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: "4px" }}>{sub.bobot}%</span> : "—"}
-                                    </td>
-                                    <td style={{
-                                      fontWeight: "800",
-                                      fontSize: "0.9rem",
-                                      borderBottom: isLast ? "1px solid var(--border-color)" : "none",
-                                      color: sub.isMayoritasSudah
-                                        ? "var(--warning, #d97706)"
-                                        : sub.nilaiAsli === null
-                                          ? "var(--text-muted)"
-                                          : sub.nilaiAsli >= res.kkm
-                                            ? "var(--success)"
-                                            : "var(--danger)"
-                                    }}>
-                                      {sub.isMayoritasSudah ? (
-                                        <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk sub-komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.8rem", fontWeight: "600" }}>
-                                          Kosong ⚠️
+                                    <td style={{ textAlign: "right", verticalAlign: "middle", whiteSpace: "nowrap", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
+                                      <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                                        <span style={{
+                                          fontWeight: "700",
+                                          fontSize: "0.92rem",
+                                          color: sub.isMayoritasSudah
+                                            ? "var(--warning, #d97706)"
+                                            : sub.nilaiAsli === null
+                                              ? "var(--text-muted)"
+                                              : sub.nilaiAsli >= res.kkm
+                                                ? "var(--success)"
+                                                : "var(--danger)"
+                                        }}>
+                                          {sub.isMayoritasSudah ? (
+                                            <span title="Mayoritas siswa di kelas sudah memiliki nilai untuk sub-komponen ini" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                              Kosong ⚠️
+                                            </span>
+                                          ) : (
+                                            sub.nilaiAsli === null ? "Belum Diisi" : sub.nilaiAsli
+                                          )}
                                         </span>
-                                      ) : (
-                                        sub.nilaiAsli === null ? <span style={{ fontSize: "0.8rem", fontWeight: "600" }}>Belum Diisi</span> : sub.nilaiAsli
-                                      )}
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setInfoModalItem({
+                                              ...sub,
+                                              namaKolom: sub.nama,
+                                              isSub: true,
+                                              parentName: col.namaKolom,
+                                              parentBobot: col.bobot
+                                            });
+                                          }}
+                                          style={{
+                                            width: "22px",
+                                            height: "22px",
+                                            minWidth: "22px",
+                                            borderRadius: "50%",
+                                            border: "1px solid var(--border-color)",
+                                            backgroundColor: "var(--bg-tertiary)",
+                                            color: "var(--text-muted)",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: "0.75rem",
+                                            fontWeight: "800",
+                                            cursor: "pointer",
+                                            transition: "all 0.2s ease",
+                                            padding: 0,
+                                            lineHeight: 1
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.color = "var(--primary)";
+                                            e.currentTarget.style.borderColor = "var(--primary)";
+                                            e.currentTarget.style.backgroundColor = "var(--primary-glow)";
+                                            e.currentTarget.style.transform = "scale(1.1)";
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.color = "var(--text-muted)";
+                                            e.currentTarget.style.borderColor = "var(--border-color)";
+                                            e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+                                            e.currentTarget.style.transform = "scale(1)";
+                                          }}
+                                          title={`Klik info sub-komponen: ${sub.nama}`}
+                                          aria-label="Info Sub-Komponen"
+                                        >
+                                          !
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 )})}
@@ -1157,7 +1330,7 @@ function StudentPortalContent() {
                       </div>
 
                       <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontStyle: "italic", textAlign: "right" }}>
-                        * Nilai Akhir dihitung berdasarkan penjumlahan dari (Nilai Asli &times; Bobot %). KKM kelulusan untuk kelas ini adalah {res.kkm}.
+                        * Klik tombol (!) di sebelah nilai untuk melihat rincian bobot serta arti nilai 0 vs Belum Diisi. KKM kelulusan untuk kelas ini adalah {res.kkm}.
                       </p>
 
                       {/* Watermark for Image Download */}
@@ -1940,6 +2113,199 @@ function StudentPortalContent() {
         );
       })()}
 
+
+      {/* MODAL: INFORMASI BOBOT & PENJELASAN KOMPONEN NILAI */}
+      {infoModalItem && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            backdropFilter: "blur(4px)",
+            padding: "16px"
+          }}
+          className="animate-fade-in"
+          onClick={() => setInfoModalItem(null)}
+        >
+          <div
+            className="glass-card"
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+              position: "relative",
+              backgroundColor: "var(--bg-primary)",
+              maxHeight: "90vh",
+              overflowY: "auto"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setInfoModalItem(null)}
+              style={{
+                position: "absolute",
+                top: "14px",
+                right: "14px",
+                background: "none",
+                border: "none",
+                fontSize: "1.2rem",
+                cursor: "pointer",
+                color: "var(--text-muted)",
+                padding: "4px"
+              }}
+              aria-label="Tutup"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
+              <div style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "10px",
+                backgroundColor: "var(--primary-glow)",
+                color: "var(--primary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.2rem",
+                fontWeight: "800",
+                flexShrink: 0
+              }}>
+                !
+              </div>
+              <div>
+                <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                  Informasi Komponen Nilai
+                </span>
+                <h4 style={{ margin: "2px 0 0 0", fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)" }}>
+                  {infoModalItem.namaKolom || infoModalItem.nama}
+                </h4>
+                {infoModalItem.parentName && (
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "var(--primary)", fontWeight: "600" }}>
+                    Bagian dari: {infoModalItem.parentName}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Card 1: Porsi Bobot Komponen */}
+            <div style={{
+              backgroundColor: "var(--bg-secondary)",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              border: "1px solid var(--border-color)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "6px"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)" }}>
+                  ⚖️ Bobot Komponen
+                </span>
+                <span style={{
+                  fontSize: "0.85rem",
+                  fontWeight: "800",
+                  color: "var(--primary)",
+                  backgroundColor: "var(--primary-glow)",
+                  padding: "2px 10px",
+                  borderRadius: "99px",
+                  border: "1px solid rgba(59, 130, 246, 0.25)"
+                }}>
+                  {infoModalItem.bobot != null ? `${infoModalItem.bobot}%` : (infoModalItem.parentBobot != null ? `Bagian dari ${infoModalItem.parentBobot}%` : "—")}
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: "0.76rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                {infoModalItem.isSub ? (
+                  infoModalItem.bobot != null
+                    ? `Sub-komponen ini memiliki bobot porsi ${infoModalItem.bobot}% di dalam kelompok "${infoModalItem.parentName}".`
+                    : `Nilai sub-komponen ini dirata-ratakan bersama sub-komponen lainnya untuk membentuk nilai "${infoModalItem.parentName}" (bobot total ${infoModalItem.parentBobot || 0}% terhadap nilai akhir).`
+                ) : (
+                  `Komponen ini menyumbang porsi sebesar ${infoModalItem.bobot || 0}% dalam pembentukan Nilai Akhir semester Anda.`
+                )}
+              </p>
+            </div>
+
+            {/* Card 2: Arti Nilai 0 vs Belum Diisi */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <span style={{ fontSize: "0.78rem", fontWeight: "800", color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                💡 Pahami Arti Status Nilai:
+              </span>
+
+              {/* Arti Nilai 0 */}
+              <div style={{
+                backgroundColor: "rgba(239, 68, 68, 0.06)",
+                border: "1px solid rgba(239, 68, 68, 0.25)",
+                borderRadius: "8px",
+                padding: "10px 12px"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "0.9rem" }}>❌</span>
+                  <strong style={{ fontSize: "0.82rem", color: "var(--danger)" }}>Jika Tertulis Angka 0:</strong>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                  Tugas atau ujian ini <strong>sudah dinilai</strong> oleh guru dan Anda mendapatkan skor <strong>0</strong> (misalnya karena belum mengumpulkan, tidak mengikuti ujian, atau hasil jawaban belum tepat). Nilai 0 ini <strong>berpengaruh langsung menurunkan</strong> nilai akhir Anda.
+                </p>
+              </div>
+
+              {/* Arti Belum Diisi */}
+              <div style={{
+                backgroundColor: "rgba(245, 158, 11, 0.08)",
+                border: "1px solid rgba(245, 158, 11, 0.25)",
+                borderRadius: "8px",
+                padding: "10px 12px"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "0.9rem" }}>⏳</span>
+                  <strong style={{ fontSize: "0.82rem", color: "var(--warning)" }}>Jika Tertulis "Belum Diisi":</strong>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                  Guru <strong>belum menginput nilai</strong> untuk komponen ini (misalnya materi belum selesai diajarkan, tugas masih berlangsung, atau sedang dalam proses koreksi). Status ini <strong>belum dihitung</strong> dan <strong>tidak merugikan</strong> nilai akhir Anda.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Komponen Gabungan */}
+            {infoModalItem.isGroup && (
+              <div style={{
+                backgroundColor: "rgba(59, 130, 246, 0.06)",
+                border: "1px solid rgba(59, 130, 246, 0.25)",
+                borderRadius: "8px",
+                padding: "10px 12px"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "0.9rem" }}>📂</span>
+                  <strong style={{ fontSize: "0.82rem", color: "var(--primary)" }}>Nilai Hasil Rata-Rata:</strong>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                  Nilai pada baris komponen ini dihitung secara otomatis dari akumulasi rata-rata <strong>{infoModalItem.subDetail?.length || 0} sub-komponen</strong> di dalamnya.
+                </p>
+              </div>
+            )}
+
+            {/* Button Tutup */}
+            <button
+              onClick={() => setInfoModalItem(null)}
+              className="btn btn-primary"
+              style={{ width: "100%", padding: "10px", fontSize: "0.85rem", fontWeight: "700", marginTop: "2px" }}
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* MODAL: GABUNG KELAS */}
       {joinModalOpen && (
