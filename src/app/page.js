@@ -1243,11 +1243,6 @@ function StudentPortalContent() {
 
                                       <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "6px" }}>
                                         <span>{sub.nama}</span>
-                                        {sub.bobot != null && (
-                                          <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", backgroundColor: "var(--bg-tertiary)", padding: "1px 6px", borderRadius: "4px" }}>
-                                            Porsi {sub.bobot}%
-                                          </span>
-                                        )}
                                       </div>
                                     </td>
                                     <td style={{ textAlign: "right", verticalAlign: "middle", whiteSpace: "nowrap", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
