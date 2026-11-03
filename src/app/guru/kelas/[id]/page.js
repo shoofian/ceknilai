@@ -256,9 +256,8 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [guruProfile, setGuruProfile] = useState(null);
   const [sessionUsername, setSessionUsername] = useState("");
   const isLocked = !!(guruProfile && guruProfile.is_locked);
-  const isShoofian = (guruProfile?.username?.toLowerCase() === "shoofian") || (sessionUsername?.toLowerCase() === "shoofian");
 
-  // State untuk Mode Fokus Siswa (Eksklusif username: shoofian)
+  // State untuk Mode Fokus Siswa
   const [focusStudent, setFocusStudent] = useState(null);
   const [focusStudentTab, setFocusStudentTab] = useState("nilai"); // "nilai" | "presensi"
   const [returnToColumn, setReturnToColumn] = useState(null);
@@ -803,9 +802,8 @@ function DetailKelasContent({ params: paramsPromise }) {
     return mapped;
   }, [kelas?.siswa, kelas?.kolomNilai, temporaryScores, sortConfig]);
 
-  // === MODE FOKUS SISWA (Eksklusif username: shoofian) ===
+  // === MODE FOKUS SISWA ===
   const handleOpenFocusStudent = useCallback((student, preferredTab = null) => {
-    if (!isShoofian) return;
     setReturnToColumn(null);
     setFocusStudent(student);
     if (preferredTab) {
@@ -815,10 +813,9 @@ function DetailKelasContent({ params: paramsPromise }) {
     } else {
       setFocusStudentTab("nilai");
     }
-  }, [isShoofian, activeTab]);
+  }, [activeTab]);
 
   const handleOpenFocusStudentFromColumn = useCallback((student, col) => {
-    if (!isShoofian) return;
     setReturnToColumn(col);
     setFocusColumn(null);
     setFocusStudent(student);
@@ -827,7 +824,7 @@ function DetailKelasContent({ params: paramsPromise }) {
     } else {
       setFocusStudentTab("nilai");
     }
-  }, [isShoofian]);
+  }, []);
 
   const currentFocusStudentIndex = useMemo(() => {
     if (!focusStudent || !sortedStudents) return -1;
@@ -898,7 +895,7 @@ function DetailKelasContent({ params: paramsPromise }) {
   }, [currentFocusStudent, kelas?.skemaPenilaian?.pertemuan]);
 
   useEffect(() => {
-    if (!focusStudent || !isShoofian) return;
+    if (!focusStudent) return;
     const handleKeyNav = (e) => {
       if (e.target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
         return;
@@ -917,7 +914,7 @@ function DetailKelasContent({ params: paramsPromise }) {
     };
     window.addEventListener("keydown", handleKeyNav);
     return () => window.removeEventListener("keydown", handleKeyNav);
-  }, [focusStudent, isShoofian, handlePrevFocusStudent, handleNextFocusStudent]);
+  }, [focusStudent, handlePrevFocusStudent, handleNextFocusStudent]);
 
   // === COMPUTED ANALYTICS & RANKING ===
   const analyticsData = useMemo(() => {
@@ -9827,24 +9824,22 @@ function DetailKelasContent({ params: paramsPromise }) {
               <h3 style={{ margin: 0, fontSize: "0.95rem" }}>Aksi: {studentActionModal.student.nama}</h3>
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              {isShoofian && (
-                <div 
-                  onClick={() => { 
-                    const s = studentActionModal.student;
-                    setStudentActionModal(null); 
-                    handleOpenFocusStudent(s); 
-                  }}
-                  style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--primary)" }}
-                  onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
-                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
-                >
-                  <span style={{ display: "flex", alignItems: "center" }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                  </span>
-                  Mode Fokus Siswa
-                  <span style={{ marginLeft: "auto", fontSize: "0.68rem", backgroundColor: "rgba(59, 130, 246, 0.15)", color: "var(--primary)", padding: "2px 6px", borderRadius: "10px", fontWeight: "700" }}>PRO</span>
-                </div>
-              )}
+              <div 
+                onClick={() => { 
+                  const s = studentActionModal.student;
+                  setStudentActionModal(null); 
+                  handleOpenFocusStudent(s); 
+                }}
+                style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--primary)" }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+              >
+                <span style={{ display: "flex", alignItems: "center" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                </span>
+                Mode Fokus Siswa
+                <span style={{ marginLeft: "auto", fontSize: "0.68rem", backgroundColor: "rgba(59, 130, 246, 0.15)", color: "var(--primary)", padding: "2px 6px", borderRadius: "10px", fontWeight: "700" }}>FOKUS</span>
+              </div>
               <div 
                 onClick={() => { setStudentActionModal(null); handleOpenHistory(studentActionModal.student); }}
                 style={{ padding: "10px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", opacity: (studentActionModal.student.nilai && studentActionModal.student.nilai._login_history && studentActionModal.student.nilai._login_history.length > 0) ? 1 : 0.6 }}
@@ -10433,52 +10428,50 @@ function DetailKelasContent({ params: paramsPromise }) {
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span 
                               style={{ 
-                                cursor: isShoofian ? "pointer" : "default",
+                                cursor: "pointer",
                                 transition: "color 0.15s ease"
                               }}
-                              onMouseEnter={(e) => { if (isShoofian) e.currentTarget.style.color = "var(--primary)"; }}
-                              onMouseLeave={(e) => { if (isShoofian) e.currentTarget.style.color = "inherit"; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.color = "inherit"; }}
                               onClick={() => {
-                                if (isShoofian) handleOpenFocusStudentFromColumn(student, focusColumn);
+                                handleOpenFocusStudentFromColumn(student, focusColumn);
                               }}
-                              title={isShoofian ? `Buka Mode Fokus Siswa: ${student.nama}` : undefined}
+                              title={`Buka Mode Fokus Siswa: ${student.nama}`}
                             >
                               {student.nama}
                             </span>
-                            {isShoofian && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenFocusStudentFromColumn(student, focusColumn);
-                                }}
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  padding: "2px 4px",
-                                  color: "var(--text-muted)",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  opacity: 0.5,
-                                  borderRadius: "4px",
-                                  transition: "all 0.15s ease",
-                                  flexShrink: 0
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.opacity = "1";
-                                  e.currentTarget.style.color = "var(--primary)";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.opacity = "0.5";
-                                  e.currentTarget.style.color = "var(--text-muted)";
-                                }}
-                                title={`Mode Fokus Siswa: ${student.nama}`}
-                              >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenFocusStudentFromColumn(student, focusColumn);
+                              }}
+                              style={{
+                                background: "transparent",
+                                border: "none",
+                                padding: "2px 4px",
+                                color: "var(--text-muted)",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                opacity: 0.5,
+                                borderRadius: "4px",
+                                transition: "all 0.15s ease",
+                                flexShrink: 0
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.opacity = "1";
+                                e.currentTarget.style.color = "var(--primary)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.opacity = "0.5";
+                                e.currentTarget.style.color = "var(--text-muted)";
+                              }}
+                              title={`Mode Fokus Siswa: ${student.nama}`}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                            </button>
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
@@ -10545,52 +10538,50 @@ function DetailKelasContent({ params: paramsPromise }) {
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span 
                               style={{ 
-                                cursor: isShoofian ? "pointer" : "default",
+                                cursor: "pointer",
                                 transition: "color 0.15s ease"
                               }}
-                              onMouseEnter={(e) => { if (isShoofian) e.currentTarget.style.color = "var(--primary)"; }}
-                              onMouseLeave={(e) => { if (isShoofian) e.currentTarget.style.color = "inherit"; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.color = "var(--primary)"; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.color = "inherit"; }}
                               onClick={() => {
-                                if (isShoofian) handleOpenFocusStudentFromColumn(student, focusColumn);
+                                handleOpenFocusStudentFromColumn(student, focusColumn);
                               }}
-                              title={isShoofian ? `Buka Mode Fokus Siswa: ${student.nama}` : undefined}
+                              title={`Buka Mode Fokus Siswa: ${student.nama}`}
                             >
                               {student.nama}
                             </span>
-                            {isShoofian && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenFocusStudentFromColumn(student, focusColumn);
-                                }}
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  padding: "2px 4px",
-                                  color: "var(--text-muted)",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  opacity: 0.5,
-                                  borderRadius: "4px",
-                                  transition: "all 0.15s ease",
-                                  flexShrink: 0
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.opacity = "1";
-                                  e.currentTarget.style.color = "var(--primary)";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.opacity = "0.5";
-                                  e.currentTarget.style.color = "var(--text-muted)";
-                                }}
-                                title={`Mode Fokus Siswa: ${student.nama}`}
-                              >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenFocusStudentFromColumn(student, focusColumn);
+                              }}
+                              style={{
+                                background: "transparent",
+                                border: "none",
+                                padding: "2px 4px",
+                                color: "var(--text-muted)",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                opacity: 0.5,
+                                borderRadius: "4px",
+                                transition: "all 0.15s ease",
+                                flexShrink: 0
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.opacity = "1";
+                                e.currentTarget.style.color = "var(--primary)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.opacity = "0.5";
+                                e.currentTarget.style.color = "var(--text-muted)";
+                              }}
+                              title={`Mode Fokus Siswa: ${student.nama}`}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                            </button>
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
@@ -10660,8 +10651,8 @@ function DetailKelasContent({ params: paramsPromise }) {
       </Modal>
       )}
 
-      {/* Modal Mode Fokus Siswa (Eksklusif Username: shoofian) */}
-      {focusStudent && isShoofian && currentFocusStudent && (
+      {/* Modal Mode Fokus Siswa */}
+      {focusStudent && currentFocusStudent && (
         <div 
           className="animate-fade-in" 
           onClick={() => { setFocusStudent(null); setReturnToColumn(null); }} 
