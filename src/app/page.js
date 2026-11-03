@@ -823,15 +823,6 @@ function StudentPortalContent() {
                             ✨ Simulasi
                           </button>
                         )}
-                        {res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
-                          <button
-                            onClick={() => setIsPresensiOpen(true)}
-                            className="compact-action-btn"
-                            style={{ border: "1px solid rgba(99,102,241,0.25)", background: "rgba(99,102,241,0.08)", color: "#6366f1" }}
-                          >
-                            📅 Presensi
-                          </button>
-                        )}
                         <button
                           onClick={() => handleDownloadImage(res.kelasId)}
                           disabled={isGenerating}
@@ -925,20 +916,58 @@ function StudentPortalContent() {
                       {res.rekapPresensi && res.rekapPresensi.totalPertemuan > 0 && (
                         <div 
                           className="glass-card animate-fade-in" 
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setIsPresensiOpen(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              setIsPresensiOpen(true);
+                            }
+                          }}
                           style={{ 
                             padding: "20px", 
                             borderRadius: "var(--radius-md)", 
                             border: "1px solid var(--border-color)", 
                             backgroundColor: "var(--bg-secondary)", 
                             marginBottom: "16px",
-                            boxShadow: "var(--shadow-sm)"
+                            boxShadow: "var(--shadow-sm)",
+                            cursor: "pointer",
+                            transition: "var(--transition)"
                           }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = "var(--primary)";
+                            e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = "var(--border-color)";
+                            e.currentTarget.style.boxShadow = "var(--shadow-sm)";
+                          }}
+                          title="Klik untuk melihat rincian tanggal, materi, dan status presensi per pertemuan"
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                            <span style={{ fontSize: "1.2rem" }}>📊</span>
-                            <h5 style={{ fontSize: "0.95rem", fontWeight: "800", color: "var(--text-primary)", margin: 0, fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                              Rekapan Presensi & Kehadiran
-                            </h5>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "8px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <span style={{ fontSize: "1.2rem" }}>📊</span>
+                              <h5 style={{ fontSize: "0.95rem", fontWeight: "800", color: "var(--text-primary)", margin: 0, fontFamily: "var(--font-heading)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                Rekapan Presensi & Kehadiran
+                              </h5>
+                            </div>
+                            <div style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              fontSize: "0.78rem",
+                              fontWeight: "700",
+                              color: "var(--primary)",
+                              backgroundColor: "var(--primary-glow)",
+                              border: "1px solid rgba(59, 130, 246, 0.25)",
+                              padding: "4px 12px",
+                              borderRadius: "999px",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+                            }}>
+                              <span>📅 Rincian Pertemuan</span>
+                              <span style={{ fontSize: "0.85rem" }}>➔</span>
+                            </div>
                           </div>
 
                           <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
@@ -994,6 +1023,28 @@ function StudentPortalContent() {
                                 <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "var(--danger)", marginTop: "2px" }}>{res.rekapPresensi.summary.A || 0}</div>
                               </div>
                             </div>
+                          </div>
+
+                          {/* Interactive Footer Cue */}
+                          <div style={{
+                            marginTop: "14px",
+                            paddingTop: "10px",
+                            borderTop: "1px dashed var(--border-color)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            fontSize: "0.78rem",
+                            color: "var(--text-secondary)",
+                            flexWrap: "wrap",
+                            gap: "6px"
+                          }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span>🔍</span>
+                              <span>Klik kartu ini untuk melihat rincian tanggal, materi, & status kehadiran</span>
+                            </span>
+                            <span style={{ fontWeight: "700", color: "var(--primary)", display: "flex", alignItems: "center", gap: "4px" }}>
+                              Buka Rincian ➔
+                            </span>
                           </div>
                         </div>
                       )}
