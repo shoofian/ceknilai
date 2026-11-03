@@ -12,6 +12,8 @@ export default function GuruLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [guru, setGuru] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [isPopup, setIsPopup] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -20,6 +22,51 @@ export default function GuruLayout({ children }) {
   const [pendingPayments, setPendingPayments] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Deteksi ukuran layar desktop dan simpan status minimize sidebar
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth > 1024);
+    };
+    checkDesktop();
+    window.addEventListener("resize", checkDesktop);
+
+    try {
+      const savedCollapsed = localStorage.getItem("ceknilai_sidebar_collapsed");
+      if (savedCollapsed !== null) {
+        setSidebarCollapsed(savedCollapsed === "true");
+      }
+    } catch (e) {}
+
+    // Shortcut keyboard Ctrl+B / Cmd+B untuk minimize/expand sidebar di PC
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
+        const tag = e.target?.tagName?.toLowerCase();
+        if (tag !== "input" && tag !== "textarea" && !e.target?.isContentEditable) {
+          e.preventDefault();
+          toggleSidebarCollapsed();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("resize", checkDesktop);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("ceknilai_sidebar_collapsed", String(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const isEffectiveCollapsed = sidebarCollapsed && isDesktop;
 
   // Inisialisasi mode dari localStorage saat pertama mount dan cek status popup
   useEffect(() => {
@@ -129,33 +176,35 @@ export default function GuruLayout({ children }) {
   };
 
   const navItems = [
-    { name: "📚 Daftar Kelas", path: "/guru/kelas" },
+    { icon: "📚", name: "Daftar Kelas", path: "/guru/kelas" },
   ];
 
   // Cetak Laporan is now hidden from sidebar navigation as it is accessible as a modal preview inside Kelola Kelas.
   
   if (guru) {
-    navItems.push({ name: "👨‍🏫 Wali Kelas", path: "/guru/walikelas" });
+    navItems.push({ icon: "👨‍🏫", name: "Wali Kelas", path: "/guru/walikelas" });
     if (guru.walikelas_tingkatan && guru.walikelas_rombel_nama) {
-      navItems.push({ name: "📄 e-Rapor", path: "/guru/erapor" });
+      navItems.push({ icon: "📄", name: "e-Rapor", path: "/guru/erapor" });
     }
   }
 
-    if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
-      navItems.push({ 
-        name: "🛡️ Superadmin Panel", 
-        path: "/guru/superadmin",
-        badge: pendingPayments > 0 ? pendingPayments : null
-      });
-    }
-    
-    // Add "Konfigurasi Sekolah" for Superadmin OR Admin Sekolah
-    if (guru && (["superadmin", "shoofian"].includes(guru.username.toLowerCase()) || guru.is_admin_sekolah)) {
-      navItems.push({ name: "🏫 Konfigurasi Sekolah", path: "/guru/sekolah" });
-    }
+  if (guru && ["superadmin", "shoofian"].includes(guru.username.toLowerCase())) {
+    navItems.push({ 
+      icon: "🛡️",
+      name: "Superadmin Panel", 
+      path: "/guru/superadmin",
+      badge: pendingPayments > 0 ? pendingPayments : null
+    });
+  }
+  
+  // Add "Konfigurasi Sekolah" for Superadmin OR Admin Sekolah
+  if (guru && (["superadmin", "shoofian"].includes(guru.username.toLowerCase()) || guru.is_admin_sekolah)) {
+    navItems.push({ icon: "🏫", name: "Konfigurasi Sekolah", path: "/guru/sekolah" });
+  }
 
-    navItems.push({
-    name: "💬 Chat Bantuan (WA)",
+  navItems.push({
+    icon: "💬",
+    name: "Chat Bantuan (WA)",
     path: "https://wa.me/6285157544004?text=Halo%20Admin,%20saya%20butuh%20bantuan%20mengenai%20Cek%20Nilai.",
     isExternal: true
   });
@@ -316,29 +365,129 @@ export default function GuruLayout({ children }) {
       )}
 
       {/* Sidebar Navigation */}
-      <aside className={`sidebar ${sidebarOpen ? "active" : ""} no-print`}>
+      <aside className={`sidebar ${sidebarOpen ? "active" : ""} ${isEffectiveCollapsed ? "collapsed" : ""} no-print`}>
         {/* Logo and Brand */}
-        <div style={{ height: "var(--header-height)", display: "flex", alignItems: "center", gap: "10px", padding: "0 24px", borderBottom: "1px solid var(--border-color)" }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--theme-gradient, linear-gradient(135deg, var(--primary), var(--primary-hover)))", display: "flex", justifyContent: "center", alignItems: "center", fontWeight: "800", color: "#ffffff", fontSize: "1.05rem", boxShadow: "0 2px 8px var(--theme-glow, rgba(0,0,0,0.15))" }}>
-            N
+        <div style={{
+          height: "var(--header-height)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: isEffectiveCollapsed ? "center" : "space-between",
+          padding: isEffectiveCollapsed ? "0" : "0 16px 0 20px",
+          borderBottom: "1px solid var(--border-color)",
+          transition: "var(--transition)"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, overflow: "hidden" }}>
+            <div
+              onClick={toggleSidebarCollapsed}
+              style={{
+                width: "34px",
+                height: "34px",
+                minWidth: "34px",
+                borderRadius: "8px",
+                background: "var(--theme-gradient, linear-gradient(135deg, var(--primary), var(--primary-hover)))",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                fontWeight: "800",
+                color: "#ffffff",
+                fontSize: "1.05rem",
+                boxShadow: "0 2px 8px var(--theme-glow, rgba(0,0,0,0.15))",
+                cursor: "pointer",
+                transition: "transform 0.2s"
+              }}
+              title={isEffectiveCollapsed ? "Perluas Sidebar" : "CekNilai Guru"}
+            >
+              N
+            </div>
+            {!isEffectiveCollapsed && (
+              <div style={{ overflow: "hidden", whiteSpace: "nowrap" }}>
+                <h2 style={{ fontSize: "1.05rem", fontWeight: "800", margin: 0 }}>CekNilai</h2>
+                <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: "500", margin: 0 }}>PANEL KONTROL GURU</p>
+              </div>
+            )}
           </div>
-          <div>
-            <h2 style={{ fontSize: "1.05rem", fontWeight: "800" }}>CekNilai</h2>
-            <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: "500" }}>PANEL KONTROL GURU</p>
-          </div>
+
+          {!isEffectiveCollapsed && (
+            <button
+              onClick={toggleSidebarCollapsed}
+              className="hide-on-mobile"
+              title="Perkecil Sidebar (Ctrl+B)"
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                padding: "6px",
+                borderRadius: "6px",
+                color: "var(--text-muted)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "var(--transition)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--primary)";
+                e.currentTarget.style.backgroundColor = "var(--bg-tertiary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-muted)";
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="11 17 6 12 11 7"></polyline>
+                <polyline points="18 17 13 12 18 7"></polyline>
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* User Quick Info */}
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "4px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-primary)" }}>{guru?.nama}</span>
-            {guru?.is_locked && <span title="Akun Terkunci (Read-Only)" style={{ fontSize: "0.85rem", cursor: "help" }}>🔒</span>}
-          </div>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>{guru?.email}</p>
+        <div style={{
+          padding: isEffectiveCollapsed ? "16px 0" : "20px 24px",
+          borderBottom: "1px solid var(--border-color)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: isEffectiveCollapsed ? "center" : "flex-start",
+          gap: "4px",
+          transition: "var(--transition)"
+        }} title={`${guru?.nama || "Guru"} (${guru?.email || ""})`}>
+          {isEffectiveCollapsed ? (
+            <div style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "50%",
+              backgroundColor: "var(--primary-glow)",
+              border: "1px solid var(--primary)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "0.95rem",
+              fontWeight: "700",
+              color: "var(--primary)"
+            }}>
+              {guru?.nama ? guru.nama.charAt(0).toUpperCase() : "👤"}
+            </div>
+          ) : (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", overflow: "hidden" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{guru?.nama}</span>
+                {guru?.is_locked && <span title="Akun Terkunci (Read-Only)" style={{ fontSize: "0.85rem", cursor: "help" }}>🔒</span>}
+              </div>
+              <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", width: "100%" }}>{guru?.email}</p>
+            </>
+          )}
         </div>
 
         {/* Nav Links */}
-        <nav style={{ flex: 1, padding: "20px 12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+        <nav style={{
+          flex: 1,
+          padding: isEffectiveCollapsed ? "20px 8px" : "20px 12px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+          overflowY: "auto",
+          overflowX: "hidden"
+        }}>
           {navItems.map((item) => {
             const isActive = !item.isExternal && (pathname === item.path || (item.path !== "/guru" && pathname.startsWith(item.path)));
 
@@ -350,12 +499,14 @@ export default function GuruLayout({ children }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn"
+                  title={item.name}
                   onClick={() => setSidebarOpen(false)}
                   style={{
+                    position: "relative",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "flex-start",
-                    padding: "12px 16px",
+                    justifyContent: isEffectiveCollapsed ? "center" : "flex-start",
+                    padding: isEffectiveCollapsed ? "12px 0" : "12px 16px",
                     fontSize: "0.9rem",
                     borderRadius: "var(--radius-sm)",
                     boxShadow: "none",
@@ -374,7 +525,10 @@ export default function GuruLayout({ children }) {
                     e.currentTarget.style.backgroundColor = "transparent";
                   }}
                 >
-                  {item.name}
+                  <span style={{ fontSize: isEffectiveCollapsed ? "1.25rem" : "1.1rem", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.icon}</span>
+                  {!isEffectiveCollapsed && (
+                    <span style={{ marginLeft: "10px", whiteSpace: "nowrap" }}>{item.name}</span>
+                  )}
                 </a>
               );
             }
@@ -384,10 +538,14 @@ export default function GuruLayout({ children }) {
                 key={item.path}
                 href={item.path}
                 className="btn"
+                title={item.name}
                 onClick={() => setSidebarOpen(false)}
                 style={{
-                  justifyContent: "flex-start",
-                  padding: "12px 16px",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: isEffectiveCollapsed ? "center" : "flex-start",
+                  padding: isEffectiveCollapsed ? "12px 0" : "12px 16px",
                   fontSize: "0.9rem",
                   borderRadius: "var(--radius-sm)",
                   boxShadow: isActive ? "0 2px 10px var(--theme-glow, rgba(0,0,0,0.1))" : "none",
@@ -395,83 +553,188 @@ export default function GuruLayout({ children }) {
                   color: isActive ? "var(--primary)" : "var(--text-secondary)",
                   borderLeft: isActive ? "3px solid var(--sidebar-active-border, var(--primary))" : "3px solid transparent",
                   fontWeight: isActive ? "700" : "500",
-                  transition: "var(--transition)"
+                  transition: "var(--transition)",
+                  textDecoration: "none"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                  <span>{item.name}</span>
-                  {item.badge && (
-                    <span style={{ 
-                      backgroundColor: "var(--danger)", 
-                      color: "white", 
-                      borderRadius: "12px", 
-                      padding: "2px 8px", 
-                      fontSize: "0.75rem", 
-                      fontWeight: "bold",
-                      boxShadow: "0 2px 4px rgba(239, 68, 68, 0.4)"
-                    }}>
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
+                <span style={{ fontSize: isEffectiveCollapsed ? "1.25rem" : "1.1rem", lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>{item.icon}</span>
+                {!isEffectiveCollapsed && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1, marginLeft: "10px", overflow: "hidden" }}>
+                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</span>
+                    {item.badge && (
+                      <span style={{ 
+                        backgroundColor: "var(--danger)", 
+                        color: "white", 
+                        borderRadius: "12px", 
+                        padding: "2px 8px", 
+                        fontSize: "0.75rem", 
+                        fontWeight: "bold",
+                        boxShadow: "0 2px 4px rgba(239, 68, 68, 0.4)",
+                        marginLeft: "8px",
+                        flexShrink: 0
+                      }}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {isEffectiveCollapsed && item.badge && (
+                  <span style={{
+                    position: "absolute",
+                    top: "6px",
+                    right: "12px",
+                    minWidth: "16px",
+                    height: "16px",
+                    padding: "0 4px",
+                    borderRadius: "8px",
+                    backgroundColor: "var(--danger)",
+                    color: "#ffffff",
+                    fontSize: "0.65rem",
+                    fontWeight: "800",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 0 0 2px var(--bg-secondary)"
+                  }}>
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom Actions: Dark mode toggle + Logout */}
-        <div style={{ padding: "16px 12px", borderTop: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{
+          padding: isEffectiveCollapsed ? "16px 8px" : "16px 12px",
+          borderTop: "1px solid var(--border-color)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px"
+        }}>
           {/* Dark Mode Toggle Button */}
-          <button
-            onClick={toggleDark}
-            title={isDark ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
-            className="btn btn-secondary"
-            style={{
-              width: "100%",
-              justifyContent: "space-between",
-              fontSize: "0.88rem",
-              padding: "10px 16px",
-            }}
-          >
-            <span>{isDark ? "☀️  Light Mode" : "🌙  Dark Mode"}</span>
-            {/* Toggle pill */}
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              width: "40px",
-              height: "22px",
-              borderRadius: "999px",
-              backgroundColor: isDark ? "var(--primary)" : "var(--border-color)",
-              padding: "2px",
-              flexShrink: 0,
-            }}>
+          {isEffectiveCollapsed ? (
+            <button
+              onClick={toggleDark}
+              title={isDark ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
+              className="btn btn-secondary"
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                fontSize: "1.15rem",
+                padding: "10px 0"
+              }}
+            >
+              {isDark ? "☀️" : "🌙"}
+            </button>
+          ) : (
+            <button
+              onClick={toggleDark}
+              title={isDark ? "Beralih ke Light Mode" : "Beralih ke Dark Mode"}
+              className="btn btn-secondary"
+              style={{
+                width: "100%",
+                justifyContent: "space-between",
+                fontSize: "0.88rem",
+                padding: "10px 16px",
+              }}
+            >
+              <span>{isDark ? "☀️  Light Mode" : "🌙  Dark Mode"}</span>
+              {/* Toggle pill */}
               <span style={{
-                width: "18px",
-                height: "18px",
-                borderRadius: "50%",
-                backgroundColor: "#ffffff",
-                transform: isDark ? "translateX(18px)" : "translateX(0px)",
-                transition: "transform 0.25s ease",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-              }} />
-            </span>
-          </button>
+                display: "inline-flex",
+                alignItems: "center",
+                width: "40px",
+                height: "22px",
+                borderRadius: "999px",
+                backgroundColor: isDark ? "var(--primary)" : "var(--border-color)",
+                padding: "2px",
+                flexShrink: 0,
+              }}>
+                <span style={{
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "50%",
+                  backgroundColor: "#ffffff",
+                  transform: isDark ? "translateX(18px)" : "translateX(0px)",
+                  transition: "transform 0.25s ease",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                }} />
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={handleLogout}
-            className="btn btn-secondary"
-            style={{ width: "100%", justifyContent: "center", color: "var(--danger)", border: "1px solid rgba(239, 68, 68, 0.15)", backgroundColor: "var(--danger-glow)" }}
-          >
-            🚪 Keluar Sistem
-          </button>
+          {isEffectiveCollapsed ? (
+            <button
+              onClick={handleLogout}
+              title="Keluar Sistem"
+              className="btn btn-secondary"
+              style={{
+                width: "100%",
+                justifyContent: "center",
+                color: "var(--danger)",
+                border: "1px solid rgba(239, 68, 68, 0.15)",
+                backgroundColor: "var(--danger-glow)",
+                fontSize: "1.15rem",
+                padding: "10px 0"
+              }}
+            >
+              🚪
+            </button>
+          ) : (
+            <button
+              onClick={handleLogout}
+              className="btn btn-secondary"
+              style={{ width: "100%", justifyContent: "center", color: "var(--danger)", border: "1px solid rgba(239, 68, 68, 0.15)", backgroundColor: "var(--danger-glow)" }}
+            >
+              🚪 Keluar Sistem
+            </button>
+          )}
         </div>
       </aside>
 
       {/* Main Content Pane */}
-      <div className="main-content" style={{ minWidth: 0 }}>
+      <div className={`main-content ${isEffectiveCollapsed ? "sidebar-collapsed" : ""}`} style={{ minWidth: 0 }}>
         {/* Top Header - Desktop Only */}
         <header className="header desktop-header no-print" style={{ margin: "-32px -32px 32px -32px", borderTop: "none" }}>
-          <h3 style={{ fontSize: "1.1rem", fontWeight: "700" }}>Panel Guru &bull; Penilaian Digital</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              onClick={toggleSidebarCollapsed}
+              title={isEffectiveCollapsed ? "Perluas Sidebar (Ctrl+B)" : "Perkecil Sidebar (Ctrl+B)"}
+              className="btn btn-secondary"
+              style={{
+                width: "36px",
+                height: "36px",
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "var(--radius-sm)",
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "var(--transition)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = "var(--primary)";
+                e.currentTarget.style.borderColor = "var(--primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = "var(--text-secondary)";
+                e.currentTarget.style.borderColor = "var(--border-color)";
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+                {isEffectiveCollapsed ? (
+                  <polyline points="13 10 15 12 13 14"></polyline>
+                ) : (
+                  <polyline points="15 10 13 12 15 14"></polyline>
+                )}
+              </svg>
+            </button>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: "700", margin: 0 }}>Panel Guru &bull; Penilaian Digital</h3>
+          </div>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
 
             {/* Dark Mode Toggle - Desktop Header */}

@@ -6397,18 +6397,18 @@ function DetailKelasContent({ params: paramsPromise }) {
             <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Pilih kelas sumber untuk menyalin konfigurasi komponen dan bobotnya ke kelas ini.</p>
 
             {/* Opsi Penyesuaian Salin */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
-              <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-secondary)" }}>Opsi Penyesuaian:</span>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: "var(--text-primary)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", fontSize: "0.75rem" }}>
+              <span style={{ fontSize: "0.73rem", fontWeight: "700", color: "var(--text-secondary)" }}>Opsi Penyesuaian:</span>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: "var(--text-primary)" }}>
                 <input 
                   type="checkbox" 
                   checked={duplicateSyncBobot} 
                   onChange={(e) => setDuplicateSyncBobot(e.target.checked)}
                   style={{ accentColor: "var(--primary)", cursor: "pointer" }}
                 />
-                <span>Sesuaikan bobot komponen yang sudah ada mengikuti kelas sumber</span>
+                <span>Sesuaikan bobot komponen yang sudah ada</span>
               </label>
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: duplicateRemoveMissing ? "var(--danger)" : "var(--text-primary)" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: duplicateRemoveMissing ? "var(--danger)" : "var(--text-secondary)" }}>
                 <input 
                   type="checkbox" 
                   checked={duplicateRemoveMissing} 
@@ -6452,47 +6452,44 @@ function DetailKelasContent({ params: paramsPromise }) {
       {/* Apply to Other Classes Modal */}
       {applyToOtherModalOpen && (
         <div className="modal-overlay animate-fade-in" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1050, padding: "16px" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "520px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflow: "hidden", position: "relative" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px" }}>
-              <div>
-                <h3 style={{ fontSize: "1.2rem", fontWeight: "800", margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "540px", padding: "18px 20px", display: "flex", flexDirection: "column", gap: "10px", maxHeight: "92vh", overflow: "hidden", position: "relative" }}>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: "800", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                   📤 Terapkan ke Kelas Lain
                 </h3>
-                <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginTop: "4px", margin: 0 }}>
-                  Salin & terapkan konfigurasi komponen dan bobot dari kelas ini ke beberapa kelas sekaligus.
-                </p>
               </div>
               <button 
                 onClick={() => setApplyToOtherModalOpen(false)} 
-                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)", padding: "4px" }}
+                style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--text-muted)", padding: "2px 6px" }}
                 disabled={isApplyingToOther}
               >
                 ✕
               </button>
             </div>
 
-            {/* Info Sumber */}
-            <div style={{ backgroundColor: "var(--bg-tertiary)", padding: "12px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* Info Sumber Ringkas */}
+            <div style={{ backgroundColor: "var(--bg-tertiary)", padding: "6px 12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem" }}>
               <div>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: "700" }}>Kelas Asal</span>
-                <h4 style={{ fontSize: "0.95rem", fontWeight: "800", margin: "2px 0 0 0", color: "var(--primary)" }}>{kelas?.nama}</h4>
+                <span style={{ color: "var(--text-muted)" }}>Asal: </span>
+                <strong style={{ color: "var(--primary)" }}>{kelas?.nama}</strong>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)" }}>{kelas?.kolomNilai?.length || 0} Komponen Nilai</span>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)", display: "block" }}>Total Bobot: {totalBobot}%</span>
+              <div style={{ color: "var(--text-secondary)", fontSize: "0.75rem" }}>
+                <strong>{kelas?.kolomNilai?.length || 0}</strong> Komponen &bull; Bobot: <strong>{totalBobot}%</strong>
               </div>
             </div>
 
             {/* Search & Toggle All */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px", flex: 1, minHeight: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, minHeight: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                 <input 
                   type="text" 
                   className="form-input" 
                   placeholder="🔍 Cari nama kelas..." 
                   value={applySearchQuery} 
                   onChange={(e) => setApplySearchQuery(e.target.value)}
-                  style={{ flex: 1, padding: "6px 12px", fontSize: "0.82rem" }}
+                  style={{ flex: 1, padding: "5px 10px", fontSize: "0.8rem" }}
                 />
                 {!fetchingClasses && availableClasses.length > 0 && (
                   <button
@@ -6515,8 +6512,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                 )}
               </div>
 
-              {/* Class List Multi-select */}
-              <div style={{ flex: 1, maxHeight: "240px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "6px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "8px", minHeight: 0 }}>
+              {/* Class List Multi-select (Expanded Space) */}
+              <div style={{ flex: 1, minHeight: "180px", maxHeight: "380px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "4px", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", padding: "6px" }}>
                 {fetchingClasses ? (
                   <div style={{ display: "flex", justifyContent: "center", padding: "20px" }}>
                     <span className="spinner" style={{ width: "24px", height: "24px", border: "3px solid var(--primary)", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }}></span>
@@ -6534,8 +6531,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "10px",
-                            padding: "8px 12px",
+                            gap: "8px",
+                            padding: "6px 10px",
                             borderRadius: "var(--radius-sm)",
                             cursor: "pointer",
                             border: `1px solid ${isChecked ? "var(--primary)" : "var(--border-color)"}`,
@@ -6553,16 +6550,16 @@ function DetailKelasContent({ params: paramsPromise }) {
                                 setApplySelectedClassIds([...applySelectedClassIds, c.id]);
                               }
                             }}
-                            style={{ width: "16px", height: "16px", cursor: "pointer", accentColor: "var(--primary)" }}
+                            style={{ width: "15px", height: "15px", cursor: "pointer", accentColor: "var(--primary)" }}
                           />
                           <div style={{ flex: 1 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <h4 style={{ fontSize: "0.88rem", fontWeight: "700", margin: 0 }}>{c.nama}</h4>
-                              <span className="badge" style={{ fontSize: "0.68rem", backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}>
+                              <h4 style={{ fontSize: "0.85rem", fontWeight: "700", margin: 0 }}>{c.nama}</h4>
+                              <span className="badge" style={{ fontSize: "0.65rem", backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)", padding: "1px 6px" }}>
                                 {c.siswa?.length || 0} Siswa
                               </span>
                             </div>
-                            <p style={{ fontSize: "0.73rem", color: "var(--text-muted)", margin: "2px 0 0 0" }}>
+                            <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", margin: "1px 0 0 0" }}>
                               {c.mataPelajaran || "Umum"} &bull; {c.kolomNilai?.length || 0} Komponen Saat Ini
                             </p>
                           </div>
@@ -6573,74 +6570,74 @@ function DetailKelasContent({ params: paramsPromise }) {
               </div>
             </div>
 
-            {/* Pilihan Mode Penerapan */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px", backgroundColor: "var(--bg-tertiary)", padding: "12px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)", marginTop: "4px" }}>
-              <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-secondary)" }}>Metode Penerapan</span>
-              <div style={{ display: "flex", gap: "16px", marginTop: "4px" }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", cursor: "pointer", fontWeight: applyMode === "add" ? "700" : "500", color: applyMode === "add" ? "var(--primary)" : "var(--text-secondary)" }}>
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="add" 
-                    checked={applyMode === "add"} 
-                    onChange={() => setApplyMode("add")}
-                    style={{ accentColor: "var(--primary)", cursor: "pointer" }}
-                  />
-                  ➕ Tambahkan Komponen (Gabung)
-                </label>
-                <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", cursor: "pointer", fontWeight: applyMode === "replace" ? "700" : "500", color: applyMode === "replace" ? "var(--warning)" : "var(--text-secondary)" }}>
-                  <input 
-                    type="radio" 
-                    name="applyMode" 
-                    value="replace" 
-                    checked={applyMode === "replace"} 
-                    onChange={() => setApplyMode("replace")}
-                    style={{ accentColor: "var(--primary)", cursor: "pointer" }}
-                  />
-                  🔄 Gantikan Seluruhnya (Override)
-                </label>
+            {/* Pilihan Mode Penerapan (Ringkas & Efisien Ruang) */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px", backgroundColor: "var(--bg-tertiary)", padding: "8px 10px", borderRadius: "var(--radius-sm)", border: "1px solid var(--border-color)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--text-secondary)" }}>Metode Penerapan:</span>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem", cursor: "pointer", fontWeight: applyMode === "add" ? "700" : "500", color: applyMode === "add" ? "var(--primary)" : "var(--text-secondary)" }}>
+                    <input 
+                      type="radio" 
+                      name="applyMode" 
+                      value="add" 
+                      checked={applyMode === "add"} 
+                      onChange={() => setApplyMode("add")}
+                      style={{ accentColor: "var(--primary)", cursor: "pointer" }}
+                    />
+                    ➕ Gabung (Tambah)
+                  </label>
+                  <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "0.78rem", cursor: "pointer", fontWeight: applyMode === "replace" ? "700" : "500", color: applyMode === "replace" ? "var(--warning)" : "var(--text-secondary)" }}>
+                    <input 
+                      type="radio" 
+                      name="applyMode" 
+                      value="replace" 
+                      checked={applyMode === "replace"} 
+                      onChange={() => setApplyMode("replace")}
+                      style={{ accentColor: "var(--primary)", cursor: "pointer" }}
+                    />
+                    🔄 Ganti Total
+                  </label>
+                </div>
               </div>
 
-              {applyMode === "add" && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "8px", paddingTop: "8px", borderTop: "1px dashed var(--border-color)" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: "var(--text-primary)" }}>
+              {applyMode === "add" ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", paddingTop: "5px", borderTop: "1px dashed var(--border-color)", fontSize: "0.75rem" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: "var(--text-primary)" }}>
                     <input 
                       type="checkbox" 
                       checked={applySyncBobot} 
                       onChange={(e) => setApplySyncBobot(e.target.checked)}
                       style={{ accentColor: "var(--primary)", cursor: "pointer" }}
                     />
-                    <span>Sesuaikan bobot komponen yang sudah ada mengikuti kelas ini</span>
+                    <span>Sesuaikan bobot komponen yang sudah ada</span>
                   </label>
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", cursor: "pointer", color: applyRemoveMissing ? "var(--danger)" : "var(--text-primary)" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer", color: applyRemoveMissing ? "var(--danger)" : "var(--text-secondary)" }}>
                     <input 
                       type="checkbox" 
                       checked={applyRemoveMissing} 
                       onChange={(e) => setApplyRemoveMissing(e.target.checked)}
                       style={{ accentColor: "var(--danger)", cursor: "pointer" }}
                     />
-                    <span>Hapus komponen di kelas tujuan jika tidak ada lagi di kelas ini</span>
+                    <span>Hapus komponen tujuan jika tidak ada di kelas asal</span>
                   </label>
+                </div>
+              ) : (
+                <div style={{ fontSize: "0.7rem", color: "var(--warning)", fontStyle: "italic", paddingTop: "2px" }}>
+                  ⚠️ Seluruh komponen lama di kelas tujuan akan dihapus dan diganti.
                 </div>
               )}
             </div>
 
-            {/* Note & Footer Buttons */}
-            <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", lineHeight: 1.4 }}>
-              {applyMode === "add" 
-                ? `*Komponen baru akan ditambahkan.${applySyncBobot ? " Bobot komponen yang sudah ada disesuaikan." : ""}${applyRemoveMissing ? " Komponen yang tidak ada di kelas ini akan dihapus dari kelas tujuan." : " Komponen lain di kelas tujuan tetap dipertahankan."}` 
-                : "*Peringatan: Seluruh komponen lama di kelas tujuan akan dihapus dan digantikan sepenuhnya dengan konfigurasi kelas ini."}
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "4px" }}>
-              <span style={{ fontSize: "0.82rem", fontWeight: "700", color: applySelectedClassIds.length > 0 ? "var(--primary)" : "var(--text-muted)" }}>
+            {/* Footer Buttons */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "10px", marginTop: "2px" }}>
+              <span style={{ fontSize: "0.8rem", fontWeight: "700", color: applySelectedClassIds.length > 0 ? "var(--primary)" : "var(--text-muted)" }}>
                 {applySelectedClassIds.length > 0 ? `+${applySelectedClassIds.length} Kelas Dipilih` : "Belum ada kelas dipilih"}
               </span>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button 
                   onClick={() => setApplyToOtherModalOpen(false)} 
                   className="btn btn-secondary" 
-                  style={{ padding: "8px 14px", fontSize: "0.82rem" }}
+                  style={{ padding: "6px 12px", fontSize: "0.8rem" }}
                   disabled={isApplyingToOther}
                 >
                   Batal
@@ -6648,7 +6645,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 <button
                   onClick={handleApplyToOtherClasses}
                   className="btn btn-primary"
-                  style={{ padding: "8px 16px", fontSize: "0.82rem", display: "flex", alignItems: "center", gap: "6px" }}
+                  style={{ padding: "6px 14px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "6px" }}
                   disabled={applySelectedClassIds.length === 0 || isApplyingToOther}
                 >
                   {isApplyingToOther ? (
@@ -8870,6 +8867,8 @@ function DetailKelasContent({ params: paramsPromise }) {
               {/* Calculation & Live Preview Table */}
               {(() => {
                 if (!kelas?.siswa || kelas.siswa.length === 0) return null;
+
+                const skema = kelas?.skemaPenilaian || {};
 
                 // Hitung nilai murni (tanpa katrol) dan nilai normalisasi baru
                 const previewList = kelas.siswa.map(student => {
