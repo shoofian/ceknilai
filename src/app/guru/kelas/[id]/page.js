@@ -641,24 +641,23 @@ function DetailKelasContent({ params: paramsPromise }) {
     const pertemuanList = kelas?.skemaPenilaian?.pertemuan || [];
     const totalP = pertemuanList.length;
     if (totalP === 0) return null;
-    
-    let countH = 0;
-    let countD = 0;
+
+    // Status yang dianggap "hadir" ditentukan oleh pengaturan guru, default hanya H
+    const statusDianggapHadir = kelas?.skemaPenilaian?.presensi?.statusHitung || ['H'];
+
+    let countHadir = 0;
     let totalDiisi = 0;
-    
+
     pertemuanList.forEach(p => {
       const val = student.nilai[`_presensi_${p.id}`];
       if (val) {
         totalDiisi++;
-        if (val === 'H') countH++;
-        else if (val === 'D') countD++;
+        if (statusDianggapHadir.includes(val)) countHadir++;
       }
     });
-    
-    if (totalDiisi === 0) return null; // Jika belum pernah diabsen sama sekali, kembalikan null agar tampil "-"
-    
-    // Dispensasi dianggap sama dengan tidak hadir, sehingga hanya Hadir (H) yang dihitung positif
-    return (countH / totalP) * 100;
+
+    if (totalDiisi === 0) return null; // Belum pernah diabsen sama sekali
+    return (countHadir / totalP) * 100;
   };
 
   const getColScore = (student, col, tempScores = null) => {
@@ -1056,7 +1055,8 @@ function DetailKelasContent({ params: paramsPromise }) {
 
     const pertemuanList = kelas.skemaPenilaian?.pertemuan || [];
     const totalP = pertemuanList.length;
-    let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalD = 0;
+    const statusDianggapHadir = kelas.skemaPenilaian?.presensi?.statusHitung || ['H'];
+    let totalH = 0, totalI = 0, totalS = 0, totalA = 0, totalD = 0, totalDianggapHadir = 0;
     
     kelas.siswa.forEach(siswa => {
       pertemuanList.forEach(p => {
@@ -1066,11 +1066,12 @@ function DetailKelasContent({ params: paramsPromise }) {
         else if (status === 'S') totalS++;
         else if (status === 'A') totalA++;
         else if (status === 'D') totalD++;
+        if (status && statusDianggapHadir.includes(status)) totalDianggapHadir++;
       });
     });
 
     const totalPossible = kelas.siswa.length * totalP;
-    const avgAttendance = totalPossible > 0 ? Math.round((totalH / totalPossible) * 100) : 0;
+    const avgAttendance = totalPossible > 0 ? Math.round((totalDianggapHadir / totalPossible) * 100) : 0;
 
     return { totalH, totalI, totalS, totalA, totalD, avgAttendance, totalPertemuan: totalP };
   }, [kelas]);
@@ -4430,7 +4431,89 @@ function DetailKelasContent({ params: paramsPromise }) {
 
           {/* Panel Presensi Massal Cepat removed from page, integrated directly inside pertemuan modals */}
 
-
+          {/* Pengaturan Perhitungan Persentase Kehadiran */}
+          {(() => {
+            const statusHitung = kelas.skemaPenilaian?.presensi?.statusHitung || ['H'];
+            const allStatus = [
+              { id: 'H', label: 'Hadir', color: 'var(--success)' },
+              { id: 'I', label: 'Izin', color: 'var(--warning)' },
+              { id: 'S', label: 'Sakit', color: '#3b82f6' },
+              { id: 'D', label: 'Dispensasi', color: '#8b5cf6' },
+            ];
+            const toggleStatus = async (statusId) => {
+              if (handleLockedAction()) return;
+              const current = kelas.skemaPenilaian?.presensi?.statusHitung || ['H'];
+              let next;
+              if (current.includes(statusId)) {
+                if (current.length === 1) return; // minimal 1 status harus dipilih
+                next = current.filter(s => s !== statusId);
+              } else {
+                next = [...current, statusId];
+              }
+              const updatedSkema = {
+                ...kelas.skemaPenilaian,
+                presensi: { ...(kelas.skemaPenilaian?.presensi || {}), statusHitung: next }
+              };
+              setKelas({ ...kelas, skemaPenilaian: updatedSkema });
+              try {
+                await fetch(`/api/kelas/${kelas.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ skemaPenilaian: updatedSkema })
+                });
+              } catch (err) {
+                console.error('Gagal menyimpan pengaturan presensi', err);
+              }
+            };
+            return (
+              <div style={{ padding: "0 24px" }}>
+                <div style={{
+                  background: "var(--bg-secondary)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "12px",
+                  padding: "14px 16px",
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "12px"
+                }}>
+                  <div style={{ flex: "0 0 auto" }}>
+                    <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "2px" }}>⚙️ DIANGGAP HADIR DALAM %</div>
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Status yang dihitung sebagai kehadiran</div>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                    {allStatus.map(s => {
+                      const active = statusHitung.includes(s.id);
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => toggleStatus(s.id)}
+                          title={active ? `Klik untuk tidak menghitung ${s.label} sebagai hadir` : `Klik untuk menghitung ${s.label} sebagai hadir`}
+                          style={{
+                            padding: "5px 12px",
+                            borderRadius: "20px",
+                            border: `2px solid ${active ? s.color : 'var(--border-color)'}`,
+                            background: active ? `${s.color}22` : 'transparent',
+                            color: active ? s.color : 'var(--text-muted)',
+                            fontWeight: "700",
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                            transition: "all 0.18s",
+                            userSelect: "none"
+                          }}
+                        >
+                          {active ? '✓ ' : ''}{s.id} – {s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontStyle: "italic", marginLeft: "auto" }}>
+                    Alpha tidak bisa dianggap hadir
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Ringkasan Statistik Presensi */}
           {kelas.skemaPenilaian?.pertemuan?.length > 0 && (
@@ -4447,7 +4530,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 <div style={{ fontSize: "1.8rem" }}>📈</div>
                 <div>
                   <div style={{ fontSize: "1.3rem", fontWeight: "800", color: presensiStats.avgAttendance >= 85 ? "var(--success)" : "var(--warning)", lineHeight: 1.2 }}>{presensiStats.avgAttendance}%</div>
-                  <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "2px" }}>Rata-Rata Kehadiran</div>
+                  <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", marginTop: "2px" }}>Rata-Rata Kehadiran ({(kelas.skemaPenilaian?.presensi?.statusHitung || ['H']).join('+')})</div>
                 </div>
               </div>
 
