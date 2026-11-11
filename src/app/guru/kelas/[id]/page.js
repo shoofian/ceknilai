@@ -3041,14 +3041,20 @@ function DetailKelasContent({ params: paramsPromise }) {
 
     setSaveStatus(prev => ({ ...prev, [key]: "saving" }));
 
+    const keyRemedial = `${colId}_remedial`;
+    const payloadNilai = {
+      [colId]: parsedValue
+    };
+    if (student?.nilai?.[keyRemedial]) {
+      payloadNilai[keyRemedial] = null;
+    }
+
     try {
       const response = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nilai: {
-            [colId]: parsedValue
-          }
+          nilai: payloadNilai
         }),
       });
 
@@ -3060,12 +3066,16 @@ function DetailKelasContent({ params: paramsPromise }) {
           if (!prevKelas) return prevKelas;
           const updatedSiswa = prevKelas.siswa.map(s => {
             if (s.nisn === studentNisn) {
+              const newNilai = {
+                ...s.nilai,
+                [colId]: parsedValue
+              };
+              if (newNilai[keyRemedial]) {
+                delete newNilai[keyRemedial];
+              }
               return {
                 ...s,
-                nilai: {
-                  ...s.nilai,
-                  [colId]: parsedValue
-                }
+                nilai: newNilai
               };
             }
             return s;

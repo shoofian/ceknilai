@@ -55,10 +55,13 @@ export async function PATCH(request, { params }) {
     // Lakukan merge untuk nilai agar tidak menimpa nilai yang lain
     let mergedNilai = { ...siswaLama.nilai };
     if (updates.nilai) {
-      mergedNilai = {
-        ...mergedNilai,
-        ...updates.nilai
-      };
+      Object.keys(updates.nilai).forEach((k) => {
+        if (updates.nilai[k] === null && k.endsWith('_remedial')) {
+          delete mergedNilai[k];
+        } else {
+          mergedNilai[k] = updates.nilai[k];
+        }
+      });
     }
 
     const siswaUpdate = {

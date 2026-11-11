@@ -36,11 +36,17 @@ export default function RemedialModal({
       siswaList.forEach((s) => {
         const keyRemedial = `${kolom.id}_remedial`;
         const remObj = s.nilai?.[keyRemedial] || {};
+        const currentGrade = s.nilai?.[kolom.id] !== undefined && s.nilai?.[kolom.id] !== null && s.nilai?.[kolom.id] !== ""
+          ? Number(s.nilai[kolom.id])
+          : null;
+
+        // Data remedial dianggap masih valid jika nilai di kolom saat ini cocok dengan nilaiAkhir hasil remedial
+        const isRemedialValid = remObj.nilaiAkhir !== undefined && currentGrade !== null && Number(remObj.nilaiAkhir) === currentGrade;
 
         initialData[s.nisn] = {
-          remedialTes: remObj.status !== "PENGAYAAN" && remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
-          pengayaanTes: remObj.status === "PENGAYAAN" && remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
-          catatan: remObj.catatan || ""
+          remedialTes: isRemedialValid && remObj.status !== "PENGAYAAN" && remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
+          pengayaanTes: isRemedialValid && remObj.status === "PENGAYAAN" && remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
+          catatan: isRemedialValid ? (remObj.catatan || "") : ""
         };
       });
       setRemedialData(initialData);
@@ -52,10 +58,18 @@ export default function RemedialModal({
   // Helper function to extract original pre-remedial grade
   const getOriginalGrade = (s) => {
     const keyRemedial = `${kolom.id}_remedial`;
-    if (s.nilai?.[keyRemedial]?.nilaiAwal !== undefined && s.nilai?.[keyRemedial]?.nilaiAwal !== null) {
-      return Number(s.nilai[keyRemedial].nilaiAwal);
+    const remObj = s.nilai?.[keyRemedial];
+    const currentGrade = s.nilai?.[kolom.id] !== undefined && s.nilai?.[kolom.id] !== null && s.nilai?.[kolom.id] !== ""
+      ? Number(s.nilai[kolom.id])
+      : null;
+
+    if (remObj && remObj.nilaiAkhir !== undefined && remObj.nilaiAkhir !== null) {
+      // Jika nilai kolom saat ini persis sama dengan nilai akhir remedial, gunakan nilaiAwal asli
+      if (currentGrade !== null && Number(remObj.nilaiAkhir) === currentGrade) {
+        return Number(remObj.nilaiAwal) || 0;
+      }
     }
-    return Number(s.nilai?.[kolom.id]) || 0;
+    return currentGrade !== null ? currentGrade : 0;
   };
 
   // Helper calculation functions
