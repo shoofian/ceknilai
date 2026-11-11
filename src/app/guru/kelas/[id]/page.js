@@ -889,7 +889,12 @@ function DetailKelasContent({ params: paramsPromise }) {
     });
     const totalPertemuan = pList.length;
     const totalTerisi = H + I + S + A + D;
-    const pct = totalPertemuan > 0 ? Math.round((H / totalPertemuan) * 100) : 0;
+    const statusDianggapHadir = kelas?.skemaPenilaian?.presensi?.statusHitung || ['H'];
+    const countDianggapHadir = pList.reduce((acc, p) => {
+      const val = currentFocusStudent.nilai?.[`_presensi_${p.id}`];
+      return acc + (val && statusDianggapHadir.includes(val) ? 1 : 0);
+    }, 0);
+    const pct = totalPertemuan > 0 ? Math.round((countDianggapHadir / totalPertemuan) * 100) : 0;
     return { H, I, S, A, D, totalPertemuan, totalTerisi, pct };
   }, [currentFocusStudent, kelas?.skemaPenilaian?.pertemuan]);
 
@@ -4815,8 +4820,12 @@ function DetailKelasContent({ params: paramsPromise }) {
                         else if (status === 'D') countD++;
                       });
                       const totalP = kelas.skemaPenilaian.pertemuan.length;
-                      // Dispensasi tidak dihitung sebagai hadir
-                      const persentase = totalP > 0 ? Math.round((countH / totalP) * 100) : 0;
+                      const statusDianggapHadir = kelas.skemaPenilaian?.presensi?.statusHitung || ['H'];
+                      const countDianggapHadir = (kelas.skemaPenilaian?.pertemuan || []).filter(p => {
+                        const st = siswa.nilai[`_presensi_${p.id}`];
+                        return st && statusDianggapHadir.includes(st);
+                      }).length;
+                      const persentase = totalP > 0 ? Math.round((countDianggapHadir / totalP) * 100) : 0;
                       const summaryOpacity = unlockedPertemuanIds.length > 0 ? 0.35 : 1;
                       return (
                         <>
