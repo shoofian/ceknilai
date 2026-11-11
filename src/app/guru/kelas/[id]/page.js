@@ -171,6 +171,7 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
   const pendingSaveRequests = useRef({}); // AbortController per cell key
   const saveSequenceRef = useRef({});     // Sequence counter per cell key
+  const debounceSaveTimers = useRef({});  // Debounce 5s auto-save timer per cell key
 
 
   // States untuk Status Nilai
@@ -253,6 +254,9 @@ function DetailKelasContent({ params: paramsPromise }) {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
       setPanelKontrolExpanded(false);
     }
+    return () => {
+      Object.values(debounceSaveTimers.current).forEach(timer => clearTimeout(timer));
+    };
   }, []);
 
   useEffect(() => {
@@ -3021,9 +3025,38 @@ function DetailKelasContent({ params: paramsPromise }) {
     return false;
   };
 
-  // === SPREADSHEET AUTO SAVE ON BLUR ===
+  // === SPREADSHEET AUTO SAVE ON BLUR & DEBOUNCE (5 DETIK) ===
+  const handleGradeChange = (studentNisn, colId, rawVal) => {
+    let val = rawVal;
+    if (val !== "") {
+      val = val.replace(/[^0-9]/g, '');
+      if (val !== "") {
+        const num = parseInt(val, 10);
+        if (num > 100) val = "100";
+        else val = num.toString();
+      }
+    }
+    const key = `${studentNisn}-${colId}`;
+    setTemporaryScores(prev => ({ ...prev, [key]: val }));
+
+    // Reset dan pasang timer debounce 5 detik: simpan otomatis jika kursor tidak berpindah
+    if (debounceSaveTimers.current[key]) {
+      clearTimeout(debounceSaveTimers.current[key]);
+    }
+    debounceSaveTimers.current[key] = setTimeout(() => {
+      delete debounceSaveTimers.current[key];
+      handleGradeBlur(studentNisn, colId, val);
+    }, 5000);
+  };
+
   const handleGradeBlur = async (studentNisn, colId, value) => {
     const key = `${studentNisn}-${colId}`;
+
+    // Batalkan timer debounce jika ada, karena proses simpan langsung dieksekusi sekarang (blur / enter)
+    if (debounceSaveTimers.current[key]) {
+      clearTimeout(debounceSaveTimers.current[key]);
+      delete debounceSaveTimers.current[key];
+    }
     
     // Jangan lakukan apa-apa jika nilainya kosong dan awalnya memang kosong
     const student = kelas.siswa.find(s => s.nisn === studentNisn);
@@ -5342,18 +5375,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                                       inputMode="numeric"
                                       pattern="[0-9]*"
                                       value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[sub.id] !== null && student.nilai[sub.id] !== undefined ? student.nilai[sub.id] : "")}
-                                      onChange={(e) => {
-                                        let val = e.target.value;
-                                        if (val !== "") {
-                                          val = val.replace(/[^0-9]/g, '');
-                                          if (val !== "") {
-                                            const num = parseInt(val, 10);
-                                            if (num > 100) val = "100";
-                                            else val = num.toString();
-                                          }
-                                        }
-                                        setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
-                                      }}
+                                      onChange={(e) => handleGradeChange(student.nisn, sub.id, e.target.value)}
                                       onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
                                       onWheel={(e) => e.target.blur()}
                                       onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
@@ -10647,18 +10669,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                             inputMode="numeric"
                             pattern="[0-9]*"
                             value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[focusColumn.id] !== null && student.nilai[focusColumn.id] !== undefined ? student.nilai[focusColumn.id] : "")}
-                            onChange={(e) => {
-                              let val = e.target.value;
-                              if (val !== "") {
-                                val = val.replace(/[^0-9]/g, '');
-                                if (val !== "") {
-                                  const num = parseInt(val, 10);
-                                  if (num > 100) val = "100";
-                                  else val = num.toString();
-                                }
-                              }
-                              setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
-                            }}
+                            onChange={(e) => handleGradeChange(student.nisn, focusColumn.id, e.target.value)}
                             onBlur={(e) => handleGradeBlur(student.nisn, focusColumn.id, e.target.value)}
                             onWheel={(e) => e.target.blur()}
                             onPaste={(e) => handleGradePaste(e, student.nisn, focusColumn.id)}
@@ -11199,18 +11210,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                                             value={currentVal}
                                             disabled={!isSubUnlocked}
                                             placeholder="-"
-                                            onChange={(e) => {
-                                              let val = e.target.value;
-                                              if (val !== "") {
-                                                val = val.replace(/[^0-9]/g, '');
-                                                if (val !== "") {
-                                                  const num = parseInt(val, 10);
-                                                  if (num > 100) val = "100";
-                                                  else val = num.toString();
-                                                }
-                                              }
-                                              setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
-                                            }}
+                                            onChange={(e) => handleGradeChange(currentFocusStudent.nisn, sub.id, e.target.value)}
                                             onBlur={(e) => handleGradeBlur(currentFocusStudent.nisn, sub.id, e.target.value)}
                                             onWheel={(e) => e.target.blur()}
                                             onPaste={(e) => handleGradePaste(e, currentFocusStudent.nisn, sub.id)}
@@ -11272,18 +11272,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                                     value={currentVal}
                                     disabled={!isColUnlocked}
                                     placeholder="-"
-                                    onChange={(e) => {
-                                      let val = e.target.value;
-                                      if (val !== "") {
-                                        val = val.replace(/[^0-9]/g, '');
-                                        if (val !== "") {
-                                          const num = parseInt(val, 10);
-                                          if (num > 100) val = "100";
-                                          else val = num.toString();
-                                        }
-                                      }
-                                      setTemporaryScores(prev => ({ ...prev, [cellKey]: val }));
-                                    }}
+                                    onChange={(e) => handleGradeChange(currentFocusStudent.nisn, col.id, e.target.value)}
                                     onBlur={(e) => handleGradeBlur(currentFocusStudent.nisn, col.id, e.target.value)}
                                     onWheel={(e) => e.target.blur()}
                                     onPaste={(e) => handleGradePaste(e, currentFocusStudent.nisn, col.id)}
