@@ -983,22 +983,12 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       let jumlahAspekTerisi = 0;
       const detailNilai = [];
 
-      const kolomNilai = [...(k.kolom_nilai || [])].sort((a, b) => {
-        const partsA = (a.id || '').split('-');
-        const partsB = (b.id || '').split('-');
-        const timeA = parseInt(partsA[1]) || 0;
-        const timeB = parseInt(partsB[1]) || 0;
-        if (timeA !== timeB) return timeA - timeB;
-        const indexA = parseInt(partsA[2]) || 0;
-        const indexB = parseInt(partsB[2]) || 0;
-        if (indexA !== indexB) return indexA - indexB;
-        return (a.id || '').localeCompare(b.id || '');
-      });
-      const nilaiObj = s.nilai || {};
-
       // Ambil skema penilaian kustom dari kelas atau gunakan default
       const skema = k.skema_penilaian || { A: 85, B: 75, C: 65, D: 50, kkm: "" };
       const hiddenAspek = Array.isArray(skema.hiddenAspek) ? skema.hiddenAspek : [];
+
+      const kolomNilai = sortKolomNilai(k.kolom_nilai || [], skema);
+      const nilaiObj = s.nilai || {};
 
       // Ambil seluruh data nilai siswa di kelas ini untuk perbandingan & hitung rata-rata
       let allSiswa = [];
