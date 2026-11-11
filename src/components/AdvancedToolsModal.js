@@ -100,21 +100,63 @@ export default function AdvancedToolsModal({
                   onChange={(e) => {
                     const selectedId = e.target.value;
                     if (selectedId) {
-                      const col = kelas.kolomNilai.find(c => c.id === selectedId);
-                      if (col) {
+                      let targetCol = null;
+                      for (const col of (kelas?.kolomNilai || [])) {
+                        if (col.id === selectedId) {
+                          targetCol = col;
+                          break;
+                        }
+                        if (col.isGroup && col.subKolom) {
+                          const foundSub = col.subKolom.find(s => s.id === selectedId);
+                          if (foundSub) {
+                            targetCol = {
+                              ...foundSub,
+                              id: foundSub.id,
+                              nama: `${col.nama} › ${foundSub.nama}`,
+                              subNama: foundSub.nama,
+                              parentNama: col.nama,
+                              parentId: col.id,
+                              parentBobot: col.bobot,
+                              isSub: true
+                            };
+                            break;
+                          }
+                        }
+                      }
+                      if (targetCol) {
                         onClose();
-                        onOpenRemedialModal(col);
+                        onOpenRemedialModal(targetCol);
                       }
                     }
                   }}
                   defaultValue=""
                 >
                   <option value="" disabled>-- Pilih Kolom Asesmen yang Ingin Diremedial --</option>
-                  {(kelas?.kolomNilai || []).map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.nama} (Bobot: {col.bobot}%)
-                    </option>
-                  ))}
+                  {(kelas?.kolomNilai || []).map((col) => {
+                    if (col.isGroup && col.subKolom?.length > 0) {
+                      return (
+                        <optgroup key={col.id} label={`📂 Grup: ${col.nama} (Bobot: ${col.bobot}%)`}>
+                          {col.subKolom.map((sub) => {
+                            if (sub.isPresensi) return null;
+                            const bobotText = sub.bobot !== undefined && sub.bobot !== null && sub.bobot !== ""
+                              ? ` (Bobot: ${sub.bobot}%)`
+                              : "";
+                            return (
+                              <option key={sub.id} value={sub.id}>
+                                ↳ {col.nama} › {sub.nama}{bobotText}
+                              </option>
+                            );
+                          })}
+                        </optgroup>
+                      );
+                    }
+                    if (col.isPresensi) return null;
+                    return (
+                      <option key={col.id} value={col.id}>
+                        {col.nama} (Bobot: {col.bobot}%)
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             </div>

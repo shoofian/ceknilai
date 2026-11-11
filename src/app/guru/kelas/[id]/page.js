@@ -110,6 +110,17 @@ function DetailKelasContent({ params: paramsPromise }) {
         skemaPenilaian: updatedSkema
       }));
 
+      // Bersihkan temporaryScores untuk kolom/sub-kolom terkait agar input langsung ter-update
+      if (selectedRemedialKolom?.id) {
+        setTemporaryScores((prev) => {
+          const next = { ...prev };
+          updatedSiswaList.forEach((s) => {
+            delete next[`${s.nisn}-${selectedRemedialKolom.id}`];
+          });
+          return next;
+        });
+      }
+
       setRemedialModalOpen(false);
 
       await fetch(`/api/kelas/${classId}`, {
@@ -10408,18 +10419,52 @@ function DetailKelasContent({ params: paramsPromise }) {
                   const parentCol = focusColumn.type === 'nilai' ? kelas.kolomNilai.find(c => c.id === focusColumn.id || (c.isGroup && c.subKolom?.some(s => s.id === focusColumn.id))) : null;
                   if (!parentCol) return <div />;
                   return (
-                    <button 
-                      onClick={() => {
-                        setFocusColumn(null);
-                        setQuickEditData(JSON.parse(JSON.stringify(parentCol)));
-                        setQuickEditModalOpen(true);
-                      }}
-                      className="btn"
-                      style={{ padding: "6px 8px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", backgroundColor: "transparent", color: "var(--text-secondary)", border: "none", boxShadow: "none" }}
-                      title="Pengaturan Komponen"
-                    >
-                      <span style={{ fontSize: "1.1rem" }}>⚙️</span> <span className="hide-on-mobile" style={{ fontWeight: "600" }}>Pengaturan</span>
-                    </button>
+                    <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                      <button 
+                        onClick={() => {
+                          setFocusColumn(null);
+                          setQuickEditData(JSON.parse(JSON.stringify(parentCol)));
+                          setQuickEditModalOpen(true);
+                        }}
+                        className="btn"
+                        style={{ padding: "6px 8px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", backgroundColor: "transparent", color: "var(--text-secondary)", border: "none", boxShadow: "none" }}
+                        title="Pengaturan Komponen"
+                      >
+                        <span style={{ fontSize: "1.1rem" }}>⚙️</span> <span className="hide-on-mobile" style={{ fontWeight: "600" }}>Pengaturan</span>
+                      </button>
+                      <button 
+                        onClick={() => {
+                          let colToRemedial = null;
+                          if (parentCol.isGroup && parentCol.subKolom) {
+                            const foundSub = parentCol.subKolom.find(s => s.id === focusColumn.id);
+                            if (foundSub) {
+                              colToRemedial = {
+                                ...foundSub,
+                                id: foundSub.id,
+                                nama: `${parentCol.nama} › ${foundSub.nama}`,
+                                subNama: foundSub.nama,
+                                parentNama: parentCol.nama,
+                                parentId: parentCol.id,
+                                parentBobot: parentCol.bobot,
+                                isSub: true
+                              };
+                            }
+                          } else {
+                            colToRemedial = parentCol;
+                          }
+                          if (colToRemedial) {
+                            setFocusColumn(null);
+                            setSelectedRemedialKolom(colToRemedial);
+                            setRemedialModalOpen(true);
+                          }
+                        }}
+                        className="btn"
+                        style={{ padding: "6px 8px", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "6px", backgroundColor: "transparent", color: "var(--danger, #ef4444)", border: "none", boxShadow: "none", cursor: "pointer" }}
+                        title="Program Remedial & Pengayaan untuk Asesmen ini"
+                      >
+                        <span style={{ fontSize: "1.1rem" }}>✨</span> <span className="hide-on-mobile" style={{ fontWeight: "600" }}>Remedial</span>
+                      </button>
+                    </div>
                   );
                 })()}
                 <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
