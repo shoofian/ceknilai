@@ -5000,8 +5000,8 @@ function DetailKelasContent({ params: paramsPromise }) {
       {/* Table: Main Spreadsheet Gradebook */}
       <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
         
-        <div className="buku-nilai-header" style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "16px" }}>
-          <div className="buku-nilai-title">
+        <div className="buku-nilai-header" style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+          <div className="buku-nilai-title" style={{ flex: "1 1 200px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>📊 Buku Nilai Kelas</h4>
             </div>
@@ -5014,21 +5014,21 @@ function DetailKelasContent({ params: paramsPromise }) {
           <div className="buku-nilai-actions" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", overflow: "visible", paddingBottom: "4px" }}>
             <button 
               onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
-              className={(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
+              className={`hide-on-mobile ${(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"}`} 
               style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", boxShadow: (!kelas?.siswa || kelas.siswa.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.siswa || kelas.siswa.length === 0) ? "pulse-soft 2s infinite" : "none" }}
             >
               + Data Siswa
             </button>
             <button 
               onClick={() => { handleOpenKolomModal(); }} 
-              className={(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"} 
+              className={`hide-on-mobile ${(!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "btn btn-primary" : "btn btn-outline"}`} 
               style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "pulse-soft 2s infinite" : "none" }}
             >
               + Komponen Nilai
             </button>
             <button 
               onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
-              className="btn btn-secondary" 
+              className="btn btn-secondary hide-on-mobile" 
               style={{ width: "auto", padding: "6px 10px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", flexShrink: 0 }}
               title="Cetak & Ekspor"
             >
@@ -5103,15 +5103,42 @@ function DetailKelasContent({ params: paramsPromise }) {
                       overflow: "hidden",
                       boxShadow: "0 -4px 20px rgba(0,0,0,0.15)"
                     }}>
+                      <div style={{ padding: "14px 20px 10px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)" }}>
+                        <span style={{ fontWeight: "800", fontSize: "0.95rem", color: "var(--text-secondary)" }}>Menu Buku Nilai</span>
+                        <button 
+                          onClick={() => setSettingsDropdownOpen(false)}
+                          style={{ background: "none", border: "none", fontSize: "1.1rem", color: "var(--text-muted)", cursor: "pointer", padding: "2px 6px" }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
+                        style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                      >
+                        👤 + Data Siswa
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); handleOpenKolomModal(); }}
+                        style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                      >
+                        📊 + Komponen Nilai
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
+                        style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                      >
+                        🖨️ Cetak & Ekspor
+                      </div>
                       <div 
                         onClick={() => { setSettingsDropdownOpen(false); setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }}
-                        style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                        style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
                       >
                         📖 Panduan Penggunaan
                       </div>
                       <div 
                         onClick={() => { setSettingsDropdownOpen(false); setAdvancedToolsModalOpen(true); }}
-                        style={{ padding: "16px 20px", cursor: "pointer", fontSize: "1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
+                        style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", color: "var(--text-primary)" }}
                       >
                         🧪 Fitur Lanjutan (Eksperimental)
                       </div>
