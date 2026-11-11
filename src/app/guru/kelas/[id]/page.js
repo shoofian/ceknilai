@@ -815,8 +815,30 @@ function DetailKelasContent({ params: paramsPromise }) {
       return (a.nisn || "").localeCompare(b.nisn || "");
     });
 
+    mapped.forEach((student, index) => {
+      student.absenNo = index + 1;
+    });
+
     return mapped;
   }, [kelas?.siswa, kelas?.kolomNilai, temporaryScores, sortConfig]);
+
+  // Filter siswa multi-nama untuk penilaian kelompok / pencarian cepat
+  const [studentFilterQuery, setStudentFilterQuery] = useState("");
+
+  const displayedStudents = useMemo(() => {
+    if (!studentFilterQuery.trim()) return sortedStudents;
+    const terms = studentFilterQuery
+      .split(/[,;]/)
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
+    if (terms.length === 0) return sortedStudents;
+
+    return sortedStudents.filter(student => {
+      const name = (student.nama || "").toLowerCase();
+      const nisn = (student.nisn || "").toLowerCase();
+      return terms.some(term => name.includes(term) || nisn.includes(term));
+    });
+  }, [sortedStudents, studentFilterQuery]);
 
   // === MODE FOKUS SISWA ===
   const handleOpenFocusStudent = useCallback((student, preferredTab = null) => {
@@ -5103,6 +5125,70 @@ function DetailKelasContent({ params: paramsPromise }) {
           </div>
         </div>
 
+        {/* Filter Siswa / Mode Penilaian Kelompok */}
+        {kelas?.siswa?.length > 0 && (
+          <div style={{ padding: "0 24px 14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+            <div style={{ position: "relative", flex: "1 1 300px", maxWidth: "520px" }}>
+              <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem", opacity: 0.6, pointerEvents: "none" }}>
+                👥
+              </span>
+              <input
+                type="text"
+                placeholder="Cari siswa / anggota kelompok (pisahkan koma: ahmad, siti, budi)..."
+                value={studentFilterQuery}
+                onChange={(e) => setStudentFilterQuery(e.target.value)}
+                className="form-input"
+                style={{
+                  width: "100%",
+                  padding: "7px 28px 7px 32px",
+                  fontSize: "0.85rem",
+                  borderRadius: "8px",
+                  backgroundColor: studentFilterQuery ? "rgba(59,130,246,0.06)" : "var(--bg-primary)",
+                  border: studentFilterQuery ? "1.5px solid var(--primary)" : "1px solid var(--border-color)",
+                  transition: "all 0.2s"
+                }}
+              />
+              {studentFilterQuery && (
+                <button
+                  type="button"
+                  onClick={() => setStudentFilterQuery("")}
+                  style={{
+                    position: "absolute",
+                    right: "6px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "0.95rem",
+                    color: "var(--text-muted)",
+                    padding: "2px 6px"
+                  }}
+                  title="Bersihkan filter"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {studentFilterQuery.trim() !== "" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
+                <span>
+                  Menampilkan <strong>{displayedStudents.length}</strong> dari {sortedStudents.length} siswa
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setStudentFilterQuery("")}
+                  className="btn btn-outline"
+                  style={{ padding: "3px 8px", fontSize: "0.75rem", borderRadius: "6px" }}
+                >
+                  Reset Filter
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
           <div style={{ position: "relative" }}>
             {(showLeftScroll || showRightScroll) && (
@@ -5293,8 +5379,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                     )}
                   </thead>
                   <tbody>
-                  {kelas.siswa.length > 0 ? (
-                    sortedStudents.map((student, idx) => {
+                  {displayedStudents.length > 0 ? (
+                    displayedStudents.map((student, idx) => {
                       
                       // Nilai akhir sudah dihitung di useMemo
                       const finalScore = student.finalScore;
@@ -5313,7 +5399,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                           />
                         </td>
                         <td data-label="No" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
-                          {idx + 1}
+                          {student.absenNo || (idx + 1)}
                         </td>
                         <td 
                           data-label="Nama Siswa"
@@ -5383,8 +5469,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                                         if (e.key === "Enter") {
                                           e.preventDefault();
                                           handleGradeBlur(student.nisn, sub.id, e.target.value);
-                                          const currentRowIdx = sortedStudents.findIndex(s => s.nisn === student.nisn);
-                                          const nextStudent = sortedStudents[currentRowIdx + 1];
+                                          const currentRowIdx = displayedStudents.findIndex(s => s.nisn === student.nisn);
+                                          const nextStudent = displayedStudents[currentRowIdx + 1];
                                           if (nextStudent) {
                                             const nextInput = document.getElementById(`grade-${nextStudent.nisn}-${sub.id}`);
                                             if (nextInput) {
@@ -5584,6 +5670,23 @@ function DetailKelasContent({ params: paramsPromise }) {
                     </Fragment>
                   );
                 })
+              ) : kelas.siswa.length > 0 && studentFilterQuery.trim() !== "" ? (
+                <tr>
+                  <td colSpan={7 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                    <div style={{ fontSize: "1.1rem", marginBottom: "8px" }}>🔍 Tidak ditemukan siswa yang cocok</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "16px" }}>
+                      Tidak ada siswa yang cocok dengan kata kunci: <strong>"{studentFilterQuery}"</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setStudentFilterQuery("")}
+                      className="btn btn-outline"
+                      style={{ fontSize: "0.82rem", padding: "6px 14px", borderRadius: "6px" }}
+                    >
+                      ✕ Tampilkan Semua Siswa
+                    </button>
+                  </td>
+                </tr>
               ) : (
                 <tr>
                   <td colSpan={7 + kelas.kolomNilai.reduce((sum, col) => sum + (col.isGroup && col.subKolom?.length > 0 ? col.subKolom.length : 1), 0)} style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)", fontStyle: "italic" }}>
