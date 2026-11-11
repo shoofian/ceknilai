@@ -1130,11 +1130,8 @@ function StudentPortalContent() {
                                         )}
                                       </div>
                                       {col.isGroup && (
-                                        <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", fontWeight: "500", display: "flex", alignItems: "center", gap: "4px", paddingLeft: "2px" }}>
-                                          <span>↳</span>
-                                          <span style={{ fontStyle: "italic" }}>
-                                            Nilai baris ini adalah <strong>hasil rata-rata</strong> dari {col.subDetail?.length || 0} sub-komponen di bawah:
-                                          </span>
+                                        <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", fontStyle: "italic", paddingLeft: "2px" }}>
+                                          ↳ Lihat {col.subDetail?.length || 0} sub-komponen di bawah
                                         </div>
                                       )}
                                     </div>
