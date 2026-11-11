@@ -38,7 +38,8 @@ export default function RemedialModal({
         const remObj = s.nilai?.[keyRemedial] || {};
 
         initialData[s.nisn] = {
-          remedialTes: remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
+          remedialTes: remObj.status !== "PENGAYAAN" && remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
+          pengayaanTes: remObj.status === "PENGAYAAN" && remObj.nilaiTes !== undefined ? remObj.nilaiTes : "",
           catatan: remObj.catatan || ""
         };
       });
@@ -80,6 +81,27 @@ export default function RemedialModal({
     return Math.min(finalVal, maxCap);
   };
 
+  const computePengayaanFinal = (nilaiAwal, tesInput) => {
+    if (tesInput === "" || tesInput === null || isNaN(Number(tesInput))) {
+      return Number(nilaiAwal) || 0;
+    }
+    const awal = Number(nilaiAwal) || 0;
+    const tes = Number(tesInput);
+    let finalVal = tes;
+
+    if (remedialPolicy === "average") {
+      finalVal = Math.round((awal + tes) / 2);
+    } else if (remedialPolicy === "actual") {
+      finalVal = tes;
+    } else {
+      // Default: ambil nilai tertinggi (atau tes jika lebih tinggi) agar nilai siswa tidak turun
+      finalVal = Math.max(awal, tes);
+    }
+
+    // Apply Capping
+    return Math.min(finalVal, maxCap);
+  };
+
   // Group students: candidates based on original pre-remedial grade
   const siswaRemedial = siswaList.filter((s) => getOriginalGrade(s) < kkm);
   const siswaPengayaan = siswaList.filter((s) => getOriginalGrade(s) >= kkm);
@@ -102,7 +124,7 @@ export default function RemedialModal({
 
       const keyRemedial = `${kolom.id}_remedial`;
 
-      if (awal < kkm && data.remedialTes !== "" && data.remedialTes !== null) {
+      if (awal < kkm && data.remedialTes !== "" && data.remedialTes !== null && !isNaN(Number(data.remedialTes))) {
         const finalRem = computeRemedialFinal(awal, data.remedialTes);
         newNilai[kolom.id] = finalRem; // Update main grade column
         newNilai[keyRemedial] = {
@@ -110,17 +132,19 @@ export default function RemedialModal({
           nilaiTes: Number(data.remedialTes),
           nilaiAkhir: finalRem,
           status: finalRem >= kkm ? "LULUS" : "BELUM LULUS",
-          catatan: data.catatan || "Telah mengikuti tes remedial",
+          catatan: "Telah mengikuti tes remedial",
           tanggal: s.nilai?.[keyRemedial]?.tanggal || new Date().toISOString().split("T")[0]
         };
-      } else if (awal >= kkm && data.catatan) {
+      } else if (awal >= kkm && data.pengayaanTes !== "" && data.pengayaanTes !== null && !isNaN(Number(data.pengayaanTes))) {
+        const finalPengayaan = computePengayaanFinal(awal, data.pengayaanTes);
+        newNilai[kolom.id] = finalPengayaan; // Update main grade column
         newNilai[keyRemedial] = {
           nilaiAwal: awal,
-          nilaiTes: awal,
-          nilaiAkhir: awal,
+          nilaiTes: Number(data.pengayaanTes),
+          nilaiAkhir: finalPengayaan,
           status: "PENGAYAAN",
-          catatan: data.catatan || "Mengikuti Program Pengayaan",
-          tanggal: new Date().toISOString().split("T")[0]
+          catatan: "Telah mengikuti program pengayaan",
+          tanggal: s.nilai?.[keyRemedial]?.tanggal || new Date().toISOString().split("T")[0]
         };
       }
 
@@ -216,26 +240,24 @@ export default function RemedialModal({
               </p>
               {siswaRemedial.length === 0 ? (
                 <div style={emptyStateStyle}>
-                  🎉 <strong>Selamat!</strong> Tidak ada siswa yang nilai awalknya berada di bawah KKM ({kkm}) pada kolom ini.
+                  🎉 <strong>Selamat!</strong> Tidak ada siswa yang nilai awalnya berada di bawah KKM ({kkm}) pada kolom ini.
                 </div>
               ) : (
                 <table style={tableStyle}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>No</th>
+                      <th style={{ ...thStyle, width: "50px", textAlign: "center" }}>No</th>
                       <th style={thStyle}>Nama Siswa</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Awal</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Tes Remedial</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Akhir Hasil</th>
-                      <th style={thStyle}>Status Remedial</th>
-                      <th style={thStyle}>Catatan / Materi</th>
+                      <th style={{ ...thStyle, width: "130px", textAlign: "center" }}>Nilai Awal</th>
+                      <th style={{ ...thStyle, width: "160px", textAlign: "center" }}>Nilai Tes Remedial</th>
+                      <th style={{ ...thStyle, width: "150px", textAlign: "center" }}>Nilai Akhir Hasil</th>
                     </tr>
                   </thead>
                   <tbody>
                     {siswaRemedial.map((s, idx) => {
                       const awal = getOriginalGrade(s);
                       const keyRemedial = `${kolom.id}_remedial`;
-                      const existingRem = s.nilai?.[keyRemedial];
+                      const existingRem = s.nilai?.[keyRemedial]?.status !== "PENGAYAAN" ? s.nilai[keyRemedial] : null;
                       const inputTes = remedialData[s.nisn]?.remedialTes;
                       
                       const hasRemedial = inputTes !== "" && inputTes !== null && !isNaN(Number(inputTes));
@@ -244,12 +266,12 @@ export default function RemedialModal({
 
                       return (
                         <tr key={s.nisn} style={trStyle}>
-                          <td style={tdStyle}>{idx + 1}</td>
+                          <td style={{ ...tdStyle, textAlign: "center", color: "var(--text-secondary)" }}>{idx + 1}</td>
                           <td style={tdStyle}>
-                            <strong>{s.nama}</strong>
-                            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>NISN: {s.nisn}</div>
+                            <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>NISN: {s.nisn}</div>
                           </td>
-                          <td style={{ ...tdStyle, textAlign: "center", color: "#ef4444", fontWeight: "700" }}>
+                          <td style={{ ...tdStyle, textAlign: "center", color: "var(--danger, #ef4444)", fontWeight: "800", fontSize: "0.95rem" }}>
                             {awal}
                           </td>
                           <td style={{ ...tdStyle, textAlign: "center" }}>
@@ -266,38 +288,16 @@ export default function RemedialModal({
                           <td style={{ ...tdStyle, textAlign: "center" }}>
                             <span style={{
                               fontWeight: "800",
-                              fontSize: "1rem",
-                              color: isLulus ? "#10b981" : "#ef4444"
+                              fontSize: "1.05rem",
+                              color: isLulus ? "var(--success, #10b981)" : "var(--danger, #ef4444)"
                             }}>
                               {finalVal}
                             </span>
                             {maxCap < 100 && finalVal === maxCap && (
-                              <span style={{ fontSize: "0.65rem", display: "block", color: "var(--text-secondary)" }}>
-                                (Capped @ {maxCap})
+                              <span style={{ fontSize: "0.68rem", display: "block", color: "var(--text-muted)", fontWeight: "600" }}>
+                                (MaxCap {maxCap})
                               </span>
                             )}
-                          </td>
-                          <td style={tdStyle}>
-                            <span style={{
-                              display: "inline-block",
-                              padding: "2px 8px",
-                              borderRadius: "12px",
-                              fontSize: "0.75rem",
-                              fontWeight: "700",
-                              backgroundColor: hasRemedial || existingRem ? (isLulus ? "rgba(16, 185, 129, 0.15)" : "rgba(245, 158, 11, 0.15)") : "rgba(239, 68, 68, 0.15)",
-                              color: hasRemedial || existingRem ? (isLulus ? "#10b981" : "#d97706") : "#ef4444"
-                            }}>
-                              {hasRemedial || existingRem ? (isLulus ? "🟢 LULUS REMEDIAL" : "⚠️ BELUM TUNTAS") : "🔴 BELUM REMEDIAL"}
-                            </span>
-                          </td>
-                          <td style={tdStyle}>
-                            <input
-                              type="text"
-                              placeholder="Materi / Catatan"
-                              value={remedialData[s.nisn]?.catatan || ""}
-                              onChange={(e) => handleInputChange(s.nisn, "catatan", e.target.value)}
-                              style={tableTextInputsStyle}
-                            />
                           </td>
                         </tr>
                       );
@@ -311,7 +311,7 @@ export default function RemedialModal({
           {activeTab === "pengayaan" && (
             <div>
               <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "12px" }}>
-                Program Pengayaan diperuntukkan bagi siswa yang telah mencapai KKM ({kkm}). Rekam aktivitas pendalaman materi dan tugas khusus di bawah ini.
+                💡 <strong>Pengayaan Fleksibel:</strong> Nilai awal siswa tetap tersimpan aman. Masukkan nilai pengayaan untuk memperbarui nilai akhir asesmen siswa yang telah tuntas KKM (≥ {kkm}).
               </p>
               {siswaPengayaan.length === 0 ? (
                 <div style={emptyStateStyle}>
@@ -321,48 +321,57 @@ export default function RemedialModal({
                 <table style={tableStyle}>
                   <thead>
                     <tr>
-                      <th style={thStyle}>No</th>
+                      <th style={{ ...thStyle, width: "50px", textAlign: "center" }}>No</th>
                       <th style={thStyle}>Nama Siswa</th>
-                      <th style={{ ...thStyle, textAlign: "center" }}>Nilai Murni</th>
-                      <th style={thStyle}>Materi / Bentuk Pengayaan</th>
-                      <th style={thStyle}>Catatan Guru</th>
+                      <th style={{ ...thStyle, width: "130px", textAlign: "center" }}>Nilai Awal</th>
+                      <th style={{ ...thStyle, width: "160px", textAlign: "center" }}>Nilai Pengayaan</th>
+                      <th style={{ ...thStyle, width: "150px", textAlign: "center" }}>Nilai Akhir Hasil</th>
                     </tr>
                   </thead>
                   <tbody>
                     {siswaPengayaan.map((s, idx) => {
                       const awal = getOriginalGrade(s);
+                      const keyRemedial = `${kolom.id}_remedial`;
+                      const existingRem = s.nilai?.[keyRemedial]?.status === "PENGAYAAN" ? s.nilai[keyRemedial] : null;
+                      const inputTes = remedialData[s.nisn]?.pengayaanTes;
+
+                      const hasPengayaan = inputTes !== "" && inputTes !== null && !isNaN(Number(inputTes));
+                      const finalVal = hasPengayaan ? computePengayaanFinal(awal, inputTes) : (existingRem?.nilaiAkhir !== undefined ? existingRem.nilaiAkhir : awal);
 
                       return (
                         <tr key={s.nisn} style={trStyle}>
-                          <td style={tdStyle}>{idx + 1}</td>
+                          <td style={{ ...tdStyle, textAlign: "center", color: "var(--text-secondary)" }}>{idx + 1}</td>
                           <td style={tdStyle}>
-                            <strong>{s.nama}</strong>
-                            <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}>NISN: {s.nisn}</div>
+                            <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{s.nama}</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>NISN: {s.nisn}</div>
                           </td>
-                          <td style={{ ...tdStyle, textAlign: "center", fontWeight: "700", color: "#10b981" }}>
+                          <td style={{ ...tdStyle, textAlign: "center", fontWeight: "800", color: "var(--success, #10b981)", fontSize: "0.95rem" }}>
                             {awal}
                           </td>
-                          <td style={tdStyle}>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>
                             <input
-                              type="text"
-                              placeholder="Pendalaman Materi / Project Mandiri"
-                              value={remedialData[s.nisn]?.catatan || ""}
-                              onChange={(e) => handleInputChange(s.nisn, "catatan", e.target.value)}
-                              style={tableTextInputsStyle}
+                              type="number"
+                              min={0}
+                              max={100}
+                              placeholder="Nilai Pengayaan"
+                              value={inputTes ?? ""}
+                              onChange={(e) => handleInputChange(s.nisn, "pengayaanTes", e.target.value)}
+                              style={tableInputStyle}
                             />
                           </td>
-                          <td style={tdStyle}>
+                          <td style={{ ...tdStyle, textAlign: "center" }}>
                             <span style={{
-                              display: "inline-block",
-                              padding: "2px 8px",
-                              borderRadius: "12px",
-                              fontSize: "0.75rem",
-                              fontWeight: "700",
-                              backgroundColor: "rgba(16, 185, 129, 0.15)",
-                              color: "#10b981"
+                              fontWeight: "800",
+                              fontSize: "1.05rem",
+                              color: "var(--success, #10b981)"
                             }}>
-                              🟢 PENGAYAAN
+                              {finalVal}
                             </span>
+                            {maxCap < 100 && finalVal === maxCap && (
+                              <span style={{ fontSize: "0.68rem", display: "block", color: "var(--text-muted)", fontWeight: "600" }}>
+                                (MaxCap {maxCap})
+                              </span>
+                            )}
                           </td>
                         </tr>
                       );

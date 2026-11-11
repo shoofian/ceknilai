@@ -25,7 +25,14 @@ export default function RemedialReportModal({
   const pesertasRemedial = siswaList
     .map((s) => {
       const remData = s.nilai?.[keyRemedial];
-      return remData ? { ...s, remData } : null;
+      return remData && remData.status !== "PENGAYAAN" ? { ...s, remData } : null;
+    })
+    .filter(Boolean);
+
+  const pesertasPengayaan = siswaList
+    .map((s) => {
+      const pengData = s.nilai?.[keyRemedial];
+      return pengData && pengData.status === "PENGAYAAN" ? { ...s, pengData } : null;
     })
     .filter(Boolean);
 
@@ -112,11 +119,11 @@ export default function RemedialReportModal({
             </table>
           )}
 
-          {/* Table 2: Peserta Pengayaan & Bonus */}
-          <h3 style={{ ...sectionTitleStyle, marginTop: "24px" }}>2. Daftar Peserta Program Pengayaan & Bonus Keaktifan</h3>
-          {pesertasBonus.length === 0 ? (
+          {/* Table 2: Peserta Pengayaan */}
+          <h3 style={{ ...sectionTitleStyle, marginTop: "24px" }}>2. Daftar Peserta & Hasil Pelaksanaan Pengayaan</h3>
+          {pesertasPengayaan.length === 0 ? (
             <p style={{ fontSize: "0.85rem", fontStyle: "italic", color: "#64748b" }}>
-              Tidak ada catatan pemberian bonus/pengayaan pada kolom ini.
+              Tidak ada catatan pelaksanaan pengayaan pada kolom ini.
             </p>
           ) : (
             <table style={reportTableStyle}>
@@ -126,21 +133,21 @@ export default function RemedialReportModal({
                   <th style={reportThStyle}>NISN</th>
                   <th style={reportThStyle}>Nama Siswa</th>
                   <th style={reportThStyle}>Nilai Awal</th>
-                  <th style={reportThStyle}>Poin Bonus</th>
-                  <th style={reportThStyle}>Nilai Akhir (Capped)</th>
-                  <th style={reportThStyle}>Apresiasi / Catatan</th>
+                  <th style={reportThStyle}>Nilai Pengayaan</th>
+                  <th style={reportThStyle}>Nilai Akhir</th>
+                  <th style={reportThStyle}>Keterangan</th>
                 </tr>
               </thead>
               <tbody>
-                {pesertasBonus.map((s, i) => (
+                {pesertasPengayaan.map((s, i) => (
                   <tr key={s.nisn}>
                     <td style={reportTdStyle}>{i + 1}</td>
                     <td style={reportTdStyle}>{s.nisn}</td>
                     <td style={reportTdStyle}><strong>{s.nama}</strong></td>
-                    <td style={{ ...reportTdStyle, textAlign: "center" }}>{s.bonusData.nilaiAwal}</td>
-                    <td style={{ ...reportTdStyle, textAlign: "center", color: "#16a34a", fontWeight: "700" }}>+{s.bonusData.poin}</td>
-                    <td style={{ ...reportTdStyle, textAlign: "center", fontWeight: "700" }}>{s.bonusData.nilaiAkhir}</td>
-                    <td style={reportTdStyle}>{s.bonusData.catatan}</td>
+                    <td style={{ ...reportTdStyle, textAlign: "center", color: "#16a34a" }}>{s.pengData.nilaiAwal}</td>
+                    <td style={{ ...reportTdStyle, textAlign: "center" }}>{s.pengData.nilaiTes}</td>
+                    <td style={{ ...reportTdStyle, textAlign: "center", fontWeight: "700" }}>{s.pengData.nilaiAkhir}</td>
+                    <td style={reportTdStyle}>{s.pengData.catatan || "Tuntas Pengayaan"}</td>
                   </tr>
                 ))}
               </tbody>
