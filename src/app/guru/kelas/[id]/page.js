@@ -169,6 +169,8 @@ function DetailKelasContent({ params: paramsPromise }) {
   
   // Status penyimpanan otomatis tabel nilai
   const [saveStatus, setSaveStatus] = useState({}); // { [nisn-colId]: 'idle' | 'saving' | 'saved' }
+  const pendingSaveRequests = useRef({}); // AbortController per cell key
+  const saveSequenceRef = useRef({});     // Sequence counter per cell key
 
 
   // States untuk Status Nilai
@@ -3039,6 +3041,17 @@ function DetailKelasContent({ params: paramsPromise }) {
       return;
     }
 
+    // Batalkan request sebelumnya untuk sel yang sama jika masih berjalan
+    if (pendingSaveRequests.current[key]) {
+      pendingSaveRequests.current[key].abort();
+    }
+    const controller = new AbortController();
+    pendingSaveRequests.current[key] = controller;
+
+    // Sequence counter agar respon jaringan yang terlambat tidak menimpa nilai terbaru
+    const seq = (saveSequenceRef.current[key] || 0) + 1;
+    saveSequenceRef.current[key] = seq;
+
     setSaveStatus(prev => ({ ...prev, [key]: "saving" }));
 
     const keyRemedial = `${colId}_remedial`;
@@ -3056,7 +3069,11 @@ function DetailKelasContent({ params: paramsPromise }) {
         body: JSON.stringify({
           nilai: payloadNilai
         }),
+        signal: controller.signal
       });
+
+      // Abaikan jika sudah ada request yang lebih baru untuk sel ini
+      if (saveSequenceRef.current[key] !== seq) return;
 
       if (response.ok) {
         setSaveStatus(prev => ({ ...prev, [key]: "saved" }));
@@ -3089,14 +3106,17 @@ function DetailKelasContent({ params: paramsPromise }) {
           return next;
         });
 
-        // Kembalikan ke status idle setelah 1.5 detik
+        // Kembalikan ke status idle setelah 1.5 detik jika tidak ada request baru
         setTimeout(() => {
-          setSaveStatus(prev => ({ ...prev, [key]: "idle" }));
+          if (saveSequenceRef.current[key] === seq) {
+            setSaveStatus(prev => ({ ...prev, [key]: "idle" }));
+          }
         }, 1500);
       } else {
         setSaveStatus(prev => ({ ...prev, [key]: "failed" }));
       }
     } catch (err) {
+      if (err.name === 'AbortError') return; // Request dibatalkan oleh perubahan nilai lebih baru
       console.error("Grade update failed", err);
       setSaveStatus(prev => ({ ...prev, [key]: "failed" }));
     }
