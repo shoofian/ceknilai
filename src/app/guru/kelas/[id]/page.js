@@ -6528,28 +6528,34 @@ function DetailKelasContent({ params: paramsPromise }) {
         @media (max-width: 576px) {
           .buku-nilai-header {
             padding: 0 16px 12px 16px !important;
-            flex-direction: column !important;
+            flex-direction: row !important;
             align-items: flex-start !important;
-            gap: 12px !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
           }
           
+          .buku-nilai-title {
+            flex: 1 1 auto !important;
+          }
+
           .buku-nilai-title h4 {
-            font-size: 1.1rem !important;
+            font-size: 1.05rem !important;
           }
           
           .buku-nilai-title p {
-            font-size: 0.75rem !important;
+            font-size: 0.72rem !important;
           }
 
           .buku-nilai-actions {
-            width: 100%;
-            justify-content: flex-start;
+            width: auto !important;
+            justify-content: flex-end !important;
+            flex-shrink: 0 !important;
           }
           
           .buku-nilai-actions button {
             padding: 6px 10px !important;
             font-size: 0.75rem !important;
-            flex: 1;
+            flex: 0 0 auto !important;
             justify-content: center;
           }
           
