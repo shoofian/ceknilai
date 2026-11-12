@@ -367,6 +367,17 @@ export default function KelolaKelas() {
     setModalOpen(true);
   };
 
+  // Event listener untuk tombol contextual bottom-nav di mobile
+  useEffect(() => {
+    const onTambahKelas = () => {
+      handleOpenAdd();
+    };
+    window.addEventListener("ceknilai:tambah-kelas", onTambahKelas);
+    return () => {
+      window.removeEventListener("ceknilai:tambah-kelas", onTambahKelas);
+    };
+  }, []);
+
   const handleOpenEdit = async (k) => {
     setIsEditing(true);
     setCurrentId(k.id);

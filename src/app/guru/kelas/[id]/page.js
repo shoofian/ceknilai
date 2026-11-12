@@ -241,6 +241,31 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [cetakEksporModalOpen, setCetakEksporModalOpen] = useState(false);
   const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor' | 'excel'
 
+  // Listener untuk trigger aksi dari kontekstual bottom-nav mobile
+  useEffect(() => {
+    const onKelolaSiswa = () => {
+      setKelolaSiswaTab('tambah');
+      setKelolaSiswaModalOpen(true);
+    };
+    const onKelolaKomponen = () => {
+      handleOpenKolomModal();
+    };
+    const onCetakEkspor = () => {
+      setCetakEksporTab('laporan');
+      setCetakEksporModalOpen(true);
+    };
+
+    window.addEventListener("ceknilai:kelola-siswa", onKelolaSiswa);
+    window.addEventListener("ceknilai:kelola-komponen", onKelolaKomponen);
+    window.addEventListener("ceknilai:cetak-ekspor", onCetakEkspor);
+
+    return () => {
+      window.removeEventListener("ceknilai:kelola-siswa", onKelolaSiswa);
+      window.removeEventListener("ceknilai:kelola-komponen", onKelolaKomponen);
+      window.removeEventListener("ceknilai:cetak-ekspor", onCetakEkspor);
+    };
+  }, []);
+
   const [panelKontrolExpanded, setPanelKontrolExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       if (window.innerWidth < 768) return false; // Selalu paksa tertutup di mobile (< 768px)

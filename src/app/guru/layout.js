@@ -920,20 +920,69 @@ export default function GuruLayout({ children }) {
         </div>
       </div>
 
-      {/* Bottom Navigation (Mobile Only) */}
+      {/* Bottom Navigation (Mobile Only) — Kontekstual per halaman */}
       <nav className="bottom-nav hide-on-desktop no-print">
-        <Link href="/guru" className={`bottom-nav-item ${pathname === '/guru' ? 'active' : ''}`}>
-          <span className="icon">🏠</span>
-          <span className="label">Dasbor</span>
-        </Link>
-        <Link href="/guru/kelas" className={`bottom-nav-item ${pathname.startsWith('/guru/kelas') ? 'active' : ''}`}>
-          <span className="icon">📚</span>
-          <span className="label">Kelas</span>
-        </Link>
-        <button onClick={() => setSidebarOpen(true)} className="bottom-nav-item">
-          <span className="icon">☰</span>
-          <span className="label">Menu</span>
-        </button>
+        {pathname.match(/^\/guru\/kelas\/[^/]+$/) ? (
+          /* === Detail Kelas / Buku Nilai === */
+          <>
+            <Link href="/guru/kelas" className="bottom-nav-item">
+              <span className="icon">◀</span>
+              <span className="label">Kelas</span>
+            </Link>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('ceknilai:kelola-siswa'))} className="bottom-nav-item">
+              <span className="icon">👥</span>
+              <span className="label">Siswa</span>
+            </button>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('ceknilai:kelola-komponen'))} className="bottom-nav-item">
+              <span className="icon">📊</span>
+              <span className="label">Komponen</span>
+            </button>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('ceknilai:cetak-ekspor'))} className="bottom-nav-item">
+              <span className="icon">🖨️</span>
+              <span className="label">Ekspor</span>
+            </button>
+            <button onClick={() => setSidebarOpen(true)} className="bottom-nav-item">
+              <span className="icon">☰</span>
+              <span className="label">Menu</span>
+            </button>
+          </>
+        ) : pathname === '/guru/kelas' ? (
+          /* === Manajemen Kelas === */
+          <>
+            <Link href="/guru" className={`bottom-nav-item ${pathname === '/guru' ? 'active' : ''}`}>
+              <span className="icon">🏠</span>
+              <span className="label">Dasbor</span>
+            </Link>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('ceknilai:tambah-kelas'))} className="bottom-nav-item">
+              <span className="icon">➕</span>
+              <span className="label">Tambah</span>
+            </button>
+            <Link href="/guru/arsip" className="bottom-nav-item">
+              <span className="icon">📁</span>
+              <span className="label">Arsip</span>
+            </Link>
+            <button onClick={() => setSidebarOpen(true)} className="bottom-nav-item">
+              <span className="icon">☰</span>
+              <span className="label">Menu</span>
+            </button>
+          </>
+        ) : (
+          /* === Default (Dasbor, dll) === */
+          <>
+            <Link href="/guru" className={`bottom-nav-item ${pathname === '/guru' ? 'active' : ''}`}>
+              <span className="icon">🏠</span>
+              <span className="label">Dasbor</span>
+            </Link>
+            <Link href="/guru/kelas" className={`bottom-nav-item ${pathname.startsWith('/guru/kelas') ? 'active' : ''}`}>
+              <span className="icon">📚</span>
+              <span className="label">Kelas</span>
+            </Link>
+            <button onClick={() => setSidebarOpen(true)} className="bottom-nav-item">
+              <span className="icon">☰</span>
+              <span className="label">Menu</span>
+            </button>
+          </>
+        )}
       </nav>
 
       <style jsx global>{`
