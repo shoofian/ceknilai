@@ -6532,7 +6532,8 @@ function DetailKelasContent({ params: paramsPromise }) {
             flex-direction: row !important;
             align-items: flex-start !important;
             justify-content: space-between !important;
-            gap: 8px !important;
+            gap: 4px !important;
+            flex-wrap: nowrap !important;
           }
           
           .buku-nilai-title {
@@ -6551,6 +6552,8 @@ function DetailKelasContent({ params: paramsPromise }) {
             width: auto !important;
             justify-content: flex-end !important;
             flex-shrink: 0 !important;
+            padding-bottom: 0 !important;
+            margin-top: 2px !important;
           }
           
           .buku-nilai-actions button {
