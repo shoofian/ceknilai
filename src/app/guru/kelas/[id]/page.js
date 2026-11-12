@@ -3801,9 +3801,10 @@ function DetailKelasContent({ params: paramsPromise }) {
                 {kelas.nama} <span style={{ fontSize: "1rem", color: "var(--text-muted)" }}>▼</span>
               </span>
               
+              {/* Desktop Class Switcher Dropdown */}
               {switcherOpen && (
                 <div 
-                  className="class-switcher-menu"
+                  className="hide-on-mobile"
                   style={{
                     position: "absolute",
                     top: "100%",
@@ -3820,9 +3821,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                     overflowY: "auto"
                   }}
                 >
-                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>🚀 Pindah Kelas</span>
-                    <span className="hide-on-desktop" style={{ fontSize: "1.1rem", cursor: "pointer", padding: "0 4px" }} onClick={() => setSwitcherOpen(false)}>✕</span>
+                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    🚀 Pindah Kelas
                   </div>
                   {availableClasses.length > 0 ? availableClasses.map(c => (
                     <div 
@@ -3850,12 +3850,83 @@ function DetailKelasContent({ params: paramsPromise }) {
               )}
             </div>
             
-            {/* Click away listener overlay */}
+            {/* Desktop Click away listener overlay */}
             {switcherOpen && (
               <div 
-                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, backgroundColor: "rgba(0,0,0,0.4)" }}
+                className="hide-on-mobile"
+                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}
                 onClick={() => setSwitcherOpen(false)}
               />
+            )}
+
+            {/* Mobile Bottom Sheet Portal for Class Switcher */}
+            {switcherOpen && typeof document !== 'undefined' && createPortal(
+              <div className="hide-on-desktop" style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}>
+                <div 
+                  style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(2px)" }}
+                  onClick={() => setSwitcherOpen(false)}
+                />
+                <div style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  maxHeight: "75vh",
+                  background: "var(--bg-primary)",
+                  borderRadius: "20px 20px 0 0",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                  boxShadow: "0 -4px 25px rgba(0,0,0,0.25)",
+                  animation: "slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)"
+                }}>
+                  {/* Bottom sheet header */}
+                  <div style={{ padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "1.1rem" }}>🚀</span>
+                      <span style={{ fontWeight: "800", fontSize: "1rem", color: "var(--text-primary)" }}>Pindah Kelas Cepat</span>
+                    </div>
+                    <button 
+                      onClick={() => setSwitcherOpen(false)}
+                      style={{ background: "none", border: "none", fontSize: "1.2rem", color: "var(--text-muted)", cursor: "pointer", padding: "4px 8px", lineHeight: 1 }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  {/* Scrollable classes list */}
+                  <div style={{ overflowY: "auto", flex: 1, WebkitOverflowScrolling: "touch", paddingBottom: "calc(20px + env(safe-area-inset-bottom, 16px))" }}>
+                    {availableClasses.length > 0 ? availableClasses.map(c => (
+                      <div 
+                        key={c.id}
+                        onClick={() => window.location.href = `/guru/kelas/${c.id}`}
+                        style={{
+                          padding: "16px 20px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid var(--border-color)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          backgroundColor: "transparent",
+                          transition: "background 0.15s"
+                        }}
+                        onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                        onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                      >
+                        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                          <span style={{ fontWeight: "800", fontSize: "1rem", color: "var(--text-primary)" }}>{c.nama}</span>
+                          <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{c.mataPelajaran || "Mata Pelajaran"}</span>
+                        </div>
+                        <span style={{ fontSize: "1.2rem", color: "var(--text-muted)" }}>›</span>
+                      </div>
+                    )) : (
+                      <div style={{ padding: "30px 20px", fontSize: "0.9rem", color: "var(--text-muted)", textAlign: "center" }}>
+                        Tidak ada kelas aktif lain yang tersedia.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>,
+              document.body
             )}
             
 
@@ -6616,24 +6687,6 @@ function DetailKelasContent({ params: paramsPromise }) {
             padding-bottom: 20px !important;
             margin: 0 !important;
             transform: none !important;
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
-          }
-
-          .class-switcher-menu {
-            position: fixed !important;
-            bottom: 0 !important;
-            top: auto !important;
-            left: 0 !important;
-            right: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            max-height: 70vh !important;
-            border-radius: 16px 16px 0 0 !important;
-            border: none !important;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.2) !important;
-            z-index: 9999 !important;
-            padding-bottom: 24px !important;
-            margin: 0 !important;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
           }
           
