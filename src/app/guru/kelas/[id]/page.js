@@ -3054,7 +3054,8 @@ function DetailKelasContent({ params: paramsPromise }) {
       val = val.replace(/[^0-9]/g, '');
       if (val !== "") {
         const num = parseInt(val, 10);
-        if (num > 100) val = "100";
+        // Hanya izinkan 3 digit jika hasilnya tepat 100; selain itu batasi 2 digit
+        if (num > 100) val = val.slice(0, 2);
         else val = num.toString();
       }
     }
@@ -10675,7 +10676,8 @@ function DetailKelasContent({ params: paramsPromise }) {
                       let val = e.target.value.replace(/[^0-9]/g, '');
                       if (val !== "") {
                         const num = parseInt(val, 10);
-                        if (num > 100) val = "100";
+                        // Hanya izinkan 3 digit jika hasilnya tepat 100; selain itu batasi 2 digit
+                        if (num > 100) val = val.slice(0, 2);
                         else val = num.toString();
                       }
                       setFocusBulkValue(val);
