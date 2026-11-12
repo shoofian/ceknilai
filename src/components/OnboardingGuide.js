@@ -200,11 +200,11 @@ export default function OnboardingGuide() {
             }
             @media (max-width: 768px) {
               .onboarding-guide-btn {
-                bottom: 16px;
+                bottom: 76px;
                 right: 16px;
                 padding: 0;
-                width: 46px;
-                height: 46px;
+                width: 44px;
+                height: 44px;
                 border-radius: 50%;
                 justify-content: center;
                 gap: 0;

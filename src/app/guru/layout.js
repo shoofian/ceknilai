@@ -925,10 +925,10 @@ export default function GuruLayout({ children }) {
         {pathname.match(/^\/guru\/kelas\/[^/]+$/) ? (
           /* === Detail Kelas / Buku Nilai === */
           <>
-            <Link href="/guru/kelas" className="bottom-nav-item">
-              <span className="icon">◀</span>
-              <span className="label">Kelas</span>
-            </Link>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('ceknilai:toggle-switcher'))} className="bottom-nav-item" title="Pindah Kelas Cepat">
+              <span className="icon">🔄</span>
+              <span className="label">Pindah</span>
+            </button>
             <button onClick={() => window.dispatchEvent(new CustomEvent('ceknilai:kelola-siswa'))} className="bottom-nav-item">
               <span className="icon">👥</span>
               <span className="label">Siswa</span>

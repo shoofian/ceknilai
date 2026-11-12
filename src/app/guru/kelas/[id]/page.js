@@ -254,15 +254,20 @@ function DetailKelasContent({ params: paramsPromise }) {
       setCetakEksporTab('laporan');
       setCetakEksporModalOpen(true);
     };
+    const onToggleSwitcher = () => {
+      setSwitcherOpen(prev => !prev);
+    };
 
     window.addEventListener("ceknilai:kelola-siswa", onKelolaSiswa);
     window.addEventListener("ceknilai:kelola-komponen", onKelolaKomponen);
     window.addEventListener("ceknilai:cetak-ekspor", onCetakEkspor);
+    window.addEventListener("ceknilai:toggle-switcher", onToggleSwitcher);
 
     return () => {
       window.removeEventListener("ceknilai:kelola-siswa", onKelolaSiswa);
       window.removeEventListener("ceknilai:kelola-komponen", onKelolaKomponen);
       window.removeEventListener("ceknilai:cetak-ekspor", onCetakEkspor);
+      window.removeEventListener("ceknilai:toggle-switcher", onToggleSwitcher);
     };
   }, []);
 
@@ -3797,23 +3802,27 @@ function DetailKelasContent({ params: paramsPromise }) {
               </span>
               
               {switcherOpen && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  marginTop: "8px",
-                  background: "var(--bg-primary)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "var(--radius-md)",
-                  boxShadow: "var(--shadow-lg)",
-                  zIndex: 100,
-                  width: "max-content",
-                  minWidth: "220px",
-                  maxHeight: "50vh",
-                  overflowY: "auto"
-                }}>
-                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                    🚀 Pindah Kelas
+                <div 
+                  className="class-switcher-menu"
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    marginTop: "8px",
+                    background: "var(--bg-primary)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "var(--radius-md)",
+                    boxShadow: "var(--shadow-lg)",
+                    zIndex: 1000,
+                    width: "max-content",
+                    minWidth: "220px",
+                    maxHeight: "50vh",
+                    overflowY: "auto"
+                  }}
+                >
+                  <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--border-color)", fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>🚀 Pindah Kelas</span>
+                    <span className="hide-on-desktop" style={{ fontSize: "1.1rem", cursor: "pointer", padding: "0 4px" }} onClick={() => setSwitcherOpen(false)}>✕</span>
                   </div>
                   {availableClasses.length > 0 ? availableClasses.map(c => (
                     <div 
@@ -3844,7 +3853,7 @@ function DetailKelasContent({ params: paramsPromise }) {
             {/* Click away listener overlay */}
             {switcherOpen && (
               <div 
-                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 99 }}
+                style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, backgroundColor: "rgba(0,0,0,0.4)" }}
                 onClick={() => setSwitcherOpen(false)}
               />
             )}
@@ -6607,6 +6616,24 @@ function DetailKelasContent({ params: paramsPromise }) {
             padding-bottom: 20px !important;
             margin: 0 !important;
             transform: none !important;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+          }
+
+          .class-switcher-menu {
+            position: fixed !important;
+            bottom: 0 !important;
+            top: auto !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            max-height: 70vh !important;
+            border-radius: 16px 16px 0 0 !important;
+            border: none !important;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.2) !important;
+            z-index: 9999 !important;
+            padding-bottom: 24px !important;
+            margin: 0 !important;
             animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
           }
           
