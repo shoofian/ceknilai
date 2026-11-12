@@ -241,6 +241,29 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [cetakEksporModalOpen, setCetakEksporModalOpen] = useState(false);
   const [cetakEksporTab, setCetakEksporTab] = useState('laporan'); // 'laporan' | 'kartu' | 'erapor' | 'excel'
 
+  const [isFocusCard, setIsFocusCard] = useState(false);
+
+  // Keyboard shortcut Esc untuk keluar dari Mode Fokus Card
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && isFocusCard) {
+        setIsFocusCard(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFocusCard]);
+
+  // Lock body scroll saat Mode Fokus aktif
+  useEffect(() => {
+    if (isFocusCard) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isFocusCard]);
+
   // Listener untuk trigger aksi dari kontekstual bottom-nav mobile
   useEffect(() => {
     const onKelolaSiswa = () => {
@@ -5104,12 +5127,40 @@ function DetailKelasContent({ params: paramsPromise }) {
       {activeTab !== "nilai" ? null : (
       <>
       {/* Table: Main Spreadsheet Gradebook */}
-      <div className="glass-card" style={{ padding: "20px 0", overflow: "hidden" }}>
+      <div 
+        className={`glass-card ${isFocusCard ? "buku-nilai-focus-card" : ""}`} 
+        style={{ 
+          padding: "20px 0", 
+          overflow: isFocusCard ? "auto" : "hidden",
+          ...(isFocusCard ? {
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            width: "100vw",
+            height: "100vh",
+            maxHeight: "100vh",
+            maxWidth: "100vw",
+            zIndex: 99998,
+            borderRadius: 0,
+            margin: 0,
+            backgroundColor: "var(--bg-primary)",
+            display: "flex",
+            flexDirection: "column",
+          } : {})
+        }}
+      >
         
         <div className="buku-nilai-header" style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
           <div className="buku-nilai-title" style={{ flex: "1 1 200px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>📊 Buku Nilai Kelas</h4>
+              {isFocusCard && (
+                <span style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: "12px", backgroundColor: "var(--primary-glow)", color: "var(--primary)", fontWeight: "700" }}>
+                  Mode Fokus
+                </span>
+              )}
             </div>
             <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)", margin: 0 }}>
               Ketik nilai pada tabel. Terkunci otomatis saat kursor berpindah.
@@ -5118,6 +5169,16 @@ function DetailKelasContent({ params: paramsPromise }) {
           
           {/* Action Toolbar */}
           <div className="buku-nilai-actions" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", overflow: "visible", paddingBottom: "4px" }}>
+            {isFocusCard && (
+              <button
+                onClick={() => setIsFocusCard(false)}
+                className="btn btn-outline"
+                style={{ width: "auto", padding: "6px 10px", fontSize: "0.78rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "4px", color: "var(--danger)", borderColor: "var(--danger)" }}
+                title="Keluar dari Mode Fokus (Esc)"
+              >
+                ✕ <span className="hide-on-mobile">Keluar Fokus</span>
+              </button>
+            )}
             <button 
               onClick={() => { setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
               className={`hide-on-mobile ${(!kelas?.siswa || kelas.siswa.length === 0) ? "btn btn-primary" : "btn btn-outline"}`} 
@@ -5131,6 +5192,16 @@ function DetailKelasContent({ params: paramsPromise }) {
               style={{ width: "auto", padding: "6px 12px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", boxShadow: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "0 0 0 4px rgba(59,130,246,0.2)" : "none", animation: (!kelas?.kolomNilai || kelas.kolomNilai.length === 0) ? "pulse-soft 2s infinite" : "none" }}
             >
               + Komponen Nilai
+            </button>
+            <button 
+              onClick={() => setIsFocusCard(!isFocusCard)}
+              className="btn btn-secondary hide-on-mobile" 
+              style={{ width: "auto", padding: "6px 10px", fontSize: "0.85rem", fontWeight: "700", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", whiteSpace: "nowrap", flexShrink: 0, backgroundColor: isFocusCard ? "var(--primary-glow)" : undefined, color: isFocusCard ? "var(--primary)" : undefined, borderColor: isFocusCard ? "var(--primary)" : undefined }}
+              title={isFocusCard ? "Keluar Mode Fokus Layar Penuh (Esc)" : "Mode Fokus Layar Penuh"}
+              aria-pressed={isFocusCard}
+              aria-label={isFocusCard ? "Keluar Mode Fokus Layar Penuh" : "Aktifkan Mode Fokus Layar Penuh"}
+            >
+              {isFocusCard ? "🗗" : "⛶"}
             </button>
             <button 
               onClick={() => { setCetakEksporTab('laporan'); setCetakEksporModalOpen(true); }}
@@ -5170,6 +5241,14 @@ function DetailKelasContent({ params: paramsPromise }) {
                   flexDirection: "column",
                   overflow: "hidden"
                 }}>
+                  <div 
+                    onClick={() => { setSettingsDropdownOpen(false); setIsFocusCard(!isFocusCard); }}
+                    style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: isFocusCard ? "var(--primary)" : "var(--text-primary)" }}
+                    onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
+                    onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                  >
+                    {isFocusCard ? "🗗 Keluar Mode Fokus" : "⛶ Mode Fokus Layar Penuh"}
+                  </div>
                   <div 
                     onClick={() => { setSettingsDropdownOpen(false); setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }}
                     style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
@@ -5217,6 +5296,12 @@ function DetailKelasContent({ params: paramsPromise }) {
                         >
                           ✕
                         </button>
+                      </div>
+                      <div 
+                        onClick={() => { setSettingsDropdownOpen(false); setIsFocusCard(!isFocusCard); }}
+                        style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: isFocusCard ? "var(--primary)" : "var(--text-primary)" }}
+                      >
+                        {isFocusCard ? "🗗 Keluar Mode Fokus" : "⛶ Mode Fokus Layar Penuh"}
                       </div>
                       <div 
                         onClick={() => { setSettingsDropdownOpen(false); setKelolaSiswaTab('tambah'); setKelolaSiswaModalOpen(true); }}
@@ -5375,7 +5460,7 @@ function DetailKelasContent({ params: paramsPromise }) {
               className="table-container" 
               ref={tableContainerRef}
               onScroll={handleTableScroll}
-              style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: "70vh", overflowY: "auto", overflowX: "auto" }}
+              style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: isFocusCard ? "none" : "70vh", overflowY: "auto", overflowX: "auto", ...(isFocusCard ? { flex: "1 1 auto" } : {}) }}
             >
               {(() => {
                 const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
@@ -6627,6 +6712,23 @@ function DetailKelasContent({ params: paramsPromise }) {
             font-style: italic;
           }
         }
+        .buku-nilai-focus-card {
+          animation: focusFadeIn 0.2s ease-out;
+          padding-top: env(safe-area-inset-top, 0px) !important;
+          padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+        }
+
+        .buku-nilai-focus-card .table-container {
+          flex: 1 1 auto !important;
+          max-height: none !important;
+          overflow-y: auto !important;
+        }
+
+        @keyframes focusFadeIn {
+          from { opacity: 0.8; transform: scale(0.99); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
         .settings-dropdown-menu {
           right: 0;
         }
@@ -6672,7 +6774,7 @@ function DetailKelasContent({ params: paramsPromise }) {
             flex: 0 0 auto !important;
           }
 
-          .settings-dropdown-menu {
+        .settings-dropdown-menu {
             position: fixed !important;
             bottom: 0 !important;
             top: auto !important;
