@@ -424,11 +424,14 @@ function DetailKelasContent({ params: paramsPromise }) {
   // States untuk Alat Lanjutan & Normalisasi Nilai
   const [showAdvancedTools, setShowAdvancedTools] = useState(false);
   const [normModalOpen, setNormModalOpen] = useState(false);
-  const [normMethod, setNormMethod] = useState("linear"); // "linear" | "minmax" | "scalemax"
+  const [normMethod, setNormMethod] = useState("linear"); // "linear" | "minmax" | "scalemax" | "rescale"
   const [normLinearPoin, setNormLinearPoin] = useState("");
   const [normMinTarget, setNormMinTarget] = useState("");
   const [normMaxTarget, setNormMaxTarget] = useState("");
   const [normMaxOnlyTarget, setNormMaxOnlyTarget] = useState("");
+  const [normRescaleMin, setNormRescaleMin] = useState("");
+  const [normRescaleMax, setNormRescaleMax] = useState("");
+  const [normRescaleRound, setNormRescaleRound] = useState("round"); // "round" | "decimal1" | "decimal2" | "none"
   const [isSavingNorm, setIsSavingNorm] = useState(false);
 
   useEffect(() => {
@@ -438,6 +441,9 @@ function DetailKelasContent({ params: paramsPromise }) {
       setNormMinTarget("");
       setNormMaxTarget("");
       setNormMaxOnlyTarget("");
+      setNormRescaleMin("");
+      setNormRescaleMax("");
+      setNormRescaleRound("round");
     }
   }, [normModalOpen]);
 
@@ -9292,6 +9298,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                   <option value="linear">➕ Geser Linear (Tambah/Kurang Poin Tetap ke Semua Siswa)</option>
                   <option value="minmax">📊 Skala Min-Max (Seragamkan ke Rentang Target, misal 60–100)</option>
                   <option value="scalemax">🎯 Skala ke Max (Siswa Tertinggi Menjadi Target, misal 100)</option>
+                  <option value="rescale">🔄 Pemetaan Skala Baru (Konversi 0–100 ke Rentang Kustom, misal 25–95)</option>
                 </select>
               </div>
 
@@ -9382,6 +9389,85 @@ function DetailKelasContent({ params: paramsPromise }) {
                     </span>
                   </div>
                 )}
+
+                {normMethod === "rescale" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", padding: "8px 10px", backgroundColor: "rgba(59,130,246,0.06)", borderRadius: "6px", border: "1px solid rgba(59,130,246,0.12)", lineHeight: "1.5" }}>
+                      <strong>📖 Cara Kerja:</strong> Seluruh nilai murni (skala 0–100) dipetakan secara linear ke rentang skala baru yang Anda tentukan.<br/>
+                      <strong>Rumus:</strong> <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: "3px", backgroundColor: "var(--bg-tertiary)" }}>Nilai Baru = Min Baru + (Nilai Lama / 100) × (Max Baru − Min Baru)</code>
+                    </div>
+                    <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                      <div style={{ flex: 1, minWidth: "130px" }}>
+                        <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                          Batas Bawah Skala Baru:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={normRescaleMin}
+                          onChange={(e) => setNormRescaleMin(e.target.value)}
+                          placeholder="Contoh: 25"
+                          style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: "130px" }}>
+                        <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                          Batas Atas Skala Baru:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={normRescaleMax}
+                          onChange={(e) => setNormRescaleMax(e.target.value)}
+                          placeholder="Contoh: 95"
+                          style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%" }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                        Pembulatan Hasil:
+                      </label>
+                      <select
+                        className="form-input"
+                        value={normRescaleRound}
+                        onChange={(e) => setNormRescaleRound(e.target.value)}
+                        style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "280px" }}
+                      >
+                        <option value="round">Bilangan Bulat Terdekat (57.6 → 58)</option>
+                        <option value="decimal1">1 Desimal (57.64 → 57.6)</option>
+                        <option value="decimal2">2 Desimal (57.642 → 57.64)</option>
+                        <option value="none">Tanpa Pembulatan (presisi penuh)</option>
+                      </select>
+                    </div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "2px", lineHeight: "1.5" }}>
+                      {normRescaleMin !== "" && normRescaleMax !== "" && !isNaN(Number(normRescaleMin)) && !isNaN(Number(normRescaleMax)) ? (
+                        <>
+                          Nilai <strong>0</strong> akan menjadi <strong>{normRescaleMin}</strong>, nilai <strong>100</strong> akan menjadi <strong>{normRescaleMax}</strong>.
+                          {" "}Contoh: nilai <strong>50</strong> → <strong>{(() => {
+                            const minB = Number(normRescaleMin);
+                            const maxB = Number(normRescaleMax);
+                            const raw = minB + (50 / 100) * (maxB - minB);
+                            if (normRescaleRound === "round") return Math.round(raw);
+                            if (normRescaleRound === "decimal1") return parseFloat(raw.toFixed(1));
+                            if (normRescaleRound === "decimal2") return parseFloat(raw.toFixed(2));
+                            return raw;
+                          })()}</strong>, nilai <strong>75</strong> → <strong>{(() => {
+                            const minB = Number(normRescaleMin);
+                            const maxB = Number(normRescaleMax);
+                            const raw = minB + (75 / 100) * (maxB - minB);
+                            if (normRescaleRound === "round") return Math.round(raw);
+                            if (normRescaleRound === "decimal1") return parseFloat(raw.toFixed(1));
+                            if (normRescaleRound === "decimal2") return parseFloat(raw.toFixed(2));
+                            return raw;
+                          })()}</strong>
+                        </>
+                      ) : (
+                        "Masukkan batas bawah dan atas skala baru. Misal: 25 dan 95 untuk memetakan nilai 0–100 menjadi 25–95."
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Calculation & Live Preview Table */}
@@ -9431,6 +9517,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                   if (normMethod === "linear") return normLinearPoin !== "" && !isNaN(Number(normLinearPoin));
                   if (normMethod === "minmax") return normMinTarget !== "" && normMaxTarget !== "" && !isNaN(Number(normMinTarget)) && !isNaN(Number(normMaxTarget));
                   if (normMethod === "scalemax") return normMaxOnlyTarget !== "" && !isNaN(Number(normMaxOnlyTarget)) && Number(normMaxOnlyTarget) > 0;
+                  if (normMethod === "rescale") return normRescaleMin !== "" && normRescaleMax !== "" && !isNaN(Number(normRescaleMin)) && !isNaN(Number(normRescaleMax)) && Number(normRescaleMax) > Number(normRescaleMin);
                   return false;
                 })();
 
@@ -9460,6 +9547,18 @@ function DetailKelasContent({ params: paramsPromise }) {
                       rawNormalized = 0;
                     } else {
                       rawNormalized = (s.totalMurni / maxMurni) * maxT;
+                    }
+                  } else if (normMethod === "rescale") {
+                    const minB = Number(normRescaleMin);
+                    const maxB = Number(normRescaleMax);
+                    rawNormalized = minB + (s.totalMurni / 100) * (maxB - minB);
+                    // Terapkan pembulatan sesuai pilihan
+                    if (normRescaleRound === "round") {
+                      rawNormalized = Math.round(rawNormalized);
+                    } else if (normRescaleRound === "decimal1") {
+                      rawNormalized = parseFloat(rawNormalized.toFixed(1));
+                    } else if (normRescaleRound === "decimal2") {
+                      rawNormalized = parseFloat(rawNormalized.toFixed(2));
                     }
                   }
                   
