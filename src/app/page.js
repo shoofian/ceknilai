@@ -1050,6 +1050,42 @@ function StudentPortalContent() {
                         </div>
                       )}
 
+                      {/* Banner Peringatan Catatan Khusus dari Guru */}
+                      {(() => {
+                        const notesCount = (res.detailNilai || []).reduce((acc, col) => {
+                          let count = col.catatan ? 1 : 0;
+                          if (col.isGroup && col.subDetail) {
+                            count += col.subDetail.filter(s => s.catatan).length;
+                          }
+                          return acc + count;
+                        }, 0);
+
+                        if (notesCount === 0) return null;
+
+                        return (
+                          <div style={{
+                            marginBottom: "16px",
+                            padding: "12px 16px",
+                            backgroundColor: "rgba(245, 158, 11, 0.1)",
+                            border: "1.5px solid rgba(245, 158, 11, 0.35)",
+                            borderRadius: "var(--radius-md, 8px)",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px"
+                          }}>
+                            <span style={{ fontSize: "1.5rem" }}>📢</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: "700", color: "#d97706", fontSize: "0.92rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span>Pesan & Catatan Guru Ditemukan ({notesCount})</span>
+                                <span style={{ fontSize: "0.68rem", backgroundColor: "#f59e0b", color: "#ffffff", padding: "1px 6px", borderRadius: "10px", fontWeight: "800" }}>PENTING</span>
+                              </div>
+                              <div style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                                Guru memberikan keterangan khusus pada nilai Anda. Perhatikan rincian beraksen 💬 pada tabel nilai di bawah ini.
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Detailed Grades Table */}
                       <h5 style={{ fontSize: "1.1rem", fontWeight: "600", marginBottom: "12px", fontFamily: "var(--font-heading)" }}>Rincian Komponen Nilai</h5>
@@ -1132,6 +1168,25 @@ function StudentPortalContent() {
                                       {col.isGroup && (
                                         <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", fontStyle: "italic", paddingLeft: "2px" }}>
                                           ↳ Lihat {col.subDetail?.length || 0} sub-komponen di bawah
+                                        </div>
+                                      )}
+                                      {col.catatan && (
+                                        <div style={{
+                                          marginTop: "4px",
+                                          padding: "4px 10px",
+                                          backgroundColor: "rgba(245, 158, 11, 0.12)",
+                                          borderLeft: "3px solid #f59e0b",
+                                          borderRadius: "4px",
+                                          fontSize: "0.8rem",
+                                          color: "var(--text-primary)",
+                                          display: "inline-flex",
+                                          alignItems: "center",
+                                          gap: "6px",
+                                          width: "fit-content"
+                                        }}>
+                                          <span>💬</span>
+                                          <strong style={{ color: "#d97706" }}>Catatan Guru:</strong>
+                                          <span>{col.catatan}</span>
                                         </div>
                                       )}
                                     </div>
@@ -1238,8 +1293,28 @@ function StudentPortalContent() {
                                       {/* Ikon dot kecil */}
                                       <div style={{ position: "absolute", left: "2.3rem", top: "50%", transform: "translateY(-50%)", width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--primary)", opacity: 0.8 }}></div>
 
-                                      <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: "6px" }}>
-                                        <span>{sub.nama}</span>
+                                      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                          <span>{sub.nama}</span>
+                                        </div>
+                                        {sub.catatan && (
+                                          <div style={{
+                                            padding: "2px 8px",
+                                            backgroundColor: "rgba(245, 158, 11, 0.12)",
+                                            borderLeft: "3px solid #f59e0b",
+                                            borderRadius: "4px",
+                                            fontSize: "0.78rem",
+                                            color: "var(--text-primary)",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px",
+                                            width: "fit-content"
+                                          }}>
+                                            <span>💬</span>
+                                            <strong style={{ color: "#d97706" }}>Catatan:</strong>
+                                            <span>{sub.catatan}</span>
+                                          </div>
+                                        )}
                                       </div>
                                     </td>
                                     <td style={{ textAlign: "right", verticalAlign: "middle", whiteSpace: "nowrap", borderBottom: isLast ? "1px solid var(--border-color)" : "none" }}>
@@ -1417,6 +1492,11 @@ function StudentPortalContent() {
                                               {res.skemaPenilaian?.tpConfig?.[col.kolomId] || res.skema?.tpConfig?.[col.kolomId]}
                                             </div>
                                           )}
+                                          {col.catatan && (
+                                            <div style={{ fontSize: "0.75rem", color: "#b45309", fontWeight: "600", marginTop: "2px" }}>
+                                              💬 Catatan: {col.catatan}
+                                            </div>
+                                          )}
                                         </td>
                                         <td style={{ textAlign: "center" }}>{res.kkm}</td>
                                         <td style={{ textAlign: "center", fontWeight: "bold" }}>
@@ -1442,6 +1522,11 @@ function StudentPortalContent() {
                                               {subTp && (
                                                 <div style={{ fontSize: "0.72rem", fontStyle: "italic", fontWeight: "normal", color: "#4b5563", marginTop: "1px", paddingLeft: "12px" }}>
                                                   {subTp}
+                                                </div>
+                                              )}
+                                              {sub.catatan && (
+                                                <div style={{ fontSize: "0.72rem", color: "#b45309", fontWeight: "600", marginTop: "2px", paddingLeft: "12px" }}>
+                                                  💬 Catatan: {sub.catatan}
                                                 </div>
                                               )}
                                             </td>

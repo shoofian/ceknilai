@@ -1147,6 +1147,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
             nama: sub.nama,
             bobot: sub.bobot,
             nilaiAsli: isSFilled ? Number(sc) : null,
+            catatan: nilaiObj[`${sub.id}_catatan`] || null,
             isMayoritasSudah: !isSFilled && (subFilledPercentage > 0.5),
           };
         }) : [];
@@ -1157,6 +1158,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
           bobot: col.bobot,
           nilaiAsli: displayScore,
           kontribusi: displayKontribusi,
+          catatan: nilaiObj[`${col.id}_catatan`] || null,
           isTersembunyi: isHidden,
           isGroup: isGroup && subKolom.length > 0,
           isPresensi,

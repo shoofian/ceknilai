@@ -11,6 +11,7 @@ import html2canvas from "html2canvas";
 import RaporIntegrationModal from "@/components/RaporIntegrationModal";
 import RemedialModal from "@/components/RemedialModal";
 import RemedialReportModal from "@/components/RemedialReportModal";
+import GradeNoteModal from "@/components/GradeNoteModal";
 import AdvancedToolsModal from "@/components/AdvancedToolsModal";
 import BackupManagerModal from "@/components/BackupManagerModal";
 import dynamic from "next/dynamic";
@@ -81,6 +82,66 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [remedialReportConfig, setRemedialReportConfig] = useState({});
   const [advancedToolsModalOpen, setAdvancedToolsModalOpen] = useState(false);
   const [backupModalOpen, setBackupModalOpen] = useState(false);
+  const [gradeNoteModal, setGradeNoteModal] = useState(null); // { student, col, note }
+  const gradeTouchTimerRef = useRef(null);
+
+  const openGradeNoteModal = (student, col) => {
+    if (!student || !col) return;
+    const currentNote = student.nilai?.[`${col.id}_catatan`] || "";
+    setGradeNoteModal({
+      student,
+      col,
+      note: currentNote
+    });
+  };
+
+  const handleSaveGradeNote = async (newNote) => {
+    if (!gradeNoteModal) return;
+    const { student, col } = gradeNoteModal;
+    const studentNisn = student.nisn;
+    const colId = col.id;
+    const cleanNote = (newNote || "").trim();
+    const noteKey = `${colId}_catatan`;
+
+    // Optimistic update state lokal
+    setKelas(prevKelas => {
+      if (!prevKelas) return prevKelas;
+      const updatedSiswa = prevKelas.siswa.map(s => {
+        if (s.nisn === studentNisn) {
+          const newNilai = { ...s.nilai };
+          if (cleanNote) {
+            newNilai[noteKey] = cleanNote;
+          } else {
+            delete newNilai[noteKey];
+          }
+          return { ...s, nilai: newNilai };
+        }
+        return s;
+      });
+      return { ...prevKelas, siswa: updatedSiswa };
+    });
+
+    setGradeNoteModal(null);
+
+    try {
+      const res = await fetch(`/api/kelas/${classId}/siswa/${studentNisn}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nilai: {
+            [noteKey]: cleanNote || null
+          }
+        })
+      });
+
+      if (!res.ok) {
+        triggerAlert("Gagal menyimpan catatan nilai ke server.", null, { isDanger: true });
+      }
+    } catch (err) {
+      console.error("Error saving grade note:", err);
+      triggerAlert("Terjadi kesalahan jaringan saat menyimpan catatan.", null, { isDanger: true });
+    }
+  };
   const [latestBackupDate, setLatestBackupDate] = useState("");
 
   const fetchLatestBackupDate = async () => {
@@ -5687,6 +5748,24 @@ function DetailKelasContent({ params: paramsPromise }) {
                                       onBlur={(e) => handleGradeBlur(student.nisn, sub.id, e.target.value)}
                                       onWheel={(e) => e.target.blur()}
                                       onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
+                                      onContextMenu={(e) => {
+                                        e.preventDefault();
+                                        openGradeNoteModal(student, sub);
+                                      }}
+                                      onDoubleClick={() => {
+                                        openGradeNoteModal(student, sub);
+                                      }}
+                                      onTouchStart={() => {
+                                        gradeTouchTimerRef.current = setTimeout(() => {
+                                          openGradeNoteModal(student, sub);
+                                        }, 450);
+                                      }}
+                                      onTouchEnd={() => {
+                                        if (gradeTouchTimerRef.current) {
+                                          clearTimeout(gradeTouchTimerRef.current);
+                                          gradeTouchTimerRef.current = null;
+                                        }
+                                      }}
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter") {
                                           e.preventDefault();
@@ -5705,6 +5784,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                                       readOnly={kelas.archived || isLocked}
                                       onClick={() => handleLockedAction()}
                                       className="form-input"
+                                      title={student.nilai[`${sub.id}_catatan`] ? `Catatan: ${student.nilai[`${sub.id}_catatan`]} (Klik kanan/dobel-klik untuk edit)` : "Klik kanan atau dobel-klik untuk tambah catatan nilai"}
                                       style={{
                                         padding: "8px 8px",
                                         fontSize: "0.9rem",
@@ -5728,6 +5808,29 @@ function DetailKelasContent({ params: paramsPromise }) {
                                       placeholder="-"
                                       min={0}
                                       max={100}
+                                    />
+                                  )}
+
+                                  {/* Corner Marker for Grade Note */}
+                                  {student.nilai[`${sub.id}_catatan`] && (
+                                    <span
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openGradeNoteModal(student, sub);
+                                      }}
+                                      title={`Catatan: ${student.nilai[`${sub.id}_catatan`]} (Klik untuk edit)`}
+                                      style={{
+                                        position: "absolute",
+                                        top: "2px",
+                                        right: "2px",
+                                        width: 0,
+                                        height: 0,
+                                        borderTop: "9px solid #f59e0b",
+                                        borderLeft: "9px solid transparent",
+                                        cursor: "pointer",
+                                        zIndex: 3,
+                                        filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.2))"
+                                      }}
                                     />
                                   )}
 
@@ -10165,6 +10268,17 @@ function DetailKelasContent({ params: paramsPromise }) {
         config={remedialReportConfig}
       />
 
+      {/* ============= MODAL CATATAN NILAI SISWA ============= */}
+      <GradeNoteModal
+        key={gradeNoteModal ? `${gradeNoteModal.student.nisn}-${gradeNoteModal.col.id}` : "none"}
+        isOpen={!!gradeNoteModal}
+        onClose={() => setGradeNoteModal(null)}
+        student={gradeNoteModal?.student}
+        col={gradeNoteModal?.col}
+        initialNote={gradeNoteModal?.note || ""}
+        onSave={handleSaveGradeNote}
+      />
+
       {/* Floating 1-Click Star Notification Toast */}
       {starToast && (
         <div style={{
@@ -11209,41 +11323,90 @@ function DetailKelasContent({ params: paramsPromise }) {
                           </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[focusColumn.id] !== null && student.nilai[focusColumn.id] !== undefined ? student.nilai[focusColumn.id] : "")}
-                            onChange={(e) => handleGradeChange(student.nisn, focusColumn.id, e.target.value)}
-                            onBlur={(e) => handleGradeBlur(student.nisn, focusColumn.id, e.target.value)}
-                            onWheel={(e) => e.target.blur()}
-                            onPaste={(e) => handleGradePaste(e, student.nisn, focusColumn.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                handleGradeBlur(student.nisn, focusColumn.id, e.target.value);
-                                const nextInput = document.getElementById(`focus-grade-${idx + 1}`);
-                                if (nextInput) {
-                                  nextInput.focus();
-                                  nextInput.select();
-                                }
-                              }
-                            }}
-                            id={`focus-grade-${idx}`}
-                            readOnly={kelas.archived || isLocked}
-                            className="form-input"
-                            style={{
-                              padding: "6px 8px",
-                              fontSize: "0.95rem",
-                              fontWeight: "bold",
-                              textAlign: "center",
-                              width: "80px",
-                              borderRadius: "6px",
-                              border: "1.5px solid var(--border-color)",
-                              margin: "0 auto",
-                              display: "block"
-                            }}
-                          />
+                          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                            <div style={{ position: "relative", width: "80px" }}>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={temporaryScores[cellKey] !== undefined ? temporaryScores[cellKey] : (student.nilai[focusColumn.id] !== null && student.nilai[focusColumn.id] !== undefined ? student.nilai[focusColumn.id] : "")}
+                                onChange={(e) => handleGradeChange(student.nisn, focusColumn.id, e.target.value)}
+                                onBlur={(e) => handleGradeBlur(student.nisn, focusColumn.id, e.target.value)}
+                                onWheel={(e) => e.target.blur()}
+                                onPaste={(e) => handleGradePaste(e, student.nisn, focusColumn.id)}
+                                onContextMenu={(e) => {
+                                  e.preventDefault();
+                                  openGradeNoteModal(student, focusColumn);
+                                }}
+                                onDoubleClick={() => openGradeNoteModal(student, focusColumn)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleGradeBlur(student.nisn, focusColumn.id, e.target.value);
+                                    const nextInput = document.getElementById(`focus-grade-${idx + 1}`);
+                                    if (nextInput) {
+                                      nextInput.focus();
+                                      nextInput.select();
+                                    }
+                                  }
+                                }}
+                                id={`focus-grade-${idx}`}
+                                readOnly={kelas.archived || isLocked}
+                                className="form-input"
+                                title={student.nilai[`${focusColumn.id}_catatan`] ? `Catatan: ${student.nilai[`${focusColumn.id}_catatan`]}` : "Klik ikon 💬 untuk tambah catatan"}
+                                style={{
+                                  padding: "6px 8px",
+                                  fontSize: "0.95rem",
+                                  fontWeight: "bold",
+                                  textAlign: "center",
+                                  width: "100%",
+                                  borderRadius: "6px",
+                                  border: "1.5px solid var(--border-color)",
+                                  display: "block",
+                                  boxSizing: "border-box"
+                                }}
+                              />
+                              {student.nilai[`${focusColumn.id}_catatan`] && (
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openGradeNoteModal(student, focusColumn);
+                                  }}
+                                  title={`Catatan: ${student.nilai[`${focusColumn.id}_catatan`]}`}
+                                  style={{
+                                    position: "absolute",
+                                    top: "1px",
+                                    right: "1px",
+                                    width: 0,
+                                    height: 0,
+                                    borderTop: "8px solid #f59e0b",
+                                    borderLeft: "8px solid transparent",
+                                    cursor: "pointer",
+                                    zIndex: 3
+                                  }}
+                                />
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => openGradeNoteModal(student, focusColumn)}
+                              title={student.nilai[`${focusColumn.id}_catatan`] ? `Catatan: ${student.nilai[`${focusColumn.id}_catatan`]}` : "Beri Catatan Nilai"}
+                              style={{
+                                background: student.nilai[`${focusColumn.id}_catatan`] ? "rgba(245, 158, 11, 0.15)" : "var(--bg-secondary)",
+                                border: student.nilai[`${focusColumn.id}_catatan`] ? "1.5px solid #f59e0b" : "1px solid var(--border-color)",
+                                borderRadius: "6px",
+                                padding: "5px 7px",
+                                cursor: "pointer",
+                                fontSize: "0.82rem",
+                                lineHeight: 1,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                              }}
+                            >
+                              💬
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -11788,6 +11951,22 @@ function DetailKelasContent({ params: paramsPromise }) {
                                           {currentStatus === "saved" && (
                                             <span style={{ width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
                                           )}
+                                          <button
+                                            type="button"
+                                            onClick={() => openGradeNoteModal(currentFocusStudent, sub)}
+                                            title={currentFocusStudent.nilai?.[`${sub.id}_catatan`] ? `Catatan: ${currentFocusStudent.nilai[`${sub.id}_catatan`]}` : "Beri Catatan Nilai"}
+                                            style={{
+                                              background: currentFocusStudent.nilai?.[`${sub.id}_catatan`] ? "rgba(245, 158, 11, 0.15)" : "var(--bg-secondary)",
+                                              border: currentFocusStudent.nilai?.[`${sub.id}_catatan`] ? "1.5px solid #f59e0b" : "1px solid var(--border-color)",
+                                              borderRadius: "6px",
+                                              padding: "5px 7px",
+                                              cursor: "pointer",
+                                              fontSize: "0.82rem",
+                                              lineHeight: 1
+                                            }}
+                                          >
+                                            💬
+                                          </button>
                                         </div>
                                       </div>
                                     );
@@ -11850,6 +12029,22 @@ function DetailKelasContent({ params: paramsPromise }) {
                                   {currentStatus === "saved" && (
                                     <span style={{ width: "6px", height: "6px", backgroundColor: "var(--success)", borderRadius: "50%", display: "inline-block" }} title="Tersimpan!"></span>
                                   )}
+                                  <button
+                                    type="button"
+                                    onClick={() => openGradeNoteModal(currentFocusStudent, col)}
+                                    title={currentFocusStudent.nilai?.[`${col.id}_catatan`] ? `Catatan: ${currentFocusStudent.nilai[`${col.id}_catatan`]}` : "Beri Catatan Nilai"}
+                                    style={{
+                                      background: currentFocusStudent.nilai?.[`${col.id}_catatan`] ? "rgba(245, 158, 11, 0.15)" : "var(--bg-primary)",
+                                      border: currentFocusStudent.nilai?.[`${col.id}_catatan`] ? "1.5px solid #f59e0b" : "1px solid var(--border-color)",
+                                      borderRadius: "6px",
+                                      padding: "5px 7px",
+                                      cursor: "pointer",
+                                      fontSize: "0.82rem",
+                                      lineHeight: 1
+                                    }}
+                                  >
+                                    💬
+                                  </button>
                                 </div>
                               </div>
                             );

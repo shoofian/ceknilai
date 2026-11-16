@@ -56,7 +56,7 @@ export async function PATCH(request, { params }) {
     let mergedNilai = { ...siswaLama.nilai };
     if (updates.nilai) {
       Object.keys(updates.nilai).forEach((k) => {
-        if (updates.nilai[k] === null && k.endsWith('_remedial')) {
+        if ((updates.nilai[k] === null || updates.nilai[k] === "") && (k.endsWith('_remedial') || k.endsWith('_catatan'))) {
           delete mergedNilai[k];
         } else {
           mergedNilai[k] = updates.nilai[k];
