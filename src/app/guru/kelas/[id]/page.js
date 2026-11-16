@@ -5845,17 +5845,33 @@ function DetailKelasContent({ params: paramsPromise }) {
                                   )}
                                 </span>
                                 {student.nilai?._katrol ? (
-                                  <span style={{ 
-                                    fontSize: "0.62rem", 
-                                    backgroundColor: "rgba(16, 185, 129, 0.15)", 
-                                    color: "#34d399", 
-                                    border: "1px solid rgba(16, 185, 129, 0.25)", 
-                                    padding: "0 4px", 
-                                    borderRadius: "3px",
-                                    fontWeight: "700" 
-                                  }} title="Nilai Katrol (Rahasia)">
-                                    🔒 {Number(student.nilai._katrol) > 0 ? `+${student.nilai._katrol}` : student.nilai._katrol}
-                                  </span>
+                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                    <span style={{ 
+                                      fontSize: "0.62rem", 
+                                      backgroundColor: "rgba(16, 185, 129, 0.15)", 
+                                      color: "#34d399", 
+                                      border: "1px solid rgba(16, 185, 129, 0.25)", 
+                                      padding: "0 4px", 
+                                      borderRadius: "3px",
+                                      fontWeight: "700" 
+                                    }} title="Nilai Katrol / Normalisasi Aktif">
+                                      🔒 {Number(student.nilai._katrol) > 0 ? `+${student.nilai._katrol}` : student.nilai._katrol}
+                                    </span>
+                                    {!isSelesai && (
+                                      <span style={{ 
+                                        fontSize: "0.58rem", 
+                                        color: "#f59e0b", 
+                                        backgroundColor: "rgba(245, 158, 11, 0.12)", 
+                                        border: "1px solid rgba(245, 158, 11, 0.3)", 
+                                        padding: "0 4px", 
+                                        borderRadius: "3px", 
+                                        fontWeight: "700",
+                                        whiteSpace: "nowrap"
+                                      }} title="Perhatian: Komponen nilai belum lengkap, tetapi nilai katrol/normalisasi sudah aktif. Nilai baru yang diisi akan menambah nilai akhir di atas katrol ini.">
+                                        ⚠️ Komponen Belum Lengkap
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : null}
                               </div>
                               {!isSelesai && kelas.kolomNilai.length > 0 && (
@@ -9322,6 +9338,42 @@ function DetailKelasContent({ params: paramsPromise }) {
             </div>
 
             <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+              {/* Warning jika masih ada siswa yang komponen nilainya belum lengkap */}
+              {(() => {
+                if (!kelas?.siswa || !kelas?.kolomNilai || kelas.kolomNilai.length === 0) return null;
+                const incompleteStudents = kelas.siswa.filter(student => {
+                  let filledCount = 0;
+                  kelas.kolomNilai.forEach(col => {
+                    const { isAllFilled } = getColScore(student, col, null);
+                    if (isAllFilled) filledCount++;
+                  });
+                  return filledCount < kelas.kolomNilai.length;
+                });
+
+                if (incompleteStudents.length === 0) return null;
+
+                return (
+                  <div style={{
+                    backgroundColor: "rgba(245, 158, 11, 0.1)",
+                    border: "1px solid rgba(245, 158, 11, 0.35)",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#f59e0b", fontWeight: "800", fontSize: "0.82rem" }}>
+                      <span>⚠️</span> Perhatian: Komponen Nilai Belum Lengkap ({incompleteStudents.length} siswa)
+                    </div>
+                    <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--text-secondary)", lineHeight: "1.45" }}>
+                      Ada <strong>{incompleteStudents.length} dari {kelas.siswa.length} siswa</strong> yang belum memiliki nilai di seluruh komponen.
+                      Jika normalisasi diterapkan sekarang, <em>pengisian nilai baru di masa mendatang akan menumpuk di atas nilai hasil normalisasi ini</em>.
+                      Disarankan untuk <strong>melengkapi seluruh komponen nilai terlebih dahulu</strong> sebelum normalisasi.
+                    </p>
+                  </div>
+                );
+              })()}
+
               {/* Method Selector */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                 <label style={{ fontSize: "0.82rem", fontWeight: "700" }}>Pilih Metode Normalisasi:</label>
@@ -9663,26 +9715,49 @@ function DetailKelasContent({ params: paramsPromise }) {
                         <button
                           onClick={async () => {
                             if (!isParamReady || handleLockedAction()) return;
-                            setIsSavingNorm(true);
-                            try {
-                              const promises = computedPreview.map(s =>
-                                fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
-                                  method: "PATCH",
-                                  headers: { "Content-Type": "application/json" },
-                                  body: JSON.stringify({ nilai: { _katrol: s.newDelta === 0 ? null : s.newDelta } }),
-                                })
-                              );
-                              const responses = await Promise.all(promises);
-                              const failedCount = responses.filter(r => !r.ok).length;
-                              if (failedCount > 0) {
-                                await alertAsync(`${failedCount} dari ${computedPreview.length} siswa gagal di-update.`);
+                            
+                            // Cek jika ada siswa yang komponennya belum lengkap
+                            const incompleteCount = (kelas.siswa || []).filter(student => {
+                              let count = 0;
+                              kelas.kolomNilai.forEach(col => {
+                                const { isAllFilled } = getColScore(student, col, null);
+                                if (isAllFilled) count++;
+                              });
+                              return count < (kelas.kolomNilai?.length || 0);
+                            }).length;
+
+                            const applyAction = async () => {
+                              setIsSavingNorm(true);
+                              try {
+                                const promises = computedPreview.map(s =>
+                                  fetch(`/api/kelas/${classId}/siswa/${s.nisn}`, {
+                                    method: "PATCH",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ nilai: { _katrol: s.newDelta === 0 ? null : s.newDelta } }),
+                                  })
+                                );
+                                const responses = await Promise.all(promises);
+                                const failedCount = responses.filter(r => !r.ok).length;
+                                if (failedCount > 0) {
+                                  await alertAsync(`${failedCount} dari ${computedPreview.length} siswa gagal di-update.`);
+                                }
+                                setNormModalOpen(false);
+                                fetchClassDetail();
+                              } catch (err) {
+                                await alertAsync("Gagal menerapkan normalisasi.");
+                              } finally {
+                                setIsSavingNorm(false);
                               }
-                              setNormModalOpen(false);
-                              fetchClassDetail();
-                            } catch (err) {
-                              await alertAsync("Gagal menerapkan normalisasi.");
-                            } finally {
-                              setIsSavingNorm(false);
+                            };
+
+                            if (incompleteCount > 0) {
+                              triggerConfirm(
+                                `⚠️ Ada ${incompleteCount} siswa yang nilai komponennya belum lengkap. Jika Anda melanjutkan, pengisian nilai baru nantinya akan bertambah di atas nilai katrol/normalisasi ini. Tetap terapkan?`,
+                                applyAction,
+                                { confirmText: "Tetap Terapkan", isDanger: true }
+                              );
+                            } else {
+                              applyAction();
                             }
                           }}
                           className="btn btn-primary"
