@@ -431,7 +431,6 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [normMaxOnlyTarget, setNormMaxOnlyTarget] = useState("");
   const [normRescaleMin, setNormRescaleMin] = useState("");
   const [normRescaleMax, setNormRescaleMax] = useState("");
-  const [normRescaleRound, setNormRescaleRound] = useState("round"); // "round" | "decimal1" | "decimal2" | "none"
   const [isSavingNorm, setIsSavingNorm] = useState(false);
 
   useEffect(() => {
@@ -443,7 +442,6 @@ function DetailKelasContent({ params: paramsPromise }) {
       setNormMaxOnlyTarget("");
       setNormRescaleMin("");
       setNormRescaleMax("");
-      setNormRescaleRound("round");
     }
   }, [normModalOpen]);
 
@@ -9424,46 +9422,14 @@ function DetailKelasContent({ params: paramsPromise }) {
                         />
                       </div>
                     </div>
-                    <div>
-                      <label style={{ fontSize: "0.8rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
-                        Pembulatan Hasil:
-                      </label>
-                      <select
-                        className="form-input"
-                        value={normRescaleRound}
-                        onChange={(e) => setNormRescaleRound(e.target.value)}
-                        style={{ padding: "6px 12px", fontSize: "0.85rem", width: "100%", maxWidth: "280px" }}
-                      >
-                        <option value="round">Bilangan Bulat Terdekat (57.6 → 58)</option>
-                        <option value="decimal1">1 Desimal (57.64 → 57.6)</option>
-                        <option value="decimal2">2 Desimal (57.642 → 57.64)</option>
-                        <option value="none">Tanpa Pembulatan (presisi penuh)</option>
-                      </select>
-                    </div>
                     <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", display: "block", marginTop: "2px", lineHeight: "1.5" }}>
                       {normRescaleMin !== "" && normRescaleMax !== "" && !isNaN(Number(normRescaleMin)) && !isNaN(Number(normRescaleMax)) ? (
                         <>
-                          Nilai <strong>0</strong> akan menjadi <strong>{normRescaleMin}</strong>, nilai <strong>100</strong> akan menjadi <strong>{normRescaleMax}</strong>.
-                          {" "}Contoh: nilai <strong>50</strong> → <strong>{(() => {
-                            const minB = Number(normRescaleMin);
-                            const maxB = Number(normRescaleMax);
-                            const raw = minB + (50 / 100) * (maxB - minB);
-                            if (normRescaleRound === "round") return Math.round(raw);
-                            if (normRescaleRound === "decimal1") return parseFloat(raw.toFixed(1));
-                            if (normRescaleRound === "decimal2") return parseFloat(raw.toFixed(2));
-                            return raw;
-                          })()}</strong>, nilai <strong>75</strong> → <strong>{(() => {
-                            const minB = Number(normRescaleMin);
-                            const maxB = Number(normRescaleMax);
-                            const raw = minB + (75 / 100) * (maxB - minB);
-                            if (normRescaleRound === "round") return Math.round(raw);
-                            if (normRescaleRound === "decimal1") return parseFloat(raw.toFixed(1));
-                            if (normRescaleRound === "decimal2") return parseFloat(raw.toFixed(2));
-                            return raw;
-                          })()}</strong>
+                          Nilai <strong>0</strong> akan menjadi <strong>{normRescaleMin}</strong>, nilai <strong>100</strong> akan menjadi <strong>{normRescaleMax}</strong> (dibulatkan ke bilangan bulat terdekat).
+                          {" "}Contoh: nilai <strong>50</strong> → <strong>{Math.round(Number(normRescaleMin) + (50 / 100) * (Number(normRescaleMax) - Number(normRescaleMin)))}</strong>, nilai <strong>75</strong> → <strong>{Math.round(Number(normRescaleMin) + (75 / 100) * (Number(normRescaleMax) - Number(normRescaleMin)))}</strong>
                         </>
                       ) : (
-                        "Masukkan batas bawah dan atas skala baru. Misal: 25 dan 95 untuk memetakan nilai 0–100 menjadi 25–95."
+                        "Masukkan batas bawah dan atas skala baru. Misal: 25 dan 95 untuk memetakan nilai 0–100 menjadi 25–95 (hasil dibulatkan ke bilangan bulat terdekat)."
                       )}
                     </span>
                   </div>
@@ -9551,15 +9517,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                   } else if (normMethod === "rescale") {
                     const minB = Number(normRescaleMin);
                     const maxB = Number(normRescaleMax);
-                    rawNormalized = minB + (s.totalMurni / 100) * (maxB - minB);
-                    // Terapkan pembulatan sesuai pilihan
-                    if (normRescaleRound === "round") {
-                      rawNormalized = Math.round(rawNormalized);
-                    } else if (normRescaleRound === "decimal1") {
-                      rawNormalized = parseFloat(rawNormalized.toFixed(1));
-                    } else if (normRescaleRound === "decimal2") {
-                      rawNormalized = parseFloat(rawNormalized.toFixed(2));
-                    }
+                    rawNormalized = Math.round(minB + (s.totalMurni / 100) * (maxB - minB));
                   }
                   
                   const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
