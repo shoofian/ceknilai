@@ -9201,66 +9201,104 @@ function DetailKelasContent({ params: paramsPromise }) {
                 )}
               </div>
 
-              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
-                <button 
-                  onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); setKatrolMultiSiswa([]); setKatrolShowMulti(false); }} 
-                  className="btn btn-secondary" 
-                  style={{ padding: "6px 14px", fontSize: "0.82rem" }}
-                  disabled={isSavingKatrol}
-                >
-                  Batal
-                </button>
-                <button 
-                  onClick={async () => {
-                    if (handleLockedAction()) return;
-                    setIsSavingKatrol(true);
-                    try {
-                      const _katrol = katrolValue !== "" && katrolValue !== null && katrolValue !== undefined ? Number(katrolValue) : null;
-                      
-                      // Kumpulkan semua NISN target (siswa utama + siswa tambahan yang dipilih)
-                      const allTargetNisns = [katrolSiswa.nisn, ...katrolMultiSiswa];
-                      
-                      const promises = allTargetNisns.map(nisn => 
-                        fetch(`/api/kelas/${classId}/siswa/${nisn}`, {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ nilai: { _katrol } }),
-                        })
-                      );
-                      
-                      const responses = await Promise.all(promises);
-                      const failedCount = responses.filter(r => !r.ok).length;
-                      
-                      if (failedCount > 0) {
-                        await alertAsync(`${failedCount} dari ${allTargetNisns.length} siswa gagal disimpan.`);
-                      }
-                      
-                      setKatrolModalOpen(false);
-                      setKatrolSiswa(null);
-                      setKatrolMultiSiswa([]);
-                      setKatrolShowMulti(false);
-                      fetchClassDetail();
-                    } catch (err) {
-                      await alertAsync(err.message || "Gagal menyimpan.");
-                    } finally {
-                      setIsSavingKatrol(false);
-                    }
-                  }} 
-                  className="btn btn-primary" 
-                  style={{ padding: "6px 16px", fontSize: "0.82rem", minWidth: "90px", display: "flex", justifyContent: "center" }}
-                  disabled={isSavingKatrol}
-                >
-                  {isSavingKatrol ? (
-                    <>
-                      <span className="btn-spinner" />
-                      Menyimpan...
-                    </>
-                  ) : (
-                    katrolMultiSiswa.length > 0 
-                      ? `Simpan (${1 + katrolMultiSiswa.length} siswa)` 
-                      : "Simpan"
+              <div style={{ display: "flex", gap: "8px", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "4px" }}>
+                <div>
+                  {(katrolSiswa.nilai?._katrol !== undefined && katrolSiswa.nilai?._katrol !== null && katrolSiswa.nilai?._katrol !== "" && Number(katrolSiswa.nilai?._katrol) !== 0) && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (handleLockedAction()) return;
+                        triggerConfirm(`Kembalikan nilai ${katrolSiswa.nama} ke nilai asli/murni (hapus nilai katrol)?`, async () => {
+                          setIsSavingKatrol(true);
+                          try {
+                            const res = await fetch(`/api/kelas/${classId}/siswa/${katrolSiswa.nisn}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ nilai: { _katrol: null } }),
+                            });
+                            if (!res.ok) throw new Error("Gagal mengembalikan nilai ke asli");
+                            setKatrolModalOpen(false);
+                            setKatrolSiswa(null);
+                            setKatrolMultiSiswa([]);
+                            setKatrolShowMulti(false);
+                            fetchClassDetail();
+                          } catch (err) {
+                            await alertAsync(err.message || "Gagal mengembalikan nilai.");
+                          } finally {
+                            setIsSavingKatrol(false);
+                          }
+                        }, { confirmText: "Ya, Kembalikan ke Asli", isDanger: true });
+                      }}
+                      className="btn btn-secondary"
+                      style={{ padding: "6px 12px", fontSize: "0.8rem", color: "var(--danger)", borderColor: "rgba(239, 68, 68, 0.3)" }}
+                      disabled={isSavingKatrol}
+                    >
+                      ↩️ Reset ke Nilai Asli
+                    </button>
                   )}
-                </button>
+                </div>
+
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button 
+                    onClick={() => { setKatrolModalOpen(false); setKatrolSiswa(null); setKatrolMultiSiswa([]); setKatrolShowMulti(false); }} 
+                    className="btn btn-secondary" 
+                    style={{ padding: "6px 14px", fontSize: "0.82rem" }}
+                    disabled={isSavingKatrol}
+                  >
+                    Batal
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      if (handleLockedAction()) return;
+                      setIsSavingKatrol(true);
+                      try {
+                        const _katrol = katrolValue !== "" && katrolValue !== null && katrolValue !== undefined ? Number(katrolValue) : null;
+                        
+                        // Kumpulkan semua NISN target (siswa utama + siswa tambahan yang dipilih)
+                        const allTargetNisns = [katrolSiswa.nisn, ...katrolMultiSiswa];
+                        
+                        const promises = allTargetNisns.map(nisn => 
+                          fetch(`/api/kelas/${classId}/siswa/${nisn}`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ nilai: { _katrol } }),
+                          })
+                        );
+                        
+                        const responses = await Promise.all(promises);
+                        const failedCount = responses.filter(r => !r.ok).length;
+                        
+                        if (failedCount > 0) {
+                          await alertAsync(`${failedCount} dari ${allTargetNisns.length} siswa gagal disimpan.`);
+                        }
+                        
+                        setKatrolModalOpen(false);
+                        setKatrolSiswa(null);
+                        setKatrolMultiSiswa([]);
+                        setKatrolShowMulti(false);
+                        fetchClassDetail();
+                      } catch (err) {
+                        await alertAsync(err.message || "Gagal menyimpan.");
+                      } finally {
+                        setIsSavingKatrol(false);
+                      }
+                    }} 
+                    className="btn btn-primary" 
+                    style={{ padding: "6px 16px", fontSize: "0.82rem", minWidth: "90px", display: "flex", justifyContent: "center" }}
+                    disabled={isSavingKatrol}
+                  >
+                    {isSavingKatrol ? (
+                      <>
+                        <span className="btn-spinner" />
+                        Menyimpan...
+                      </>
+                    ) : (
+                      katrolMultiSiswa.length > 0 
+                        ? `Simpan (${1 + katrolMultiSiswa.length} siswa)` 
+                        : "Simpan"
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -10430,6 +10468,33 @@ function DetailKelasContent({ params: paramsPromise }) {
               >
                 <span>✏️</span> Edit Profil Siswa
               </div>
+              {studentActionModal.student.nilai?._katrol !== undefined && studentActionModal.student.nilai?._katrol !== null && studentActionModal.student.nilai?._katrol !== "" && Number(studentActionModal.student.nilai?._katrol) !== 0 && (
+                <div 
+                  onClick={() => {
+                    const st = studentActionModal.student;
+                    setStudentActionModal(null);
+                    if (handleLockedAction()) return;
+                    triggerConfirm(`Kembalikan nilai ${st.nama} ke nilai asli/murni (hapus nilai katrol ${Number(st.nilai._katrol) > 0 ? `+${st.nilai._katrol}` : st.nilai._katrol})?`, async () => {
+                      try {
+                        const res = await fetch(`/api/kelas/${classId}/siswa/${st.nisn}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ nilai: { _katrol: null } }),
+                        });
+                        if (!res.ok) throw new Error("Gagal mengembalikan nilai.");
+                        fetchClassDetail();
+                      } catch (err) {
+                        await alertAsync(err.message || "Gagal mengembalikan nilai.");
+                      }
+                    }, { confirmText: "Ya, Kembalikan ke Asli", isDanger: true });
+                  }}
+                  style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--danger)", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                  onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.08)"; }}
+                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <span>↩️</span> Reset Katrol ke Nilai Asli
+                </div>
+              )}
               <div 
                 onClick={() => { 
                   setStudentActionModal(null);
