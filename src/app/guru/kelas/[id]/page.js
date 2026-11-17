@@ -84,8 +84,13 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [backupModalOpen, setBackupModalOpen] = useState(false);
   const [gradeNoteModal, setGradeNoteModal] = useState(null); // { student, col, note }
   const gradeTouchTimerRef = useRef(null);
+  const gradeTouchStartPosRef = useRef({ x: 0, y: 0, hasMoved: false });
 
   const openGradeNoteModal = (student, col) => {
+    if (gradeTouchTimerRef.current) {
+      clearTimeout(gradeTouchTimerRef.current);
+      gradeTouchTimerRef.current = null;
+    }
     if (!student || !col) return;
     const currentNote = student.nilai?.[`${col.id}_catatan`] || "";
     setGradeNoteModal({
@@ -730,6 +735,15 @@ function DetailKelasContent({ params: paramsPromise }) {
   const [showRightScroll, setShowRightScroll] = useState(false);
 
   const handleTableScroll = () => {
+    // Batalkan timer catatan nilai jika tabel sedang di-scroll / digeser
+    if (gradeTouchTimerRef.current) {
+      clearTimeout(gradeTouchTimerRef.current);
+      gradeTouchTimerRef.current = null;
+    }
+    if (gradeTouchStartPosRef.current) {
+      gradeTouchStartPosRef.current.hasMoved = true;
+    }
+
     if (tableContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = tableContainerRef.current;
       setShowLeftScroll(scrollLeft > 5);
@@ -5772,18 +5786,70 @@ function DetailKelasContent({ params: paramsPromise }) {
                                       onWheel={(e) => e.target.blur()}
                                       onPaste={(e) => handleGradePaste(e, student.nisn, sub.id)}
                                       onContextMenu={(e) => {
+                                        // Hanya untuk klik kanan mouse (desktop)
+                                        // Abaikan jika dipicu touch/tekan lama di layar sentuh HP
+                                        if (e.nativeEvent && (e.nativeEvent.pointerType === 'touch' || e.nativeEvent.sourceCapabilities?.firesTouchEvents)) {
+                                          e.preventDefault();
+                                          return;
+                                        }
+                                        if (gradeTouchStartPosRef.current?.hasMoved) return;
                                         e.preventDefault();
                                         openGradeNoteModal(student, sub);
                                       }}
                                       onDoubleClick={() => {
                                         openGradeNoteModal(student, sub);
                                       }}
-                                      onTouchStart={() => {
+                                      onTouchStart={(e) => {
+                                        if (e.touches && e.touches[0]) {
+                                          gradeTouchStartPosRef.current = {
+                                            x: e.touches[0].clientX,
+                                            y: e.touches[0].clientY,
+                                            hasMoved: false
+                                          };
+                                        }
+                                        if (gradeTouchTimerRef.current) {
+                                          clearTimeout(gradeTouchTimerRef.current);
+                                        }
+                                        // Timer hanya aktif jika jari sengaja ditekan lama tanpa digeser sama sekali (750ms)
                                         gradeTouchTimerRef.current = setTimeout(() => {
-                                          openGradeNoteModal(student, sub);
-                                        }, 450);
+                                          if (!gradeTouchStartPosRef.current?.hasMoved) {
+                                            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                                              try { navigator.vibrate(40); } catch (_) {}
+                                            }
+                                            openGradeNoteModal(student, sub);
+                                          }
+                                        }, 750);
+                                      }}
+                                      onTouchMove={(e) => {
+                                        // Jika jari bergerak (guru sedang menggeser/scroll tabel), batalkan timer segera!
+                                        if (e.touches && e.touches[0]) {
+                                          const dx = Math.abs(e.touches[0].clientX - gradeTouchStartPosRef.current.x);
+                                          const dy = Math.abs(e.touches[0].clientY - gradeTouchStartPosRef.current.y);
+                                          if (dx > 6 || dy > 6) {
+                                            gradeTouchStartPosRef.current.hasMoved = true;
+                                            if (gradeTouchTimerRef.current) {
+                                              clearTimeout(gradeTouchTimerRef.current);
+                                              gradeTouchTimerRef.current = null;
+                                            }
+                                          }
+                                        } else {
+                                          gradeTouchStartPosRef.current.hasMoved = true;
+                                          if (gradeTouchTimerRef.current) {
+                                            clearTimeout(gradeTouchTimerRef.current);
+                                            gradeTouchTimerRef.current = null;
+                                          }
+                                        }
                                       }}
                                       onTouchEnd={() => {
+                                        if (gradeTouchTimerRef.current) {
+                                          clearTimeout(gradeTouchTimerRef.current);
+                                          gradeTouchTimerRef.current = null;
+                                        }
+                                      }}
+                                      onTouchCancel={() => {
+                                        if (gradeTouchStartPosRef.current) {
+                                          gradeTouchStartPosRef.current.hasMoved = true;
+                                        }
                                         if (gradeTouchTimerRef.current) {
                                           clearTimeout(gradeTouchTimerRef.current);
                                           gradeTouchTimerRef.current = null;
@@ -11411,6 +11477,10 @@ function DetailKelasContent({ params: paramsPromise }) {
                                 onWheel={(e) => e.target.blur()}
                                 onPaste={(e) => handleGradePaste(e, student.nisn, focusColumn.id)}
                                 onContextMenu={(e) => {
+                                  if (e.nativeEvent && (e.nativeEvent.pointerType === 'touch' || e.nativeEvent.sourceCapabilities?.firesTouchEvents)) {
+                                    e.preventDefault();
+                                    return;
+                                  }
                                   e.preventDefault();
                                   openGradeNoteModal(student, focusColumn);
                                 }}
