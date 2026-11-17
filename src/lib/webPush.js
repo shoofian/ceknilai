@@ -151,19 +151,23 @@ export async function enqueueGradeNotification({
 /**
  * Memproses dan mengirim notifikasi yang masa tunggunya (5 menit) sudah tercapai
  */
-export async function processPendingNotifications() {
+export async function processPendingNotifications({ force = false } = {}) {
   if (!supabase) return { processed: 0, sent: 0, error: 'Database not configured' };
 
   try {
     const nowIso = new Date().toISOString();
 
-    // Ambil antrean pending yang kirim_pada <= sekarang
-    const { data: readyItems, error: fetchErr } = await supabase
+    // Ambil antrean pending yang kirim_pada <= sekarang (atau semua pending jika force=true)
+    let query = supabase
       .from('antrean_notifikasi_nilai')
       .select('*')
-      .eq('status', 'pending')
-      .lte('kirim_pada', nowIso)
-      .limit(500);
+      .eq('status', 'pending');
+
+    if (!force) {
+      query = query.lte('kirim_pada', nowIso);
+    }
+
+    const { data: readyItems, error: fetchErr } = await query.limit(500);
 
     if (fetchErr) {
       console.error('Error fetching ready notification queue:', fetchErr);
