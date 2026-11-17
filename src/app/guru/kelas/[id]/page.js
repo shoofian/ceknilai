@@ -754,7 +754,7 @@ function DetailKelasContent({ params: paramsPromise }) {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran]);
+  }, [kelas?.siswa, kelas?.kolomNilai, viewMode, showKehadiran, isFocusCard]);
 
   const scrollTableBy = (amount) => {
     if (tableContainerRef.current) {
@@ -5195,8 +5195,8 @@ function DetailKelasContent({ params: paramsPromise }) {
       <div 
         className={`glass-card ${isFocusCard ? "buku-nilai-focus-card" : ""}`} 
         style={{ 
-          padding: "20px 0", 
-          overflow: isFocusCard ? "auto" : "hidden",
+          padding: isFocusCard ? "16px 0 0 0" : "20px 0", 
+          overflow: "hidden",
           ...(isFocusCard ? {
             position: "fixed",
             top: 0,
@@ -5217,7 +5217,7 @@ function DetailKelasContent({ params: paramsPromise }) {
         }}
       >
         
-        <div className="buku-nilai-header" style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+        <div className="buku-nilai-header" style={{ padding: "0 24px 16px 24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", flexShrink: 0 }}>
           <div className="buku-nilai-title" style={{ flex: "1 1 200px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
               <h4 style={{ fontSize: "1.25rem", fontWeight: "800", margin: 0 }}>📊 Buku Nilai Kelas</h4>
@@ -5410,7 +5410,7 @@ function DetailKelasContent({ params: paramsPromise }) {
 
         {/* Filter Siswa / Mode Penilaian Kelompok */}
         {kelas?.siswa?.length > 0 && (
-          <div style={{ padding: "0 24px 14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+          <div style={{ padding: "0 24px 14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px", flexShrink: 0 }}>
             <div style={{ position: "relative", flex: "1 1 300px", maxWidth: "520px" }}>
               <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem", opacity: 0.6, pointerEvents: "none" }}>
                 👥
@@ -5473,9 +5473,21 @@ function DetailKelasContent({ params: paramsPromise }) {
         )}
 
         {(kelas.siswa.length > 0 || kelas.kolomNilai.length > 0) ? (
-          <div style={{ position: "relative" }}>
+          <div 
+            className={isFocusCard ? "buku-nilai-focus-table-wrapper" : ""}
+            style={{ 
+              position: "relative",
+              ...(isFocusCard ? {
+                flex: "1 1 auto",
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden"
+              } : {})
+            }}
+          >
             {(showLeftScroll || showRightScroll) && (
-              <div className="hide-on-mobile" style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "8px", paddingRight: "4px", opacity: 0.9 }}>
+              <div className="hide-on-mobile" style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginBottom: "8px", paddingRight: "4px", opacity: 0.9, flexShrink: 0 }}>
                 <button
                   onClick={() => scrollTableBy(-300)}
                   disabled={!showLeftScroll}
@@ -5525,7 +5537,18 @@ function DetailKelasContent({ params: paramsPromise }) {
               className="table-container" 
               ref={tableContainerRef}
               onScroll={handleTableScroll}
-              style={{ margin: 0, borderRadius: 0, borderRight: "none", borderLeft: "none", maxHeight: isFocusCard ? "none" : "70vh", overflowY: "auto", overflowX: "auto", ...(isFocusCard ? { flex: "1 1 auto" } : {}) }}
+              style={{ 
+                margin: 0, 
+                borderRadius: 0, 
+                borderRight: "none", 
+                borderLeft: "none", 
+                maxHeight: isFocusCard ? "none" : "70vh", 
+                height: isFocusCard ? "100%" : undefined,
+                flex: isFocusCard ? "1 1 auto" : undefined,
+                minHeight: 0,
+                overflowY: "auto", 
+                overflowX: "auto" 
+              }}
             >
               {(() => {
                 const hasGroups = kelas.kolomNilai.some(col => col.isGroup && col.subKolom?.length > 0);
@@ -5533,7 +5556,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 <table className="premium-table crosshair-highlight " style={{ width: "100%", minWidth: "800px" }}>
                   <thead style={{ position: "sticky", top: 0, zIndex: 20 }}>
                     <tr>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)" }}>
+                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "50px", minWidth: "50px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", top: 0, zIndex: 20 }}>
                         <input
                           type="checkbox"
                           checked={kelas.siswa.length > 0 && selectedNisns.length === kelas.siswa.length}
@@ -5541,10 +5564,10 @@ function DetailKelasContent({ params: paramsPromise }) {
                           style={{ cursor: "pointer", width: "16px", height: "16px" }}
                         />
                       </th>
-                      <th rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: 0, zIndex: 22 }}>
+                      <th data-col="no" rowSpan={hasGroups ? 2 : 1} style={{ width: "40px", minWidth: "40px", textAlign: "center", backgroundColor: "var(--bg-tertiary)", position: "sticky", left: 0, top: 0, zIndex: 35 }}>
                         No
                       </th>
-                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: "40px", zIndex: 22, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
+                      <th className="sticky-nama" rowSpan={hasGroups ? 2 : 1} style={{ position: "sticky", left: "40px", top: 0, zIndex: 35, backgroundColor: "var(--bg-tertiary)", boxShadow: "4px 0 8px rgba(0,0,0,0.05)", cursor: "pointer", userSelect: "none" }} onClick={() => handleSort('nama')}>
                         Nama Siswa {sortConfig.key === 'nama' ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '↕'}
                       </th>
                       <th rowSpan={hasGroups ? 2 : 1} style={{ width: "140px", minWidth: "140px", cursor: "pointer", userSelect: "none", backgroundColor: "var(--bg-tertiary)" }} onClick={() => handleSort('nisn')}>
@@ -5681,7 +5704,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                             style={{ cursor: "pointer", width: "16px", height: "16px" }}
                           />
                         </td>
-                        <td data-label="No" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
+                        <td data-col="no" data-label="No" style={{ width: "40px", minWidth: "40px", textAlign: "center", color: "var(--text-secondary)", fontWeight: "bold", position: "sticky", left: 0, zIndex: 5, backgroundColor: idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-primary)" }}>
                           {student.absenNo || (idx + 1)}
                         </td>
                         <td 
@@ -6788,7 +6811,7 @@ function DetailKelasContent({ params: paramsPromise }) {
 
         .sticky-nama {
           position: sticky !important;
-          left: 0 !important;
+          left: 0;
           max-width: 150px !important;
           min-width: 150px !important;
           width: 150px !important;
@@ -6839,12 +6862,65 @@ function DetailKelasContent({ params: paramsPromise }) {
           animation: focusFadeIn 0.2s ease-out;
           padding-top: env(safe-area-inset-top, 0px) !important;
           padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: column !important;
+          height: 100vh !important;
+          max-height: 100vh !important;
+        }
+
+        .buku-nilai-focus-card .buku-nilai-header {
+          flex-shrink: 0 !important;
+        }
+
+        .buku-nilai-focus-card .buku-nilai-focus-table-wrapper {
+          flex: 1 1 auto !important;
+          min-height: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          overflow: hidden !important;
         }
 
         .buku-nilai-focus-card .table-container {
           flex: 1 1 auto !important;
+          height: 100% !important;
           max-height: none !important;
+          min-height: 0 !important;
           overflow-y: auto !important;
+          overflow-x: auto !important;
+        }
+
+        .buku-nilai-focus-card .table-container thead {
+          position: sticky !important;
+          top: 0 !important;
+          z-index: 20 !important;
+        }
+
+        .buku-nilai-focus-card .table-container thead th {
+          background-color: var(--bg-tertiary) !important;
+        }
+
+        .buku-nilai-focus-card .sticky-nama {
+          left: 40px !important;
+        }
+
+        .buku-nilai-focus-card th.sticky-nama {
+          top: 0 !important;
+          left: 40px !important;
+          z-index: 35 !important;
+        }
+
+        .buku-nilai-focus-card th[data-col="no"] {
+          position: sticky !important;
+          top: 0 !important;
+          left: 0 !important;
+          z-index: 35 !important;
+        }
+
+        .buku-nilai-focus-card td[data-col="no"] {
+          position: sticky !important;
+          left: 0 !important;
+          z-index: 5 !important;
         }
 
         @keyframes focusFadeIn {
@@ -6932,7 +7008,7 @@ function DetailKelasContent({ params: paramsPromise }) {
             max-width: 80px !important;
             min-width: 80px !important;
             width: 80px !important;
-            left: 0 !important; /* Force to left edge */
+            left: 0;
             font-size: 0.7rem !important;
             padding: 8px 6px !important;
           }
