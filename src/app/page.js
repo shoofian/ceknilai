@@ -5,6 +5,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useEffect, Fragment, Suspense } from "react";
 import Link from "next/link";
 import html2canvas from "html2canvas";
+import PushNotificationManager from "@/components/PushNotificationManager";
 
 function StudentPortalContent() {
   const { confirmAsync, alertAsync, promptAsync } = useConfirm();
@@ -412,6 +413,9 @@ function StudentPortalContent() {
         {results && results.length > 0 && (
           <div id="search-results" style={{ width: "100%", maxWidth: "900px" }} className="animate-fade-in">
             
+            {/* Banner Notifikasi Push Web PWA */}
+            <PushNotificationManager nisn={nisn} studentName={results[0]?.siswa?.nama || ""} />
+
             {/* Header pencarian */}
             <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
               <h3 style={{ fontSize: "1.5rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>

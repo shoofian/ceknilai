@@ -100,6 +100,54 @@ export async function PATCH(request, { params }) {
       await logAktivitasNilai(username, kelas.nama, siswaLama.nama, nisn);
     }
 
+    // Antrean Web Push Notifikasi Nilai Siswa (Jeda 5 Menit / Debounce)
+    if (updates.nilai) {
+      const changedColNames = [];
+      Object.keys(updates.nilai).forEach((colId) => {
+        if (colId.endsWith('_catatan') || colId.endsWith('_remedial')) return;
+
+        const oldVal = siswaLama.nilai ? siswaLama.nilai[colId] : null;
+        const newVal = updates.nilai[colId];
+        if (oldVal !== newVal && newVal !== null && newVal !== undefined && newVal !== "") {
+          let colName = colId;
+          if (colId.startsWith('_presensi_')) {
+            const pId = colId.replace('_presensi_', '');
+            const p = (kelas.skemaPenilaian?.pertemuan || []).find(x => x.id === pId);
+            colName = p ? `Presensi ${p.nama || p.tanggal}` : 'Presensi';
+          } else {
+            const col = (kelas.kolomNilai || []).find(c => c.id === colId);
+            if (col) {
+              colName = col.nama;
+            } else {
+              for (const parent of (kelas.kolomNilai || [])) {
+                if (parent.subKolom) {
+                  const sub = parent.subKolom.find(s => s.id === colId);
+                  if (sub) {
+                    colName = `${parent.nama} - ${sub.nama}`;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          changedColNames.push(colName);
+        }
+      });
+
+      if (changedColNames.length > 0) {
+        import('@/lib/webPush').then(({ enqueueGradeNotification }) => {
+          enqueueGradeNotification({
+            nisn: targetNisn,
+            kelasId: id,
+            namaKelas: kelas.nama,
+            mataPelajaran: kelas.mataPelajaran || '',
+            namaSiswa: siswaLama.nama,
+            kolomDiubah: changedColNames
+          }).catch(err => console.error('Error enqueuing grade push notification:', err));
+        }).catch(err => console.error('Error importing webPush module:', err));
+      }
+    }
+
     return NextResponse.json({ success: true, siswa: updated });
   } catch (error) {
     console.error('Error in PATCH siswa individual API:', error);

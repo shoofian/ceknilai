@@ -9,6 +9,13 @@ export default function PwaInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
+    // Daftarkan service worker untuk PWA & Web Push Notification
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.error("Service worker registration failed:", err);
+      });
+    }
+
     // Cek apakah sudah berjalan di mode standalone (sudah diinstall)
     const isApp = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
     if (isApp) {
