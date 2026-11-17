@@ -163,7 +163,7 @@ export async function processPendingNotifications() {
       .select('*')
       .eq('status', 'pending')
       .lte('kirim_pada', nowIso)
-      .limit(50);
+      .limit(500);
 
     if (fetchErr) {
       console.error('Error fetching ready notification queue:', fetchErr);

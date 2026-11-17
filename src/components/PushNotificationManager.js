@@ -122,8 +122,8 @@ export default function PushNotificationManager({ nisn, studentName = "" }) {
           </div>
           <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.4 }}>
             {isSubscribed
-              ? `Perangkat ini akan menerima pemberitahuan saat guru selesai menginput nilai untuk ${studentName || "Anda"}.`
-              : "Aktifkan agar HP Anda otomatis berdering/bergetar 5 menit setelah guru selesai menginput nilai."}
+              ? `Perangkat ini akan menerima pemberitahuan setiap pagi jika ada nilai baru untuk ${studentName || "Anda"}.`
+              : "Aktifkan agar HP Anda otomatis menerima pemberitahuan setiap pagi jika ada nilai baru yang diinput guru."}
           </p>
           {statusMessage && (
             <div
