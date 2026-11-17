@@ -19,10 +19,26 @@ export async function GET(request) {
     }
 
     const result = await processPendingNotifications({ force });
-    return NextResponse.json({ success: true, ...result });
+    return NextResponse.json({
+      success: true,
+      diagnostics: {
+        hasVapidPublicKey: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        hasVapidPrivateKey: !!process.env.VAPID_PRIVATE_KEY,
+        hasVapidSubject: !!process.env.VAPID_SUBJECT,
+      },
+      ...result
+    });
   } catch (error) {
     console.error('Error in /api/cron/notifikasi-nilai:', error);
-    return NextResponse.json({ error: 'Gagal memproses antrean notifikasi' }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'Gagal memproses antrean notifikasi',
+      diagnostics: {
+        hasVapidPublicKey: !!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        hasVapidPrivateKey: !!process.env.VAPID_PRIVATE_KEY,
+        hasVapidSubject: !!process.env.VAPID_SUBJECT,
+      }
+    }, { status: 500 });
   }
 }
 

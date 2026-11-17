@@ -1,17 +1,30 @@
 import * as webpush from 'web-push';
 import { supabase } from './db';
 
-const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-const privateKey = process.env.VAPID_PRIVATE_KEY;
-const subject = process.env.VAPID_SUBJECT || 'mailto:admin@ceknilai.id';
+export function ensureVapidConfig() {
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  const subject = process.env.VAPID_SUBJECT || 'mailto:admin@ceknilai.id';
 
-if (publicKey && privateKey) {
+  if (!publicKey || !privateKey) {
+    const errorMsg = `VAPID keys belum lengkap di server Vercel! PublicKey: ${publicKey ? 'Ada' : 'TIDAK ADA'}, PrivateKey: ${privateKey ? 'Ada' : 'TIDAK ADA'}. Silakan periksa Settings -> Environment Variables di Vercel.`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+
   try {
     webpush.setVapidDetails(subject, publicKey, privateKey);
+    return true;
   } catch (err) {
     console.error('Failed to configure web-push VAPID details:', err);
+    throw err;
   }
 }
+
+// Inisialisasi awal jika variabel tersedia
+try {
+  ensureVapidConfig();
+} catch (_) {}
 
 /**
  * Menyimpan / memperbarui langganan Push Subscription siswa
@@ -178,6 +191,9 @@ export async function processPendingNotifications({ force = false } = {}) {
       return { processed: 0, sent: 0, message: 'Tidak ada antrean siap kirim' };
     }
 
+    // Pastikan VAPID terkonfigurasi sebelum memproses
+    ensureVapidConfig();
+
     let sentTotal = 0;
 
     for (const item of readyItems) {
@@ -211,6 +227,7 @@ export async function processPendingNotifications({ force = false } = {}) {
       });
 
       let sentCountForItem = 0;
+      let lastPushError = null;
       const expiredSubIds = [];
 
       for (const sub of subscriptions) {
@@ -226,7 +243,8 @@ export async function processPendingNotifications({ force = false } = {}) {
           await webpush.sendNotification(pushSubscription, payload);
           sentCountForItem++;
         } catch (pushErr) {
-          console.error(`Gagal kirim Web Push ke endpoint (${sub.endpoint.slice(0, 30)}...):`, pushErr.statusCode || pushErr.message);
+          lastPushError = pushErr.body || pushErr.message || (typeof pushErr === 'object' ? JSON.stringify(pushErr) : String(pushErr));
+          console.error(`Gagal kirim Web Push ke endpoint (${sub.endpoint.slice(0, 30)}...):`, lastPushError);
           // Jika 410 (Gone) atau 404, langganan sudah kedaluwarsa di browser pengguna
           if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
             expiredSubIds.push(sub.id);
@@ -247,7 +265,7 @@ export async function processPendingNotifications({ force = false } = {}) {
         .from('antrean_notifikasi_nilai')
         .update({
           status: sentCountForItem > 0 ? 'sent' : 'failed',
-          error_message: sentCountForItem > 0 ? null : 'Semua endpoint push gagal dihubungi',
+          error_message: sentCountForItem > 0 ? null : (lastPushError || 'Semua endpoint push gagal dihubungi'),
           updated_at: new Date().toISOString()
         })
         .eq('id', item.id);
