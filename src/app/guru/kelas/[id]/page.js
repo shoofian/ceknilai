@@ -4582,19 +4582,21 @@ function DetailKelasContent({ params: paramsPromise }) {
                     style={{
                       position: "absolute",
                       top: "calc(100% + 6px)",
-                      right: 0,
-                      width: "310px",
-                      maxHeight: "420px",
+                      left: 0,
+                      width: "min(320px, calc(100vw - 32px))",
+                      maxWidth: "calc(100vw - 32px)",
+                      maxHeight: "min(460px, 75vh)",
                       overflowY: "auto",
                       backgroundColor: "var(--bg-primary)",
                       border: "1px solid var(--border-color)",
-                      borderRadius: "10px",
-                      boxShadow: "0 14px 35px -5px rgba(0,0,0,0.3)",
-                      zIndex: 60,
-                      padding: "12px",
+                      borderRadius: "12px",
+                      boxShadow: "0 14px 35px -5px rgba(0,0,0,0.25), 0 0 1px 1px rgba(0,0,0,0.05)",
+                      zIndex: 100,
+                      padding: "14px",
                       display: "flex",
                       flexDirection: "column",
-                      gap: "10px"
+                      gap: "10px",
+                      boxSizing: "border-box"
                     }}
                   >
                     {/* Header Filter */}
