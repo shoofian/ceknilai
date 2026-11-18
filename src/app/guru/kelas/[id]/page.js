@@ -967,7 +967,7 @@ function DetailKelasContent({ params: paramsPromise }) {
         }
       });
       let totalPoinBonus = 0;
-      if (kelas.skemaPenilaian?.enableBonusStars) {
+      if (kelas.skemaPenilaian?.enableBonusStars && kelas.skemaPenilaian?.bonusStarsAddToFinal !== false) {
         Object.keys(student.nilai || {}).forEach(k => {
           if (k.endsWith("_bonus")) totalPoinBonus += (Number(student.nilai[k]?.poin) || 0);
         });
@@ -1201,7 +1201,7 @@ function DetailKelasContent({ params: paramsPromise }) {
       
       // Tambahkan Nilai Katrol & Bonus jika ada
       let totalPoinBonus = 0;
-      if (skema.enableBonusStars) {
+      if (skema.enableBonusStars && skema.bonusStarsAddToFinal !== false) {
         Object.keys(student.nilai || {}).forEach(k => {
           if (k.endsWith("_bonus")) totalPoinBonus += (Number(student.nilai[k]?.poin) || 0);
         });
@@ -3449,7 +3449,12 @@ function DetailKelasContent({ params: paramsPromise }) {
 
     const newStarCount = newPoin;
     const shortName = (student.nama || "Siswa").split(" ")[0];
-    setStarToast(`⭐ +1 Bonus (+1 Poin) untuk ${shortName}! (Total: ${newStarCount} ⭐)`);
+    const addBonusToFinal = kelas.skemaPenilaian?.bonusStarsAddToFinal !== false;
+    setStarToast(
+      addBonusToFinal
+        ? `⭐ +1 Bonus (+1 Poin) untuk ${shortName}! (Total: ${newStarCount} ⭐)`
+        : `⭐ +1 Bintang untuk ${shortName}! (Total: ${newStarCount} ⭐)`
+    );
     setTimeout(() => setStarToast(null), 2500);
 
     try {
@@ -3553,6 +3558,10 @@ function DetailKelasContent({ params: paramsPromise }) {
 
   // === DYNAMIC EXCEL TEMPLATE EXPORTER ===
   const downloadExcelTemplate = async () => {
+    const hasBonusStars = !!kelas.skemaPenilaian?.enableBonusStars;
+    const addBonusToFinal = kelas.skemaPenilaian?.bonusStarsAddToFinal !== false;
+    const maxCap = Number(kelas.skemaPenilaian?.maxCap) || 100;
+
     // Susun header
     const headers = ["NISN", "Nama", "Tanggal Lahir (YYYY-MM-DD)"];
     kelas.kolomNilai.forEach(col => {
@@ -3564,6 +3573,9 @@ function DetailKelasContent({ params: paramsPromise }) {
         headers.push(`${col.nama} (${col.bobot}%)`);
       }
     });
+    if (hasBonusStars) {
+      headers.push("Bintang (⭐)");
+    }
     headers.push("Nilai Akhir");
     headers.push("Predikat");
     
@@ -3595,17 +3607,31 @@ function DetailKelasContent({ params: paramsPromise }) {
             totalNilaiTerisi += score * (col.bobot / 100);
           }
         });
+
+        let totalPoinBonus = 0;
+        if (hasBonusStars) {
+          const totalStars = getStudentTotalStars(siswa);
+          row.push(totalStars);
+          if (addBonusToFinal) {
+            Object.keys(siswa.nilai || {}).forEach(k => {
+              if (k.endsWith("_bonus")) totalPoinBonus += (Number(siswa.nilai[k]?.poin) || 0);
+            });
+          }
+        }
+
+        const rawFinalScore = totalNilaiTerisi + (Number(siswa.nilai?._katrol) || 0) + totalPoinBonus;
+        const finalScore = Math.min(maxCap, rawFinalScore);
         
-        row.push(Number(totalNilaiTerisi.toFixed(2)));
+        row.push(Number(finalScore.toFixed(2)));
         
         // Calculate predikat
         const A = gradeA || 85;
         const B = gradeB || 75;
         const C = gradeC || 65;
         let predikat = statusD || 'D';
-        if (totalNilaiTerisi >= A) predikat = statusA || 'A';
-        else if (totalNilaiTerisi >= B) predikat = statusB || 'B';
-        else if (totalNilaiTerisi >= C) predikat = statusC || 'C';
+        if (finalScore >= A) predikat = statusA || 'A';
+        else if (finalScore >= B) predikat = statusB || 'B';
+        else if (finalScore >= C) predikat = statusC || 'C';
         
         row.push(predikat);
         rows.push(row);
@@ -3620,6 +3646,9 @@ function DetailKelasContent({ params: paramsPromise }) {
           placeholder.push("");
         }
       });
+      if (hasBonusStars) {
+        placeholder.push(""); // Bintang
+      }
       placeholder.push(""); // Nilai Akhir
       placeholder.push(""); // Predikat
       rows.push(placeholder);
@@ -3640,6 +3669,9 @@ function DetailKelasContent({ params: paramsPromise }) {
         colWidths.push({ wch: 16 });
       }
     });
+    if (hasBonusStars) {
+      colWidths.push({ wch: 14 }); // Bintang
+    }
     colWidths.push({ wch: 14 }); // Nilai Akhir
     colWidths.push({ wch: 18 }); // Predikat
     
@@ -10067,7 +10099,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                   });
 
                   let totalPoinBonus = 0;
-                  if (skema.enableBonusStars) {
+                  if (skema.enableBonusStars && skema.bonusStarsAddToFinal !== false) {
                     Object.keys(student.nilai || {}).forEach(k => {
                       if (k.endsWith("_bonus")) totalPoinBonus += (Number(student.nilai[k]?.poin) || 0);
                     });
@@ -12480,7 +12512,11 @@ function DetailKelasContent({ params: paramsPromise }) {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", backgroundColor: "rgba(245, 158, 11, 0.05)", borderRadius: "var(--radius-md)", border: "1px dashed rgba(245, 158, 11, 0.3)" }}>
                           <div>
                             <div style={{ fontWeight: "700", fontSize: "0.9rem", color: "#d97706" }}>⭐ Bonus Keaktifan Siswa</div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>1 Bintang (⭐) bernilai +1 poin nilai akhir</div>
+                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                              {kelas.skemaPenilaian?.bonusStarsAddToFinal !== false
+                                ? "1 Bintang (⭐) bernilai +1 poin nilai akhir"
+                                : "Rekap keaktifan saja (tidak menambah nilai akhir)"}
+                            </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             {getStudentTotalStars(currentFocusStudent) > 0 && (

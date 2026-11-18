@@ -29,6 +29,7 @@ export default function AdvancedToolsModal({
   if (!isOpen || !mounted) return null;
 
   const isBonusActive = !!kelas.skemaPenilaian?.enableBonusStars;
+  const isBonusAddToFinal = kelas.skemaPenilaian?.bonusStarsAddToFinal !== false;
   const currentMaxCap = kelas.skemaPenilaian?.maxCap ?? 100;
   const currentKKM = kelas.skemaPenilaian?.kkm || 75;
 
@@ -184,12 +185,53 @@ export default function AdvancedToolsModal({
                 </span>
               </div>
               <p style={cardDescStyle}>
-                Fitur opsional untuk memberikan poin apresiasi langsung kepada siswa yang aktif di kelas. <strong>1 Bintang (⭐) = +1 Poin Nilai</strong>.
+                Fitur opsional untuk memberikan bintang apresiasi langsung kepada siswa yang aktif di kelas.{" "}
+                <strong>
+                  {isBonusAddToFinal
+                    ? "1 Bintang (⭐) = +1 Poin Nilai Akhir"
+                    : "Hanya rekap keaktifan (tidak menambah Nilai Akhir)"}
+                </strong>.
               </p>
               
               <div style={infoBoxStyle}>
                 💡 <strong>Perbedaan Penting:</strong> Fitur ini digunakan untuk <em>apresiasi keaktifan harian</em>. Jika Anda ingin mendongkrak/menyesuaikan Nilai Akhir Rapor secara administratif di akhir semester, gunakan fitur <strong>Katrol Rahasia (🔒)</strong> pada kolom <strong>N. AKHIR</strong>.
               </div>
+
+              {isBonusActive && (
+                <label
+                  style={{
+                    marginTop: "12px",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-color)",
+                    backgroundColor: "var(--bg-secondary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
+                    cursor: isLocked || kelas?.archived ? "not-allowed" : "pointer",
+                    opacity: isLocked || kelas?.archived ? 0.65 : 1
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-primary)" }}>
+                      Tambahkan Poin Bintang ke Nilai Akhir
+                    </div>
+                    <div style={{ fontSize: "0.74rem", color: "var(--text-secondary)", marginTop: "2px" }}>
+                      {isBonusAddToFinal
+                        ? "Aktif: setiap 1 ⭐ otomatis menambah +1 poin ke N. AKHIR siswa."
+                        : "Non-aktif: jumlah ⭐ tetap direkap di tabel & Excel, namun tidak mengubah N. AKHIR."}
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={isBonusAddToFinal}
+                    disabled={isLocked || kelas?.archived}
+                    onChange={() => onUpdateSkema({ bonusStarsAddToFinal: !isBonusAddToFinal })}
+                    style={{ width: "18px", height: "18px", accentColor: "var(--primary)", cursor: "inherit", flexShrink: 0 }}
+                  />
+                </label>
+              )}
 
               <div style={{ marginTop: "12px" }}>
                 <button

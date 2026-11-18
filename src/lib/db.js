@@ -87,6 +87,7 @@ function mapKelasFromDb(k) {
       maxCap: 100,
       cappingScope: "bonus_only",
       enableBonusStars: false,
+      bonusStarsAddToFinal: true,
       ...(k.skema_penilaian || {})
     },
     kolomNilai: sortKolomNilai(k.kolom_nilai || [], k.skema_penilaian).map(col => {
@@ -1176,9 +1177,10 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
         });
       }
 
-      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual) + Nilai Katrol (jika ada) + Poin Bonus
+      // Rumus baru: Menggunakan nilai akumulasi mentah (aktual) + Nilai Katrol (jika ada) + Poin Bonus (jika diaktifkan menambah nilai akhir)
       const maxCap = Number(skema.maxCap) || 100;
-      const rawFinalScore = totalNilaiTerisi + (Number(nilaiObj._katrol) || 0) + totalPoinBonus;
+      const addBonusToFinal = skema.bonusStarsAddToFinal !== false;
+      const rawFinalScore = totalNilaiTerisi + (Number(nilaiObj._katrol) || 0) + (addBonusToFinal ? totalPoinBonus : 0);
       const finalScore = Math.min(maxCap, rawFinalScore);
       const finalScoreRounded = Number(finalScore.toFixed(2));
 
