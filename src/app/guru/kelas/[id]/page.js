@@ -725,6 +725,82 @@ function DetailKelasContent({ params: paramsPromise }) {
 
   const [showKehadiran, setShowKehadiran] = useState(false);
   const [laporanTheme, setLaporanTheme] = useState("dark");
+  const [showStatusNilaiAkhir, setShowStatusNilaiAkhir] = useState(true);
+  const [selectedKendalaKomponenIds, setSelectedKendalaKomponenIds] = useState(null); // null = all selected
+  const [isFilterKendalaOpen, setIsFilterKendalaOpen] = useState(false);
+  const filterKendalaRef = useRef(null);
+
+  // Close filter kendala dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (filterKendalaRef.current && !filterKendalaRef.current.contains(e.target)) {
+        setIsFilterKendalaOpen(false);
+      }
+    };
+    if (isFilterKendalaOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isFilterKendalaOpen]);
+
+  // List semua komponen nilai untuk filter laporan kendala akademik
+  const allKendalaKomponen = useMemo(() => {
+    if (!kelas?.kolomNilai) return [];
+    const list = [];
+    kelas.kolomNilai.forEach(col => {
+      if (col.isGroup && col.subKolom?.length > 0) {
+        col.subKolom.forEach(sub => {
+          list.push({
+            id: sub.id,
+            nama: sub.nama,
+            label: `${col.nama} › ${sub.nama}`,
+            grupNama: col.nama,
+            grupId: col.id
+          });
+        });
+      } else {
+        list.push({
+          id: col.id,
+          nama: col.nama,
+          label: col.nama,
+          grupNama: null,
+          grupId: null
+        });
+      }
+    });
+    return list;
+  }, [kelas?.kolomNilai]);
+
+  const activeKendalaKomponenIds = useMemo(() => {
+    if (selectedKendalaKomponenIds === null) {
+      return allKendalaKomponen.map(k => k.id);
+    }
+    return selectedKendalaKomponenIds;
+  }, [selectedKendalaKomponenIds, allKendalaKomponen]);
+
+  const isFilterKendalaActive = !showStatusNilaiAkhir || (selectedKendalaKomponenIds !== null && selectedKendalaKomponenIds.length < allKendalaKomponen.length);
+
+  const toggleKendalaKomponen = (id) => {
+    const current = activeKendalaKomponenIds;
+    if (current.includes(id)) {
+      setSelectedKendalaKomponenIds(current.filter(x => x !== id));
+    } else {
+      setSelectedKendalaKomponenIds([...current, id]);
+    }
+  };
+
+  const selectAllKendalaKomponen = () => {
+    setSelectedKendalaKomponenIds(allKendalaKomponen.map(k => k.id));
+    setShowStatusNilaiAkhir(true);
+  };
+
+  const deselectAllKendalaKomponen = () => {
+    setSelectedKendalaKomponenIds([]);
+  };
   const [shareDropdownOpen, setShareDropdownOpen] = useState(false);
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
   const [activeRowAction, setActiveRowAction] = useState(null);
@@ -1200,17 +1276,17 @@ function DetailKelasContent({ params: paramsPromise }) {
             const isSFilled = sc !== undefined && sc !== null && sc !== "";
             const aspekLabel = `${col.nama} › ${sub.nama}`;
             if (!isSFilled) {
-              issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
+              issues.push({ id: sub.id, komponen: aspekLabel, aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
             } else if (kkmVal !== null && Number(sc) < kkmVal) {
-              issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: "Di bawah KKM" });
+              issues.push({ id: sub.id, komponen: aspekLabel, aspek: aspekLabel, status: "Di bawah KKM" });
             }
           });
         } else {
           const { score, isFilled } = getColScore(s, col, null);
           if (!isFilled) {
-            issues.push({ komponen: col.nama, aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
+            issues.push({ id: col.id, komponen: col.nama, aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
           } else if (kkmVal !== null && Number(score) < kkmVal) {
-            issues.push({ komponen: col.nama, aspek: col.nama, status: "Di bawah KKM" });
+            issues.push({ id: col.id, komponen: col.nama, aspek: col.nama, status: "Di bawah KKM" });
           }
         }
       });
@@ -4464,10 +4540,173 @@ function DetailKelasContent({ params: paramsPromise }) {
                 Daftar siswa yang memiliki nilai kosong atau di bawah KKM ({analyticsData?.kkmVal}). Laporan ini aman dibagikan karena tidak menampilkan angka nilai secara spesifik.
               </p>
             </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginRight: "8px" }}>
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+              {/* Filter Checkbox Dropdown Komponen & Status */}
+              <div style={{ position: "relative" }} ref={filterKendalaRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsFilterKendalaOpen(!isFilterKendalaOpen)}
+                  className="btn"
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "0.82rem",
+                    fontWeight: "700",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    borderRadius: "var(--radius-sm)",
+                    border: isFilterKendalaActive ? "1.5px solid var(--primary)" : "1px solid var(--border-color)",
+                    backgroundColor: isFilterKendalaActive ? "rgba(59, 130, 246, 0.08)" : "var(--bg-secondary)",
+                    color: isFilterKendalaActive ? "var(--primary)" : "var(--text-primary)",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                  title="Pilih komponen nilai & status yang ingin ditampilkan di laporan"
+                >
+                  <span>⚙️ Filter Laporan</span>
+                  <span style={{
+                    fontSize: "0.72rem",
+                    backgroundColor: isFilterKendalaActive ? "var(--primary)" : "var(--bg-tertiary)",
+                    color: isFilterKendalaActive ? "#ffffff" : "var(--text-secondary)",
+                    padding: "1px 6px",
+                    borderRadius: "10px",
+                    fontWeight: "800"
+                  }}>
+                    {activeKendalaKomponenIds.length}/{allKendalaKomponen.length}
+                  </span>
+                  <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>{isFilterKendalaOpen ? "▲" : "▼"}</span>
+                </button>
+
+                {isFilterKendalaOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 6px)",
+                      right: 0,
+                      width: "310px",
+                      maxHeight: "420px",
+                      overflowY: "auto",
+                      backgroundColor: "var(--bg-primary)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "10px",
+                      boxShadow: "0 14px 35px -5px rgba(0,0,0,0.3)",
+                      zIndex: 60,
+                      padding: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px"
+                    }}
+                  >
+                    {/* Header Filter */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px" }}>
+                      <span style={{ fontWeight: "800", fontSize: "0.82rem", color: "var(--text-primary)" }}>
+                        🎯 Filter Komponen & Status
+                      </span>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={selectAllKendalaKomponen}
+                          style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer", padding: 0 }}
+                        >
+                          Pilih Semua
+                        </button>
+                        <span style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>•</span>
+                        <button
+                          type="button"
+                          onClick={deselectAllKendalaKomponen}
+                          style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "0.72rem", fontWeight: "600", cursor: "pointer", padding: 0 }}
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Opsi Tampilkan Status Nilai Akhir */}
+                    <div style={{
+                      backgroundColor: showStatusNilaiAkhir ? "rgba(59, 130, 246, 0.05)" : "var(--bg-secondary)",
+                      border: showStatusNilaiAkhir ? "1px solid rgba(59, 130, 246, 0.25)" : "1px solid var(--border-color)",
+                      borderRadius: "6px",
+                      padding: "8px"
+                    }}>
+                      <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700", color: "var(--text-primary)" }}>
+                        <input
+                          type="checkbox"
+                          checked={showStatusNilaiAkhir}
+                          onChange={(e) => setShowStatusNilaiAkhir(e.target.checked)}
+                          style={{ cursor: "pointer", width: "15px", height: "15px", accentColor: "var(--primary)", marginTop: "2px" }}
+                        />
+                        <div>
+                          <div>Tampilkan Status Nilai Akhir</div>
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-secondary)", fontWeight: "normal", marginTop: "1px" }}>
+                            Header status (Aman Tuntas KKM / Kurang Belum Tuntas)
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Daftar Checkbox Komponen Nilai */}
+                    <div>
+                      <div style={{ fontSize: "0.72rem", fontWeight: "800", textTransform: "uppercase", color: "var(--text-muted)", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                        Pilih Komponen Nilai:
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "3px", maxHeight: "180px", overflowY: "auto", paddingRight: "4px" }}>
+                        {allKendalaKomponen.length === 0 ? (
+                          <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic", padding: "6px 0" }}>Belum ada komponen nilai</div>
+                        ) : (
+                          allKendalaKomponen.map((k) => {
+                            const isChecked = activeKendalaKomponenIds.includes(k.id);
+                            return (
+                              <label
+                                key={k.id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  padding: "5px 6px",
+                                  borderRadius: "4px",
+                                  cursor: "pointer",
+                                  fontSize: "0.8rem",
+                                  backgroundColor: isChecked ? "rgba(59, 130, 246, 0.04)" : "transparent",
+                                  color: isChecked ? "var(--text-primary)" : "var(--text-secondary)"
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleKendalaKomponen(k.id)}
+                                  style={{ cursor: "pointer", width: "14px", height: "14px", accentColor: "var(--primary)" }}
+                                />
+                                <span style={{ fontWeight: isChecked ? "600" : "400", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={k.label}>
+                                  {k.label}
+                                </span>
+                              </label>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Footer Dropdown */}
+                    <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                        {activeKendalaKomponenIds.length} dari {allKendalaKomponen.length} dipilih
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setIsFilterKendalaOpen(false)}
+                        className="btn btn-primary"
+                        style={{ padding: "3px 10px", fontSize: "0.72rem", borderRadius: "4px" }}
+                      >
+                        Selesai
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginRight: "4px" }}>
                 <input type="checkbox" id="showKehadiranToggle" checked={showKehadiran} onChange={(e) => setShowKehadiran(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "var(--primary)" }} />
-                <label htmlFor="showKehadiranToggle" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "600" }}>Tampilkan Kehadiran</label>
+                <label htmlFor="showKehadiranToggle" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", cursor: "pointer", fontWeight: "600" }}>Kehadiran</label>
               </div>
 
               {/* Theme Toggle Selector */}
@@ -4497,11 +4736,29 @@ function DetailKelasContent({ params: paramsPromise }) {
               </div>
 
               <button onClick={async () => {
+                const visibleStudentsForWa = (analyticsData?.problematicStudents || []).map(s => {
+                  const filteredIssues = s.issues.filter(issue => activeKendalaKomponenIds.includes(issue.id));
+                  return { ...s, filteredIssues };
+                }).filter(s => {
+                  if (showStatusNilaiAkhir && s.finalScore < (analyticsData?.kkmVal || 0)) return true;
+                  return s.filteredIssues.length > 0;
+                });
+
                 const text = `*Laporan Kendala Akademik (Otomatis)*\nMata Pelajaran: ${kelas.mataPelajaran}\nKelas: ${kelas.nama}\nGuru Pengampu: ${guruProfile?.nama || "-"}\nKKM: ${analyticsData?.kkmVal}\n\n` + 
-                (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
-                analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${totalBobot !== 100 ? `Belum Lengkap (Bobot < 100%) ⚠️` : (s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`)}_` +
-                (showKehadiran ? `\n_Kehadiran: H:${s.attSummary.H} I:${s.attSummary.I} S:${s.attSummary.S} A:${s.attSummary.A}_` : ``) +
-                `\n${s.issues.map(i => `- ${i.komponen || i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
+                (visibleStudentsForWa.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM untuk komponen yang dipilih. 🎉" : 
+                visibleStudentsForWa.map((s, idx) => {
+                  let str = `*${idx + 1}. ${s.nama}*`;
+                  if (showStatusNilaiAkhir) {
+                    str += `\n_Status Nilai Akhir: ${totalBobot !== 100 ? `Belum Lengkap (Bobot < 100%) ⚠️` : (s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`)}_`;
+                  }
+                  if (showKehadiran) {
+                    str += `\n_Kehadiran: H:${s.attSummary.H} I:${s.attSummary.I} S:${s.attSummary.S} A:${s.attSummary.A}_`;
+                  }
+                  if (s.filteredIssues.length > 0) {
+                    str += `\n${s.filteredIssues.map(i => `- ${i.komponen || i.aspek}: ${i.status}`).join('\n')}`;
+                  }
+                  return str;
+                }).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
                 navigator.clipboard.writeText(text);
                 await alertAsync("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
@@ -4534,6 +4791,16 @@ function DetailKelasContent({ params: paramsPromise }) {
           </div>
           {(() => {
             const isDark = laporanTheme === "dark";
+
+            // Filter siswa dan kendala sesuai pilihan komponen & status nilai akhir guru
+            const visibleProblematicStudents = (analyticsData?.problematicStudents || []).map(s => {
+              const filteredIssues = s.issues.filter(issue => activeKendalaKomponenIds.includes(issue.id));
+              return { ...s, filteredIssues };
+            }).filter(s => {
+              if (showStatusNilaiAkhir && s.finalScore < (analyticsData?.kkmVal || 0)) return true;
+              return s.filteredIssues.length > 0;
+            });
+
             const colors = {
               bg: isDark ? "#0f172a" : "#ffffff",
               textPrimary: isDark ? "#f8fafc" : "#0f172a",
@@ -4571,15 +4838,15 @@ function DetailKelasContent({ params: paramsPromise }) {
                   <p style={{ margin: 0, fontSize: "0.85rem", color: colors.textMuted }}>Guru Pengampu: <strong style={{ color: colors.subTitleGuru }}>{guruProfile?.nama || "-"}</strong> • KKM: <strong style={{ color: colors.subTitleGuru }}>{analyticsData?.kkmVal}</strong></p>
                 </div>
 
-                {analyticsData?.problematicStudents.length === 0 ? (
+                {visibleProblematicStudents.length === 0 ? (
                   <div style={{ textAlign: "center", padding: "40px 20px" }}>
                     <span style={{ fontSize: "3rem" }}>🎉</span>
                     <h3 style={{ fontSize: "1.2rem", fontWeight: "700", marginTop: "16px", color: "#10b981" }}>Luar Biasa! Semua Siswa Tuntas</h3>
-                    <p style={{ color: colors.textSecondary, fontSize: "0.9rem", marginTop: "8px" }}>Tidak ada siswa dengan nilai kosong atau di bawah KKM.</p>
+                    <p style={{ color: colors.textSecondary, fontSize: "0.9rem", marginTop: "8px" }}>Tidak ada siswa dengan kendala pada komponen nilai yang dipilih.</p>
                   </div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    {analyticsData?.problematicStudents.map((s, i) => (
+                    {visibleProblematicStudents.map((s, i) => (
                       <div key={s.nisn} style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.cardBorder}`, padding: "16px", borderRadius: "8px", borderLeft: "4px solid #ef4444" }}>
                         <h4 style={{ fontSize: "1.1rem", fontWeight: "800", margin: "0 0 12px 0", color: colors.textPrimary }}>{i + 1}. {s.nama}</h4>
                         
@@ -4590,16 +4857,18 @@ function DetailKelasContent({ params: paramsPromise }) {
                           borderRadius: "8px",
                           overflow: "hidden"
                         }}>
-                          {/* Final Score Status Header */}
-                          <div style={{ 
-                            display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", fontSize: "0.85rem", fontWeight: "600",
-                            backgroundColor: totalBobot !== 100 ? "rgba(245, 158, 11, 0.08)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasHeaderBg : colors.belumTuntasHeaderBg),
-                            color: totalBobot !== 100 ? (isDark ? "#fcd34d" : "#b45309") : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasText : colors.belumTuntasText),
-                            borderBottom: `1px solid ${totalBobot !== 100 ? "rgba(245, 158, 11, 0.15)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder)}`
-                          }}>
-                            <span>{totalBobot !== 100 ? "⚠️" : (s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️")}</span>
-                            <span>Status Nilai Akhir: {totalBobot !== 100 ? "Belum Lengkap (Bobot Komponen Belum 100%)" : (s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)")}</span>
-                          </div>
+                          {/* Final Score Status Header (Tampilkan jika dicentang guru) */}
+                          {showStatusNilaiAkhir && (
+                            <div style={{ 
+                              display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", fontSize: "0.85rem", fontWeight: "600",
+                              backgroundColor: totalBobot !== 100 ? "rgba(245, 158, 11, 0.08)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasHeaderBg : colors.belumTuntasHeaderBg),
+                              color: totalBobot !== 100 ? (isDark ? "#fcd34d" : "#b45309") : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasText : colors.belumTuntasText),
+                              borderBottom: `1px solid ${totalBobot !== 100 ? "rgba(245, 158, 11, 0.15)" : (s.finalScore >= analyticsData?.kkmVal ? colors.tuntasBorder : colors.belumTuntasBorder)}`
+                            }}>
+                              <span>{totalBobot !== 100 ? "⚠️" : (s.finalScore >= analyticsData?.kkmVal ? "✅" : "⚠️")}</span>
+                              <span>Status Nilai Akhir: {totalBobot !== 100 ? "Belum Lengkap (Bobot Komponen Belum 100%)" : (s.finalScore >= analyticsData?.kkmVal ? "Aman (Tuntas KKM)" : "Kurang (Belum Tuntas)")}</span>
+                            </div>
+                          )}
 
                           {/* Rincian Kendala Komponen (Nested inside status box) */}
                           <div style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -4616,27 +4885,33 @@ function DetailKelasContent({ params: paramsPromise }) {
                                   </span>
                                 </div>
                               )}
-                              {s.issues.map((issue, idx) => {
-                                const isKosong = issue.status.includes("Kosong");
-                                return (
-                                  <div key={idx} style={{
-                                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                                    fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
-                                    backgroundColor: isKosong ? colors.kosongBg : colors.kurangBg,
-                                    borderLeft: `3px solid ${isKosong ? colors.kosongBorder : colors.kurangBorder}`
-                                  }}>
-                                    <span style={{ color: colors.textPrimary, fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span style={{ color: isKosong ? colors.kosongBorder : colors.kurangBorder }}>•</span> {issue.komponen || issue.aspek}
-                                    </span>
-                                    <span style={{ 
-                                      fontWeight: "700", fontSize: "0.75rem",
-                                      color: isKosong ? colors.kosongText : colors.kurangText
+                              {s.filteredIssues.length === 0 ? (
+                                <div style={{ fontSize: "0.8rem", color: colors.tuntasText, fontStyle: "italic", padding: "6px 4px" }}>
+                                  ✓ Semua komponen nilai yang dipilih tuntas.
+                                </div>
+                              ) : (
+                                s.filteredIssues.map((issue, idx) => {
+                                  const isKosong = issue.status.includes("Kosong");
+                                  return (
+                                    <div key={idx} style={{
+                                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                                      fontSize: "0.82rem", padding: "7px 12px", borderRadius: "4px",
+                                      backgroundColor: isKosong ? colors.kosongBg : colors.kurangBg,
+                                      borderLeft: `3px solid ${isKosong ? colors.kosongBorder : colors.kurangBorder}`
                                     }}>
-                                      {issue.status}
-                                    </span>
-                                  </div>
-                                );
-                              })}
+                                      <span style={{ color: colors.textPrimary, fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <span style={{ color: isKosong ? colors.kosongBorder : colors.kurangBorder }}>•</span> {issue.komponen || issue.aspek}
+                                      </span>
+                                      <span style={{ 
+                                        fontWeight: "700", fontSize: "0.75rem",
+                                        color: isKosong ? colors.kosongText : colors.kurangText
+                                      }}>
+                                        {issue.status}
+                                      </span>
+                                    </div>
+                                  );
+                                })
+                              )}
                             </div>
                           </div>
                         </div>
