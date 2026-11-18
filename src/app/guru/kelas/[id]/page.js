@@ -1200,17 +1200,17 @@ function DetailKelasContent({ params: paramsPromise }) {
             const isSFilled = sc !== undefined && sc !== null && sc !== "";
             const aspekLabel = `${col.nama} › ${sub.nama}`;
             if (!isSFilled) {
-              issues.push({ komponen: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
+              issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
             } else if (kkmVal !== null && Number(sc) < kkmVal) {
-              issues.push({ komponen: aspekLabel, status: "Di bawah KKM" });
+              issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: `Di bawah KKM (${sc})` });
             }
           });
         } else {
           const { score, isFilled } = getColScore(s, col, null);
           if (!isFilled) {
-            issues.push({ komponen: col.nama, status: "Kosong (Belum Mengerjakan)" });
+            issues.push({ komponen: col.nama, aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
           } else if (kkmVal !== null && Number(score) < kkmVal) {
-            issues.push({ komponen: col.nama, status: "Di bawah KKM" });
+            issues.push({ komponen: col.nama, aspek: col.nama, status: `Di bawah KKM (${score})` });
           }
         }
       });
@@ -4501,7 +4501,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                 (analyticsData?.problematicStudents.length === 0 ? "Semua siswa telah tuntas dan melampaui KKM. 🎉" : 
                 analyticsData?.problematicStudents.map((s, idx) => `*${idx + 1}. ${s.nama}*\n_Status Nilai Akhir: ${totalBobot !== 100 ? `Belum Lengkap (Bobot < 100%) ⚠️` : (s.finalScore >= analyticsData?.kkmVal ? `Sudah Tuntas KKM ✅` : `Belum Tuntas ❌`)}_` +
                 (showKehadiran ? `\n_Kehadiran: H:${s.attSummary.H} I:${s.attSummary.I} S:${s.attSummary.S} A:${s.attSummary.A}_` : ``) +
-                `\n${s.issues.map(i => `- ${i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
+                `\n${s.issues.map(i => `- ${i.komponen || i.aspek}: ${i.status}`).join('\n')}`).join('\n\n')) + 
                 `\n\n_Mohon bantuan Bapak/Ibu Wali Kelas untuk mengingatkan siswa yang bersangkutan. Terima kasih._\n\n*Siswa dapat mengecek detail nilai masing-masing secara privat melalui: ceknilaimu.vercel.app*`;
                 navigator.clipboard.writeText(text);
                 await alertAsync("Teks laporan berhasil disalin! Silakan paste di WhatsApp Wali Kelas.");
@@ -4626,7 +4626,7 @@ function DetailKelasContent({ params: paramsPromise }) {
                                     borderLeft: `3px solid ${isKosong ? colors.kosongBorder : colors.kurangBorder}`
                                   }}>
                                     <span style={{ color: colors.textPrimary, fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span style={{ color: isKosong ? colors.kosongBorder : colors.kurangBorder }}>•</span> {issue.aspek}
+                                      <span style={{ color: isKosong ? colors.kosongBorder : colors.kurangBorder }}>•</span> {issue.komponen || issue.aspek}
                                     </span>
                                     <span style={{ 
                                       fontWeight: "700", fontSize: "0.75rem",
