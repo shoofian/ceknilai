@@ -1202,7 +1202,7 @@ function DetailKelasContent({ params: paramsPromise }) {
             if (!isSFilled) {
               issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: "Kosong (Belum Mengerjakan)" });
             } else if (kkmVal !== null && Number(sc) < kkmVal) {
-              issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: `Di bawah KKM (${sc})` });
+              issues.push({ komponen: aspekLabel, aspek: aspekLabel, status: "Di bawah KKM" });
             }
           });
         } else {
@@ -1210,7 +1210,7 @@ function DetailKelasContent({ params: paramsPromise }) {
           if (!isFilled) {
             issues.push({ komponen: col.nama, aspek: col.nama, status: "Kosong (Belum Mengerjakan)" });
           } else if (kkmVal !== null && Number(score) < kkmVal) {
-            issues.push({ komponen: col.nama, aspek: col.nama, status: `Di bawah KKM (${score})` });
+            issues.push({ komponen: col.nama, aspek: col.nama, status: "Di bawah KKM" });
           }
         }
       });
