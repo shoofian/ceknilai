@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
-import { getKelasById, updateSiswaInKelas, deleteSiswaFromKelas } from '@/lib/db';
+import { getKelasById, getKelasMetaAndSiswa, updateSiswaInKelas, deleteSiswaFromKelas } from '@/lib/db';
 
 
 
@@ -19,13 +19,12 @@ export async function PATCH(request, { params }) {
     const { id, nisn } = await params;
     const updates = await request.json();
     
-    // Dapatkan data kelas terlebih dahulu untuk mengambil data siswa lama
-    const kelas = await getKelasById(id, username);
+    // Dapatkan metadata kelas dan data siswa target (tanpa memuat seluruh siswa kelas)
+    const { kelas, siswa: siswaLama } = await getKelasMetaAndSiswa(id, nisn, username);
     if (!kelas) {
       return NextResponse.json({ error: 'Kelas tidak ditemukan' }, { status: 404 });
     }
 
-    const siswaLama = kelas.siswa.find(s => s.nisn === nisn);
     if (!siswaLama) {
       return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 });
     }
@@ -46,8 +45,8 @@ export async function PATCH(request, { params }) {
         return NextResponse.json({ error: 'Siswa dengan NISN tersebut sudah terdaftar di kelas tujuan' }, { status: 400 });
       }
     } else if (cleanNewNisn && cleanNewNisn !== nisn) {
-      const exists = kelas.siswa.some(s => s.nisn === cleanNewNisn);
-      if (exists) {
+      const { siswa: duplicateSiswa } = await getKelasMetaAndSiswa(id, cleanNewNisn, username);
+      if (duplicateSiswa) {
         return NextResponse.json({ error: 'NISN baru sudah digunakan oleh siswa lain di kelas ini' }, { status: 400 });
       }
     }

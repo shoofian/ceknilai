@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getGuru, getLegerData } from '@/lib/db';
-import { checkAuth } from '@/lib/auth';
-import { cookies } from 'next/headers';
+import { checkAuth, checkSuperadminAuth } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +28,21 @@ export async function GET(request) {
     
     if (!tingkatan || !rombelNama || !tahunAjaran || !semester) {
       return NextResponse.json({ error: 'Parameter tingkatan, rombel_nama, tahun_ajaran, dan semester wajib diisi' }, { status: 400 });
+    }
+
+    const isSuperadmin = await checkSuperadminAuth();
+    const isAdminSekolah = !!guru.is_admin_sekolah;
+    const isMatchingWaliKelas =
+      guru.walikelas_tingkatan &&
+      guru.walikelas_rombel_nama &&
+      Number(guru.walikelas_tingkatan) === Number(tingkatan) &&
+      String(guru.walikelas_rombel_nama).trim().toLowerCase() === String(rombelNama).trim().toLowerCase();
+
+    if (!isSuperadmin && !isAdminSekolah && !isMatchingWaliKelas) {
+      return NextResponse.json(
+        { error: 'Akses ditolak. Anda hanya dapat melihat leger kelas yang Anda ampuh sebagai wali kelas.' },
+        { status: 403 }
+      );
     }
     
     const leger = await getLegerData(

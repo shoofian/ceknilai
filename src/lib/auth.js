@@ -2,6 +2,9 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'ceknilai-super-secret-jwt-key-2026';
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('[SECURITY WARNING] JWT_SECRET is not set in environment variables. Using fallback secret is unsafe in production!');
+}
 const key = new TextEncoder().encode(JWT_SECRET);
 
 const SUPERADMIN_USERNAMES = ['superadmin', 'shoofian'];

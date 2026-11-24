@@ -8,16 +8,17 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as XLSX from "xlsx";
 import html2canvas from "html2canvas";
-import RaporIntegrationModal from "@/components/RaporIntegrationModal";
-import RemedialModal from "@/components/RemedialModal";
-import RemedialReportModal from "@/components/RemedialReportModal";
-import GradeNoteModal from "@/components/GradeNoteModal";
-import AdvancedToolsModal from "@/components/AdvancedToolsModal";
-import BackupManagerModal from "@/components/BackupManagerModal";
 import dynamic from "next/dynamic";
 
 import { ASPEK_PRESETS } from '@/lib/presets';
 
+const RaporIntegrationModal = dynamic(() => import("@/components/RaporIntegrationModal"), { ssr: false });
+const RemedialModal = dynamic(() => import("@/components/RemedialModal"), { ssr: false });
+const RemedialReportModal = dynamic(() => import("@/components/RemedialReportModal"), { ssr: false });
+const GradeNoteModal = dynamic(() => import("@/components/GradeNoteModal"), { ssr: false });
+const AdvancedToolsModal = dynamic(() => import("@/components/AdvancedToolsModal"), { ssr: false });
+const BackupManagerModal = dynamic(() => import("@/components/BackupManagerModal"), { ssr: false });
+const CetakEksporModal = dynamic(() => import("@/components/CetakEksporModal"), { ssr: false });
 const QrScannerModal = dynamic(() => import("@/components/QrScannerModal"), { ssr: false });
 const QrCardGeneratorModal = dynamic(() => import("@/components/QrCardGeneratorModal"), { ssr: false });
 
@@ -3532,6 +3533,9 @@ function DetailKelasContent({ params: paramsPromise }) {
 
     let updatedCount = 0;
     const newTemp = {};
+    const bulkUpdates = [];
+    const statusPending = {};
+    const statusSaved = {};
 
     lines.forEach((lineVal, offset) => {
       const targetStudent = sortedStudents[startRowIdx + offset];
@@ -3546,14 +3550,43 @@ function DetailKelasContent({ params: paramsPromise }) {
           const cellKey = `${targetStudent.nisn}-${colId}`;
 
           newTemp[cellKey] = valStr;
-          handleGradeBlur(targetStudent.nisn, colId, valStr);
+          statusPending[cellKey] = "saving";
+          statusSaved[cellKey] = "saved";
+          bulkUpdates.push({ nisn: targetStudent.nisn, nilai: { [colId]: scoreClamped } });
           updatedCount++;
         }
       }
     });
 
+    if (bulkUpdates.length === 0) return;
+
     setTemporaryScores(prev => ({ ...prev, ...newTemp }));
+    setSaveStatus(prev => ({ ...prev, ...statusPending }));
+    setKelas(prev => ({
+      ...prev,
+      siswa: (prev.siswa || []).map(s => {
+        const match = bulkUpdates.find(u => u.nisn === s.nisn);
+        return match ? { ...s, nilai: { ...(s.nilai || {}), ...match.nilai } } : s;
+      })
+    }));
+
     triggerAlert(`📋 Berhasil menempelkan (${updatedCount} nilai) dari Excel secara otomatis!`, null, { title: "Salin-Tempel Excel Cepat" });
+
+    fetch(`/api/kelas/${classId}/siswa/bulk-nilai`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updates: bulkUpdates })
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Bulk save failed");
+        setSaveStatus(prev => ({ ...prev, ...statusSaved }));
+      })
+      .catch(err => {
+        console.error("Gagal bulk save nilai:", err);
+        const statusFailed = {};
+        Object.keys(statusPending).forEach(k => { statusFailed[k] = "failed"; });
+        setSaveStatus(prev => ({ ...prev, ...statusFailed }));
+      });
   };
 
   // === DYNAMIC EXCEL TEMPLATE EXPORTER ===
@@ -8192,151 +8225,17 @@ function DetailKelasContent({ params: paramsPromise }) {
       )}
 
       {/* ============= MODAL HUB: CETAK & EKSPOR ============= */}
-      {cetakEksporModalOpen && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100, padding: "16px" }}>
-          <div className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "520px", display: "flex", flexDirection: "column", padding: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", padding: "20px 24px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "1.3rem" }}>🖨️</span>
-                <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "var(--primary)", margin: 0 }}>Cetak & Ekspor</h3>
-              </div>
-              <button onClick={() => setCetakEksporModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
-            </div>
-
-            {/* Tab Navigation */}
-            <div style={{ display: "flex", gap: "4px", backgroundColor: "var(--bg-secondary)", padding: "4px", margin: "16px 24px 0 24px", borderRadius: "8px", border: "1px solid var(--border-color)" }}>
-              <button
-                onClick={() => setCetakEksporTab('laporan')}
-                style={{
-                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: cetakEksporTab === 'laporan' ? "var(--primary)" : "transparent",
-                  color: cetakEksporTab === 'laporan' ? "#fff" : "var(--text-secondary)"
-                }}
-              >
-                🖨️ Laporan
-              </button>
-              <button
-                onClick={() => setCetakEksporTab('kartu')}
-                style={{
-                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: cetakEksporTab === 'kartu' ? "var(--primary)" : "transparent",
-                  color: cetakEksporTab === 'kartu' ? "#fff" : "var(--text-secondary)"
-                }}
-              >
-                📇 Kartu QR
-              </button>
-              <button
-                onClick={() => setCetakEksporTab('erapor')}
-                style={{
-                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: cetakEksporTab === 'erapor' ? "var(--primary)" : "transparent",
-                  color: cetakEksporTab === 'erapor' ? "#fff" : "var(--text-secondary)"
-                }}
-              >
-                📋 E-Rapor
-              </button>
-              <button
-                onClick={() => setCetakEksporTab('excel')}
-                style={{
-                  flex: 1, padding: "8px", fontSize: "0.8rem", fontWeight: "700", borderRadius: "6px", border: "none", cursor: "pointer", transition: "all 0.15s",
-                  backgroundColor: cetakEksporTab === 'excel' ? "var(--primary)" : "transparent",
-                  color: cetakEksporTab === 'excel' ? "#fff" : "var(--text-secondary)"
-                }}
-              >
-                📥 Excel
-              </button>
-            </div>
-
-            {/* Tab Content */}
-            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px", minHeight: "180px", justifyContent: "space-between" }}>
-              {cetakEksporTab === 'laporan' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Cetak lembar nilai siswa secara fisik atau simpan sebagai dokumen PDF dengan layout rapi dan profesional.
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
-                    <button
-                      onClick={() => {
-                        setCetakEksporModalOpen(false);
-                        setIsPreviewOpen(true);
-                      }}
-                      className="btn btn-primary"
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                    >
-                      🖨️ Cetak Lembar Laporan
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {cetakEksporTab === 'kartu' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Buat dan cetak kartu presensi siswa yang berisi nama, NISN, dan QR Code unik untuk sistem pemindaian.
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
-                    <button
-                      onClick={() => {
-                        setCetakEksporModalOpen(false);
-                        setQrCardModalOpen(true);
-                      }}
-                      className="btn btn-primary"
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                    >
-                      📇 Cetak Kartu Presensi & QR
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {cetakEksporTab === 'erapor' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Format dan ekspor nilai kelas langsung ke format data e-Rapor resmi (Kemendikbud).
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
-                    <button
-                      onClick={() => {
-                        setCetakEksporModalOpen(false);
-                        setRaporModalOpen(true);
-                      }}
-                      className="btn btn-primary"
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                      disabled={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0}
-                    >
-                      📋 Integrasi ke E-Rapor
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {cetakEksporTab === 'excel' && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.5" }}>
-                    Unduh seluruh data siswa beserta nilainya ke dalam format spreadsheet Excel (.xlsx).
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: "12px" }}>
-                    <button
-                      onClick={() => {
-                        setCetakEksporModalOpen(false);
-                        downloadExcelTemplate();
-                      }}
-                      className="btn btn-primary"
-                      style={{ padding: "10px 24px", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}
-                    >
-                      📥 Ekspor Data ke Excel
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid var(--border-color)", paddingTop: "14px", marginTop: "12px" }}>
-                <button onClick={() => setCetakEksporModalOpen(false)} className="btn btn-secondary" style={{ padding: "6px 16px", fontSize: "0.82rem" }}>Tutup</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CetakEksporModal
+        isOpen={cetakEksporModalOpen}
+        onClose={() => setCetakEksporModalOpen(false)}
+        activeTab={cetakEksporTab}
+        onChangeTab={setCetakEksporTab}
+        onOpenPreview={() => setIsPreviewOpen(true)}
+        onOpenQrCard={() => setQrCardModalOpen(true)}
+        onOpenRapor={() => setRaporModalOpen(true)}
+        onExportExcel={downloadExcelTemplate}
+        disableRapor={kelas.kolomNilai.length === 0 || kelas.siswa.length === 0}
+      />
 
       {/* ============= MODAL CATATAN GURU ============= */}
       {catatanSiswaTerpilih && (

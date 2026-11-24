@@ -21,6 +21,8 @@ export default function HadiahReferralPage() {
   const [infoModal, setInfoModal] = useState(null);
   const [activeTheme, setActiveTheme] = useState('default');
   const [trialTheme, setTrialTheme] = useState(null);
+  const [cashModal, setCashModal] = useState(null);
+  const [rekeningInput, setRekeningInput] = useState('');
 
   const fetchReferralData = async () => {
     try {
@@ -170,22 +172,7 @@ export default function HadiahReferralPage() {
     }
   };
 
-  const handleRedeem = async (rewardId, rewardName, price) => {
-    if (rewardId.startsWith('theme_') && isThemeUnlocked(rewardId)) {
-      applyTheme(rewardId);
-      setSuccessMsg(`Tema "${rewardName}" berhasil diterapkan!`);
-      return;
-    }
-
-    if (data.balance < price) {
-      await alertAsync(`Poin Anda tidak mencukupi untuk menukar "${rewardName}".`);
-      return;
-    }
-
-    if (!await confirmAsync(`Apakah Anda yakin ingin menukar ${price} poin untuk "${rewardName}"?`)) {
-      return;
-    }
-
+  const executeRedeem = async (rewardId, rekeningInfo = '') => {
     setRedeemingId(rewardId);
     setError('');
     setSuccessMsg('');
@@ -194,7 +181,7 @@ export default function HadiahReferralPage() {
       const res = await fetch('/api/auth/referral/redeem', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rewardId })
+        body: JSON.stringify({ rewardId, rekeningInfo })
       });
 
       const json = await res.json();
@@ -225,6 +212,31 @@ export default function HadiahReferralPage() {
     } finally {
       setRedeemingId(null);
     }
+  };
+
+  const handleRedeem = async (rewardId, rewardName, price) => {
+    if (rewardId.startsWith('theme_') && isThemeUnlocked(rewardId)) {
+      applyTheme(rewardId);
+      setSuccessMsg(`Tema "${rewardName}" berhasil diterapkan!`);
+      return;
+    }
+
+    if (data.balance < price) {
+      await alertAsync(`Poin Anda tidak mencukupi untuk menukar "${rewardName}".`);
+      return;
+    }
+
+    if (rewardId === 'cash_1m') {
+      setRekeningInput('');
+      setCashModal({ rewardId, rewardName, price });
+      return;
+    }
+
+    if (!await confirmAsync(`Apakah Anda yakin ingin menukar ${price} poin untuk "${rewardName}"?`)) {
+      return;
+    }
+
+    await executeRedeem(rewardId);
   };
 
   const themeRewards = [
@@ -902,6 +914,70 @@ export default function HadiahReferralPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px' }}>
               <button onClick={() => setRulesOpen(false)} className="btn btn-primary" style={{ padding: '6px 16px', fontSize: '0.8rem' }}>
                 Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cash Redeem Modal */}
+      {cashModal && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div className="glass-card" style={{ width: "100%", maxWidth: "440px", border: "1px solid var(--border-focus)", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: "800", margin: 0 }}>
+                💵 Pencairan {cashModal.rewardName}
+              </h3>
+              <button
+                onClick={() => setCashModal(null)}
+                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px', lineHeight: 1 }}
+              >
+                ✕
+              </button>
+            </div>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0 0 12px 0', lineHeight: 1.5 }}>
+              Masukkan tujuan transfer (Nama Bank / E-Wallet, Nomor Rekening / No. HP, dan Nama Pemilik) untuk penukaran <strong>{cashModal.price} poin</strong>:
+            </p>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Contoh: BCA 1234567890 a.n. Budi Santoso"
+              value={rekeningInput}
+              onChange={(e) => setRekeningInput(e.target.value)}
+              style={{ width: '100%', marginBottom: '16px' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button onClick={() => setCashModal(null)} className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '0.8rem' }}>
+                Batal
+              </button>
+              <button
+                onClick={async () => {
+                  const info = rekeningInput.trim();
+                  if (info.length < 6) {
+                    await alertAsync('Mohon isi informasi rekening / e-wallet dengan lengkap.');
+                    return;
+                  }
+                  const target = cashModal;
+                  setCashModal(null);
+                  await executeRedeem(target.rewardId, info);
+                }}
+                className="btn btn-primary"
+                style={{ padding: '8px 16px', fontSize: '0.8rem' }}
+                disabled={redeemingId !== null}
+              >
+                Kirim Klaim
               </button>
             </div>
           </div>

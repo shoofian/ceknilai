@@ -1,13 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getGuru, createGuruByAdmin } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`signup:${ip}`, { limit: 5, windowMs: 60 * 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak pendaftaran dari perangkat ini. Silakan coba lagi nanti.' },
+        { status: 429 }
+      );
+    }
+
     const { nama, email, username, password } = await request.json();
 
     if (!nama || !email || !username || !password) {
       return NextResponse.json({ error: 'Semua bidang wajib diisi' }, { status: 400 });
+    }
+
+    if (String(password).length < 6) {
+      return NextResponse.json({ error: 'Password minimal 6 karakter' }, { status: 400 });
     }
 
     const cleanUsername = username.trim().toLowerCase();

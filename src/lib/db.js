@@ -118,55 +118,54 @@ function mapKelasFromDb(k) {
 
 // === GURU PROFILE ===
 export const getGuru = cache(async function getGuru(username = null) {
-  if (!supabase) return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, sekolah_id: null, walikelas_tingkatan: null, walikelas_rombel_nama: null, tahun_ajaran: '2025/2026' };
+  if (!supabase || !username) return null;
   try {
     let query = supabase.from('guru').select('*, sekolah:sekolah_id(nama, npsn)');
-    if (username) {
-      query = query.ilike('username', username.trim());
-    }
+    query = query.ilike('username', username.trim());
     const { data, error } = await query.limit(1).maybeSingle();
     if (error) {
       // Fallback if sekolah relationship does not exist
-      let fallbackQuery = supabase.from('guru').select('*');
-      if (username) {
-        fallbackQuery = fallbackQuery.ilike('username', username.trim());
+      const { data: fbData, error: fbError } = await supabase
+        .from('guru')
+        .select('*')
+        .ilike('username', username.trim())
+        .limit(1)
+        .maybeSingle();
+      if (fbError || !fbData) {
+        if (fbError) console.error('Error fetching guru (fallback):', fbError);
+        return null;
       }
-      const { data: fbData, error: fbError } = await fallbackQuery.limit(1).maybeSingle();
-      if (fbError) {
-        console.error('Error fetching guru (fallback):', fbError);
-        return { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com', is_locked: false, lock_message: null, tahun_ajaran: '2025/2026' };
-      }
-      const result = fbData || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
       return {
-        ...result,
-        is_locked: result.is_locked ?? false,
-        lock_message: result.lock_message ?? null,
-        is_admin_sekolah: result.is_admin_sekolah ?? false,
+        ...fbData,
+        is_locked: fbData.is_locked ?? false,
+        lock_message: fbData.lock_message ?? null,
+        is_admin_sekolah: fbData.is_admin_sekolah ?? false,
         sekolah_id: null,
         walikelas_tingkatan: null,
         walikelas_rombel_nama: null,
         tahun_ajaran: '2025/2026',
         sekolah: null,
-        premium_until: result.premium_until ?? null,
-        created_at: result.created_at ?? null
+        premium_until: fbData.premium_until ?? null,
+        created_at: fbData.created_at ?? null
       };
     }
-    const result = data || { username: 'guru', password: 'password123', nama: 'Wahyu Shofian, S.Kom', email: 'ws@gmail.com' };
+    if (!data) return null;
     return {
-      ...result,
-      is_locked: result.is_locked ?? false,
-      lock_message: result.lock_message ?? null,
-      is_admin_sekolah: result.is_admin_sekolah ?? false,
-      sekolah_id: result.sekolah_id ?? null,
-      walikelas_tingkatan: result.walikelas_tingkatan ?? null,
-      walikelas_rombel_nama: result.walikelas_rombel_nama ?? null,
-      tahun_ajaran: result.tahun_ajaran ?? '2025/2026',
-      sekolah: result.sekolah ?? null,
-      premium_until: result.premium_until ?? null,
-      created_at: result.created_at ?? null
+      ...data,
+      is_locked: data.is_locked ?? false,
+      lock_message: data.lock_message ?? null,
+      is_admin_sekolah: data.is_admin_sekolah ?? false,
+      sekolah_id: data.sekolah_id ?? null,
+      walikelas_tingkatan: data.walikelas_tingkatan ?? null,
+      walikelas_rombel_nama: data.walikelas_rombel_nama ?? null,
+      tahun_ajaran: data.tahun_ajaran ?? '2025/2026',
+      sekolah: data.sekolah ?? null,
+      premium_until: data.premium_until ?? null,
+      created_at: data.created_at ?? null
     };
   } catch (err) {
     console.error('Unexpected error in getGuru:', err);
+    return null;
   }
 });
 
@@ -368,6 +367,61 @@ export async function getKelasById(id, guruUsername = null) {
   } catch (err) {
     console.error('Unexpected error in getKelasById:', err);
     return null;
+  }
+}
+
+// Lightweight lookup: fetches class metadata + a single student row (avoids loading all students in class on every grade edit)
+export async function getKelasMetaAndSiswa(id, nisn, guruUsername = null) {
+  if (!supabase) return { kelas: null, siswa: null };
+  try {
+    let kelasQuery = supabase
+      .from('kelas')
+      .select('*, kolom_nilai(*)')
+      .eq('id', id);
+    if (guruUsername) {
+      kelasQuery = kelasQuery.eq('guru_username', guruUsername);
+    }
+    const [{ data: kelasRow, error: kelasErr }, { data: siswaRow, error: siswaErr }] = await Promise.all([
+      kelasQuery.maybeSingle(),
+      supabase
+        .from('siswa')
+        .select('*')
+        .eq('kelas_id', id)
+        .eq('nisn', nisn)
+        .is('deleted_at', null)
+        .maybeSingle()
+    ]);
+
+    if (kelasErr || !kelasRow) {
+      return { kelas: null, siswa: null };
+    }
+    if (siswaErr) {
+      console.error('Error fetching siswa in getKelasMetaAndSiswa:', siswaErr);
+    }
+    const mappedKelas = mapKelasFromDb({ ...kelasRow, siswa: siswaRow ? [siswaRow] : [] });
+    return {
+      kelas: mappedKelas,
+      siswa: mappedKelas?.siswa?.[0] || null
+    };
+  } catch (err) {
+    console.error('Unexpected error in getKelasMetaAndSiswa:', err);
+    return { kelas: null, siswa: null };
+  }
+}
+
+export async function isValidSiswaNisn(nisn) {
+  if (!supabase || !nisn) return false;
+  try {
+    const { data, error } = await supabase
+      .from('siswa')
+      .select('nisn')
+      .eq('nisn', nisn.toString().trim())
+      .is('deleted_at', null)
+      .limit(1)
+      .maybeSingle();
+    return !error && !!data;
+  } catch {
+    return false;
   }
 }
 
@@ -947,35 +1001,54 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
     }
 
     const guruCache = {};
+    const validRows = data.filter(s => !!s.kelas);
+    const uniqueGuruUsernames = [...new Set(validRows.map(s => s.kelas.guru_username).filter(Boolean))];
+    const uniqueKelasIds = [...new Set(validRows.map(s => s.kelas.id).filter(Boolean))];
+
+    // Batch-fetch guru names and class siswa grades to avoid N+1 queries
+    const [guruRes, allKelasSiswaRes] = await Promise.all([
+      uniqueGuruUsernames.length > 0
+        ? supabase.from('guru').select('username, nama').in('username', uniqueGuruUsernames)
+        : Promise.resolve({ data: [] }),
+      uniqueKelasIds.length > 0
+        ? supabase.from('siswa').select('kelas_id, nilai').in('kelas_id', uniqueKelasIds).is('deleted_at', null)
+        : Promise.resolve({ data: [] })
+    ]);
+
+    (guruRes.data || []).forEach(g => {
+      if (g.username) guruCache[g.username] = g.nama || "Guru";
+    });
+
+    const siswaByKelas = {};
+    (allKelasSiswaRes.data || []).forEach(row => {
+      if (!siswaByKelas[row.kelas_id]) siswaByKelas[row.kelas_id] = [];
+      siswaByKelas[row.kelas_id].push(row);
+    });
+
+    const nowMs = Date.now();
+    const LOGIN_LOG_THROTTLE_MS = 60 * 60 * 1000; // Catat maksimal 1x per jam agar tidak membebani DB
 
     for (const s of data) {
-      // LOG ACTIVITY: Catat waktu akses siswa secara fire-and-forget
-      const currentNilai = s.nilai || {};
-      const history = Array.isArray(currentNilai._login_history) ? [...currentNilai._login_history] : [];
-      history.push(new Date().toISOString());
-      
-      // Simpan maksimal 15 log terakhir agar JSON tidak membengkak
-      if (history.length > 15) history.shift();
-      
-      const updatedNilai = { ...currentNilai, _login_history: history };
-      supabase.from('siswa')
-        .update({ nilai: updatedNilai })
-        .eq('kelas_id', s.kelas_id)
-        .eq('nisn', s.nisn)
-        .then(() => {})
-        .catch(err => console.error("Gagal mencatat log aktifitas:", err));
-
       const k = s.kelas;
       if (!k) continue;
 
-      let guruNama = "Guru";
-      if (k.guru_username) {
-        if (!guruCache[k.guru_username]) {
-           const g = await getGuru(k.guru_username);
-           guruCache[k.guru_username] = g?.nama || "Guru";
-        }
-        guruNama = guruCache[k.guru_username];
+      // LOG ACTIVITY: Catat waktu akses siswa dengan throttle 1 jam
+      const currentNilai = s.nilai || {};
+      const history = Array.isArray(currentNilai._login_history) ? [...currentNilai._login_history] : [];
+      const lastLogMs = history.length > 0 ? Date.parse(history[history.length - 1]) : 0;
+      if (!lastLogMs || isNaN(lastLogMs) || (nowMs - lastLogMs) > LOGIN_LOG_THROTTLE_MS) {
+        history.push(new Date(nowMs).toISOString());
+        if (history.length > 15) history.shift();
+        const updatedNilai = { ...currentNilai, _login_history: history };
+        supabase.from('siswa')
+          .update({ nilai: updatedNilai })
+          .eq('kelas_id', s.kelas_id)
+          .eq('nisn', s.nisn)
+          .then(() => {})
+          .catch(err => console.error("Gagal mencatat log aktifitas:", err));
       }
+
+      const guruNama = k.guru_username ? (guruCache[k.guru_username] || "Guru") : "Guru";
 
       // Hitung nilai akhir & persentase (Running Average / Progresif)
       let totalNilaiTerisi = 0;
@@ -991,17 +1064,7 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       const kolomNilai = sortKolomNilai(k.kolom_nilai || [], skema);
       const nilaiObj = s.nilai || {};
 
-      // Ambil seluruh data nilai siswa di kelas ini untuk perbandingan & hitung rata-rata
-      let allSiswa = [];
-      try {
-        const { data } = await supabase
-          .from('siswa')
-          .select('nilai')
-          .eq('kelas_id', k.id);
-        if (data) allSiswa = data;
-      } catch (err) {
-        console.error("Gagal mengambil data siswa kelas untuk perbandingan:", err);
-      }
+      const allSiswa = siswaByKelas[k.id] || [];
 
       kolomNilai.forEach(col => {
         const groupConfig = skema.kolomAspekGroup?.[col.id];
@@ -2057,7 +2120,15 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
         });
         studentsMap[s.nisn].kehadiranMapel[k.mataPelajaran] = attPerMapel;
         
-        const finalScore = totalNilaiTerisi + totalPresensiScore + (Number(s.nilai?._katrol) || 0);
+        let totalPoinBonus = 0;
+        if (skema.enableBonusStars && skema.bonusStarsAddToFinal !== false) {
+          Object.keys(s.nilai || {}).forEach(key => {
+            if (key.endsWith("_bonus")) totalPoinBonus += (Number(s.nilai[key]?.poin) || 0);
+          });
+        }
+        const maxCap = Number(skema.maxCap) || 100;
+        const rawFinalScore = totalNilaiTerisi + totalPresensiScore + (Number(s.nilai?._katrol) || 0) + totalPoinBonus;
+        const finalScore = Math.min(maxCap, rawFinalScore);
         
         studentsMap[s.nisn].nilaiMapel[k.mataPelajaran] = Number(finalScore.toFixed(2));
         studentsMap[s.nisn].isSelesaiMapel[k.mataPelajaran] = (jumlahAspekTerisi === k.kolomNilai.length);

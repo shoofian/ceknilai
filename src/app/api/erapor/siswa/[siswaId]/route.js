@@ -183,7 +183,7 @@ export async function GET(request, { params }) {
         alamat_sekolah: sekolahData.alamat || sekolahData.desa_kelurahan || '-',
         kelas: `${guru.walikelas_tingkatan} ${guru.walikelas_rombel_nama}`,
         fase: guru.walikelas_tingkatan <= 6 ? (guru.walikelas_tingkatan <= 2 ? 'A' : (guru.walikelas_tingkatan <= 4 ? 'B' : 'C')) : (guru.walikelas_tingkatan <= 9 ? 'D' : (guru.walikelas_tingkatan <= 10 ? 'E' : 'F')), 
-        semester: "1 (Ganjil)",
+        semester: reqSemester === 'Genap' ? "2 (Genap)" : "1 (Ganjil)",
         tahun_ajaran: guru.tahun_ajaran || '2025/2026',
         
         nama_ayah: baseBiodata.nama_ayah,

@@ -1,9 +1,19 @@
 import { NextResponse } from 'next/server';
 import { getGuruByEmail, createGuruByAdmin } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`google:${ip}`, { limit: 20, windowMs: 15 * 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak percobaan login Google. Silakan coba lagi sebentar.' },
+        { status: 429 }
+      );
+    }
+
     const { credential } = await request.json();
 
     if (!credential) {
@@ -11,14 +21,23 @@ export async function POST(request) {
     }
 
     // Verify token using Google OAuth tokeninfo endpoint
-    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json({ error: errorData.error_description || 'Kredensial Google tidak valid' }, { status: 400 });
     }
 
     const payload = await response.json();
-    const { email, name, sub } = payload;
+    const { email, name, email_verified, aud } = payload;
+
+    const expectedClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (expectedClientId && aud !== expectedClientId) {
+      return NextResponse.json({ error: 'Token Google tidak ditujukan untuk aplikasi ini' }, { status: 401 });
+    }
+
+    if (email_verified !== true && email_verified !== 'true') {
+      return NextResponse.json({ error: 'Email Google belum terverifikasi' }, { status: 400 });
+    }
 
     if (!email) {
       return NextResponse.json({ error: 'Email Google tidak ditemukan' }, { status: 400 });

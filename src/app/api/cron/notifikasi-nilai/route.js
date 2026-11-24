@@ -3,15 +3,17 @@ import { processPendingNotifications } from '@/lib/webPush';
 
 export async function GET(request) {
   try {
-    // Verifikasi otorisasi opsional (misal Vercel Cron / custom secret)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    
+
     const url = new URL(request.url);
     const force = url.searchParams.get('force') === 'true';
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      // Izinkan jika tidak ada CRON_SECRET disetel, atau cocok
+    if (!cronSecret) {
+      if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json({ error: 'CRON_SECRET belum dikonfigurasi' }, { status: 500 });
+      }
+    } else if (authHeader !== `Bearer ${cronSecret}`) {
       const queryKey = url.searchParams.get('key');
       if (queryKey !== cronSecret) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

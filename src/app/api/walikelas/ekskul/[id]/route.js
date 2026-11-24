@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
-import { getGuru } from '@/lib/db';
+import { getGuru, isGuruLocked } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,6 +14,10 @@ export async function DELETE(request, { params }) {
   try {
     const username = await checkAuth();
     if (!username) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (await isGuruLocked(username)) {
+      return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
+    }
     
     const guru = await getGuru(username);
     if (!guru || !guru.walikelas_tingkatan) {

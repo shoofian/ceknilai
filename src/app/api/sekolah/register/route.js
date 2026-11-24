@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { checkAuth } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,6 +24,17 @@ function normalizeSchoolName(name) {
 
 export async function POST(request) {
   try {
+    const username = await checkAuth();
+    if (!username) {
+      return NextResponse.json({ error: 'Tidak diizinkan. Silakan login terlebih dahulu.' }, { status: 401 });
+    }
+
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`sekolah-reg:${ip}`, { limit: 5, windowMs: 60 * 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Terlalu banyak permintaan pendaftaran sekolah.' }, { status: 429 });
+    }
+
     const { nama, npsn } = await request.json();
     
     if (!nama || !npsn) {

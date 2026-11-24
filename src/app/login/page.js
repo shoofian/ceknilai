@@ -297,12 +297,16 @@ export default function LoginGuru() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                     <label className="form-label" htmlFor="password" style={{ fontSize: "0.8rem", fontWeight: "700", color: "var(--text-secondary)", marginBottom: 0 }}>Password</label>
                     {mode === "login" && (
-                      <span 
-                        style={{ fontSize: "0.75rem", color: "var(--text-muted)", cursor: "pointer" }}
-                        onClick={async () => await alertAsync("Lupa password? Silakan hubungi admin sekolah Anda.")}
+                      <a
+                        href={`https://wa.me/6285157544004?text=${encodeURIComponent(
+                          `Halo Admin CekNilai, saya lupa password untuk akun guru${username.trim() ? ` (${username.trim()})` : ""}. Mohon bantuannya untuk reset password.`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: "600", textDecoration: "none", cursor: "pointer" }}
                       >
-                        Lupa password?
-                      </span>
+                        Lupa password? (Chat Admin)
+                      </a>
                     )}
                   </div>
                   <div style={{ position: "relative" }}>

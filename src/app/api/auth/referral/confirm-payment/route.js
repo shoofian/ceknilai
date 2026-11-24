@@ -30,6 +30,27 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Paket dan bukti pembayaran wajib diisi' }, { status: 400 });
     }
 
+    // Prevent repeated pending submissions & optimistic unlock abuse
+    const sevenDaysAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentPaymentLogs } = await supabase
+      .from('log_aktivitas_guru')
+      .select('aksi, created_at')
+      .eq('guru_username', username)
+      .in('aksi', ['PAYMENT_PENDING', 'PAYMENT_APPROVED', 'PAYMENT_CANCELLED'])
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (recentPaymentLogs && recentPaymentLogs.length > 0 && recentPaymentLogs[0].aksi === 'PAYMENT_PENDING') {
+      return NextResponse.json(
+        { error: 'Konfirmasi pembayaran Anda sebelumnya masih menunggu verifikasi Admin.' },
+        { status: 400 }
+      );
+    }
+
+    const usedRecentPending = (recentPaymentLogs || []).some(
+      l => l.aksi === 'PAYMENT_PENDING' && l.created_at && l.created_at >= sevenDaysAgoIso
+    );
+
     // Validate referral code if provided (but don't award points yet — deferred to Superadmin approval)
     let referralError = '';
     let referralValid = false;
@@ -74,19 +95,20 @@ export async function POST(request) {
       `PAKET:${paket.toUpperCase()} | BUKTI:${bukti}${referralInfo}`
     );
 
-    // Optimistic unlock: give access immediately (Masa Tenggang 24 Jam) while Superadmin verifies payment
-    // If payment turns out to be invalid, Superadmin can re-lock the account manually
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Optimistic unlock: give access immediately (Masa Tenggang 24 Jam) max once per 7 days while Superadmin verifies
+    if (!usedRecentPending) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
 
-    await supabase
-      .from('guru')
-      .update({ 
-        is_locked: false, 
-        lock_message: '',
-        premium_until: tomorrow.toISOString()
-      })
-      .eq('username', username);
+      await supabase
+        .from('guru')
+        .update({ 
+          is_locked: false, 
+          lock_message: '',
+          premium_until: tomorrow.toISOString()
+        })
+        .eq('username', username);
+    }
 
     return NextResponse.json({
       success: true,

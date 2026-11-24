@@ -1,10 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getGuru } from '@/lib/db';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
     const { username, password } = await request.json();
+    const rateKey = `login:${ip}:${String(username || '').trim().toLowerCase()}`;
+    const rl = checkRateLimit(rateKey, { limit: 10, windowMs: 15 * 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak percobaan login. Silakan coba lagi dalam beberapa menit.' },
+        { status: 429 }
+      );
+    }
+
     const guru = await getGuru(username);
     
     if (!guru) {

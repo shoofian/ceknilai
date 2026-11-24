@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { checkAuth } from '@/lib/auth';
-import { getGuru } from '@/lib/db';
+import { getGuru, isGuruLocked } from '@/lib/db';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -54,9 +54,13 @@ export async function POST(request) {
   try {
     const username = await checkAuth();
     if (!username) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (await isGuruLocked(username)) {
+      return NextResponse.json({ error: 'Akun Anda sedang dikunci (Read-Only)' }, { status: 403 });
+    }
     
     const guru = await getGuru(username);
-    if (!guru || !guru.walikelas_tingkatan) {
+    if (!guru || !guru.walikelas_tingkatan || !guru.sekolah_id) {
       return NextResponse.json({ error: 'Bukan wali kelas' }, { status: 403 });
     }
 
@@ -65,6 +69,29 @@ export async function POST(request) {
 
     if (!nisn || !ekskul_id || !predikat) {
       return NextResponse.json({ error: 'Data tidak lengkap' }, { status: 400 });
+    }
+
+    const cleanNisn = String(nisn).trim();
+    const { data: bankMatch } = await supabase
+      .from('bank_siswa')
+      .select('nisn')
+      .eq('sekolah_id', guru.sekolah_id)
+      .eq('nisn', cleanNisn)
+      .limit(1)
+      .maybeSingle();
+
+    if (!bankMatch) {
+      const { data: kelasSiswaMatch } = await supabase
+        .from('siswa')
+        .select('nisn, kelas!inner(guru!inner(sekolah_id))')
+        .eq('nisn', cleanNisn)
+        .eq('kelas.guru.sekolah_id', guru.sekolah_id)
+        .is('deleted_at', null)
+        .limit(1)
+        .maybeSingle();
+      if (!kelasSiswaMatch) {
+        return NextResponse.json({ error: 'Siswa tidak terdaftar di sekolah Anda' }, { status: 403 });
+      }
     }
 
     const targetTahunAjaran = tahun_ajaran || guru.tahun_ajaran || '2025/2026';

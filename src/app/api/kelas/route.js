@@ -15,15 +15,14 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const archivedParam = searchParams.get('archived');
+    const includeArchived = archivedParam === 'true' || archivedParam === 'all';
     
-    const allKelas = await getKelas(true, username); // Ambil semua milik guru ini
+    const allKelas = await getKelas(includeArchived, username); // Filter archived langsung di query DB
     
     if (archivedParam === 'true') {
       return NextResponse.json(allKelas.filter(k => k.archived));
-    } else if (archivedParam === 'all') {
-      return NextResponse.json(allKelas);
     } else {
-      return NextResponse.json(allKelas.filter(k => !k.archived));
+      return NextResponse.json(allKelas);
     }
   } catch (error) {
     console.error('Error in GET kelas API:', error);

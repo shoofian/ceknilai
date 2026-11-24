@@ -36,13 +36,20 @@ export async function POST(request) {
     }
 
     const username = guru.username;
-    const { rewardId } = await request.json();
+    const { rewardId, rekeningInfo } = await request.json();
 
     if (!rewardId || !REWARDS[rewardId]) {
       return NextResponse.json({ error: 'Pilihan hadiah tidak valid' }, { status: 400 });
     }
 
     const reward = REWARDS[rewardId];
+    const cleanRekening = typeof rekeningInfo === 'string' ? rekeningInfo.trim() : '';
+    if (rewardId === 'cash_1m' && cleanRekening.length < 6) {
+      return NextResponse.json(
+        { error: 'Mohon isi informasi Bank / E-Wallet, Nomor Rekening, dan Atas Nama untuk pencairan uang tunai.' },
+        { status: 400 }
+      );
+    }
 
     // Compute balance from logs
     const { data: logs, error } = await supabase
@@ -71,10 +78,14 @@ export async function POST(request) {
     }
 
     // Success! Deduct points
+    const detailText = rewardId === 'cash_1m'
+      ? `POINTS:-${reward.price} | Menukarkan hadiah: ${reward.name} | TUJUAN:${cleanRekening}`
+      : `POINTS:-${reward.price} | Menukarkan hadiah: ${reward.name}`;
+
     const logResult = await logAktivitasGuru(
       username,
       'REDEEM_POINTS',
-      `POINTS:-${reward.price} | Menukarkan hadiah: ${reward.name}`
+      detailText
     );
 
     if (!logResult) {
@@ -85,9 +96,18 @@ export async function POST(request) {
     const { recalculatePremiumUntil } = await import('@/lib/db');
     await recalculatePremiumUntil(username);
 
+    let successMessage = `Berhasil menukarkan ${reward.price} poin dengan "${reward.name}". Permintaan Anda telah dicatat dan akan segera diproses oleh admin!`;
+    if (rewardId.startsWith('theme_')) {
+      successMessage = `Berhasil menukarkan ${reward.price} poin! "${reward.name}" telah diaktifkan di akun Anda.`;
+    } else if (rewardId.startsWith('free_')) {
+      successMessage = `Berhasil menukarkan ${reward.price} poin! "${reward.name}" telah otomatis ditambahkan ke masa aktif Anda.`;
+    } else if (rewardId === 'cash_1m') {
+      successMessage = `Berhasil menukarkan ${reward.price} poin untuk "${reward.name}". Permintaan pencairan ke (${cleanRekening}) telah dicatat dan akan segera diproses admin.`;
+    }
+
     return NextResponse.json({
       success: true,
-      message: `Berhasil menukarkan ${reward.price} poin dengan "${reward.name}". Permintaan Anda telah dicatat dan akan segera diproses oleh admin!`,
+      message: successMessage,
       newBalance: balance - reward.price
     });
   } catch (error) {

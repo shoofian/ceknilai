@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
 import { getKelasById, addSiswaToKelas } from '@/lib/db';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const rl = checkRateLimit(`join:${ip}`, { limit: 15, windowMs: 60_000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Terlalu banyak permintaan. Silakan coba lagi sebentar.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { kodeKelas, nisn, nama, tanggalLahir } = body;
 
@@ -22,6 +32,12 @@ export async function POST(request) {
       return NextResponse.json(
         { error: "Kode Kelas tidak valid atau kelas tidak ditemukan." },
         { status: 404 }
+      );
+    }
+    if (kelas.archived) {
+      return NextResponse.json(
+        { error: "Kelas ini sudah diarsipkan dan tidak menerima pendaftaran baru." },
+        { status: 403 }
       );
     }
 
