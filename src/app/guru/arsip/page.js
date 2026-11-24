@@ -20,7 +20,7 @@ export default function ArsipKelas() {
  
   const fetchArchivedKelas = async () => {
     try {
-      const response = await fetch("/api/kelas?archived=true");
+      const response = await fetch("/api/kelas?archived=true&summary=true");
       if (response.ok) {
         const data = await response.json();
         setKelas(data);

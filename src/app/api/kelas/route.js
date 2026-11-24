@@ -15,9 +15,10 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const archivedParam = searchParams.get('archived');
+    const summaryParam = searchParams.get('summary') === 'true';
     const includeArchived = archivedParam === 'true' || archivedParam === 'all';
     
-    const allKelas = await getKelas(includeArchived, username); // Filter archived langsung di query DB
+    const allKelas = await getKelas(includeArchived, username, { summary: summaryParam }); // Filter archived langsung di query DB
     
     if (archivedParam === 'true') {
       return NextResponse.json(allKelas.filter(k => k.archived));

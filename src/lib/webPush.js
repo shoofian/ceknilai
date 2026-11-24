@@ -194,83 +194,140 @@ export async function processPendingNotifications({ force = false } = {}) {
     // Pastikan VAPID terkonfigurasi sebelum memproses
     ensureVapidConfig();
 
-    let sentTotal = 0;
-
-    for (const item of readyItems) {
-      // Ambil langganan push untuk NISN ini
-      const { data: subscriptions, error: subErr } = await supabase
+    // Batch-fetch seluruh push_subscriptions untuk semua NISN dalam 1 query (hindari N+1)
+    const uniqueNisns = Array.from(new Set(readyItems.map(item => item.nisn).filter(Boolean)));
+    const subsByNisn = new Map();
+    if (uniqueNisns.length > 0) {
+      const { data: allSubs, error: subErr } = await supabase
         .from('push_subscriptions')
         .select('*')
-        .eq('nisn', item.nisn);
+        .in('nisn', uniqueNisns);
 
-      if (subErr || !subscriptions || subscriptions.length === 0) {
-        // Siswa belum subscribe push di HP-nya
-        await supabase
+      if (subErr) {
+        console.error('Error batch-fetching push subscriptions:', subErr);
+      } else {
+        (allSubs || []).forEach(sub => {
+          if (!subsByNisn.has(sub.nisn)) subsByNisn.set(sub.nisn, []);
+          subsByNisn.get(sub.nisn).push(sub);
+        });
+      }
+    }
+
+    const nowDoneIso = new Date().toISOString();
+    const noSubIds = [];
+    const sentIds = [];
+    const failedUpdates = [];
+    const expiredSubIds = [];
+    let sentTotal = 0;
+
+    const itemsWithSubs = [];
+    for (const item of readyItems) {
+      const subs = subsByNisn.get(item.nisn);
+      if (!subs || subs.length === 0) {
+        noSubIds.push(item.id);
+      } else {
+        itemsWithSubs.push({ item, subs });
+      }
+    }
+
+    // Kirim notifikasi secara paralel dalam batch berukuran 20
+    const CONCURRENCY = 20;
+    for (let i = 0; i < itemsWithSubs.length; i += CONCURRENCY) {
+      const batch = itemsWithSubs.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(
+        batch.map(async ({ item, subs }) => {
+          const kolomList = Array.isArray(item.kolom_diubah) ? item.kolom_diubah.join(', ') : 'Tugas';
+          const mapelOrKelas = item.mata_pelajaran ? `${item.mata_pelajaran} (${item.nama_kelas || ''})` : (item.nama_kelas || 'Kelas');
+
+          const payload = JSON.stringify({
+            title: `📊 Nilai Baru: ${mapelOrKelas}`,
+            body: `Halo ${item.nama_siswa || ''}! Nilai ${kolomList} Anda telah selesai diinput oleh guru.`,
+            url: `/?nisn=${encodeURIComponent(item.nisn)}`
+          });
+
+          let sentCountForItem = 0;
+          let lastPushError = null;
+
+          await Promise.allSettled(
+            subs.map(async (sub) => {
+              try {
+                await webpush.sendNotification(
+                  {
+                    endpoint: sub.endpoint,
+                    keys: { p256dh: sub.p256dh, auth: sub.auth }
+                  },
+                  payload
+                );
+                sentCountForItem++;
+              } catch (pushErr) {
+                lastPushError = pushErr.body || pushErr.message || (typeof pushErr === 'object' ? JSON.stringify(pushErr) : String(pushErr));
+                console.error(`Gagal kirim Web Push ke endpoint (${sub.endpoint.slice(0, 30)}...):`, lastPushError);
+                if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
+                  expiredSubIds.push(sub.id);
+                }
+              }
+            })
+          );
+
+          sentTotal += sentCountForItem;
+          if (sentCountForItem > 0) {
+            sentIds.push(item.id);
+          } else {
+            failedUpdates.push({
+              id: item.id,
+              error: lastPushError || 'Semua endpoint push gagal dihubungi'
+            });
+          }
+        })
+      );
+    }
+
+    // Batch DB updates & cleanup
+    const dbOps = [];
+    if (expiredSubIds.length > 0) {
+      dbOps.push(supabase.from('push_subscriptions').delete().in('id', expiredSubIds));
+    }
+    if (noSubIds.length > 0) {
+      dbOps.push(
+        supabase
           .from('antrean_notifikasi_nilai')
           .update({
             status: 'no_subscription',
             error_message: 'Siswa belum mengaktifkan notifikasi di HP',
-            updated_at: new Date().toISOString()
+            updated_at: nowDoneIso
           })
-          .eq('id', item.id);
-        continue;
-      }
-
-      // Susun pesan notifikasi
-      const kolomList = Array.isArray(item.kolom_diubah) ? item.kolom_diubah.join(', ') : 'Tugas';
-      const mapelOrKelas = item.mata_pelajaran ? `${item.mata_pelajaran} (${item.nama_kelas || ''})` : (item.nama_kelas || 'Kelas');
-      
-      const payload = JSON.stringify({
-        title: `📊 Nilai Baru: ${mapelOrKelas}`,
-        body: `Halo ${item.nama_siswa || ''}! Nilai ${kolomList} Anda telah selesai diinput oleh guru.`,
-        url: `/?nisn=${encodeURIComponent(item.nisn)}`
+          .in('id', noSubIds)
+      );
+    }
+    if (sentIds.length > 0) {
+      dbOps.push(
+        supabase
+          .from('antrean_notifikasi_nilai')
+          .update({
+            status: 'sent',
+            error_message: null,
+            updated_at: nowDoneIso
+          })
+          .in('id', sentIds)
+      );
+    }
+    if (failedUpdates.length > 0) {
+      failedUpdates.forEach(f => {
+        dbOps.push(
+          supabase
+            .from('antrean_notifikasi_nilai')
+            .update({
+              status: 'failed',
+              error_message: f.error,
+              updated_at: nowDoneIso
+            })
+            .eq('id', f.id)
+        );
       });
+    }
 
-      let sentCountForItem = 0;
-      let lastPushError = null;
-      const expiredSubIds = [];
-
-      for (const sub of subscriptions) {
-        try {
-          const pushSubscription = {
-            endpoint: sub.endpoint,
-            keys: {
-              p256dh: sub.p256dh,
-              auth: sub.auth
-            }
-          };
-
-          await webpush.sendNotification(pushSubscription, payload);
-          sentCountForItem++;
-        } catch (pushErr) {
-          lastPushError = pushErr.body || pushErr.message || (typeof pushErr === 'object' ? JSON.stringify(pushErr) : String(pushErr));
-          console.error(`Gagal kirim Web Push ke endpoint (${sub.endpoint.slice(0, 30)}...):`, lastPushError);
-          // Jika 410 (Gone) atau 404, langganan sudah kedaluwarsa di browser pengguna
-          if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
-            expiredSubIds.push(sub.id);
-          }
-        }
-      }
-
-      // Bersihkan subscription kedaluwarsa jika ada
-      if (expiredSubIds.length > 0) {
-        await supabase
-          .from('push_subscriptions')
-          .delete()
-          .in('id', expiredSubIds);
-      }
-
-      // Update status antrean
-      await supabase
-        .from('antrean_notifikasi_nilai')
-        .update({
-          status: sentCountForItem > 0 ? 'sent' : 'failed',
-          error_message: sentCountForItem > 0 ? null : (lastPushError || 'Semua endpoint push gagal dihubungi'),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', item.id);
-
-      sentTotal += sentCountForItem;
+    if (dbOps.length > 0) {
+      await Promise.allSettled(dbOps);
     }
 
     return { processed: readyItems.length, sent: sentTotal };

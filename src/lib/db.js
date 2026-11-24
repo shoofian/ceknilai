@@ -317,12 +317,15 @@ export async function updateGuru(currentUsername, updatedProfile) {
 }
 
 // === KELAS CRUD ===
-export async function getKelas(includeArchived = false, guruUsername = null) {
+export async function getKelas(includeArchived = false, guruUsername = null, { summary = false } = {}) {
   if (!supabase) return [];
   try {
+    const selectClause = summary
+      ? '*, kolom_nilai(*), siswa(nisn, nama, tanggal_lahir, deleted_at)'
+      : '*, kolom_nilai(*), siswa(*)';
     let query = supabase
       .from('kelas')
-      .select('*, kolom_nilai(*), siswa(*)')
+      .select(selectClause)
       .order('nama', { ascending: true });
 
     if (!includeArchived) {
@@ -1878,10 +1881,11 @@ export async function getSuperadminTeacherLogs() {
 export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombelNama, tahunAjaran, semester) {
   if (!supabase) return { siswa: [], mataPelajaranList: [] };
   try {
-    // 1. Fetch all classes matching rombel name, academic year, and semester
-    const { data: classes, error: errClasses } = await supabase
+    // 1. Fetch all classes matching rombel name, academic year, semester, AND school_id in SQL
+    const { data: schoolClasses, error: errClasses } = await supabase
       .from('kelas')
-      .select('*, guru:guru_username(sekolah_id), kolom_nilai(*), siswa(*)')
+      .select('*, guru:guru_username!inner(sekolah_id), kolom_nilai(*), siswa(*)')
+      .eq('guru.sekolah_id', sekolahId)
       .eq('tingkatan', walikelasTingkatan)
       .eq('rombel_nama', walikelasRombelNama)
       .eq('tahun_ajaran', tahunAjaran)
@@ -1893,9 +1897,7 @@ export async function getLegerData(sekolahId, walikelasTingkatan, walikelasRombe
       return { siswa: [], mataPelajaranList: [] };
     }
     
-    // Filter by same school id of teachers
-    const schoolClasses = (classes || []).filter(k => k.guru && k.guru.sekolah_id === sekolahId);
-    if (schoolClasses.length === 0) {
+    if (!schoolClasses || schoolClasses.length === 0) {
       return { siswa: [], mataPelajaranList: [] };
     }
     

@@ -128,7 +128,7 @@ export default function KelolaKelas() {
 
   const fetchKelas = async () => {
     try {
-      const response = await fetch("/api/kelas?archived=false");
+      const response = await fetch("/api/kelas?archived=false&summary=true");
       if (response.ok) {
         const data = await response.json();
         setKelas(data);

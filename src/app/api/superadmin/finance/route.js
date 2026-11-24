@@ -11,18 +11,23 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
     const superadmin = await checkSuperadminAuth();
     if (!superadmin) {
       return NextResponse.json({ error: 'Akses ditolak. Khusus Superadmin.' }, { status: 403 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const rawLimit = Number(searchParams.get('limit')) || 500;
+    const limit = Math.min(2000, Math.max(1, rawLimit));
+
     const { data: logs, error } = await supabase
       .from('log_aktivitas_guru')
       .select('id, guru_username, aksi, detail, created_at, guru(nama)')
       .in('aksi', ['PAYMENT_APPROVED', 'REFERRAL_POINTS', 'REDEEM_POINTS', 'BIAYA_OPERASIONAL', 'PAYMENT_PENDING'])
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
     if (error) {
       console.error('Error fetching finance logs:', error);
