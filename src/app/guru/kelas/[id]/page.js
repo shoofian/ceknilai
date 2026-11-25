@@ -5671,12 +5671,12 @@ function DetailKelasContent({ params: paramsPromise }) {
                     {isFocusCard ? "🗗 Keluar Mode Fokus" : "⛶ Mode Fokus Layar Penuh"}
                   </div>
                   <div 
-                    onClick={() => { setSettingsDropdownOpen(false); setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }}
+                    onClick={() => { setSettingsDropdownOpen(false); window.dispatchEvent(new CustomEvent("ceknilai:open-ai-assistant")); }}
                     style={{ padding: "12px 16px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
                     onMouseOver={e => e.currentTarget.style.backgroundColor = "var(--bg-secondary)"}
                     onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
                   >
-                    📖 Panduan Penggunaan
+                    🤖 Asisten AI & Panduan
                   </div>
                   <div 
                     onClick={() => { setSettingsDropdownOpen(false); setAdvancedToolsModalOpen(true); }}
@@ -5743,10 +5743,10 @@ function DetailKelasContent({ params: paramsPromise }) {
                         🖨️ Cetak & Ekspor
                       </div>
                       <div 
-                        onClick={() => { setSettingsDropdownOpen(false); setPanduanActiveTab("komponen"); setPanduanModalOpen(true); }}
+                        onClick={() => { setSettingsDropdownOpen(false); window.dispatchEvent(new CustomEvent("ceknilai:open-ai-assistant")); }}
                         style={{ padding: "15px 20px", cursor: "pointer", fontSize: "0.95rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid var(--border-color)", color: "var(--text-primary)" }}
                       >
-                        📖 Panduan Penggunaan
+                        🤖 Asisten AI & Panduan
                       </div>
                       <div 
                         onClick={() => { setSettingsDropdownOpen(false); setAdvancedToolsModalOpen(true); }}

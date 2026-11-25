@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import OnboardingGuide from "@/components/OnboardingGuide";
+import GuruAIAssistant from "@/components/GuruAIAssistant";
 import PromoModal from "@/components/PromoModal";
 import { useConfirm } from "@/components/ConfirmProvider";
 
@@ -915,7 +915,7 @@ export default function GuruLayout({ children }) {
             </div>
           )}
           {children}
-          <OnboardingGuide />
+          <GuruAIAssistant />
           <PromoModal guru={guru} />
         </div>
       </div>
