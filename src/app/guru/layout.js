@@ -261,7 +261,29 @@ export default function GuruLayout({ children }) {
           </button>
           <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>CekNilai Guru</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* AI Assistant trigger - mobile */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("ceknilai:open-ai-assistant"))}
+            title="Asisten AI Guru"
+            style={{
+              background: "linear-gradient(135deg, var(--primary, #3b82f6) 0%, #6366f1 100%)",
+              border: "none",
+              borderRadius: "999px",
+              cursor: "pointer",
+              padding: "5px 10px",
+              fontSize: "0.78rem",
+              fontWeight: "700",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              lineHeight: 1,
+            }}
+          >
+            <span>🤖</span>
+            <span>AI</span>
+          </button>
           {/* Dark mode toggle - mobile */}
           <button
             onClick={toggleDark}
@@ -735,7 +757,29 @@ export default function GuruLayout({ children }) {
             </button>
             <h3 style={{ fontSize: "1.1rem", fontWeight: "700", margin: 0 }}>Panel Guru &bull; Penilaian Digital</h3>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* AI Assistant trigger - Desktop Header */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("ceknilai:open-ai-assistant"))}
+              title="Buka Asisten AI Guru"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "linear-gradient(135deg, var(--primary, #3b82f6) 0%, #6366f1 100%)",
+                border: "none",
+                borderRadius: "999px",
+                cursor: "pointer",
+                padding: "6px 14px",
+                fontSize: "0.82rem",
+                fontWeight: "700",
+                color: "#ffffff",
+                boxShadow: "0 2px 8px rgba(59, 130, 246, 0.25)"
+              }}
+            >
+              <span style={{ fontSize: "0.95rem" }}>🤖</span>
+              <span>Asisten AI</span>
+            </button>
 
             {/* Dark Mode Toggle - Desktop Header */}
             <button

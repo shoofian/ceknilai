@@ -63,10 +63,12 @@ export default function GuruAIAssistant() {
 
   useEffect(() => {
     const onOpenAssistant = (e) => {
-      setIsOpen(true);
       const initialPrompt = e?.detail?.prompt;
       if (initialPrompt && typeof initialPrompt === "string") {
+        setIsOpen(true);
         setInput(initialPrompt);
+      } else {
+        setIsOpen((prev) => !prev);
       }
     };
     window.addEventListener("ceknilai:open-ai-assistant", onOpenAssistant);
@@ -204,44 +206,15 @@ export default function GuruAIAssistant() {
 
   return (
     <div className="no-print">
-      {/* Floating Trigger Button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          title="Tanya Asisten AI CekNilai"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            zIndex: 1150,
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "12px 18px",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.2)",
-            background: "linear-gradient(135deg, var(--primary, #3b82f6) 0%, #6366f1 100%)",
-            color: "#ffffff",
-            fontWeight: "700",
-            fontSize: "0.86rem",
-            boxShadow: "0 10px 25px rgba(59, 130, 246, 0.35)",
-            cursor: "pointer"
-          }}
-        >
-          <span style={{ fontSize: "1.1rem" }}>🤖</span>
-          <span>Asisten AI</span>
-        </button>
-      )}
-
-      {/* Assistant Drawer / Modal */}
+      {/* Assistant Drawer / Modal (triggered from Top Header or Class Settings) */}
       {isOpen && (
         <div
           style={{
             position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            width: "min(430px, calc(100vw - 24px))",
-            height: "min(620px, calc(100vh - 40px))",
+            top: "68px",
+            right: "16px",
+            width: "min(430px, calc(100vw - 32px))",
+            height: "min(580px, calc(100vh - 150px))",
             zIndex: 1250,
             display: "flex",
             flexDirection: "column",
