@@ -431,14 +431,32 @@ export async function POST(request) {
     const actionsOut = [];
     const pendingActionsOut = [];
 
-    let response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        tools: [{ functionDeclarations }]
+    const MODEL_FALLBACKS = ['gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite'];
+    const callGeminiWithFallback = async (reqContents) => {
+      let lastErr;
+      for (const modelName of MODEL_FALLBACKS) {
+        try {
+          return await ai.models.generateContent({
+            model: modelName,
+            contents: reqContents,
+            config: {
+              systemInstruction: SYSTEM_INSTRUCTION,
+              tools: [{ functionDeclarations }]
+            }
+          });
+        } catch (err) {
+          lastErr = err;
+          const status = err?.status || err?.code;
+          if (status === 404 || status === 429 || status === 503 || status === 500) {
+            continue;
+          }
+          throw err;
+        }
       }
-    });
+      throw lastErr;
+    };
+
+    let response = await callGeminiWithFallback(contents);
 
     // Loop up to 4 tool-call rounds
     let round = 0;
@@ -459,14 +477,7 @@ export async function POST(request) {
       }
       contents.push({ role: 'user', parts: functionResponseParts });
 
-      response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
-          tools: [{ functionDeclarations }]
-        }
-      });
+      response = await callGeminiWithFallback(contents);
     }
 
     const replyText = response.text || 'Maaf, saya belum bisa memproses permintaan tersebut. Silakan coba lagi.';
