@@ -6,6 +6,7 @@ import { useState, useEffect, Fragment, Suspense } from "react";
 import Link from "next/link";
 import html2canvas from "html2canvas";
 import PushNotificationManager from "@/components/PushNotificationManager";
+import PinDigitInput from "@/components/PinDigitInput";
 
 function StudentPortalContent() {
   const { confirmAsync, alertAsync, promptAsync } = useConfirm();
@@ -634,18 +635,15 @@ function StudentPortalContent() {
             )}
 
             {!forgotPinMode ? (
-              <form onSubmit={handleVerifyPin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={6}
-                  className="form-input"
-                  placeholder="Masukkan 6 digit PIN Anda"
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  autoFocus
-                  style={{ fontSize: "0.95rem", letterSpacing: "4px" }}
-                />
+              <form onSubmit={handleVerifyPin} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ padding: "8px 0 4px 0" }}>
+                  <PinDigitInput
+                    value={pinInput}
+                    onChange={setPinInput}
+                    autoFocus
+                    disabled={pinVerifying}
+                  />
+                </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                   <button
                     type="button"
@@ -673,15 +671,16 @@ function StudentPortalContent() {
                   onChange={(e) => setResetAnswer(e.target.value)}
                   autoFocus
                 />
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={6}
-                  className="form-input"
-                  placeholder="PIN Baru (6 digit angka)"
-                  value={resetNewPin}
-                  onChange={(e) => setResetNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                />
+                <div>
+                  <label style={{ fontSize: "0.75rem", fontWeight: "700", display: "block", marginBottom: "6px", color: "var(--text-secondary)" }}>
+                    PIN Baru (6 digit angka)
+                  </label>
+                  <PinDigitInput
+                    value={resetNewPin}
+                    onChange={setResetNewPin}
+                    disabled={resetLoading}
+                  />
+                </div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
                   <button
                     type="button"
@@ -2952,30 +2951,22 @@ function StudentPortalContent() {
             <form onSubmit={handleSavePinConfig} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {hasPin && (
                 <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>PIN Saat Ini (6 digit)</label>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={6}
-                    className="form-input"
-                    placeholder="Masukkan 6 digit PIN lama"
+                  <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "6px" }}>PIN Saat Ini (6 digit)</label>
+                  <PinDigitInput
                     value={setupCurrentPin}
-                    onChange={(e) => setSetupCurrentPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onChange={setSetupCurrentPin}
+                    disabled={setupSaving}
                   />
                 </div>
               )}
               <div>
-                <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "6px" }}>
                   {hasPin ? "PIN Baru (6 digit angka)" : "Buat PIN (6 digit angka)"}
                 </label>
-                <input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={6}
-                  className="form-input"
-                  placeholder="Contoh: 123456"
+                <PinDigitInput
                   value={setupNewPin}
-                  onChange={(e) => setSetupNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={setSetupNewPin}
+                  disabled={setupSaving}
                 />
               </div>
               <div>
