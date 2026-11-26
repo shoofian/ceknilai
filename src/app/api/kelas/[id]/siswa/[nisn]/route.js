@@ -29,6 +29,16 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 });
     }
 
+    if (updates.resetPin === true) {
+      const { resetSiswaPinByGuru, logAktivitasGuru } = await import('@/lib/db');
+      const ok = await resetSiswaPinByGuru(nisn);
+      if (!ok) {
+        return NextResponse.json({ error: 'Gagal mereset PIN siswa' }, { status: 500 });
+      }
+      await logAktivitasGuru(username, 'RESET_PIN_SISWA', `Mereset PIN portal siswa "${siswaLama.nama}" (NISN: ${nisn})`);
+      return NextResponse.json({ success: true, message: 'PIN pengaman siswa berhasil direset.' });
+    }
+
     // Validasi NISN baru jika diubah
     const cleanNewNisn = updates.nisn !== undefined ? updates.nisn.toString().trim() : null;
     const targetNisn = cleanNewNisn || nisn;
@@ -175,6 +185,16 @@ export async function DELETE(request, { params }) {
     const siswaLama = kelas.siswa.find(s => s.nisn === nisn);
     if (!siswaLama) {
       return NextResponse.json({ error: 'Siswa tidak ditemukan' }, { status: 404 });
+    }
+
+    if (updates.resetPin === true) {
+      const { resetSiswaPinByGuru, logAktivitasGuru } = await import('@/lib/db');
+      const ok = await resetSiswaPinByGuru(nisn);
+      if (!ok) {
+        return NextResponse.json({ error: 'Gagal mereset PIN siswa' }, { status: 500 });
+      }
+      await logAktivitasGuru(username, 'RESET_PIN_SISWA', `Mereset PIN portal siswa "${siswaLama.nama}" (NISN: ${nisn})`);
+      return NextResponse.json({ success: true, message: 'PIN pengaman siswa berhasil direset.' });
     }
 
     const success = await deleteSiswaFromKelas(id, nisn, username);

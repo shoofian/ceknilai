@@ -988,19 +988,135 @@ export async function getKelasBackupById(backupId) {
 }
 
 // === SEARCH STUDENT (SISWA PORTAL) ===
-export async function pencarianSiswa(nisn, tanggalLahir) {
-  if (!supabase) return [];
+export async function getSiswaPinConfig(nisn, tanggalLahir) {
+  if (!supabase || !nisn || !tanggalLahir) return { found: false, pinConfig: null, rows: [] };
+  try {
+    const { data, error } = await supabase
+      .from('siswa')
+      .select('kelas_id, nisn, nilai')
+      .eq('nisn', nisn.trim())
+      .eq('tanggal_lahir', tanggalLahir)
+      .is('deleted_at', null);
+
+    if (error || !data || data.length === 0) {
+      return { found: false, pinConfig: null, rows: [] };
+    }
+    const rowWithPin = data.find(r => r.nilai && r.nilai._pin_config && r.nilai._pin_config.pinHash);
+    return {
+      found: true,
+      pinConfig: rowWithPin ? rowWithPin.nilai._pin_config : null,
+      rows: data
+    };
+  } catch (err) {
+    console.error('Error in getSiswaPinConfig:', err);
+    return { found: false, pinConfig: null, rows: [] };
+  }
+}
+
+export async function updateSiswaPinConfig(nisn, tanggalLahir, pinConfig) {
+  if (!supabase || !nisn || !tanggalLahir) return false;
+  try {
+    const { data: rows, error } = await supabase
+      .from('siswa')
+      .select('kelas_id, nisn, nilai')
+      .eq('nisn', nisn.trim())
+      .eq('tanggal_lahir', tanggalLahir)
+      .is('deleted_at', null);
+
+    if (error || !rows || rows.length === 0) return false;
+
+    await Promise.all(
+      rows.map((r) => {
+        const nextNilai = { ...(r.nilai || {}) };
+        if (pinConfig) {
+          nextNilai._pin_config = pinConfig;
+        } else {
+          delete nextNilai._pin_config;
+        }
+        return supabase
+          .from('siswa')
+          .update({ nilai: nextNilai })
+          .eq('kelas_id', r.kelas_id)
+          .eq('nisn', r.nisn);
+      })
+    );
+    return true;
+  } catch (err) {
+    console.error('Error in updateSiswaPinConfig:', err);
+    return false;
+  }
+}
+
+export async function resetSiswaPinByGuru(nisn) {
+  if (!supabase || !nisn) return false;
+  try {
+    const { data: rows, error } = await supabase
+      .from('siswa')
+      .select('kelas_id, nisn, nilai')
+      .eq('nisn', nisn.trim())
+      .is('deleted_at', null);
+
+    if (error || !rows || rows.length === 0) return false;
+
+    await Promise.all(
+      rows
+        .filter(r => r.nilai && r.nilai._pin_config)
+        .map((r) => {
+          const nextNilai = { ...(r.nilai || {}) };
+          delete nextNilai._pin_config;
+          return supabase
+            .from('siswa')
+            .update({ nilai: nextNilai })
+            .eq('kelas_id', r.kelas_id)
+            .eq('nisn', r.nisn);
+        })
+    );
+    return true;
+  } catch (err) {
+    console.error('Error in resetSiswaPinByGuru:', err);
+    return false;
+  }
+}
+
+export async function pencarianSiswa(nisn, tanggalLahir, pin = null) {
+  if (!supabase) return { requiresPin: false, hasPin: false, securityQuestion: '', hasil: [] };
   try {
     const { data, error } = await supabase
       .from('siswa')
       .select('*, kelas(*, kolom_nilai(*))')
       .eq('nisn', nisn.trim())
-      .eq('tanggal_lahir', tanggalLahir);
+      .eq('tanggal_lahir', tanggalLahir)
+      .is('deleted_at', null);
 
     const hasil = [];
     if (error || !data) {
       if (error) console.error('Error searching student:', error);
-      return hasil;
+      return { requiresPin: false, hasPin: false, securityQuestion: '', hasil };
+    }
+
+    const rowWithPin = data.find(r => r.nilai && r.nilai._pin_config && r.nilai._pin_config.pinHash);
+    const pinConfig = rowWithPin ? rowWithPin.nilai._pin_config : null;
+
+    if (pinConfig && pinConfig.pinHash) {
+      if (!pin || String(pin).trim() === '') {
+        return {
+          requiresPin: true,
+          hasPin: true,
+          securityQuestion: pinConfig.question || 'Pertanyaan Keamanan',
+          hasil: []
+        };
+      }
+      const bcrypt = await import('bcryptjs');
+      const isPinValid = bcrypt.compareSync(String(pin).trim(), pinConfig.pinHash);
+      if (!isPinValid) {
+        return {
+          requiresPin: true,
+          hasPin: true,
+          pinInvalid: true,
+          securityQuestion: pinConfig.question || 'Pertanyaan Keamanan',
+          hasil: []
+        };
+      }
     }
 
     const guruCache = {};
@@ -1413,10 +1529,15 @@ export async function pencarianSiswa(nisn, tanggalLahir) {
       });
     }
 
-    return hasil;
+    return {
+      requiresPin: false,
+      hasPin: !!(pinConfig && pinConfig.pinHash),
+      securityQuestion: pinConfig?.question || '',
+      hasil
+    };
   } catch (err) {
     console.error('Unexpected error in pencarianSiswa:', err);
-    return [];
+    return { requiresPin: false, hasPin: false, securityQuestion: '', hasil: [] };
   }
 }
 

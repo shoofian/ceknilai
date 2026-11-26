@@ -16,6 +16,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const nisn = searchParams.get('nisn');
     const tanggalLahir = searchParams.get('tanggalLahir');
+    const pin = searchParams.get('pin') || null;
 
     if (!nisn || !tanggalLahir) {
       return NextResponse.json(
@@ -24,8 +25,36 @@ export async function GET(request) {
       );
     }
 
-    const hasil = await pencarianSiswa(nisn, tanggalLahir);
-    return NextResponse.json({ success: true, hasil });
+    if (pin) {
+      const pinRl = checkRateLimit(`pin-verify:${ip}:${nisn.trim()}`, { limit: 8, windowMs: 60_000 });
+      if (!pinRl.allowed) {
+        return NextResponse.json(
+          { error: 'Terlalu banyak percobaan PIN salah. Mohon tunggu 1 menit.' },
+          { status: 429 }
+        );
+      }
+    }
+
+    const result = await pencarianSiswa(nisn, tanggalLahir, pin);
+    if (result.pinInvalid) {
+      return NextResponse.json(
+        {
+          error: 'PIN pengaman salah. Silakan periksa kembali PIN Anda.',
+          requiresPin: true,
+          pinInvalid: true,
+          securityQuestion: result.securityQuestion
+        },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      requiresPin: result.requiresPin,
+      hasPin: result.hasPin,
+      securityQuestion: result.securityQuestion,
+      hasil: result.hasil
+    });
   } catch (error) {
     console.error('Error in GET pencarian API:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });
@@ -43,7 +72,7 @@ export async function POST(request) {
       );
     }
 
-    const { nisn, tanggalLahir } = await request.json();
+    const { nisn, tanggalLahir, pin = null } = await request.json();
 
     if (!nisn || !tanggalLahir) {
       return NextResponse.json(
@@ -52,8 +81,36 @@ export async function POST(request) {
       );
     }
 
-    const hasil = await pencarianSiswa(nisn, tanggalLahir);
-    return NextResponse.json({ success: true, hasil });
+    if (pin) {
+      const pinRl = checkRateLimit(`pin-verify:${ip}:${String(nisn).trim()}`, { limit: 8, windowMs: 60_000 });
+      if (!pinRl.allowed) {
+        return NextResponse.json(
+          { error: 'Terlalu banyak percobaan PIN salah. Mohon tunggu 1 menit.' },
+          { status: 429 }
+        );
+      }
+    }
+
+    const result = await pencarianSiswa(nisn, tanggalLahir, pin);
+    if (result.pinInvalid) {
+      return NextResponse.json(
+        {
+          error: 'PIN pengaman salah. Silakan periksa kembali PIN Anda.',
+          requiresPin: true,
+          pinInvalid: true,
+          securityQuestion: result.securityQuestion
+        },
+        { status: 401 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      requiresPin: result.requiresPin,
+      hasPin: result.hasPin,
+      securityQuestion: result.securityQuestion,
+      hasil: result.hasil
+    });
   } catch (error) {
     console.error('Error in POST pencarian API:', error);
     return NextResponse.json({ error: 'Terjadi kesalahan pada server' }, { status: 500 });

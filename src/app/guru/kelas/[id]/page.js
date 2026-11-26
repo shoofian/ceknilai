@@ -11034,6 +11034,34 @@ function DetailKelasContent({ params: paramsPromise }) {
                   <span>↩️</span> Reset Katrol ke Nilai Asli
                 </div>
               )}
+              {studentActionModal.student.nilai?._pin_config?.pinHash && (
+                <div
+                  onClick={() => {
+                    const st = studentActionModal.student;
+                    setStudentActionModal(null);
+                    if (handleLockedAction()) return;
+                    triggerConfirm(`Reset PIN pengaman portal untuk ${st.nama} (NISN: ${st.nisn})? Siswa dapat masuk kembali dengan NISN + Tanggal Lahir dan membuat PIN baru.`, async () => {
+                      try {
+                        const res = await fetch(`/api/kelas/${classId}/siswa/${st.nisn}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ resetPin: true }),
+                        });
+                        if (!res.ok) throw new Error("Gagal mereset PIN siswa.");
+                        await alertAsync("PIN pengaman siswa berhasil direset!");
+                        fetchClassDetail();
+                      } catch (err) {
+                        await alertAsync(err.message || "Gagal mereset PIN siswa.");
+                      }
+                    }, { confirmText: "Ya, Reset PIN", isDanger: true });
+                  }}
+                  style={{ padding: "10px 16px", cursor: (kelas.archived || isLocked) ? "not-allowed" : "pointer", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid var(--border-color)", color: "#d97706", opacity: (kelas.archived || isLocked) ? 0.5 : 1 }}
+                  onMouseOver={e => { if(!kelas.archived && !isLocked) e.currentTarget.style.backgroundColor = "rgba(245, 158, 11, 0.08)"; }}
+                  onMouseOut={e => e.currentTarget.style.backgroundColor = "transparent"}
+                >
+                  <span>🔓</span> Reset PIN Portal Siswa
+                </div>
+              )}
               <div 
                 onClick={() => { 
                   setStudentActionModal(null);

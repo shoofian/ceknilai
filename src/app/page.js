@@ -24,6 +24,27 @@ function StudentPortalContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState({});
 
+  // Student PIN Security States
+  const [pinRequired, setPinRequired] = useState(false);
+  const [hasPin, setHasPin] = useState(false);
+  const [pinSecurityQuestion, setPinSecurityQuestion] = useState("");
+  const [pinInput, setPinInput] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinVerifying, setPinVerifying] = useState(false);
+  const [forgotPinMode, setForgotPinMode] = useState(false);
+  const [resetAnswer, setResetAnswer] = useState("");
+  const [resetNewPin, setResetNewPin] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinPromptOpen, setPinPromptOpen] = useState(false);
+  const [setupCurrentPin, setSetupCurrentPin] = useState("");
+  const [setupNewPin, setSetupNewPin] = useState("");
+  const [setupQuestion, setSetupQuestion] = useState("Siapa nama panggilan masa kecilmu?");
+  const [setupAnswer, setSetupAnswer] = useState("");
+  const [setupSaving, setSetupSaving] = useState(false);
+  const [setupError, setSetupError] = useState("");
+
   // Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTahunAjaran, setSelectedTahunAjaran] = useState("Semua");
@@ -155,39 +176,84 @@ function StudentPortalContent() {
     }, 1000);
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!nisn.trim() || !tanggalLahir) {
-      setError("Harap isi NISN dan Tanggal Lahir.");
-      return;
+  const executeSearch = async (pinToVerify = null) => {
+    const isPinSubmit = pinToVerify !== null;
+    if (isPinSubmit) {
+      setPinVerifying(true);
+      setPinError("");
+    } else {
+      setLoading(true);
+      setError("");
+      setResults(null);
+      setPinRequired(false);
+      setHasPin(false);
+      setPinInput("");
+      setPinError("");
+      setForgotPinMode(false);
+      setResetAnswer("");
+      setResetNewPin("");
+      setActiveClassId(null);
+      setSearchQuery("");
+      setSelectedTahunAjaran("Semua");
+      setSelectedSemester("Semua");
+      setSelectedMataPelajaran("Semua");
+      setSelectedTingkatan("Semua");
     }
 
-    setLoading(true);
-    setError("");
-    setResults(null);
-    setActiveClassId(null);
-    setSearchQuery("");
-    setSelectedTahunAjaran("Semua");
-    setSelectedSemester("Semua");
-    setSelectedMataPelajaran("Semua");
-    setSelectedTingkatan("Semua");
-
     try {
-      const response = await fetch(
-        `/api/pencarian?nisn=${encodeURIComponent(nisn)}&tanggalLahir=${encodeURIComponent(tanggalLahir)}`
-      );
-      const data = await response.json();
+      const res = await fetch("/api/pencarian", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nisn: nisn.trim(),
+          tanggalLahir,
+          pin: pinToVerify
+        })
+      });
+      const data = await res.json();
 
-      if (!response.ok) {
+      if (res.status === 401 && data.requiresPin) {
+        setPinRequired(true);
+        setPinSecurityQuestion(data.securityQuestion || "");
+        setPinError(data.error || "PIN pengaman salah.");
+        return;
+      }
+
+      if (!res.ok) {
         throw new Error(data.error || "Gagal memuat data");
       }
 
+      if (data.requiresPin) {
+        setPinRequired(true);
+        setHasPin(true);
+        setPinSecurityQuestion(data.securityQuestion || "Pertanyaan Keamanan");
+        setTimeout(() => {
+          const el = document.getElementById("pin-gate");
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
+        return;
+      }
+
+      setPinRequired(false);
+      setHasPin(!!data.hasPin);
+      if (data.securityQuestion) setPinSecurityQuestion(data.securityQuestion);
+
       if (data.hasil && data.hasil.length > 0) {
         setResults(data.hasil);
-        setActiveClassId(null); // Menampilkan card-card kelas terlebih dahulu
+        setActiveClassId(null);
         setSimulationScores({});
-        
-        // Scroll ke hasil pencarian secara otomatis setelah DOM di-update
+
+        if (!data.hasPin) {
+          try {
+            const dismissed = localStorage.getItem(`pin_prompt_dismissed_${nisn.trim()}`);
+            if (dismissed !== "true") {
+              setPinPromptOpen(true);
+            }
+          } catch (_) {
+            setPinPromptOpen(true);
+          }
+        }
+
         setTimeout(() => {
           const el = document.getElementById("search-results");
           if (el) {
@@ -200,9 +266,144 @@ function StudentPortalContent() {
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || "Terjadi kesalahan saat mencari data.");
+      if (isPinSubmit) {
+        setPinError(err.message || "Gagal memverifikasi PIN.");
+      } else {
+        setError(err.message || "Terjadi kesalahan saat mencari data.");
+      }
     } finally {
-      setLoading(false);
+      if (isPinSubmit) setPinVerifying(false);
+      else setLoading(false);
+    }
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!nisn.trim() || !tanggalLahir) {
+      setError("Harap isi NISN dan Tanggal Lahir.");
+      return;
+    }
+    await executeSearch(null);
+  };
+
+  const handleVerifyPin = async (e) => {
+    e.preventDefault();
+    if (!pinInput.trim()) {
+      setPinError("Masukkan PIN pengaman Anda.");
+      return;
+    }
+    await executeSearch(pinInput.trim());
+  };
+
+  const handleResetPin = async (e) => {
+    e.preventDefault();
+    if (!resetAnswer.trim() || !/^\d{6}$/.test(resetNewPin.trim())) {
+      setPinError("Isi jawaban pertanyaan keamanan dan PIN baru (tepat 6 digit angka).");
+      return;
+    }
+    setResetLoading(true);
+    setPinError("");
+    try {
+      const res = await fetch("/api/pencarian/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reset",
+          nisn: nisn.trim(),
+          tanggalLahir,
+          answer: resetAnswer.trim(),
+          newPin: resetNewPin.trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal mereset PIN.");
+      const newPinVal = resetNewPin.trim();
+      setForgotPinMode(false);
+      setResetAnswer("");
+      setResetNewPin("");
+      setPinInput(newPinVal);
+      await executeSearch(newPinVal);
+    } catch (err) {
+      setPinError(err.message || "Gagal mereset PIN.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleSavePinConfig = async (e) => {
+    e.preventDefault();
+    setSetupError("");
+    if (!/^\d{6}$/.test(setupNewPin.trim())) {
+      setSetupError("PIN harus berupa tepat 6 digit angka.");
+      return;
+    }
+    if (!setupQuestion.trim() || setupAnswer.trim().length < 2) {
+      setSetupError("Pertanyaan keamanan dan jawaban (min. 2 huruf) wajib diisi.");
+      return;
+    }
+    if (hasPin && !setupCurrentPin.trim()) {
+      setSetupError("Masukkan PIN saat ini untuk mengubah PIN.");
+      return;
+    }
+    setSetupSaving(true);
+    try {
+      const res = await fetch("/api/pencarian/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "setup",
+          nisn: nisn.trim(),
+          tanggalLahir,
+          currentPin: hasPin ? setupCurrentPin.trim() : undefined,
+          newPin: setupNewPin.trim(),
+          question: setupQuestion.trim(),
+          answer: setupAnswer.trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal menyimpan PIN.");
+      setHasPin(true);
+      setPinSecurityQuestion(setupQuestion.trim());
+      setPinModalOpen(false);
+      setSetupCurrentPin("");
+      setSetupNewPin("");
+      setSetupAnswer("");
+      await alertAsync(data.message || "PIN pengaman berhasil diaktifkan!");
+    } catch (err) {
+      setSetupError(err.message || "Gagal menyimpan PIN.");
+    } finally {
+      setSetupSaving(false);
+    }
+  };
+
+  const handleDisablePin = async () => {
+    if (!setupCurrentPin.trim()) {
+      setSetupError("Masukkan PIN saat ini untuk menonaktifkan pengaman PIN.");
+      return;
+    }
+    setSetupSaving(true);
+    setSetupError("");
+    try {
+      const res = await fetch("/api/pencarian/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "disable",
+          nisn: nisn.trim(),
+          tanggalLahir,
+          currentPin: setupCurrentPin.trim()
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal menonaktifkan PIN.");
+      setHasPin(false);
+      setPinModalOpen(false);
+      setSetupCurrentPin("");
+      await alertAsync(data.message || "PIN pengaman dinonaktifkan.");
+    } catch (err) {
+      setSetupError(err.message || "Gagal menonaktifkan PIN.");
+    } finally {
+      setSetupSaving(false);
     }
   };
 
@@ -409,6 +610,95 @@ function StudentPortalContent() {
 
         </div>
 
+        {/* PIN Security Gate */}
+        {pinRequired && (
+          <div id="pin-gate" className="glass-card animate-fade-in" style={{ width: "100%", maxWidth: "460px", padding: "24px", marginBottom: "24px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+              <span style={{ fontSize: "1.6rem" }}>{forgotPinMode ? "🔑" : "🔒"}</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800" }}>
+                  {forgotPinMode ? "Reset PIN Pengaman" : "Masukkan PIN Pengaman"}
+                </h3>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "var(--text-secondary)" }}>
+                  {forgotPinMode
+                    ? "Jawab pertanyaan keamanan yang Anda buat untuk mengatur PIN baru."
+                    : "Akun siswa ini dilindungi PIN pribadi agar nilai tidak dilihat orang lain."}
+                </p>
+              </div>
+            </div>
+
+            {pinError && (
+              <div style={{ padding: "8px 12px", borderRadius: "8px", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444", fontSize: "0.8rem", fontWeight: "600", marginBottom: "12px" }}>
+                {pinError}
+              </div>
+            )}
+
+            {!forgotPinMode ? (
+              <form onSubmit={handleVerifyPin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="form-input"
+                  placeholder="Masukkan 6 digit PIN Anda"
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  autoFocus
+                  style={{ fontSize: "0.95rem", letterSpacing: "4px" }}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotPinMode(true); setPinError(""); }}
+                    style={{ background: "none", border: "none", color: "var(--primary)", fontSize: "0.8rem", fontWeight: "700", cursor: "pointer", padding: 0 }}
+                  >
+                    Lupa PIN?
+                  </button>
+                  <button type="submit" disabled={pinVerifying} className="btn btn-primary" style={{ padding: "8px 18px", fontSize: "0.85rem", fontWeight: "700" }}>
+                    {pinVerifying ? "Memeriksa..." : "🔓 Buka Nilai"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPin} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ padding: "10px 12px", borderRadius: "8px", backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-color)", fontSize: "0.82rem" }}>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase", marginBottom: "2px" }}>Pertanyaan Keamanan:</div>
+                  <div style={{ fontWeight: "700", color: "var(--text-primary)" }}>{pinSecurityQuestion || "Pertanyaan Keamanan"}</div>
+                </div>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Jawaban Anda..."
+                  value={resetAnswer}
+                  onChange={(e) => setResetAnswer(e.target.value)}
+                  autoFocus
+                />
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="form-input"
+                  placeholder="PIN Baru (6 digit angka)"
+                  value={resetNewPin}
+                  onChange={(e) => setResetNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotPinMode(false); setPinError(""); }}
+                    style={{ background: "none", border: "none", color: "var(--text-secondary)", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", padding: 0 }}
+                  >
+                    ← Kembali ke PIN
+                  </button>
+                  <button type="submit" disabled={resetLoading} className="btn btn-primary" style={{ padding: "8px 16px", fontSize: "0.85rem", fontWeight: "700" }}>
+                    {resetLoading ? "Menyimpan..." : "Reset & Buka Nilai"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
         {/* Search Results */}
         {results && results.length > 0 && (
           <div id="search-results" style={{ width: "100%", maxWidth: "900px" }} className="animate-fade-in">
@@ -421,9 +711,32 @@ function StudentPortalContent() {
               <h3 style={{ fontSize: "1.5rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "10px" }}>
                 <span>📊 Hasil Pencarian Nilai</span>
               </h3>
-              <span className="badge badge-primary" style={{ fontSize: "0.9rem", padding: "6px 14px" }}>
-                👤 {results[0].siswa.nama}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSetupError("");
+                    setSetupCurrentPin("");
+                    setSetupNewPin("");
+                    setSetupAnswer("");
+                    if (pinSecurityQuestion) setSetupQuestion(pinSecurityQuestion);
+                    setPinModalOpen(true);
+                  }}
+                  className="btn btn-secondary"
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: "0.78rem",
+                    fontWeight: "700",
+                    borderColor: hasPin ? "var(--success, #10b981)" : "var(--border-color)",
+                    color: hasPin ? "var(--success, #10b981)" : "var(--text-primary)"
+                  }}
+                >
+                  {hasPin ? "🔐 PIN Aktif (Atur)" : "🔓 Pasang PIN Pengaman"}
+                </button>
+                <span className="badge badge-primary" style={{ fontSize: "0.9rem", padding: "6px 14px" }}>
+                  👤 {results[0].siswa.nama}
+                </span>
+              </div>
             </div>
 
              {activeClassId === null ? (
@@ -2480,6 +2793,284 @@ function StudentPortalContent() {
                 <button type="submit" className="btn btn-primary" disabled={joining}>
                   {joining ? "Memproses..." : "Daftar Sekarang"}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Pop-up Ajakan Pasang PIN Pengaman (jika siswa belum punya PIN) */}
+      {pinPromptOpen && !pinModalOpen && (
+        <div
+          className="no-print"
+          onClick={() => setPinPromptOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 1290,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            className="glass-card animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "430px",
+              padding: "24px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+              border: "1px solid var(--primary)"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  borderRadius: "12px",
+                  backgroundColor: "rgba(59, 130, 246, 0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1.45rem",
+                  flexShrink: 0
+                }}
+              >
+                🔐
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.08rem", fontWeight: "800" }}>
+                  Amankan Nilai Anda dengan PIN
+                </h3>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "var(--primary)", fontWeight: "700" }}>
+                  Direkomendasikan untuk privasi siswa
+                </p>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, fontSize: "0.84rem", color: "var(--text-secondary)", lineHeight: 1.55 }}>
+              Pasang <strong>PIN 6 digit angka</strong> agar orang lain yang mengetahui NISN &amp; Tanggal Lahir Anda tidak bisa membuka nilai Anda. Tersedia juga <strong>Pertanyaan Keamanan</strong> untuk reset mandiri jika lupa PIN.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "4px" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setPinPromptOpen(false);
+                  setSetupError("");
+                  setSetupCurrentPin("");
+                  setSetupNewPin("");
+                  setSetupAnswer("");
+                  setPinModalOpen(true);
+                }}
+                className="btn btn-primary"
+                style={{
+                  width: "100%",
+                  padding: "11px 16px",
+                  fontSize: "0.92rem",
+                  fontWeight: "800",
+                  justifyContent: "center",
+                  boxShadow: "0 6px 18px rgba(59, 130, 246, 0.35)"
+                }}
+              >
+                🔐 Atur Sekarang
+              </button>
+
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  type="button"
+                  onClick={() => setPinPromptOpen(false)}
+                  className="btn btn-secondary"
+                  style={{ flex: 1, padding: "8px 10px", fontSize: "0.78rem", fontWeight: "600", justifyContent: "center" }}
+                >
+                  Ingatkan Nanti
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.setItem(`pin_prompt_dismissed_${nisn.trim()}`, "true");
+                    } catch (_) {}
+                    setPinPromptOpen(false);
+                  }}
+                  className="btn btn-secondary"
+                  style={{ flex: 1, padding: "8px 10px", fontSize: "0.78rem", fontWeight: "600", color: "var(--text-muted)", justifyContent: "center" }}
+                >
+                  Jangan Tampilkan Lagi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Atur / Pasang PIN Pengaman Siswa */}
+      {pinModalOpen && (
+        <div
+          className="no-print"
+          onClick={() => setPinModalOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            backdropFilter: "blur(6px)",
+            zIndex: 1300,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px"
+          }}
+        >
+          <div
+            className="glass-card animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "100%", maxWidth: "460px", padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: "1.08rem", fontWeight: "800" }}>
+                {hasPin ? "🔐 Kelola PIN Pengaman" : "🔐 Pasang PIN Pengaman"}
+              </h3>
+              <button onClick={() => setPinModalOpen(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "var(--text-muted)" }}>✕</button>
+            </div>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+              Dengan PIN Pengaman, orang lain yang mengetahui NISN &amp; Tanggal Lahir Anda tidak bisa membuka nilai Anda. Pertanyaan keamanan digunakan jika Anda lupa PIN.
+            </p>
+
+            {setupError && (
+              <div style={{ padding: "8px 12px", borderRadius: "8px", backgroundColor: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444", fontSize: "0.78rem", fontWeight: "600" }}>
+                {setupError}
+              </div>
+            )}
+
+            <form onSubmit={handleSavePinConfig} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {hasPin && (
+                <div>
+                  <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>PIN Saat Ini (6 digit)</label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className="form-input"
+                    placeholder="Masukkan 6 digit PIN lama"
+                    value={setupCurrentPin}
+                    onChange={(e) => setSetupCurrentPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  />
+                </div>
+              )}
+              <div>
+                <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>
+                  {hasPin ? "PIN Baru (6 digit angka)" : "Buat PIN (6 digit angka)"}
+                </label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  className="form-input"
+                  placeholder="Contoh: 123456"
+                  value={setupNewPin}
+                  onChange={(e) => setSetupNewPin(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: "0.78rem", fontWeight: "700", display: "block", marginBottom: "4px" }}>Pertanyaan Keamanan (untuk Reset jika Lupa PIN)</label>
+                <select
+                  className="form-input"
+                  value={[
+                    "Siapa nama panggilan masa kecilmu?",
+                    "Apa nama SD tempat kamu bersekolah?",
+                    "Apa makanan favoritmu?",
+                    "Siapa nama hewan peliharaan pertamamu?",
+                    "Apa cita-citamu waktu kecil?",
+                    "Di kota mana kamu dilahirkan?",
+                    "Siapa nama sahabat terdekatmu di sekolah?",
+                    "Apa hobi atau olahraga favoritmu?",
+                    "Apa warna kesukaanmu?",
+                    "Siapa nama guru favoritmu waktu SD?",
+                    "Apa judul film atau kartun favoritmu?",
+                    "Apa nama jalan tempat tinggalmu sekarang?"
+                  ].includes(setupQuestion) ? setupQuestion : "__custom__"}
+                  onChange={(e) => {
+                    if (e.target.value === "__custom__") {
+                      setSetupQuestion("");
+                    } else {
+                      setSetupQuestion(e.target.value);
+                    }
+                  }}
+                  style={{ marginBottom: "6px" }}
+                >
+                  <option value="Siapa nama panggilan masa kecilmu?">Siapa nama panggilan masa kecilmu?</option>
+                  <option value="Apa nama SD tempat kamu bersekolah?">Apa nama SD tempat kamu bersekolah?</option>
+                  <option value="Apa makanan favoritmu?">Apa makanan favoritmu?</option>
+                  <option value="Siapa nama hewan peliharaan pertamamu?">Siapa nama hewan peliharaan pertamamu?</option>
+                  <option value="Apa cita-citamu waktu kecil?">Apa cita-citamu waktu kecil?</option>
+                  <option value="Di kota mana kamu dilahirkan?">Di kota mana kamu dilahirkan?</option>
+                  <option value="Siapa nama sahabat terdekatmu di sekolah?">Siapa nama sahabat terdekatmu di sekolah?</option>
+                  <option value="Apa hobi atau olahraga favoritmu?">Apa hobi atau olahraga favoritmu?</option>
+                  <option value="Apa warna kesukaanmu?">Apa warna kesukaanmu?</option>
+                  <option value="Siapa nama guru favoritmu waktu SD?">Siapa nama guru favoritmu waktu SD?</option>
+                  <option value="Apa judul film atau kartun favoritmu?">Apa judul film atau kartun favoritmu?</option>
+                  <option value="Apa nama jalan tempat tinggalmu sekarang?">Apa nama jalan tempat tinggalmu sekarang?</option>
+                  <option value="__custom__">✏️ Tulis pertanyaan sendiri...</option>
+                </select>
+                {![
+                  "Siapa nama panggilan masa kecilmu?",
+                  "Apa nama SD tempat kamu bersekolah?",
+                  "Apa makanan favoritmu?",
+                  "Siapa nama hewan peliharaan pertamamu?",
+                  "Apa cita-citamu waktu kecil?",
+                  "Di kota mana kamu dilahirkan?",
+                  "Siapa nama sahabat terdekatmu di sekolah?",
+                  "Apa hobi atau olahraga favoritmu?",
+                  "Apa warna kesukaanmu?",
+                  "Siapa nama guru favoritmu waktu SD?",
+                  "Apa judul film atau kartun favoritmu?",
+                  "Apa nama jalan tempat tinggalmu sekarang?"
+                ].includes(setupQuestion) && (
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Tulis pertanyaan keamanan Anda sendiri..."
+                    value={setupQuestion}
+                    onChange={(e) => setSetupQuestion(e.target.value)}
+                    style={{ marginBottom: "6px" }}
+                  />
+                )}
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Jawaban rahasia Anda (spasi/tanda baca/huruf besar diabaikan)"
+                  value={setupAnswer}
+                  onChange={(e) => setSetupAnswer(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginTop: "6px", flexWrap: "wrap" }}>
+                {hasPin ? (
+                  <button
+                    type="button"
+                    onClick={handleDisablePin}
+                    disabled={setupSaving}
+                    className="btn btn-secondary"
+                    style={{ padding: "8px 12px", fontSize: "0.78rem", color: "#ef4444", borderColor: "rgba(239, 68, 68, 0.35)" }}
+                  >
+                    Nonaktifkan PIN
+                  </button>
+                ) : <span />}
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button type="button" onClick={() => setPinModalOpen(false)} className="btn btn-secondary" style={{ padding: "8px 14px", fontSize: "0.8rem" }}>
+                    Batal
+                  </button>
+                  <button type="submit" disabled={setupSaving} className="btn btn-primary" style={{ padding: "8px 16px", fontSize: "0.8rem", fontWeight: "700" }}>
+                    {setupSaving ? "Menyimpan..." : "Simpan PIN"}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
